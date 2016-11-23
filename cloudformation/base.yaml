@@ -415,7 +415,11 @@ Outputs:
     Value: !GetAtt DevPortalLambdaFunction.Arn
 
   WebsiteURL:
-    Value: !GetAtt WebsiteS3Bucket.WebsiteURL
+    Value: !Join
+      - ''
+      - - https://s3.amazonaws.com/
+        - !Ref DevPortalSiteS3Bucket
+        - /index.html
     Description: URL for website hosted on S3
 
   CognitoUserPoolId:
