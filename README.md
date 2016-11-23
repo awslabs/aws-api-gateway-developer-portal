@@ -38,7 +38,7 @@ npm run delete-stack
 
 ### UI (/app)
 
-The UI is a simple React application hosted in a public S3 bucket. The client side code communicates with the application backend via an API Gateway proxy API.
+The UI is a simple React application hosted in a public S3 bucket. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
 
 ### Application Backend (/lambdas/express)
 

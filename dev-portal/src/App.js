@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
-import {HashRouter, Match, Link, Miss} from 'react-router'
+import React, { Component } from 'react'
+import {HashRouter, Match, Link, Miss, Redirect} from 'react-router'
 import Index from './pages'
 import CaseStudies from './pages/CaseStudies'
 import Dashboard from './pages/Dashboard'
-import logo from './logo.svg';
-import './App.css';
+import Apis from './pages/Apis'
+import logo from './logo.svg'
+import './App.css'
 import AlertPopup from './components/AlertPopup'
 import {start} from './js/devportal'
 import { isAuthenticated } from './services/self'
@@ -23,7 +24,7 @@ const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
   )}/>
 )
 
-class App extends Component {
+export default class App extends Component {
   componentDidMount() {
     start()
   }
@@ -47,16 +48,15 @@ class App extends Component {
               <Match exactly pattern="/" component={Index} />
               <Match pattern="/case-studies" component={CaseStudies} />
               <MatchWhenAuthorized pattern="/dashboard" component={Dashboard}/>
+              <MatchWhenAuthorized pattern="/apis" component={Apis}/>
               <Miss component={NoMatch}/>
           </section>
         </div>
       </HashRouter>
-    );
+    )
     /*
 
 
      */
   }
 }
-
-export default App;

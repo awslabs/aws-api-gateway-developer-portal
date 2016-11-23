@@ -2,6 +2,7 @@ import React from 'react'
 import { Container, Segment, Divider, Button, Card } from 'semantic-ui-react'
 import SignIn from '../components/SignIn'
 import Register from '../components/Register'
+import ApiCatalog from '../components/ApiCatalog'
 
 
 export default () => (
