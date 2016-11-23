@@ -3,6 +3,9 @@
   "homepage": "https://s3.amazonaws.com/YOUR_CLIENT_BUCKET_NAME/",
   "version": "0.1.0",
   "private": true,
+  "config": {
+    "siteS3Bucket": "YOUR_CLIENT_BUCKET_NAME"
+  },
   "devDependencies": {
     "react-scripts": "0.7.0"
   },
@@ -20,6 +23,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "upload-site": "aws s3 sync ./build s3://$npm_package_config_siteS3Bucket --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers"
   }
 }
