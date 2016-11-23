@@ -1,6 +1,5 @@
 import React from 'react'
-import SignIn from '../components/SignIn'
-import ApiCatalog from '../components/ApiCatalog'
-import { isAuthenticated } from '../services/self'
+import Home from './Home'
 
-export default () => isAuthenticated() ? <ApiCatalog />  :<SignIn />
+
+export default () => <Home />

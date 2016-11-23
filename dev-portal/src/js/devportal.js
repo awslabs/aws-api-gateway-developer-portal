@@ -5,9 +5,9 @@ import {CognitoUserPool, CognitoUser, AuthenticationDetails} from 'amazon-cognit
 import $ from 'jquery'
 const awsRegion = 'us-east-1'
 const cognitoRegion = 'us-east-1'
-const cognitoUserPoolId = 'us-east-1_zRDhjEhx6'
-const cognitoIdentityPoolId = 'us-east-1:bf6731c5-b58a-4b5c-bdeb-6cd5d373fe14'
-const cognitoClientId = '45ad0tnca1830dcgq3d4lbouiv'
+const cognitoUserPoolId = 'YOUR_COGNITO_USER_POOL_ID'
+const cognitoIdentityPoolId = 'YOUR_COGNITO_IDENTITY_POOL_ID'
+const cognitoClientId = 'YOUR_COGNITO_CLIENT_ID'
 // AWSCognito.config.region = awsRegion
 AWS.config.region = cognitoRegion
 const identityPoolId = cognitoIdentityPoolId

@@ -14,8 +14,12 @@
   color: white;
 }
 
+.App-header h2 {
+  margin: 0;
+}
+
 .App-intro {
-  font-size: large;
+  padding: 1rem;
 }
 
 @keyframes App-logo-spin {

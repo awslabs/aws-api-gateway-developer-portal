@@ -1,17 +1,21 @@
 import React from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
-import {login} from '../../js/devportal'
+import {start, register} from '../../js/devportal'
 
  export default class SignIn extends React.Component {
   constructor(props){
     super(props)
 
-    this.handleLogin = this.handleLogin.bind(this)
+    this.handleRegister = this.handleRegister.bind(this);
   }
 
-  handleLogin(event, serializedForm) {
+  componentDidMount() {
+    start()
+  }
+
+  handleRegister(event, serializedForm) {
     event.preventDefault()
-    login(serializedForm.email, serializedForm.password)
+    register(serializedForm.email, serializedForm.password)
   }
 
   render() {
@@ -19,14 +23,14 @@ import {login} from '../../js/devportal'
     const isSubmitting = false
 
     return (
-      <Modal trigger={<Button primary fluid>Sign In</Button>}>
-        <Modal.Header>Sign in</Modal.Header>
+      <Modal trigger={<Button secondary fluid>Register</Button>}>
+        <Modal.Header>Register</Modal.Header>
         <Modal.Content>
           <Modal.Description>
-            <Form onSubmit={this.handleLogin} error={errorMessage !== ''} loading={isSubmitting}>
+            <Form onSubmit={this.handleRegister} error={errorMessage !== ''} loading={isSubmitting}>
               <Form.Input label='Email' name='email' />
               <Form.Input type='password' label='Password' name='password' autoComplete='false' />
-              <Button primary type='submit'>Sign In</Button>
+              <Button primary type='submit'>Register</Button>
               <Message
                 error
                 header='Action Forbidden'
@@ -36,5 +40,5 @@ import {login} from '../../js/devportal'
           </Modal.Description>
         </Modal.Content>
       </Modal>)
-  }
+    }
 }
