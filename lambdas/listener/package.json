@@ -1,0 +1,13 @@
+{
+  "name": "aws-serverless-dev-portal-example",
+  "version": "1.0.0",
+  "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
+  "main": "index.js",
+  "config": {},
+  "scripts": {},
+  "license": "Apache-2.0",
+  "dependencies": {
+    "aws-sdk": "^2.6.7"
+  },
+  "devDependencies": {}
+}

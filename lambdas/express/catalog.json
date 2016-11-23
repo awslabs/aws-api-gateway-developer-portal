@@ -1,0 +1,365 @@
+[
+    {
+      "usagePlanId" : "68ro9q",
+      "apiId": "ff",
+      "title" : "My API 0",
+      "image" : "http://...",
+      "description" : "Kombucha mumblecore cray, cillum scenester tote bag health goth dolore nesciunt you probably haven't heard of them. Succulents laboris microdosing snackwave, franzen skateboard organic echo park chartreuse blue bottle in. Swag yuccie fixie, culpa kickstarter pok pok bespoke gentrify iPhone lyft irure ugh man bun. Pop-up austin nulla pitchfork post-ironic mustache 8-bit edison bulb, yr kinfolk kombucha raclette delectus id."
+    },
+  {
+    "usagePlanId" : "10hmtf",
+      "apiId": "dhz2hj6zgh",
+    "title" : "My API 1",
+    "image" : "http://...",
+    "description" : "Kombucha mumblecore cray, cillum scenester tote bag health goth dolore nesciunt you probably haven't heard of them. Succulents laboris microdosing snackwave, franzen skateboard organic echo park chartreuse blue bottle in. Swag yuccie fixie, culpa kickstarter pok pok bespoke gentrify iPhone lyft irure ugh man bun. Pop-up austin nulla pitchfork post-ironic mustache 8-bit edison bulb, yr kinfolk kombucha raclette delectus id.",
+    "swagger": {
+        "swagger": "2.0",
+        "info": {
+          "version": "2016-10-21T19:26:03Z",
+          "title": "PetStore"
+        },
+        "host": "dhz2hj6zgh.execute-api.us-east-1.amazonaws.com",
+        "basePath": "/prod",
+        "schemes": [
+          "https"
+        ],
+        "paths": {
+          "/": {
+            "get": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "text/html"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    },
+                    "Content-Type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "security": [
+                {
+                  "api_key": []
+                }
+              ]
+            },
+            "post": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "application/json"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "security": [
+                {
+                  "andrbret": []
+                }
+              ]
+            },
+            "options": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "application/json"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Methods": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Headers": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/pets": {
+            "get": {
+              "produces": [
+                "application/json"
+              ],
+              "parameters": [
+                {
+                  "name": "type",
+                  "in": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                {
+                  "name": "page",
+                  "in": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "post": {
+              "produces": [
+                "application/json"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "options": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "application/json"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Methods": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Headers": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/pets/{petId}": {
+            "get": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "application/json"
+              ],
+              "parameters": [
+                {
+                  "name": "petId",
+                  "in": "path",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "delete": {
+              "produces": [
+                "application/json"
+              ],
+              "parameters": [
+                {
+                  "name": "petId",
+                  "in": "path",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "options": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "application/json"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Methods": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Headers": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/pets/{petId}/test": {
+            "delete": {
+              "produces": [
+                "application/json"
+              ],
+              "parameters": [
+                {
+                  "name": "petId",
+                  "in": "path",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "options": {
+              "consumes": [
+                "application/json"
+              ],
+              "produces": [
+                "application/json"
+              ],
+              "responses": {
+                "200": {
+                  "description": "200 response",
+                  "schema": {
+                    "$ref": "#/definitions/Empty"
+                  },
+                  "headers": {
+                    "Access-Control-Allow-Origin": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Methods": {
+                      "type": "string"
+                    },
+                    "Access-Control-Allow-Headers": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "securityDefinitions": {
+          "andrbret": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "x-amazon-apigateway-authtype": "custom"
+          },
+          "api_key": {
+            "type": "apiKey",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        },
+        "definitions": {
+          "Empty": {
+            "type": "object"
+          }
+        }
+      }
+  },
+  {
+    "usagePlanId" : "cfn94b",
+    "title" : "My API 2",
+    "image" : "http://...",
+    "description" : "Kombucha mumblecore cray, cillum scenester tote bag health goth dolore nesciunt you probably haven't heard of them. Succulents laboris microdosing snackwave, franzen skateboard organic echo park chartreuse blue bottle in. Swag yuccie fixie, culpa kickstarter pok pok bespoke gentrify iPhone lyft irure ugh man bun. Pop-up austin nulla pitchfork post-ironic mustache 8-bit edison bulb, yr kinfolk kombucha raclette delectus id."
+  },
+  {
+    "usagePlanId" : "887xv2",
+    "title" : "My API 3",
+    "image" : "http://...",
+    "description" : "Kombucha mumblecore cray, cillum scenester tote bag health goth dolore nesciunt you probably haven't heard of them. Succulents laboris microdosing snackwave, franzen skateboard organic echo park chartreuse blue bottle in. Swag yuccie fixie, culpa kickstarter pok pok bespoke gentrify iPhone lyft irure ugh man bun. Pop-up austin nulla pitchfork post-ironic mustache 8-bit edison bulb, yr kinfolk kombucha raclette delectus id."
+  },
+  {
+    "usagePlanId" : "nllhpp",
+    "title" : "My API 4",
+    "image" : "http://...",
+    "description" : "Kombucha mumblecore cray, cillum scenester tote bag health goth dolore nesciunt you probably haven't heard of them. Succulents laboris microdosing snackwave, franzen skateboard organic echo park chartreuse blue bottle in. Swag yuccie fixie, culpa kickstarter pok pok bespoke gentrify iPhone lyft irure ugh man bun. Pop-up austin nulla pitchfork post-ironic mustache 8-bit edison bulb, yr kinfolk kombucha raclette delectus id."
+  }
+]

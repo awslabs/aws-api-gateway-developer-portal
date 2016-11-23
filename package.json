@@ -1,0 +1,45 @@
+{
+  "name": "aws-serverless-dev-portal-example",
+  "version": "1.0.0",
+  "description": "Example application for running a Serverless YOUR_API_GATEWAY_API_NAME with API Gateway and Lambda",
+  "main": "lambda.js",
+  "config": {
+    "artifactsS3Bucket": "YOUR_ARTIFACTS_BUCKET_NAME",
+    "siteS3Bucket": "YOUR_CLIENT_BUCKET_NAME",
+    "accountId": "YOUR_ACCOUNT_ID",
+    "primaryAwsRegion": "YOUR_PRIMARY_AWS_REGION",
+    "cloudFormationStackName": "YOUR_CLOUDFORMATION_STACK_NAME",
+    "apiGatewayApiName": "YOUR_API_GATEWAY_API_NAME",
+    "expressLambdaFunctionName": "YOUR_LAMBDA_FUNCTION_NAME",
+    "identityPoolName": "DevPortal",
+    "apiGatewayApiId": "YOUR_API_GATEWAY_API_ID",
+    "cognitoRegion": "YOUR_COGNITO_REGION",
+    "cognitoUserPoolId": "YOUR_COGNITO_USER_POOL_ID",
+    "cognitoClientId": "YOUR_COGNITO_CLIENT_ID",
+    "cognitoIdentityPoolId": "YOUR_COGNITO_IDENTITY_POOL_ID",
+    "listenerLambdaFunctionName": "DevPortalSubscriptionListener",
+    "marketplaceSubscriptionTopic": "arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-PRODUCT_CODE"
+  },
+  "scripts": {
+    "package": "aws cloudformation package --template cloudformation/base.yaml --s3-bucket $npm_package_config_artifactsS3Bucket --output-template packaged-sam.yaml",
+    "deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name $npm_package_config_cloudFormationStackName --capabilities CAPABILITY_IAM --parameter-overrides ArtifactsS3Bucket=$npm_package_config_artifactsS3Bucket DevPortalSiteS3Bucket=$npm_package_config_siteS3Bucket DevPortalFunction=$npm_package_config_expressLambdaFunctionName MarketplaceSubscriptionTopic=$npm_package_config_marketplaceSubscriptionTopic CognitoIdentityPoolName=$npm_package_config_identityPoolName DevPortalCustomersTableName=DevPortalCustomers",
+    "package-deploy": "npm run package && npm run deploy",
+    "pre-config": "node pre-configure.js",
+    "post-config": "node post-configure.js",
+    "create-artifacts-bucket": "aws s3 mb s3://$npm_package_config_artifactsS3Bucket --region $npm_package_config_primaryAwsRegion",
+    "delete-artifacts-bucket": "aws s3 rm s3://$npm_package_config_artifactsS3Bucket/lambda-function.zip --region $npm_package_config_primaryAwsRegion; aws s3 rm s3://$npm_package_config_artifactsS3Bucket/dev-portal-express-proxy-api.yaml --region $npm_package_config_primaryAwsRegion; aws s3 rb s3://$npm_package_config_artifactsS3Bucket --region $npm_package_config_primaryAwsRegion",
+    "upload-site": "cd ./dev-portal && npm run build && aws s3 sync ./build s3://$npm_package_config_siteS3Bucket --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --region $npm_package_config_primaryAwsRegion && cd ..",
+    "delete-stack": "aws cloudformation delete-stack --stack-name $npm_package_config_cloudFormationStackName --region $npm_package_config_primaryAwsRegion",
+    "lambdas-npm-install": "cd lambdas/express && npm install && npm install ../_common && cd meteringservice-preview-sdk-js-06-23-2016 && npm install && cd ../../listener && npm install && npm install ../_common && cd ../cognito-cloudformation-custom-resource && npm install && cd ../..",
+    "subscribe-listener": "aws sns subscribe --topic-arn $npm_package_config_marketplaceSubscriptionTopic --protocol lambda --notification-endpoint arn:aws:lambda:$npm_package_config_primaryAwsRegion:$npm_package_config_accountId:function:$npm_package_config_listenerLambdaFunctionName --region us-east-1",
+    "setup": "aws s3api get-bucket-location --bucket $npm_package_config_artifactsS3Bucket --region $npm_package_config_primaryAwsRegion || npm run create-artifacts-bucket && npm run lambdas-npm-install && npm run package-deploy",
+    "post-setup": "npm run post-config && npm run upload-site && npm run package-deploy",
+    "clean": "npm run delete-artifacts-bucket && npm run delete-stack"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "inquirer": "^1.2.1"
+  }
+}

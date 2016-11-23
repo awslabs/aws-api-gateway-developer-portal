@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "Sns" : {
+        "Message" : "{\"action\" : \"unsubscribe-complete\", \"customer-identifier\" : \"[CUSTOMER_ID]\", \"product-code\" : \"[PRODUCT_CODE]\"}"
+      }
+    }
+  ]
+}
