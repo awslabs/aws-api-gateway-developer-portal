@@ -410,10 +410,6 @@ Outputs:
     Description: Devleoper Portal Lambda Function Name.
     Value: !Ref DevPortalLambdaFunction
 
-  DevPortalFunctionArn:
-    Description: Devleoper Portal Lambda Function Arn.
-    Value: !GetAtt DevPortalLambdaFunction.Arn
-
   WebsiteURL:
     Value: !Join
       - ''

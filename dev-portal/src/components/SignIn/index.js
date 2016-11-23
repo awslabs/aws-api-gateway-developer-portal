@@ -19,7 +19,7 @@ import {login} from '../../js/devportal'
     const isSubmitting = false
 
     return (
-      <Modal trigger={<Button primary fluid>Sign In</Button>}>
+      <Modal size='small' trigger={<Button primary fluid>Sign In</Button>}>
         <Modal.Header>Sign in</Modal.Header>
         <Modal.Content>
           <Modal.Description>

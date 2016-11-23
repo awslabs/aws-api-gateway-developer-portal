@@ -1,5 +1,6 @@
 {
   "name": "dev-portal",
+  "homepage": "https://s3.amazonaws.com/YOUR_CLIENT_BUCKET_NAME/",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {

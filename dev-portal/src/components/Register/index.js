@@ -23,7 +23,7 @@ import {start, register} from '../../js/devportal'
     const isSubmitting = false
 
     return (
-      <Modal trigger={<Button secondary fluid>Register</Button>}>
+      <Modal size='small' trigger={<Button secondary fluid>Register</Button>}>
         <Modal.Header>Register</Modal.Header>
         <Modal.Content>
           <Modal.Description>
