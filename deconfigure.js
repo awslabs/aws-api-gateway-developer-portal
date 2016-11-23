@@ -17,7 +17,7 @@ modifyCloudFormation(config.cognitoIdentityPoolId)
 modifyPackageFile(config)
 
 function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
-    const apigClientPath = './app/js/apigateway-js-sdk/apigClient.js'
+    const apigClientPath = './dev-portal/public/apigateway-js-sdk/apigClient.js'
     const apigClient = fs.readFileSync(apigClientPath, 'utf8')
     const apiGatewayApiIdRegex = new RegExp(apiGatewayApiId, 'g')
     const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')
@@ -29,7 +29,7 @@ function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
 }
 
 function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegion, cognitoUserPoolId, cognitoClientId) {
-    const htmlPath = './app/js/devportal.js'
+    const htmlPath = './dev-portal/src/js/devportal.js'
     const html = fs.readFileSync(htmlPath, 'utf8')
     const cognitoIdentityPoolIdRegex = new RegExp(cognitoIdentityPoolId, 'g')
     const cognitoRegionRegex = new RegExp(`var cognitoRegion = '${cognitoRegion}'`, 'g')

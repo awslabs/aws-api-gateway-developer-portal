@@ -41,7 +41,7 @@ apigClientFactory.newClient = function (config) {
         config.sessionToken = '';
     }
     if(config.region === undefined) {
-        config.region = 'us-east-1';
+        config.region = 'YOUR_PRIMARY_AWS_REGION';
     }
     //If defaultContentType is not defined then default to application/json
     if(config.defaultContentType === undefined) {
@@ -53,7 +53,7 @@ apigClientFactory.newClient = function (config) {
     }
 
     // extract endpoint and path from url
-    var invokeUrl = 'https://acq9iv8k46.execute-api.us-east-1.amazonaws.com/prod';
+    var invokeUrl = 'https://acq9iv8k46.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod';
     var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
     var pathComponent = invokeUrl.substring(endpoint.length);
 

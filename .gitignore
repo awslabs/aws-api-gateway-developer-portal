@@ -1,8 +1,5 @@
 node_modules
 npm-debug.log
-lambda-function.zip
-listener-function.zip
 .DS_Store
 packaged-sam.yaml
 cognito.js
-.next

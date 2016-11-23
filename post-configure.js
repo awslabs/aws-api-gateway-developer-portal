@@ -57,7 +57,7 @@ function modifyPackageFile(apiGatewayApiId, expressLambdaFunctionName, cognitoRe
 }
 
 function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegion, cognitoUserPoolId, cognitoClientId) {
-    const htmlPath = './app/js/devportal.js'
+    const htmlPath = './dev-portal/src/js/devportal.js'
     const html = fs.readFileSync(htmlPath, 'utf8')
     const htmlModified = html
         .replace(/YOUR_COGNITO_IDENTITY_POOL_ID/g, cognitoIdentityPoolId)
@@ -70,7 +70,7 @@ function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegio
 }
 
 function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
-    const apigClientPath = './app/js/apigateway-js-sdk/apigClient.js'
+    const apigClientPath = './dev-portal/public/apigateway-js-sdk/apigClient.js'
     const apigClient = fs.readFileSync(apigClientPath, 'utf8')
     const apigClientModified = apigClient
         .replace(/YOUR_API_GATEWAY_API_ID/g, apiGatewayApiId)

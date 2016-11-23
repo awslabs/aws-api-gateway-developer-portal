@@ -33,28 +33,27 @@ const questions = [{
     message: 'API name:',
     type: 'input',
     default: 'Developer Portal'
-}, {
+}/*, {
     name: 'expressLambdaFunctionName',
     message: 'Lambda function name:',
     type: 'input',
     default: 'DevPortalFunction'
-}]
-//YOUR_COGNITO_IDENTITY_POOL_NAME
+}*/]
 
 inquirer.prompt(questions).then((answers) => {
-    modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.cloudFormationStackName, answers.expressLambdaFunctionName, answers.accountId)
+    modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, answers.accountId)
     modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
-    modifySwaggerFile(answers.accountId, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.expressLambdaFunctionName)
+    modifySwaggerFile(answers.accountId, answers.primaryAwsRegion, answers.apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
 }).catch(e => {console.log(e)})
 
-function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAwsRegion, apiGatewayApiName, cloudFormationStackName, expressLambdaFunctionName, accountId) {
+function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAwsRegion, apiGatewayApiName, cloudFormationStackName/*, expressLambdaFunctionName*/, accountId) {
     const packageJsonPath = './package.json'
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const packageJsonModified = packageJson
         .replace(/YOUR_ARTIFACTS_BUCKET_NAME/g, artifactsS3BucketName)
         .replace(/YOUR_CLIENT_BUCKET_NAME/g, clientS3BucketName)
         .replace(/YOUR_API_GATEWAY_API_NAME/g, apiGatewayApiName)
-        .replace(/YOUR_LAMBDA_FUNCTION_NAME/g, expressLambdaFunctionName)
+        // .replace(/YOUR_LAMBDA_FUNCTION_NAME/g, expressLambdaFunctionName)
         .replace(/YOUR_ACCOUNT_ID/g, accountId)
         .replace(/YOUR_CLOUDFORMATION_STACK_NAME/g, cloudFormationStackName)
         .replace(/YOUR_PRIMARY_AWS_REGION/g, primaryAwsRegion)
@@ -72,7 +71,7 @@ function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
     fs.writeFileSync(expressServerPath, expressServerModified, 'utf8')
 }
 
-function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName, expressLambdaFunctionName) {
+function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName/*, expressLambdaFunctionName*/) {
     const swaggerDefinitionPath = './lambdas/express/dev-portal-express-proxy-api.yaml'
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const simpleProxyApiModified = swaggerDefinition
