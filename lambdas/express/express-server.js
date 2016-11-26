@@ -23,11 +23,11 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(awsServerlessExpressMiddleware.eventContext())
 
 // no auth
-app.post('/register', (req, res) => {
-    console.log(util.inspect(req))
-
-    res.json({})
-})
+// app.post('/register', (req, res) => {
+//     console.log(util.inspect(req))
+//
+//     res.json({})
+// })
 
 app.post('/signin', (req, res) => {
     const cognitoIdentityId = getCognitoIdentityId(req)

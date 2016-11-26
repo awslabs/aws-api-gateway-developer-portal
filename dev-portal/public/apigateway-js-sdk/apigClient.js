@@ -114,7 +114,7 @@ apigClientFactory.newClient = function (config) {
             body: body
         };
 
-        console.log(proxyOptionsRequest);
+        // console.log(proxyOptionsRequest);
 
         return apiGatewayClient.makeRequest(proxyOptionsRequest, authType, additionalParams, config.apiKey);
     };

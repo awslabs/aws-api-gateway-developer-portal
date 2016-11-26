@@ -4,5 +4,5 @@ import Head from '../../components/Head'
 export default (props) => (
   <div>
     <Head {...props} />
-    <h1>Case Studies</h1>
+    <h1>Getting Started</h1>
   </div>)

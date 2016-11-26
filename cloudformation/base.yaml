@@ -35,7 +35,9 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       DefinitionUri: ../lambdas/express/dev-portal-express-proxy-api.yaml
-      StageName: beta
+      StageName: prod
+      Variables:
+        DevPortalFunctionName: !Ref DevPortalLambdaFunction
 
   WebsiteS3Bucket:
     Type: AWS::S3::Bucket
@@ -280,7 +282,7 @@ Resources:
       CodeUri: ../lambdas/cognito-user-pools-auto-confirm
       Handler: index.handler
       MemorySize: 128
-      # Role: !GetAtt PreSignupLambdaExecutionRole.Arn
+      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
       Runtime: nodejs4.3
       Timeout: 3
 
@@ -354,7 +356,7 @@ Resources:
                 - ':'
                 - !Ref 'AWS::AccountId'
                 - ':'
-                - 'Ref ApiGatewayApiId'
+                - !Ref ApiGatewayApi
                 - /prod/*/*
       Path: '/'
 

@@ -57,7 +57,7 @@ function modifyPackageFile(apiGatewayApiId, expressLambdaFunctionName, cognitoRe
 }
 
 function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegion, cognitoUserPoolId, cognitoClientId) {
-    const htmlPath = './dev-portal/src/js/devportal.js'
+    const htmlPath = './dev-portal/src/services/aws.js'
     const html = fs.readFileSync(htmlPath, 'utf8')
     const htmlModified = html
         .replace(/YOUR_COGNITO_IDENTITY_POOL_ID/g, cognitoIdentityPoolId)

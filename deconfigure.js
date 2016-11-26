@@ -30,7 +30,7 @@ function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
 }
 
 function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegion, cognitoUserPoolId, cognitoClientId) {
-    const htmlPath = './dev-portal/src/js/devportal.js'
+    const htmlPath = './dev-portal/src/services/aws.js'
     const html = fs.readFileSync(htmlPath, 'utf8')
     const cognitoIdentityPoolIdRegex = new RegExp(cognitoIdentityPoolId, 'g')
     const cognitoRegionRegex = new RegExp(`var cognitoRegion = '${cognitoRegion}'`, 'g')
