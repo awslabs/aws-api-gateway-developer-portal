@@ -142,6 +142,28 @@ Resources:
                 - !Ref 'AWS::AccountId'
                 - table/DevPortalCustomers/index/MarketplaceCustomerIdIndex
 
+  ApiGatewayMarketplaceMeteringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ApiGatewayMarketplaceMeteringRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: apigateway.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: ApiGatewayMeteringPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - aws-marketplace:BatchMeterUsage
+            - aws-marketplace:ResolveCustomer
+            Effect: Allow
+            Resource: "*"
+
   LambdaApiGatewayExecutionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -157,6 +179,21 @@ Resources:
           - ':'
           - !Ref ApiGatewayApi
           - '/*/*'
+
+  LambdaCognitoIdentityPoolExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PreSignupLambdaFunction.Arn
+      Principal: cognito-identity.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:cogntio-identity:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':identitypool/'
+          - !Ref CognitoIdentityPool
 
   LambdaCognitoUserPoolExecutionPermission:
     Type: AWS::Lambda::Permission
