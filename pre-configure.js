@@ -42,7 +42,7 @@ const questions = [{
 
 inquirer.prompt(questions).then((answers) => {
     modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, answers.accountId)
-    modifyUiPackageFile(answers.clientS3BucketName)
+    modifyUiPackageFile(answers.clientS3BucketName, answers.primaryAwsRegion)
     modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
     modifySwaggerFile(answers.accountId, answers.primaryAwsRegion, answers.apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
 }).catch(e => {console.log(e)})
@@ -62,11 +62,12 @@ function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAws
     fs.writeFileSync(packageJsonPath, packageJsonModified, 'utf8')
 }
 
-function modifyUiPackageFile(clientS3BucketName) {
+function modifyUiPackageFile(clientS3BucketName, primaryAwsRegion) {
     const packageJsonPath = './dev-portal/package.json'
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const packageJsonModified = packageJson
         .replace(/YOUR_CLIENT_BUCKET_NAME/g, clientS3BucketName)
+        .replace(/YOUR_PRIMARY_AWS_REGION/g, primaryAwsRegion)
 
     fs.writeFileSync(packageJsonPath, packageJsonModified, 'utf8')
 }

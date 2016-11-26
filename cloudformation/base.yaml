@@ -47,6 +47,17 @@ Resources:
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
+        RoutingRules:
+          - RoutingRuleCondition:
+              HttpErrorCodeReturnedEquals: 404
+            RedirectRule:
+              HostName: !Join
+                - ''
+                - - !Ref DevPortalSiteS3Bucket
+                  - .s3-website-
+                  - !Ref 'AWS::Region'
+                  - .amazonaws.com
+              ReplaceKeyPrefixWith: '#!/'
 
   CustomersTable:
     Type: AWS::DynamoDB::Table
@@ -146,6 +157,21 @@ Resources:
           - ':'
           - !Ref ApiGatewayApi
           - '/*/*'
+
+  LambdaCognitoUserPoolExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PreSignupLambdaFunction.Arn
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:cogntio-idp:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':userpool/'
+          - !Ref CognitoUserPool
 
   LambdaSNSExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -415,9 +441,11 @@ Outputs:
   WebsiteURL:
     Value: !Join
       - ''
-      - - https://s3.amazonaws.com/
+      - - http://
         - !Ref DevPortalSiteS3Bucket
-        - /index.html
+        - .s3-website-
+        - !Ref 'AWS::Region'
+        - .amazonaws.com
     Description: URL for website hosted on S3
 
   CognitoUserPoolId:
