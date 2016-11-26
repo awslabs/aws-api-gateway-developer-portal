@@ -14,13 +14,13 @@ const questions = [{
     name: 'expressLambdaFunctionName',
     message: 'Dev Portal Lambda Function Name:',
     type: 'input'
-}, {
+}/*, {
     name: 'cognitoRegion',
     message: 'Cognito region:',
     type: 'list',
     choices: ['us-east-1', 'us-west-2'],
     default: 'us-east-1'
-}, {
+}*/, {
     name: 'cognitoUserPoolId',
     message: 'Cognito User Pool ID:',
     type: 'input'
@@ -35,8 +35,8 @@ const questions = [{
 }]
 
 inquirer.prompt(questions).then((answers) => {
-    modifyPackageFile(answers.apiGatewayApiId, answers.expressLambdaFunctionName, answers.cognitoRegion, answers.cognitoUserPoolId, answers.cognitoClientId, answers.cognitoIdentityPoolId)
-    modifyDevPortalJs(answers.cognitoIdentityPoolId, primaryAwsRegion, answers.cognitoRegion, answers.cognitoUserPoolId, answers.cognitoClientId)
+    modifyPackageFile(answers.apiGatewayApiId, answers.expressLambdaFunctionName, primaryAwsRegion, answers.cognitoUserPoolId, answers.cognitoClientId, answers.cognitoIdentityPoolId)
+    modifyDevPortalJs(answers.cognitoIdentityPoolId, primaryAwsRegion, primaryAwsRegion, answers.cognitoUserPoolId, answers.cognitoClientId)
     modifyApigClient(answers.apiGatewayApiId, primaryAwsRegion)
     modifySwaggerFile(answers.expressLambdaFunctionName)
 }).catch(e => {console.log(e)})
