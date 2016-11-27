@@ -180,21 +180,6 @@ Resources:
           - !Ref ApiGatewayApi
           - '/*/*'
 
-  LambdaCognitoIdentityPoolExecutionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt PreSignupLambdaFunction.Arn
-      Principal: cognito-identity.amazonaws.com
-      SourceArn: !Join
-        - ''
-        - - 'arn:aws:cogntio-identity:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':identitypool/'
-          - !Ref CognitoIdentityPool
-
   LambdaCognitoUserPoolExecutionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -203,7 +188,7 @@ Resources:
       Principal: cognito-idp.amazonaws.com
       SourceArn: !Join
         - ''
-        - - 'arn:aws:cogntio-idp:'
+        - - 'arn:aws:cognito-idp:'
           - !Ref 'AWS::Region'
           - ':'
           - !Ref 'AWS::AccountId'

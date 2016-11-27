@@ -22,7 +22,7 @@
   },
   "scripts": {
     "package": "aws cloudformation package --template cloudformation/base.yaml --s3-bucket $npm_package_config_artifactsS3Bucket --output-template packaged-sam.yaml",
-    "deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name $npm_package_config_cloudFormationStackName --capabilities CAPABILITY_IAM --parameter-overrides ArtifactsS3Bucket=$npm_package_config_artifactsS3Bucket DevPortalSiteS3Bucket=$npm_package_config_siteS3Bucket DevPortalFunction=$npm_package_config_expressLambdaFunctionName MarketplaceSubscriptionTopic=$npm_package_config_marketplaceSubscriptionTopic CognitoIdentityPoolName=$npm_package_config_identityPoolName DevPortalCustomersTableName=DevPortalCustomers",
+    "deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name $npm_package_config_cloudFormationStackName --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --parameter-overrides ArtifactsS3Bucket=$npm_package_config_artifactsS3Bucket DevPortalSiteS3Bucket=$npm_package_config_siteS3Bucket DevPortalFunction=$npm_package_config_expressLambdaFunctionName MarketplaceSubscriptionTopic=$npm_package_config_marketplaceSubscriptionTopic CognitoIdentityPoolName=$npm_package_config_identityPoolName DevPortalCustomersTableName=DevPortalCustomers",
     "package-deploy": "npm run package && npm run deploy",
     "pre-config": "node pre-configure.js",
     "post-config": "node post-configure.js",
