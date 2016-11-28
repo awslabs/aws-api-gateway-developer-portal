@@ -1,21 +1,20 @@
 import React from 'react'
 import {BrowserRouter, Match, Miss, Redirect, Link} from 'react-router'
 import { Dimmer, Loader } from 'semantic-ui-react'
-import Index from './pages'
-import CaseStudies from './pages/CaseStudies'
-import GettingStarted from './pages/GettingStarted'
-import Dashboard from './pages/Dashboard'
-import Apis from './pages/Apis'
-import ApiDetails from './pages/ApiDetails'
-import logo from './logo.svg'
+import Home from '../../pages/Home'
+import CaseStudies from '../../pages/CaseStudies'
+import GettingStarted from '../../pages/GettingStarted'
+import Dashboard from '../../pages/Dashboard'
+import Apis from '../../pages/Apis'
+import ApiDetails from '../../pages/ApiDetails'
+import logo from '../../logo.png'
+import AlertPopup from '../../components/AlertPopup'
+import { init, isAuthenticated } from '../../services/self'
+import { apiGatewayClient } from '../../services/api'
 import './App.css'
-import AlertPopup from './components/AlertPopup'
-import { init, isAuthenticated } from './services/self'
-import { apiGatewayClient } from './services/api'
-import Head from './components/Head'
 
 const NoMatch = () => <h2>Page not found</h2>
-class MatchWhenAuthorized extends React.Component {
+class MatchWhenAuthorized extends React.Component { // eslint-disable-line
   constructor(props) {
     super(props)
 
@@ -27,7 +26,6 @@ class MatchWhenAuthorized extends React.Component {
     }, 100)
 
     this.state = {apiGatewayClient, apiGatewayClientInterval}
-    history.pushState({}, 'home page', location.hash.substring(2))
   }
 
   componentWillUnmount() {
@@ -51,6 +49,12 @@ export default class App extends React.Component {
   constructor() {
     super()
     init()
+
+    // We are using an S3 redirect rule to prefix the url path with #!
+    // This then converts it back to a URL path for React routing
+    // NOTE: For local development, you will get a Page Not Found when refreshing the Swagger UI page when it has a #!
+    const hashRoute = location.hash.substring(2)
+    history.pushState({}, 'home page', hashRoute)
   }
 
   render() {
@@ -64,7 +68,7 @@ export default class App extends React.Component {
           <section className="App-intro">
               <AlertPopup />
 
-              <Match exactly pattern="/" component={Index} />
+              <Match exactly pattern="/" component={Home} />
               <Match pattern="/case-studies" component={CaseStudies} />
               <Match pattern="/getting-started" component={GettingStarted} />
               <Match pattern="/dashboard" component={Dashboard}/>

@@ -1,20 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router'
 import { Button, Card, Image, Dropdown } from 'semantic-ui-react'
-import { addSubscription, showUsage, unsubscribe, isSubscribed } from '../../services/api-catalog'
+import { addSubscription, unsubscribe, isSubscribed } from '../../services/api-catalog'
 import { isAuthenticated } from '../../services/self'
-import logo from '../../logo.svg'
+import Usage from '../Usage'
 
 function handleSubscribe(event, api) {
   event.preventDefault()
 
   addSubscription(api.usagePlanId)
-}
-
-function handleShowUsage(event, api) {
-  event.preventDefault()
-
-  showUsage(api.usagePlanId)
 }
 
 function handleUnsubscribe(event, api) {
@@ -26,7 +20,7 @@ function handleUnsubscribe(event, api) {
 const SubscribedApiActionsDropdown = ({api}) => (
   <Dropdown text='Actions' button>
     <Dropdown.Menu>
-      <Dropdown.Item onClick={event => handleShowUsage(event, api)}>Show Usage</Dropdown.Item>
+      <Usage api={api} />
       <Dropdown.Item onClick={event => handleUnsubscribe(event, api)}>Unsubscribe</Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>)
@@ -36,7 +30,7 @@ const SubscribeButton = ({api}) => (
 )
 const ApiCard = api => (
 <Card key={api.apiId} style={{textAlign: 'center'}}>
-  <Link to={`apis/${api.apiId}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}><Image src={api.image} /></Link>{/*TODO: REMOVE 'logo || '*/}
+  <Link to={`apis/${api.apiId}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}><Image src={api.image} style={{margin: 'auto'}} /></Link>
   <Card.Content>
     <Card.Header><Link to={`apis/${api.apiId}`}>{api.swagger.info.title}</Link></Card.Header>
     <Card.Meta>

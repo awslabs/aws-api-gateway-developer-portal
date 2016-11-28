@@ -38,8 +38,7 @@
     "clean": "npm run delete-artifacts-bucket && npm run delete-stack"
   },
   "license": "Apache-2.0",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "inquirer": "^1.2.1"
   }

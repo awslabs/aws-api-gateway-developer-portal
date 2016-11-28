@@ -1,5 +1,4 @@
-import $ from 'jquery'
-import { getApiGatewayClient, apiGatewayClient } from './api'
+import { getApiGatewayClient } from './api'
 import { showError } from './misc'
 import apis from '../catalog.json'
 // export apis
@@ -7,13 +6,13 @@ export let subscriptions
 
 export function getApis() {
   return Promise.resolve(apis)
-  if (apis) return Promise.resolve(apis)
+  // if (apis) return Promise.resolve(apis)
 
-  return fetchApis()
-  .then(({data}) => {
+  // return fetchApis()
+  // .then(({data}) => {
     // apis = data
-    return data
-  })
+  //   return data
+  // })
 }
 
 export function getApi(id) {
@@ -80,50 +79,6 @@ export function addSubscription(usagePlanId) {
     })
 }
 
-export function showUsage(usagePlanId) {
-    const date = new Date()
-    const start = new Date(date.getFullYear(), date.getMonth(), 1).toJSON().split('T')[0]
-    const end = new Date().toJSON().split('T')[0]
-    return getApiGatewayClient().then(apiGatewayClient => {
-        return apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', {
-          start,
-          end
-      }, {}).then(function(result) {
-          $('#usage-modal').modal('show')
-          const data = mapUsageByDate(result.data, 'used')
-          const ctx = document.getElementById('myChart')
-          new window.Chart(ctx, {
-              type: 'line',
-              data: {
-                  labels: data.map(d => new Date(parseInt(d[0], 10)).toLocaleDateString()),
-                  datasets: [
-                      {
-                          label: 'Usage',
-                          data: data.map(d => d[1]),
-                          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                          borderColor: 'rgba(255,99,132,1)',
-                          borderWidth: 1
-                      }
-                  ]
-              },
-              options: {
-                  scales: {
-                      yAxes: [
-                          {
-                              ticks: {
-                                  beginAtZero: true
-                              }
-                          }
-                      ]
-                  }
-              }
-          })
-      }).catch(function(err) {
-          showError(JSON.stringify(err))
-      })
-    })
-}
-
 export function unsubscribe(usagePlanId) {
     return getApiGatewayClient().then(apiGatewayClient => {
         return apiGatewayClient.delete(`/subscriptions/${usagePlanId}`, {}, {}).then(function(result) {
@@ -134,7 +89,16 @@ export function unsubscribe(usagePlanId) {
     })
 }
 
-function mapUsageByDate(usage, usedOrRemaining) {
+export function fetchUsage(usagePlanId) {
+    const date = new Date()
+    const start = new Date(date.getFullYear(), date.getMonth(), 1).toJSON().split('T')[0]
+    const end = new Date().toJSON().split('T')[0]
+    return getApiGatewayClient().then(apiGatewayClient => {
+        return apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', { start, end }, {})
+    })
+}
+
+export function mapUsageByDate(usage, usedOrRemaining) {
     const apiKeyDates = {}
     Object.keys(usage.items).forEach(apiKeyId => {
         apiKeyDates[apiKeyId] = mapApiKeyUsageByDate(usage.items[apiKeyId], usage.startDate, usedOrRemaining)

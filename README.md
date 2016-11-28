@@ -16,7 +16,7 @@ npm run post-setup
 
 Enter your new API Id, Dev Portal Function Name, Cognito User Pool ID, Cognito Client ID, and Cognito Identity Pool ID, available in Cloudformation __Outputs__. Click the WebsiteURL in the __Outputs__ section of your CloudFormation stack.
 
-Update backend/catalog.json with your API Gateway Usage Plans (if you do not yet have one, you will need to create it).
+Update dev-portal/src/catalog.json with your API Gateway APIs and Usage Plans (if you do not yet have one, you will need to create it), and run `npm run upload-site`.
 
 ## Components
 

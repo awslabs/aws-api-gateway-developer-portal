@@ -11,19 +11,19 @@ export default (props) => (
       <Card>
         <Card.Content>
           <Card.Header><Link to='/case-studies'>Case Studies</Link></Card.Header>
-          <Card.Description>Here are some case studies...</Card.Description>
+          <Card.Description>Want to learn about what you can achieve by integrating with our APIs? The possibilities are endless, but <Link to='/case-studies'>here are just a few examples</Link>.</Card.Description>
         </Card.Content>
       </Card>
       <Card>
         <Card.Content>
           <Card.Header><Link to='/apis'>APIs</Link></Card.Header>
-          <Card.Description>See a list of our APIs and their documentation...</Card.Description>
+          <Card.Description><Link to='/apis'>See what APIs we have on offer</Link>, including extensive documentation. Sign in to manage your subscriptions, see your current usage, get your API Key, and test against our live API.</Card.Description>
         </Card.Content>
       </Card>
       <Card>
         <Card.Content>
-          <Card.Header><Link to='/getting-started'>Getting Started Guides</Link></Card.Header>
-          <Card.Description>Here's how you can get started...</Card.Description>
+          <Card.Header><Link to='/getting-started'>Getting Started</Link></Card.Header>
+          <Card.Description>Ready to get started? This is the place that answers all your questions. We'll have you up and running in no time. <Link to='/getting-started'>Let's get started!</Link></Card.Description>
         </Card.Content>
       </Card>
     </Card.Group>

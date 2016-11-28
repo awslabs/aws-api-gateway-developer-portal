@@ -1,7 +1,6 @@
 import React from 'react'
 import { Breadcrumb, Button, Popup } from 'semantic-ui-react'
 import { Link, Redirect} from 'react-router'
-import logo from '../../logo.svg'
 import { logout, showApiKey, isAuthenticated } from '../../services/self'
 import { getApi } from '../../services/api-catalog'
 
@@ -65,16 +64,14 @@ export default class Head extends React.Component {
         { this.isApiDetailsRoute() ? <Breadcrumb.Section><Breadcrumb.Section><Breadcrumb.Divider icon='right chevron' /><Link to="/apis">APIs</Link></Breadcrumb.Section><Breadcrumb.Section active><Breadcrumb.Divider icon='right chevron' />{ this.state.apiName }</Breadcrumb.Section></Breadcrumb.Section> : ''}
       </Breadcrumb>
       { this.state.isAuthenticated ? <div style={{float: 'right'}}>
-        <Button onClick={() => this.logout()} size='mini'>Sign out</Button>
         <Popup
           trigger={<Button onClick={() => this.showApiKey()} size='mini'>Show API Key</Button>}
-          content={this.state.apiKey.toString()}
+          content={this.state.apiKey ? this.state.apiKey.toString() : 'Loading API Key...'}
           on='click'
           positioning='top right'
         />
+        <Button onClick={() => this.logout()} size='mini'>Sign out</Button>
       </div> : ''}
     </section>)
   }
 }
-
-const ApiKey = ({apiKey}) => apiKey ? apiKey.toString() : 'Loading API Key...'

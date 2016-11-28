@@ -1,6 +1,6 @@
 {
   "name": "dev-portal",
-  "homepage": "http://YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com/",
+  "homepage": "http://YOUR_CLIENT_BUCKET_NAME.s3-website-us-east-1.amazonaws.com/",
   "version": "0.1.0",
   "private": true,
   "config": {
@@ -10,12 +10,13 @@
     "react-scripts": "0.7.0"
   },
   "dependencies": {
+    "amazon-cognito-identity-js": "^1.7.0",
+    "aws-sdk": "^2.7.6",
+    "chart.js": "^2.4.0",
+    "jquery": "^3.1.1",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
     "react-router": "^4.0.0-alpha.6",
-    "amazon-cognito-identity-js": "^1.7.0",
-    "aws-sdk": "^2.7.6",
-    "jquery": "^3.1.1",
     "semantic-ui-css": "^2.2.4",
     "semantic-ui-react": "^0.61.2"
   },

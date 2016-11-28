@@ -1,6 +1,4 @@
 import AWS from 'aws-sdk'
-import $ from 'jquery'
-// import CognitoIdentity from 'aws-sdk/clients/cognitoidentity'
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
 import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from './aws'
 import { showError } from './misc'
@@ -77,10 +75,9 @@ export function register(email, password) {
       if (err) {
         reject(err)
       } else {
-        const cognitoUser = result.user
+        // cognitoUser = result.user
 
-        login(email, password)
-        resolve()
+        resolve(login(email, password))
       }
     })
   })
@@ -98,10 +95,11 @@ export function login(email, password) {
       Pool: userPool
     }
 
-    const cognitoUser = new CognitoUser(userData)
+    cognitoUser = new CognitoUser(userData)
     return new Promise((resolve, reject) => {
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
+          // cognitoUser = result.user
           console.log('access token + ' + result.getAccessToken().getJwtToken())
 
           const cognitoLoginKey = getCognitoLoginKey()
