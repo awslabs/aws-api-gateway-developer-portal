@@ -40,7 +40,7 @@ npm run delete-stack
 
 The UI is a simple React application hosted in a public S3 bucket. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
 
-### Application Backend (/lambdas/express)
+### Application Backend (/lambdas/backend)
 
 The application backend is a Lambda function built on the [aws-serverless-express](https://github.com/awslabs/aws-serverless-express) library. The backend is responsible for login/registration, API subscription/unsubscription, usage metrics, and handling product subscription redirects from AWS Marketplace.
 

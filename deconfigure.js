@@ -48,7 +48,7 @@ function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegio
 }
 
 function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName, expressLambdaFunctionName) {
-    const swaggerDefinitionPath = './lambdas/express/dev-portal-express-proxy-api.yaml'
+    const swaggerDefinitionPath = './lambdas/backend/dev-portal-express-proxy-api.yaml'
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const accountIdRegex = new RegExp(accountId, 'g')
     const expressLambdaFunctionNameRegex = new RegExp(expressLambdaFunctionName, 'g')
@@ -64,7 +64,7 @@ function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName, expre
 }
 
 function modifyExpressServer(siteS3Bucket, primaryAwsRegion) {
-    const expressServerPath = './lambdas/express/express-server.js'
+    const expressServerPath = './lambdas/backend/express-server.js'
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
     const siteS3BucketRegex = new RegExp(siteS3Bucket, 'g')
     const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')

@@ -34,7 +34,7 @@ Resources:
   ApiGatewayApi:
     Type: AWS::Serverless::Api
     Properties:
-      DefinitionUri: ../lambdas/express/dev-portal-express-proxy-api.yaml
+      DefinitionUri: ../lambdas/backend/dev-portal-express-proxy-api.yaml
       StageName: prod
       Variables:
         DevPortalFunctionName: !Ref DevPortalLambdaFunction
@@ -223,7 +223,7 @@ Resources:
   DevPortalLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../lambdas/express
+      CodeUri: ../lambdas/backend
       Handler: index.handler
       # FunctionName: !Ref DevPortalFunction
       MemorySize: 1024

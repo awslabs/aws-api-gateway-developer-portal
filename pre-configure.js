@@ -73,7 +73,7 @@ function modifyUiPackageFile(clientS3BucketName, primaryAwsRegion) {
 }
 
 function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
-    const expressServerPath = './lambdas/express/express-server.js'
+    const expressServerPath = './lambdas/backend/express-server.js'
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
     const expressServerModified = expressServer
         .replace(/YOUR_CLIENT_BUCKET_NAME/g, clientS3BucketName)
@@ -83,7 +83,7 @@ function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
 }
 
 function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName/*, expressLambdaFunctionName*/) {
-    const swaggerDefinitionPath = './lambdas/express/dev-portal-express-proxy-api.yaml'
+    const swaggerDefinitionPath = './lambdas/backend/dev-portal-express-proxy-api.yaml'
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const simpleProxyApiModified = swaggerDefinition
         .replace(/YOUR_ACCOUNT_ID/g, accountId)

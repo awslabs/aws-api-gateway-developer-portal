@@ -79,7 +79,7 @@ function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
 }
 
 function modifySwaggerFile(expressLambdaFunctionName) {
-    const swaggerDefinitionPath = './lambdas/express/dev-portal-express-proxy-api.yaml'
+    const swaggerDefinitionPath = './lambdas/backend/dev-portal-express-proxy-api.yaml'
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const simpleProxyApiModified = swaggerDefinition
         .replace(/YOUR_LAMBDA_FUNCTION_NAME/g, expressLambdaFunctionName)
