@@ -11,7 +11,7 @@ const config = packageJson.config
 
 modifyApigClient(config.apiGatewayApiId, config.primaryAwsRegion)
 modifyDevPortalJs(config.cognitoIdentityPoolId, config.primaryAwsRegion, config.cognitoRegion, config.cognitoUserPoolId, config.cognitoClientId)
-modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName, config.expressLambdaFunctionName)
+modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName)
 modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion)
 modifyCloudFormation(config.cognitoIdentityPoolId)
 modifyPackageFile(config)
@@ -47,16 +47,14 @@ function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegio
     fs.writeFileSync(htmlPath, htmlModified, 'utf8')
 }
 
-function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName, expressLambdaFunctionName) {
+function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName) {
     const swaggerDefinitionPath = './lambdas/backend/dev-portal-express-proxy-api.yaml'
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const accountIdRegex = new RegExp(accountId, 'g')
-    const expressLambdaFunctionNameRegex = new RegExp(expressLambdaFunctionName, 'g')
     const apiGatewayApiNameRegex = new RegExp(apiGatewayApiName, 'g')
     const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')
     const simpleProxyApiModified = swaggerDefinition
         .replace(accountIdRegex, 'YOUR_ACCOUNT_ID')
-        .replace(expressLambdaFunctionNameRegex, 'YOUR_LAMBDA_FUNCTION_NAME')
         .replace(apiGatewayApiNameRegex, 'YOUR_API_GATEWAY_API_NAME')
         .replace(primaryAwsRegionRegex, 'YOUR_PRIMARY_AWS_REGION')
 
@@ -91,7 +89,6 @@ function modifyPackageFile(config) {
     const artifactsS3BucketRegex = new RegExp(`"artifactsS3Bucket": "${config.artifactsS3Bucket}"`, 'g')
     const siteS3BucketRegex = new RegExp(config.siteS3Bucket, 'g')
     const apiGatewayApiNameRegex = new RegExp(config.apiGatewayApiName, 'g')
-    const expressLambdaFunctionNameRegex = new RegExp(`"expressLambdaFunctionName": "${config.expressLambdaFunctionName}"`, 'g')
     const accountIdRegex = new RegExp(config.accountId, 'g')
     const cloudFormationStackNameRegex = new RegExp(config.cloudFormationStackName, 'g')
     const primaryAwsRegionRegex = new RegExp(`"primaryAwsRegion": "${config.primaryAwsRegion}"`, 'g')
@@ -104,7 +101,6 @@ function modifyPackageFile(config) {
       .replace(artifactsS3BucketRegex, '"artifactsS3Bucket": "YOUR_ARTIFACTS_BUCKET_NAME"')
       .replace(siteS3BucketRegex, 'YOUR_CLIENT_BUCKET_NAME')
       .replace(apiGatewayApiNameRegex, 'YOUR_API_GATEWAY_API_NAME')
-      .replace(expressLambdaFunctionNameRegex, '"expressLambdaFunctionName": "YOUR_LAMBDA_FUNCTION_NAME"')
       .replace(accountIdRegex, 'YOUR_ACCOUNT_ID')
       .replace(cloudFormationStackNameRegex, 'YOUR_CLOUDFORMATION_STACK_NAME')
       .replace(apiGatewayApiIdRegex, 'YOUR_API_GATEWAY_API_ID')

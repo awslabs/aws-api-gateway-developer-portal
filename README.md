@@ -20,7 +20,7 @@ Update dev-portal/src/catalog.json with your API Gateway APIs and Usage Plans (i
 
 ## Components
 
-### Cloudformation Stack (cloudformation.json)
+### Cloudformation Stack (cloudformation/base.json)
 
 Most components in the developer portal are managed by the CloudFormation stack defined in cloudformation.json. New application components can be added to this template. Configuration values are fed to this template from the configuration properties in package.json.
 

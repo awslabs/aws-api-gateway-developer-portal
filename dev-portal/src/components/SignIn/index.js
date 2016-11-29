@@ -21,7 +21,7 @@ import { login } from '../../services/self'
     this.setState({isSubmitting: true})
     login(serializedForm.email, serializedForm.password)
     .then(() => this.setState({signedIn: true, isSubmitting: false, errorMessage: ''}))
-    .catch((e) => this.setState({errorMessage: e, isSubmitting: false}))
+    .catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
   }
 
   render() {
@@ -34,7 +34,7 @@ import { login } from '../../services/self'
               <Form.Input label='Email' name='email' />
               <Form.Input type='password' label='Password' name='password' autoComplete='false' />
               <Button primary type='submit'>Sign In</Button>
-              <Message error content={this.state.errorMessage.toString()} />
+              <Message error content={this.state.errorMessage} />
             </Form>
           </Modal.Description>
         </Modal.Content>

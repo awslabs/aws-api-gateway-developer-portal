@@ -1,11 +1,13 @@
 import { getApiGatewayClient } from './api'
-import { showError } from './misc'
 import apis from '../catalog.json'
-// export apis
 export let subscriptions
+// let apis
 
 export function getApis() {
   return Promise.resolve(apis)
+
+  // NOTE: if you prefer to expose your catalog.json only to authenticated users,
+  // use the code below and manage lambdas/backend/catalog.json instead
   // if (apis) return Promise.resolve(apis)
 
   // return fetchApis()
@@ -22,20 +24,7 @@ export function getApi(id) {
 
 export function fetchApis() {
   return getApiGatewayClient().then(apiGatewayClient => {
-    return apiGatewayClient.get('/catalog', {}, {}, {}).then((result) => {
-      // const catalog = result.data.map(c => {
-      //     const subscribedUsagePlan = subscriptionsResult.data.find(s => s.id === c.usagePlanId)
-      //     c.isSubscribed = !!subscribedUsagePlan
-      //     c.apiStages = (subscribedUsagePlan && subscribedUsagePlan.apiStages) || []
-      //
-      //     return c
-      // })
-      //
-      // apis = catalog
-      // return result.data
-    }).catch(function(err) {
-      showError(JSON.stringify(err.data.message))
-    })
+    return apiGatewayClient.get('/catalog', {}, {}, {})
   })
 }
 
@@ -73,8 +62,6 @@ export function addSubscription(usagePlanId) {
     return getApiGatewayClient().then(apiGatewayClient => {
         return apiGatewayClient.put('/subscriptions/' + usagePlanId, {}, {}).then((result) => {
           window.location.reload()
-      }).catch((err) => {
-          showError(JSON.stringify(err.data.message))
       })
     })
 }
@@ -83,8 +70,6 @@ export function unsubscribe(usagePlanId) {
     return getApiGatewayClient().then(apiGatewayClient => {
         return apiGatewayClient.delete(`/subscriptions/${usagePlanId}`, {}, {}).then(function(result) {
           window.location.reload()
-      }).catch(function(err) {
-          showError(JSON.stringify(err.data.message))
       })
     })
 }

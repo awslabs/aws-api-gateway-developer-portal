@@ -13,14 +13,9 @@ Parameters:
     Description: The S3 bucket in which the web application code is stored. Bucket
       names are region-unique, so you must change this.
 
-  DevPortalFunction:
-    Type: String
-    Description: The name of your dev portal backend Lambda function.
-
   DevPortalCustomersTableName:
     Type: String
     Description: The name of the DynamoDB Customers table.
-    Default: DevPortalCustomers
 
   MarketplaceSubscriptionTopic:
     Type: String
@@ -114,11 +109,6 @@ Resources:
             - apigateway:*
             Resource: '*'
           - Action:
-            - aws-marketplace:BatchMeterUsage
-            - aws-marketplace:ResolveCustomer
-            Effect: Allow
-            Resource: '*'
-          - Action:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:Scan
@@ -162,7 +152,7 @@ Resources:
             - aws-marketplace:BatchMeterUsage
             - aws-marketplace:ResolveCustomer
             Effect: Allow
-            Resource: "*"
+            Resource: '*'
 
   LambdaApiGatewayExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -225,7 +215,6 @@ Resources:
     Properties:
       CodeUri: ../lambdas/backend
       Handler: index.handler
-      # FunctionName: !Ref DevPortalFunction
       MemorySize: 1024
       Role: !GetAtt DevPortalLambdaExecutionRole.Arn
       Runtime: nodejs4.3
@@ -249,7 +238,6 @@ Resources:
     Properties:
       CodeUri: ../lambdas/listener
       Handler: index.handler
-      # FunctionName: DevPortalSubscriptionListener
       MemorySize: 128
       Role: !GetAtt DevPortalLambdaExecutionRole.Arn
       Runtime: nodejs4.3
@@ -265,7 +253,7 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
-        Path: "/"
+        Path: '/'
         Policies:
         - PolicyName: root
           PolicyDocument:
@@ -289,7 +277,7 @@ Resources:
               - cognito-idp:CreateUserPoolClient
               - cognito-idp:DeleteUserPoolClient
               - cognito-idp:UpdateUserPoolClient
-              Resource: "*"
+              Resource: '*'
 
   CognitoCustomResourceLambda:
     Type: AWS::Serverless::Function
@@ -311,7 +299,7 @@ Resources:
   #         Principal:
   #           Service: lambda.amazonaws.com
   #         Action: sts:AssumeRole
-  #     Path: "/"
+  #     Path: '/'
   #     Policies:
   #     - PolicyName: root
   #       PolicyDocument:

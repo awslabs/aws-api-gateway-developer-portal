@@ -13,7 +13,7 @@ const questions = [{
     name: 'primaryAwsRegion',
     message: 'Region:',
     type: 'list',
-    choices: ['us-east-1', 'us-west-2'],
+    choices: ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-central-1', 'ap-northeast-1', 'ap-northeast-2'],
     default: 'us-east-1'
 }, {
     name: 'artifactsS3BucketName',

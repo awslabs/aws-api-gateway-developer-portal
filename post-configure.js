@@ -10,10 +10,6 @@ const questions = [{
     name: 'apiGatewayApiId',
     message: 'API ID:',
     type: 'input'
-}, {
-    name: 'expressLambdaFunctionName',
-    message: 'Dev Portal Lambda Function Name:',
-    type: 'input'
 }/*, {
     name: 'cognitoRegion',
     message: 'Cognito region:',
@@ -35,19 +31,17 @@ const questions = [{
 }]
 
 inquirer.prompt(questions).then((answers) => {
-    modifyPackageFile(answers.apiGatewayApiId, answers.expressLambdaFunctionName, primaryAwsRegion, answers.cognitoUserPoolId, answers.cognitoClientId, answers.cognitoIdentityPoolId)
+    modifyPackageFile(answers.apiGatewayApiId, primaryAwsRegion, answers.cognitoUserPoolId, answers.cognitoClientId, answers.cognitoIdentityPoolId)
     modifyDevPortalJs(answers.cognitoIdentityPoolId, primaryAwsRegion, primaryAwsRegion, answers.cognitoUserPoolId, answers.cognitoClientId)
     modifyApigClient(answers.apiGatewayApiId, primaryAwsRegion)
-    modifySwaggerFile(answers.expressLambdaFunctionName)
 }).catch(e => {console.log(e)})
 
 
-function modifyPackageFile(apiGatewayApiId, expressLambdaFunctionName, cognitoRegion, cognitoUserPoolId, cognitoClientId, cognitoIdentityPoolId) {
+function modifyPackageFile(apiGatewayApiId, cognitoRegion, cognitoUserPoolId, cognitoClientId, cognitoIdentityPoolId) {
     const packageJsonPath = './package.json'
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const packageJsonModified = packageJson
         .replace(/YOUR_API_GATEWAY_API_ID/g, apiGatewayApiId)
-        .replace(/YOUR_LAMBDA_FUNCTION_NAME/g, expressLambdaFunctionName)
         .replace(/YOUR_COGNITO_REGION/g, cognitoRegion)
         .replace(/YOUR_COGNITO_USER_POOL_ID/g, cognitoUserPoolId)
         .replace(/YOUR_COGNITO_CLIENT_ID/g, cognitoClientId)
@@ -76,13 +70,4 @@ function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
         .replace(/YOUR_API_GATEWAY_API_ID/g, apiGatewayApiId)
         .replace(/YOUR_PRIMARY_AWS_REGION/g, primaryAwsRegion)
     fs.writeFileSync(apigClientPath, apigClientModified, 'utf8')
-}
-
-function modifySwaggerFile(expressLambdaFunctionName) {
-    const swaggerDefinitionPath = './lambdas/backend/dev-portal-express-proxy-api.yaml'
-    const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
-    const simpleProxyApiModified = swaggerDefinition
-        .replace(/YOUR_LAMBDA_FUNCTION_NAME/g, expressLambdaFunctionName)
-
-    fs.writeFileSync(swaggerDefinitionPath, simpleProxyApiModified, 'utf8')
 }

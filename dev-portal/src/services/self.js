@@ -1,7 +1,6 @@
 import AWS from 'aws-sdk'
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
 import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from './aws'
-import { showError } from './misc'
 import { initApiGatewayClient, apiGatewayClient } from './api'
 import { clearSubscriptions } from './api-catalog'
 
@@ -33,7 +32,8 @@ export function init() {
 
     cognitoUser.getSession(function(err, session) {
       if (err) {
-        showError(err)
+        logout()
+        console.error(err)
         return
       }
       console.log('session validity: ' + session.isValid())
@@ -47,7 +47,8 @@ export function init() {
 
       AWS.config.credentials.refresh((error) => {
         if (error) {
-            showError(error)
+          logout()
+          console.error(error)
         } else {
           console.log('Successfully logged in')
 
@@ -142,9 +143,5 @@ export function logout() {
 }
 
 export function showApiKey() {
-  return apiGatewayClient.get('/apikey', {}, {}, {}).then((result) => {
-    return result.data.value
-  }).catch((err) => {
-      showError(JSON.stringify(err))
-  })
+  return apiGatewayClient.get('/apikey', {}, {}, {}).then(({data}) => data.value)
 }

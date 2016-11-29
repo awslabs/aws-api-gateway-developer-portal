@@ -3,7 +3,7 @@
 const https = require('https')
 const url = require('url')
 const AWS = require('aws-sdk')
-AWS.config.region = 'us-east-1'// remove
+
 const cognitoIdentityPoolService = new AWS.CognitoIdentity()
 const cognitoUserPoolService = new AWS.CognitoIdentityServiceProvider()
 const constants = {
