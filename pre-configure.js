@@ -18,16 +18,18 @@ const questions = [{
 }, {
     name: 'artifactsS3BucketName',
     message: 'S3 bucket for artifacts such as Lambda package and Swagger file (will be created if it doesn\'t exist):',
-    type: 'input'
+    type: 'input',
+    validate: value => /^[a-zA-Z0-9.\-_]{1,255}/.test(value)
 }, {
     name: 'clientS3BucketName',
     message: 'S3 bucket for website (will be created; do not provide existing bucket):',
-    type: 'input'
+    type: 'input',
+    validate: value => /^[a-zA-Z0-9.\-_]{1,255}/.test(value)
 }, {
     name: 'cloudFormationStackName',
     message: 'CloudFormation stack name:',
     type: 'input',
-    default: 'DevPortalStack'
+    default: 'Dev Portal Stack'
 }, {
     name: 'apiGatewayApiName',
     message: 'API name:',

@@ -5,7 +5,7 @@ aws-serverless-developer-portal is a reference implementation for a developer po
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
 
 ## Setup
-First, ensure you have the latest AWS CLI installed (eg. `pip install --upgrade awscli`) http://docs.aws.amazon.com/cli/latest/userguide/installing.html.
+First, ensure you have the latest AWS CLI installed http://docs.aws.amazon.com/cli/latest/userguide/installing.html.
 
 ```js
 npm install
