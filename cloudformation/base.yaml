@@ -364,7 +364,9 @@ Resources:
           - ClientId: !Ref CognitoUserPoolClient
             ProviderName: !Join
               - ''
-              - - cognito-idp.us-east-1.amazonaws.com/
+              - - cognito-idp.
+                - !Ref 'AWS::Region'
+                - .amazonaws.com/
                 - !Ref CognitoUserPool
 
   CognitoAuthenticatedRole:

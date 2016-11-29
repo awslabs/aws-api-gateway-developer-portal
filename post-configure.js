@@ -36,7 +36,6 @@ inquirer.prompt(questions).then((answers) => {
     modifyApigClient(answers.apiGatewayApiId, primaryAwsRegion)
 }).catch(e => {console.log(e)})
 
-
 function modifyPackageFile(apiGatewayApiId, cognitoRegion, cognitoUserPoolId, cognitoClientId, cognitoIdentityPoolId) {
     const packageJsonPath = './package.json'
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')

@@ -1,11 +1,8 @@
 {
   "name": "dev-portal",
-  "homepage": "http://YOUR_CLIENT_BUCKET_NAME.s3-website-us-east-1.amazonaws.com/",
+  "homepage": "http://YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com/",
   "version": "0.1.0",
   "private": true,
-  "config": {
-    "siteS3Bucket": "YOUR_CLIENT_BUCKET_NAME"
-  },
   "devDependencies": {
     "react-scripts": "0.7.0"
   },

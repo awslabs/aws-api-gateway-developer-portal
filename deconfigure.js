@@ -15,7 +15,7 @@ modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayAp
 modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion)
 modifyCloudFormation(config.cognitoIdentityPoolId)
 modifyPackageFile(config)
-modifyUiPackageFile(config.siteS3Bucket)
+modifyUiPackageFile(config.siteS3Bucket, config.primaryAwsRegion)
 
 function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
     const apigClientPath = './dev-portal/public/apigateway-js-sdk/apigClient.js'
@@ -113,11 +113,13 @@ function modifyPackageFile(config) {
     fs.writeFileSync(packageJsonPath, packageJsonModified, 'utf8')
 }
 
-function modifyUiPackageFile(siteS3Bucket) {
+function modifyUiPackageFile(siteS3Bucket, primaryAwsRegion) {
     const packageJsonPath = './dev-portal/package.json'
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
+    const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')
     const siteS3BucketRegex = new RegExp(siteS3Bucket, 'g')
     const packageJsonModified = packageJson
+      .replace(primaryAwsRegionRegex, 'YOUR_PRIMARY_AWS_REGION')
       .replace(siteS3BucketRegex, 'YOUR_CLIENT_BUCKET_NAME')
 
     fs.writeFileSync(packageJsonPath, packageJsonModified, 'utf8')
