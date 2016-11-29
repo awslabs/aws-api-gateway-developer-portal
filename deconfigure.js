@@ -33,16 +33,16 @@ function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegio
     const htmlPath = './dev-portal/src/services/aws.js'
     const html = fs.readFileSync(htmlPath, 'utf8')
     const cognitoIdentityPoolIdRegex = new RegExp(cognitoIdentityPoolId, 'g')
-    const cognitoRegionRegex = new RegExp(`var cognitoRegion = '${cognitoRegion}'`, 'g')
-    const primaryAwsRegionRegex = new RegExp(`var awsRegion = '${primaryAwsRegion}'`, 'g')
+    const cognitoRegionRegex = new RegExp(`const cognitoRegion = '${cognitoRegion}'`, 'g')
+    const primaryAwsRegionRegex = new RegExp(`const awsRegion = '${primaryAwsRegion}'`, 'g')
     const cognitoUserPoolIdRegex = new RegExp(cognitoUserPoolId, 'g')
     const cognitoClientIdRegex = new RegExp(cognitoClientId, 'g')
     const htmlModified = html
         .replace(cognitoIdentityPoolIdRegex, 'YOUR_COGNITO_IDENTITY_POOL_ID')
         .replace(cognitoUserPoolIdRegex, 'YOUR_COGNITO_USER_POOL_ID')
         .replace(cognitoClientIdRegex, 'YOUR_COGNITO_CLIENT_ID')
-        .replace(primaryAwsRegionRegex, `var awsRegion = 'YOUR_PRIMARY_AWS_REGION'`)
-        .replace(cognitoRegionRegex, `var cognitoRegion = 'YOUR_COGNITO_REGION'`)
+        .replace(primaryAwsRegionRegex, `const awsRegion = 'YOUR_PRIMARY_AWS_REGION'`)
+        .replace(cognitoRegionRegex, `const cognitoRegion = 'YOUR_COGNITO_REGION'`)
 
     fs.writeFileSync(htmlPath, htmlModified, 'utf8')
 }
