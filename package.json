@@ -10,6 +10,7 @@
     "primaryAwsRegion": "YOUR_PRIMARY_AWS_REGION",
     "cloudFormationStackName": "YOUR_CLOUDFORMATION_STACK_NAME",
     "apiGatewayApiName": "YOUR_API_GATEWAY_API_NAME",
+    "customersTableName": "DevPortalCustomers",
     "identityPoolName": "DevPortal",
     "apiGatewayApiId": "YOUR_API_GATEWAY_API_ID",
     "cognitoRegion": "YOUR_COGNITO_REGION",
@@ -21,7 +22,7 @@
   },
   "scripts": {
     "package": "aws cloudformation package --template cloudformation/base.yaml --s3-bucket $npm_package_config_artifactsS3Bucket --output-template packaged-sam.yaml",
-    "deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name $npm_package_config_cloudFormationStackName --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --parameter-overrides ArtifactsS3Bucket=$npm_package_config_artifactsS3Bucket DevPortalSiteS3Bucket=$npm_package_config_siteS3Bucket MarketplaceSubscriptionTopic=$npm_package_config_marketplaceSubscriptionTopic CognitoIdentityPoolName=$npm_package_config_identityPoolName DevPortalCustomersTableName=DevPortalCustomers",
+    "deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name $npm_package_config_cloudFormationStackName --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --parameter-overrides ArtifactsS3Bucket=$npm_package_config_artifactsS3Bucket DevPortalSiteS3Bucket=$npm_package_config_siteS3Bucket MarketplaceSubscriptionTopic=$npm_package_config_marketplaceSubscriptionTopic CognitoIdentityPoolName=$npm_package_config_identityPoolName DevPortalCustomersTableName=$npm_package_config_customersTableName",
     "package-deploy": "npm run package && npm run deploy",
     "pre-config": "node pre-configure.js",
     "post-config": "node post-configure.js",

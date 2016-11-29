@@ -117,20 +117,25 @@ Resources:
             - dynamodb:DeleteItem
             Effect: Allow
             Resource: !Join
-              - ':'
-              - - arn:aws:dynamodb
+              - ''
+              - - 'arn:aws:dynamodb:'
                 - !Ref 'AWS::Region'
+                - ':'
                 - !Ref 'AWS::AccountId'
-                - table/DevPortalCustomers
+                - :table/
+                - !Ref CustomersTable
           - Action:
             - dynamodb:Query
             Effect: Allow
             Resource: !Join
-              - ':'
-              - - arn:aws:dynamodb
+              - ''
+              - - 'arn:aws:dynamodb:'
                 - !Ref 'AWS::Region'
+                - ':'
                 - !Ref 'AWS::AccountId'
-                - table/DevPortalCustomers/index/MarketplaceCustomerIdIndex
+                - :table/
+                - !Ref CustomersTable
+                - /index/MarketplaceCustomerIdIndex
 
   ApiGatewayMarketplaceMeteringRole:
     Type: AWS::IAM::Role
@@ -469,3 +474,7 @@ Outputs:
   CognitoIdentityPoolId:
     Description: Cognito Identity Pool ID
     Value: !Ref CognitoIdentityPool
+
+  CustomersTable:
+    Description: CustomersTable
+    Value: !Ref CustomersTable
