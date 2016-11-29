@@ -29,7 +29,8 @@ const questions = [{
     name: 'cloudFormationStackName',
     message: 'CloudFormation stack name:',
     type: 'input',
-    default: 'Dev Portal Stack'
+    default: 'DevPortalStack',
+    validate: value => /^[a-zA-Z][a-zA-Z0-9\-]*/.test(value)
 }, {
     name: 'apiGatewayApiName',
     message: 'API name:',
