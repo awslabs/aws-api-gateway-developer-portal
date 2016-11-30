@@ -25,9 +25,7 @@ const SubscribedApiActionsDropdown = ({api}) => (
     </Dropdown.Menu>
   </Dropdown>)
 
-const SubscribeButton = ({api}) => (
-  isAuthenticated() ? <Button onClick={event => handleSubscribe(event, api)}>Subscribe</Button> : <a href='https://aws.amazon.com/marketplace/' target='_blank'><Button>Subscribe!</Button></a>
-)
+const SubscribeButton = ({api}) => isAuthenticated() ? <Button onClick={event => handleSubscribe(event, api)}>Subscribe</Button> : ''//<a href='https://aws.amazon.com/marketplace/' target='_blank'><Button>Subscribe!</Button></a>
 const ApiCard = api => (
 <Card key={api.apiId} style={{textAlign: 'center'}}>
   <Link to={`apis/${api.apiId}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}><Image src={api.image} style={{margin: 'auto'}} /></Link>
