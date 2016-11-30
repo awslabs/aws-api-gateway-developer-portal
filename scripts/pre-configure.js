@@ -4,6 +4,7 @@
 const fs = require('fs')
 const path = require('path')
 const inquirer = require('inquirer')
+const deconfigure = require('./deconfigure')
 const rootDir = path.resolve(__dirname, '..')
 
 const questions = [{
@@ -46,10 +47,11 @@ const questions = [{
 }*/]
 
 inquirer.prompt(questions).then((answers) => {
-    modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, answers.accountId)
-    modifyUiPackageFile(answers.clientS3BucketName, answers.primaryAwsRegion)
-    modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
-    modifySwaggerFile(answers.accountId, answers.primaryAwsRegion, answers.apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
+  deconfigure()
+  modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, answers.accountId)
+  modifyUiPackageFile(answers.clientS3BucketName, answers.primaryAwsRegion)
+  modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
+  modifySwaggerFile(answers.accountId, answers.primaryAwsRegion, answers.apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
 }).catch(e => {console.log(e)})
 
 function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAwsRegion, apiGatewayApiName, cloudFormationStackName/*, expressLambdaFunctionName*/, accountId) {

@@ -6,41 +6,13 @@ const path = require('path')
 const AWS = require('aws-sdk')
 const rootDir = path.resolve(__dirname, '..')
 const packageJson = require(`${rootDir}/package.json`)
-AWS.config.update({region:'us-east-1'})//packageJson.primaryAwsRegion
-
-const cloudformation = new AWS.CloudFormation();
-// const inquirer = require('inquirer')
 const primaryAwsRegion = packageJson.config.primaryAwsRegion
 
-/*const questions = [{
-    name: 'apiGatewayApiId',
-    message: 'API ID:',
-    type: 'input'
-}/*, {
-    name: 'cognitoRegion',
-    message: 'Cognito region:',
-    type: 'list',
-    choices: ['us-east-1', 'us-west-2'],
-    default: 'us-east-1'
-}* /, {
-    name: 'cognitoUserPoolId',
-    message: 'Cognito User Pool ID:',
-    type: 'input'
-}, {
-    name: 'cognitoUserPoolClientId',
-    message: 'Cognito Client ID:',
-    type: 'input'
-}, {
-    name: 'cognitoIdentityPoolId',
-    message: 'Cognito Identity Pool ID:',
-    type: 'input'
-}]
-
-inquirer.prompt(questions).then(answers => {
-*/
+AWS.config.update({ region:primaryAwsRegion })
+const cloudformation = new AWS.CloudFormation();
 
 cloudformation.describeStacks({
-  StackName: 'DevPortalStack'//packageJson.config.cloudFormationStackName
+  StackName: packageJson.config.cloudFormationStackName
 })
 .promise()
 .then(data => {
@@ -58,6 +30,7 @@ cloudformation.describeStacks({
 function getOutputValue(outputs, key) {
   return outputs.find(o => o.OutputKey === key).OutputValue
 }
+
 function modifyPackageFile(apiGatewayApiId, cognitoRegion, cognitoUserPoolId, cognitoUserPoolClientId, cognitoIdentityPoolId) {
     const packageJsonPath = `${rootDir}/package.json`
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
