@@ -55,7 +55,7 @@ inquirer.prompt(questions).then((answers) => {
 }).catch(e => {console.log(e)})
 
 function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAwsRegion, apiGatewayApiName, cloudFormationStackName/*, expressLambdaFunctionName*/, accountId) {
-    const packageJsonPath = `${rootDir}./package.json`
+    const packageJsonPath = `${rootDir}/package.json`
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const packageJsonModified = packageJson
         .replace(/YOUR_ARTIFACTS_BUCKET_NAME/g, artifactsS3BucketName)
@@ -70,7 +70,7 @@ function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAws
 }
 
 function modifyUiPackageFile(clientS3BucketName, primaryAwsRegion) {
-    const packageJsonPath = `${rootDir}./dev-portal/package.json`
+    const packageJsonPath = `${rootDir}/dev-portal/package.json`
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const packageJsonModified = packageJson
         .replace(/YOUR_CLIENT_BUCKET_NAME/g, clientS3BucketName)
@@ -80,7 +80,7 @@ function modifyUiPackageFile(clientS3BucketName, primaryAwsRegion) {
 }
 
 function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
-    const expressServerPath = `${rootDir}./lambdas/backend/express-server.js`
+    const expressServerPath = `${rootDir}/lambdas/backend/express-server.js`
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
     const expressServerModified = expressServer
         .replace(/YOUR_CLIENT_BUCKET_NAME/g, clientS3BucketName)
@@ -90,7 +90,7 @@ function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
 }
 
 function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName/*, expressLambdaFunctionName*/) {
-    const swaggerDefinitionPath = `${rootDir}./lambdas/backend/dev-portal-express-proxy-api.yaml`
+    const swaggerDefinitionPath = `${rootDir}/lambdas/backend/dev-portal-express-proxy-api.yaml`
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const simpleProxyApiModified = swaggerDefinition
         .replace(/YOUR_ACCOUNT_ID/g, accountId)
