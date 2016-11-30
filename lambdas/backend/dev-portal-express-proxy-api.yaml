@@ -130,7 +130,7 @@ paths:
           application/json: "{\"statusCode\": 200}"
         type: mock
   /catalog:
-    post:
+    get:
       produces:
       - application/json
       responses: {}

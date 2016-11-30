@@ -1,20 +1,15 @@
 import { getApiGatewayClient } from './api'
-import apis from '../catalog.json'
 export let subscriptions
-// let apis
+let apis
 
 export function getApis() {
-  return Promise.resolve(apis)
+  if (apis) return Promise.resolve(apis)
 
-  // NOTE: if you prefer to expose your catalog.json only to authenticated users,
-  // use the code below and manage lambdas/backend/catalog.json instead
-  // if (apis) return Promise.resolve(apis)
-
-  // return fetchApis()
-  // .then(({data}) => {
-    // apis = data
-  //   return data
-  // })
+  return fetchApis()
+  .then(({data}) => {
+    apis = data
+    return data
+  })
 }
 
 export function getApi(id) {

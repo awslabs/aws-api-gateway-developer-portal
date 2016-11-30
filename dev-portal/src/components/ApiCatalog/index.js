@@ -25,10 +25,10 @@ const SubscribedApiActionsDropdown = ({api}) => (
     </Dropdown.Menu>
   </Dropdown>)
 
-const SubscribeButton = ({api}) => isAuthenticated() ? <Button onClick={event => handleSubscribe(event, api)}>Subscribe</Button> : ''//<a href='https://aws.amazon.com/marketplace/' target='_blank'><Button>Subscribe!</Button></a>
+
 const ApiCard = api => (
 <Card key={api.apiId} style={{textAlign: 'center'}}>
-  <Link to={`apis/${api.apiId}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}><Image src={api.image} style={{margin: 'auto'}} /></Link>
+  <Link to={`apis/${api.apiId}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}>{ api.image ? <Image src={api.image} style={{margin: 'auto'}} /> : ''}</Link>
   <Card.Content>
     <Card.Header><Link to={`apis/${api.apiId}`}>{api.swagger.info.title}</Link></Card.Header>
     <Card.Meta>
@@ -36,9 +36,9 @@ const ApiCard = api => (
     </Card.Meta>
     <Card.Description>{api.swagger.info.description}</Card.Description>
   </Card.Content>
-  <Card.Content extra>
-    { isSubscribed(api) ? <SubscribedApiActionsDropdown api={api} /> : <SubscribeButton api={api} />}
-  </Card.Content>
+  { isAuthenticated() ? (<Card.Content extra>
+    { isSubscribed(api) ? <SubscribedApiActionsDropdown api={api} /> : <Button onClick={event => handleSubscribe(event, api)}>Subscribe</Button>}
+  </Card.Content>) : ''}
 </Card>)
 
 export default ({ apis }) => (

@@ -5,18 +5,37 @@ aws-serverless-developer-portal is a reference implementation for a developer po
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
 
 ## Setup
-First, ensure you have the latest AWS CLI installed http://docs.aws.amazon.com/cli/latest/userguide/installing.html.
 
-```js
-npm install
-npm run pre-config
-npm run setup
-npm run post-setup
+### Prerequisites
+First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.19) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
+
+### List your products (APIs/Usage Plans)
+Add your API Gateway APIs to the array in the `lambdas/backend/catalog.json` file, using the following format. If you have not yet created an API and Usage Plan, see [blog post]() for a detailed walkthrough. Alternatively, skip this step for now if you just want to get started with your developer portal (A placeholder API with swagger definition is provided for you for demonstration purposes, however, some features such as __Subscribe__ will not work)
+
+```json
+{
+	"apiId": "YOUR_API_ID",
+	"usagePlanId": "YOUR_USAGE_PLAN_ID",
+	"image": "http://example.com/your-api-product-image.svg",
+	"swagger": {
+  	"swagger": "2.0",
+		...
+	}
+}
 ```
 
-Enter your new API Id, Dev Portal Function Name, Cognito User Pool ID, Cognito Client ID, and Cognito Identity Pool ID, available in Cloudformation __Outputs__. Click the WebsiteURL in the __Outputs__ section of your CloudFormation stack.
+__TIP:__ If you put your api product images in the `dev-portal/public` directory, you can simply do `"image": "/your-api-product-image.svg"`. `image` is also optional.
 
-Update dev-portal/src/catalog.json with your API Gateway APIs and Usage Plans (if you do not yet have one, you will need to create it), and run `npm run upload-site`.
+Add your swagger definition to the `swagger` property to enable documentation for your API.
+
+### Setup and deploy
+Run:
+
+```js
+npm run setup
+```
+
+Follow the prompts and enter your account id, region, and names for your S3 buckets, CloudFormation stack, and API. The names you provide for the S3 buckets must be unique to that region (ie. not just unique to your account) so it is recommended to add a prefix or suffix (eg. my-org-dev-portal). You can choose to provide an existing bucket for the __artifacts__ S3 bucket name, or a new one (in which case it will be created for you). The __site__ S3 bucket must __NOT__ exist, as this is managed by the CloudFormation stack.
 
 ## Components
 
@@ -64,7 +83,7 @@ Deploy changes to the application UI:
 npm run upload-site
 ```
 
-Deploy changes to CloudFormation, Swagger, backend function, and the listener function:
+Deploy changes to CloudFormation, Swagger, or lambda functions:
 
 ```js
 npm run package-deploy
