@@ -4,8 +4,7 @@
 const fs = require('fs')
 const inquirer = require('inquirer')
 const deconfigure = require('./deconfigure')
-console.log(deconfigure)
-deconfigure()
+
 const questions = [{
     name: 'accountId',
     message: 'AWS account id:',

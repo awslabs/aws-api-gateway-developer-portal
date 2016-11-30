@@ -27,7 +27,7 @@
     "config": "node scripts/configure.js",
     "pre-config": "node scripts/pre-configure.js",
     "post-config": "node scripts/post-configure.js",
-    "deconfig": "node scripts/deconfigure.js",
+    "deconfig": "node -e \"require('./scripts/deconfigure.js')()\"",
     "create-artifacts-bucket": "aws s3 mb s3://$npm_package_config_artifactsS3Bucket --region $npm_package_config_primaryAwsRegion",
     "delete-artifacts-bucket": "aws s3 rm s3://$npm_package_config_artifactsS3Bucket/lambda-function.zip --region $npm_package_config_primaryAwsRegion; aws s3 rm s3://$npm_package_config_artifactsS3Bucket/dev-portal-express-proxy-api.yaml --region $npm_package_config_primaryAwsRegion; aws s3 rb s3://$npm_package_config_artifactsS3Bucket --region $npm_package_config_primaryAwsRegion",
     "upload-site": "cd ./dev-portal && npm run build && aws s3 sync ./build s3://$npm_package_config_siteS3Bucket --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --region $npm_package_config_primaryAwsRegion && cd ..",
@@ -39,7 +39,9 @@
     "clean": "npm run delete-artifacts-bucket && npm run delete-stack"
   },
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "aws-sdk": "^2.7.8"
+  },
   "devDependencies": {
     "inquirer": "^1.2.1"
   }
