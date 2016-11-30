@@ -6,19 +6,24 @@
 'use strict'
 
 const fs = require('fs')
-const packageJson = require('./package.json')
+const path = require('path')
+
+const rootDir = path.resolve(__dirname, '..')
+const packageJson = require(`${rootDir}/package.json`)
 const config = packageJson.config
 
-modifyApigClient(config.apiGatewayApiId, config.primaryAwsRegion)
-modifyDevPortalJs(config.cognitoIdentityPoolId, config.primaryAwsRegion, config.cognitoRegion, config.cognitoUserPoolId, config.cognitoClientId)
-modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName)
-modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion)
-modifyCloudFormation(config.cognitoIdentityPoolId)
-modifyPackageFile(config)
-modifyUiPackageFile(config.siteS3Bucket, config.primaryAwsRegion)
+module.exports = function() {
+  modifyApigClient(config.apiGatewayApiId, config.primaryAwsRegion)
+  modifyDevPortalJs(config.cognitoIdentityPoolId, config.primaryAwsRegion, config.cognitoRegion, config.cognitoUserPoolId, config.cognitoClientId)
+  modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName)
+  modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion)
+  modifyCloudFormation(config.cognitoIdentityPoolId)
+  modifyPackageFile(config)
+  modifyUiPackageFile(config.siteS3Bucket, config.primaryAwsRegion)
+}
 
 function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
-    const apigClientPath = './dev-portal/public/apigateway-js-sdk/apigClient.js'
+    const apigClientPath = `${rootDir}/dev-portal/public/apigateway-js-sdk/apigClient.js`
     const apigClient = fs.readFileSync(apigClientPath, 'utf8')
     const apiGatewayApiIdRegex = new RegExp(apiGatewayApiId, 'g')
     const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')
@@ -30,7 +35,7 @@ function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
 }
 
 function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegion, cognitoUserPoolId, cognitoClientId) {
-    const htmlPath = './dev-portal/src/services/aws.js'
+    const htmlPath = `${rootDir}/dev-portal/src/services/aws.js`
     const html = fs.readFileSync(htmlPath, 'utf8')
     const cognitoIdentityPoolIdRegex = new RegExp(cognitoIdentityPoolId, 'g')
     const cognitoRegionRegex = new RegExp(`const cognitoRegion = '${cognitoRegion}'`, 'g')
@@ -48,7 +53,7 @@ function modifyDevPortalJs(cognitoIdentityPoolId, primaryAwsRegion, cognitoRegio
 }
 
 function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName) {
-    const swaggerDefinitionPath = './lambdas/backend/dev-portal-express-proxy-api.yaml'
+    const swaggerDefinitionPath = `${rootDir}/lambdas/backend/dev-portal-express-proxy-api.yaml`
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const accountIdRegex = new RegExp(accountId, 'g')
     const apiGatewayApiNameRegex = new RegExp(apiGatewayApiName, 'g')
@@ -62,7 +67,7 @@ function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName) {
 }
 
 function modifyExpressServer(siteS3Bucket, primaryAwsRegion) {
-    const expressServerPath = './lambdas/backend/express-server.js'
+    const expressServerPath = `${rootDir}/lambdas/backend/express-server.js`
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
     const siteS3BucketRegex = new RegExp(siteS3Bucket, 'g')
     const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')
@@ -74,7 +79,7 @@ function modifyExpressServer(siteS3Bucket, primaryAwsRegion) {
 }
 
 function modifyCloudFormation(cognitoIdentityPoolId) {
-    const cloudFormationPath = './cloudformation/base.yaml'
+    const cloudFormationPath = `${rootDir}/cloudformation/base.yaml`
     const cloudFormation = fs.readFileSync(cloudFormationPath, 'utf8')
     const cognitoIdentityPoolIdRegex = new RegExp(cognitoIdentityPoolId, 'g')
     const cloudFormationModified = cloudFormation
@@ -84,7 +89,7 @@ function modifyCloudFormation(cognitoIdentityPoolId) {
 }
 
 function modifyPackageFile(config) {
-    const packageJsonPath = './package.json'
+    const packageJsonPath = `${rootDir}/package.json`
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const artifactsS3BucketRegex = new RegExp(`"artifactsS3Bucket": "${config.artifactsS3Bucket}"`, 'g')
     const siteS3BucketRegex = new RegExp(config.siteS3Bucket, 'g')
@@ -114,7 +119,7 @@ function modifyPackageFile(config) {
 }
 
 function modifyUiPackageFile(siteS3Bucket, primaryAwsRegion) {
-    const packageJsonPath = './dev-portal/package.json'
+    const packageJsonPath = `${rootDir}/dev-portal/package.json`
     const packageJson = fs.readFileSync(packageJsonPath, 'utf8')
     const primaryAwsRegionRegex = new RegExp(primaryAwsRegion, 'g')
     const siteS3BucketRegex = new RegExp(siteS3Bucket, 'g')
