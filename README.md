@@ -35,11 +35,13 @@ Add your swagger definition to the `swagger` property to enable documentation fo
 ### Setup and deploy
 Run:
 
-```js
+```bash
 npm run setup
 ```
 
 Follow the prompts and enter your account id, region, and names for your S3 buckets, CloudFormation stack, and API. The names you provide for the S3 buckets must be unique to that region (ie. not just unique to your account) so it is recommended to add a prefix or suffix (eg. my-org-dev-portal). You can choose to provide an existing bucket for the __artifacts__ S3 bucket name, or a new one (in which case it will be created for you). The __site__ S3 bucket must __NOT__ exist, as this is managed by the CloudFormation stack.
+
+After this command completes, it will open your developer portal web app in your default browser.
 
 ## Components
 
@@ -49,13 +51,13 @@ Most components in the developer portal are managed by the CloudFormation stack 
 
 To create/update the stack, run:
 
-```js
+```bash
 npm run package-deploy
 ```
 
 To delete the stack, run:
 
-```js
+```bash
 npm run delete-stack
 ```
 
@@ -83,13 +85,13 @@ From the listener function you can manage your Usage Plan Keys through API Gatew
 
 Deploy changes to the application UI:
 
-```js
+```bash
 npm run upload-site
 ```
 
 Deploy changes to CloudFormation, Swagger, or lambda functions:
 
-```js
+```bash
 npm run package-deploy
 ```
 
