@@ -1,8 +1,8 @@
 import AWS from 'aws-sdk'
-export const awsRegion = 'us-east-1'
-export const cognitoRegion = 'us-east-1'
-export const cognitoUserPoolId = 'us-east-1_8M1tvuIV8'
-export const cognitoIdentityPoolId = 'us-east-1:93c008a9-adaf-442d-8da2-1f00b539bcd0'
-export const cognitoClientId = '6cpmle8j5kdmt7qrlj2aid43bc'
+export const awsRegion = 'YOUR_PRIMARY_AWS_REGION'
+export const cognitoRegion = 'YOUR_COGNITO_REGION'
+export const cognitoUserPoolId = 'YOUR_COGNITO_USER_POOL_ID'
+export const cognitoIdentityPoolId = 'YOUR_COGNITO_IDENTITY_POOL_ID'
+export const cognitoClientId = 'YOUR_COGNITO_CLIENT_ID'
 
 AWS.config.region = cognitoRegion

@@ -14,7 +14,7 @@ const app = express()
 const apigateway = new AWS.APIGateway()
 
 // replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
-const domain = 'brett-dev-portal-app.s3-website-us-east-1.amazonaws.com'
+const domain = 'YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com'
 const baseUrl = `http://${domain}/`
 
 app.use(cors())
