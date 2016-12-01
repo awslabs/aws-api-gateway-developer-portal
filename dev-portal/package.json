@@ -22,6 +22,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "upload-site": "cd .. && npm run upload-site && cd dev-portal"
+    "upload-site": "cd .. && npm run upload-site && cd dev-portal",
+    "win-upload-site": "cd .. && npm run win-upload-site && cd dev-portal"
   }
 }

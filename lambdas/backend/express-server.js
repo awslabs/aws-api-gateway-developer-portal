@@ -5,7 +5,6 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const util = require('util')
 const AWS = require('aws-sdk')
-const AWSMP = require('./meteringservice-preview-sdk-js-06-23-2016')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const catalog = require('./catalog.json')
 const customersController = require('common-lambda-assets/customers-controller.js')
@@ -225,8 +224,7 @@ app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
         res.status(200).json(data)
     }
 
-    // from custom version of aws-sdk
-    const marketplace = new AWSMP.MarketplaceMetering()
+    const marketplace = new AWS.MarketplaceMetering()
 
     const params = {
         RegistrationToken: marketplaceToken
