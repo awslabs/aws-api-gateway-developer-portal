@@ -1,7 +1,7 @@
 {
   "name": "aws-serverless-dev-portal-example",
   "version": "1.0.0",
-  "description": "Example application for running a Serverless YOUR_API_GATEWAY_API_NAME with API Gateway and Lambda",
+  "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
   "main": "lambda.js",
   "config": {
     "artifactsS3Bucket": "YOUR_ARTIFACTS_BUCKET_NAME",
