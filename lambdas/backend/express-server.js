@@ -189,7 +189,7 @@ app.delete('/subscriptions/:usagePlanId', (req, res) => {
 
 // no auth
 // this is the redirect URL for AWS Marketplace products
-// i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]
+// i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.us-east-1.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]
 app.post('/marketplace-confirm/:usagePlanId', (req, res) => {
     const marketplaceToken = req.body['x-amzn-marketplace-token']
 

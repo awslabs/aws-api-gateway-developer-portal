@@ -68,11 +68,9 @@ function modifyExpressServer(siteS3Bucket, primaryAwsRegion, apiGatewayApiId) {
     const expressServerPath = `${rootDir}/lambdas/backend/express-server.js`
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
     const domainRegex = new RegExp(`const domain = '${siteS3Bucket}.s3-website-${primaryAwsRegion}.amazonaws.com'`)
-    const marketplaceConfirmExampleRegex = new RegExp(`// i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.${primaryAwsRegion}.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]`)
 
     const expressServerModified = expressServer
       .replace(domainRegex, 'const domain = \'YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com\'')
-      .replace(marketplaceConfirmExampleRegex, '// i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]')
 
     fs.writeFileSync(expressServerPath, expressServerModified, 'utf8')
 }
