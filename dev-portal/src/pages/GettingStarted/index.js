@@ -14,6 +14,6 @@ export default (props) => (
     </ol>
     <p>The API plans that you subscribe to are governed by throttling limits and quotas as described in the API description.
     If you have exhausted your limits and want temporary extensions, contact us.</p>
-    <p>Successfully built an app? <a href='https://aws.amazon.com/marketplace/management/register/' target='_blank'>Register as a seller</a> in AWS Marketplace and sell your application!
+    <p>Successfully built an app? <a href='http://docs.aws.amazon.com/apigateway/latest/developerguide/sell-api-as-saas-on-aws-marketplace.html' target='_blank'>Register as a seller</a> in AWS Marketplace and sell your application!
     Questions or comments? Reach out to us on our <a href='https://forums.aws.amazon.com/forum.jspa?forumID=199' target='_blank'>forums</a>.</p>
   </div>)
