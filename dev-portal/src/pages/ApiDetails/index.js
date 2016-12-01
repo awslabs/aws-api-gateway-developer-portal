@@ -20,7 +20,7 @@ export default class ApiDetailsPage extends React.Component {
   render() {
     return (<div>
       <Head {...this.props} />
-      <section className="swagger-section">
+      <section className="swagger-section" style={{overflow: 'auto'}}>
         <div className="swagger-ui-wrap" id="swagger-ui-container"></div>
       </section>
     </div>)

@@ -42,6 +42,6 @@ const ApiCard = api => (
 </Card>)
 
 export default ({ apis }) => (
-  <Card.Group itemsPerRow={3}>
+  <Card.Group itemsPerRow={3} stackable doubling>
     {apis.map(ApiCard)}
   </Card.Group>)

@@ -7,7 +7,7 @@ import { isAuthenticated } from '../services/self'
 
 export default (props) => (
   <Container>
-    <Card.Group itemsPerRow={3} style={{textAlign: 'center'}}>
+    <Card.Group itemsPerRow={3} stackable style={{textAlign: 'center'}}>
       <Card>
         <Card.Content>
           <Card.Header><Link to='/case-studies'>Case Studies</Link></Card.Header>

@@ -12,11 +12,12 @@ import { login } from '../../services/self'
    }
    open = () => this.setState({ isSubmitting: false, errorMessage: '', isOpen: true })
    close = () => this.setState({ isOpen: false })
-   handleLogin = (...args) => this._handleLogin(...args)
+   handleLogin = (event, serializedForm) => this._handleLogin(event, serializedForm)
 
   _handleLogin(event, serializedForm) {
     event.preventDefault()
     this.setState({isSubmitting: true})
+
     login(serializedForm.email, serializedForm.password)
     .then(() => this.setState({signedIn: true, isSubmitting: false, errorMessage: ''}))
     .catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
@@ -35,18 +36,16 @@ import { login } from '../../services/self'
       >
         <Modal.Header>Sign in</Modal.Header>
         <Modal.Content>
-          <Modal.Description>
-            <Form onSubmit={this.handleLogin} error={!!this.state.errorMessage} loading={this.state.isSubmitting}>
-              <Form.Input label='Email' name='email' />
-              <Form.Input type='password' label='Password' name='password' autoComplete='false' />
-              <Message error content={this.state.errorMessage} />
-            </Form>
-          </Modal.Description>
+          <Form onSubmit={this.handleLogin} error={!!this.state.errorMessage} loading={this.state.isSubmitting}>
+            <Form.Input label='Email' name='email' />
+            <Form.Input type='password' label='Password' name='password' autoComplete='false' />
+            <Message error content={this.state.errorMessage} />
+            <Modal.Actions style={{textAlign: 'right'}}>
+              <Button type='button' onClick={this.close}>Close</Button>
+              <Button primary type='submit'>Sign In</Button>
+            </Modal.Actions>
+          </Form>
         </Modal.Content>
-        <Modal.Actions>
-          <Button onClick={this.close}>Close</Button>
-          <Button primary onClick={this.handleLogin}>Sign In</Button>
-        </Modal.Actions>
       </Modal>)
   }
 }
