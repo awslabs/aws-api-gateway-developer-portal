@@ -1,17 +1,17 @@
 import React from 'react'
-import { Modal, Dropdown, Message } from 'semantic-ui-react'
+import { Modal, Dropdown, Message, Button } from 'semantic-ui-react'
 import Chart from 'chart.js'
 import { fetchUsage, mapUsageByDate } from '../../services/api-catalog'
 
  export default class Usage extends React.Component {
-  constructor(props){
-    super(props)
+   state = {
+     isLoading: false,
+     errorMessage: '',
+     isOpen: false
+   }
 
-    this.state = {
-      isLoading: false,
-      errorMessage: ''
-    }
-  }
+   open = () => this.setState({ isLoading: false, errorMessage: '', isOpen: true })
+   close = () => this.setState({ isOpen: false })
 
   loadUsage(event) {
     event.preventDefault()
@@ -20,7 +20,7 @@ import { fetchUsage, mapUsageByDate } from '../../services/api-catalog'
     .then((result) => {
       const data = mapUsageByDate(result.data, 'used')
       const ctx = document.getElementById('api-usage-chart-container')
-      console.log(ctx)
+
       new Chart(ctx, {
           type: 'line',
           data: {
@@ -53,7 +53,15 @@ import { fetchUsage, mapUsageByDate } from '../../services/api-catalog'
   }
 
   render() {
-    return <Modal size='small' trigger={<Dropdown.Item onClick={event => this.loadUsage(event)}>Show Usage</Dropdown.Item>}>
+    const { isOpen } = this.state
+
+    return <Modal
+      size='small'
+      open={isOpen}
+      onOpen={this.open}
+      onClose={this.close}
+      trigger={<Dropdown.Item onClick={event => this.loadUsage(event)}>Show Usage</Dropdown.Item>}
+    >
       <Modal.Header>Usage</Modal.Header>
       <Modal.Content>
         <Modal.Description>
@@ -62,6 +70,9 @@ import { fetchUsage, mapUsageByDate } from '../../services/api-catalog'
         {this.state.errorMessage ? <Message error content={this.state.errorMessage.toString()} /> : ''}
         <canvas id='api-usage-chart-container' width='400' height='400'></canvas>
       </Modal.Content>
+      <Modal.Actions style={{textAlign: 'right'}}>
+        <Button type='button' onClick={this.close}>Close</Button>
+      </Modal.Actions>
     </Modal>
   }
 }
