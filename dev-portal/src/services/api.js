@@ -15,7 +15,6 @@ export function getApiGatewayClient() {
 
   return new Promise(resolve => {
     const poller = window.setInterval(() => {
-      console.log(apiGatewayClient)
       if (apiGatewayClient) {
         window.clearInterval(poller)
         resolve(apiGatewayClient)

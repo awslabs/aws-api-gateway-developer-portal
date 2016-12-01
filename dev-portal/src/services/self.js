@@ -26,17 +26,13 @@ export function init() {
   cognitoUser = userPool.getCurrentUser()
 
   if (cognitoUser !== null) {
-    // try {
-    //   $('#show-api-key-button').popover({trigger: 'manual'}).on('click', showApiKey)
-    // } catch (e) {}
-
     cognitoUser.getSession(function(err, session) {
       if (err) {
         logout()
         console.error(err)
         return
       }
-      console.log('session validity: ' + session.isValid())
+
       const cognitoLoginKey = getCognitoLoginKey()
       const Logins = {}
       Logins[cognitoLoginKey] = session.getIdToken().getJwtToken()
@@ -50,21 +46,19 @@ export function init() {
           logout()
           console.error(error)
         } else {
-          console.log('Successfully logged in')
-
           initApiGatewayClient(AWS.config.credentials)
         }
       })
     })
   } else {
     initApiGatewayClient()
-    if (!/index\.html/.test(window.location.href)) {
-      // window.location = 'index.html'
-      return
-    } else {
-      window.localStorage.removeItem('aws.cognito.identity-id.' + cognitoIdentityPoolId)
-      window.localStorage.removeItem('aws.cognito.identity-providers.' + cognitoIdentityPoolId)
-    }
+    // if (!/index\.html/.test(window.location.href)) {
+    //   // window.location = 'index.html'
+    //   return
+    // } else {
+    //   window.localStorage.removeItem('aws.cognito.identity-id.' + cognitoIdentityPoolId)
+    //   window.localStorage.removeItem('aws.cognito.identity-providers.' + cognitoIdentityPoolId)
+    // }
   }
 }
 
@@ -76,8 +70,6 @@ export function register(email, password) {
       if (err) {
         reject(err)
       } else {
-        // cognitoUser = result.user
-
         resolve(login(email, password))
       }
     })
