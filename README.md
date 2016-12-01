@@ -36,7 +36,7 @@ Add your swagger definition to the `swagger` property to enable documentation fo
 Run:
 
 ```bash
-npm run setup
+npm run setup# Window users: all commands must use the `win-` prefix version, eg. npm run win-setup
 ```
 
 Follow the prompts and enter your region, and names for your S3 buckets and CloudFormation stack. The names you provide for the S3 buckets must be unique to that region (ie. not just unique to your account) so it is recommended to add a prefix or suffix (eg. my-org-dev-portal). You can choose to provide an existing bucket for the __artifacts__ S3 bucket name, or a new one (in which case it will be created for you). The __site__ S3 bucket must __NOT__ exist, as this is managed by the CloudFormation stack.
@@ -60,6 +60,8 @@ To delete the stack, run:
 ```bash
 npm run delete-stack
 ```
+
+__Windows users:__ use the `win-` prefixed commands, eg. `npm run win-package-deploy` and `npm run win-delete-stack`
 
 ### UI (/app)
 
@@ -94,6 +96,8 @@ Deploy changes to CloudFormation, Swagger, or lambda functions:
 ```bash
 npm run package-deploy
 ```
+
+__Windows users:__ use the `win-` prefixed commands, eg. `npm run win-package-deploy` and `npm run win-delete-stack`
 
 ## Debugging
 
