@@ -11,9 +11,11 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 ## Setup
 
 ### Prerequisites
+
 First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.19) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
 
 ### List your products (APIs/Usage Plans)
+
 Add your API Gateway APIs to the array in the `lambdas/backend/catalog.json` file, using the following format. If you have not yet created an API and Usage Plan, see [Generate Your Own API Gateway Developer Portal](https://aws.amazon.com/blogs/compute/generate-your-own-api-gateway-developer-portal/) for a detailed walkthrough. Alternatively, skip this step for now if you just want to get started with your developer portal (A placeholder API with swagger definition is provided for you for demonstration purposes, however, some features such as __Subscribe__ will not work)
 
 ```json
@@ -33,6 +35,7 @@ __TIP:__ If you put your api product images in the `dev-portal/public` directory
 Add your swagger definition to the `swagger` property to enable documentation for your API.
 
 ### Setup and deploy
+
 Run:
 
 ```bash
@@ -42,6 +45,16 @@ npm run setup# Window users: all commands must use the `win-` prefix version, eg
 Follow the prompts and enter your region, and names for your S3 buckets and CloudFormation stack. The names you provide for the S3 buckets must be unique to that region (ie. not just unique to your account) so it is recommended to add a prefix or suffix (eg. my-org-dev-portal). You can choose to provide an existing bucket for the __artifacts__ S3 bucket name, or a new one (in which case it will be created for you). The __site__ S3 bucket must __NOT__ exist, as this is managed by the CloudFormation stack.
 
 After this command completes, it will open your developer portal web app in your default browser.
+
+## Before going to production
+
+You should [configure your domain name to point to your S3 website](http://docs.aws.amazon.com/AmazonS3/latest/dev/website-hosting-custom-domain-walkthrough.html) URL and enable SSL before officially launching your developer portal.
+
+Additional Resources:
+
+ - [Getting Started with Amazon CloudFront and AWS Certificate Manager](http://docs.aws.amazon.com/acm/latest/userguide/gs-cf.html)
+
+ - [New – AWS Certificate Manager – Deploy SSL/TLS-Based Apps on AWS](https://aws.amazon.com/blogs/aws/new-aws-certificate-manager-deploy-ssltls-based-apps-on-aws/)
 
 ## Components
 
@@ -135,7 +148,7 @@ i.e. PATCH https://apigateway.[REGION].amazonaws.com/usageplans/[USAGE_PLAN_ID]
 
 6) Subscribe your listener function to your subscription topic via 'npm run subscribe-listener'
 
-### Marketplace Flow ###
+### Marketplace Flow
 
 When buyers subscribe through the AWS Marketplace console, the buyers browser will send a POST request to /marketplace-confirm/[USAGE_PLAN_ID] in your backend API. By default, this operation simply redirects the buyer to marketplace-subscribe.html in the developer portal.
 
