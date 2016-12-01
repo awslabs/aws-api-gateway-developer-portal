@@ -5,7 +5,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const util = require('util')
 const AWS = require('aws-sdk')
-const AWSMP = require('./meteringservice-preview-sdk-js-06-23-2016')
+// const AWSMP = require('./meteringservice-preview-sdk-js-06-23-2016')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const catalog = require('./catalog.json')
 const customersController = require('common-lambda-assets/customers-controller.js')
@@ -14,7 +14,7 @@ const app = express()
 const apigateway = new AWS.APIGateway()
 
 // replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
-const domain = 'YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com'
+const domain = 'brett-dev-portal-app.s3-website-us-east-1.amazonaws.com'
 const baseUrl = `http://${domain}/`
 
 app.use(cors())
@@ -225,8 +225,7 @@ app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
         res.status(200).json(data)
     }
 
-    // from custom version of aws-sdk
-    const marketplace = new AWSMP.MarketplaceMetering()
+    const marketplace = new AWS.MarketplaceMetering()
 
     const params = {
         RegistrationToken: marketplaceToken
