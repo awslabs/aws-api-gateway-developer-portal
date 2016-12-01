@@ -16,7 +16,7 @@ module.exports = function() {
   modifyApigClient(config.apiGatewayApiId, config.primaryAwsRegion)
   modifyDevPortalAwsService(config.cognitoIdentityPoolId, config.primaryAwsRegion, config.cognitoRegion, config.cognitoUserPoolId, config.cognitoClientId)
   modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName)
-  modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion)
+  modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion, config.apiGatewayApiId)
   modifyPackageFile(config)
   modifyUiPackageFile(config.siteS3Bucket, config.primaryAwsRegion)
 }
@@ -28,7 +28,7 @@ function modifyApigClient(apiGatewayApiId, primaryAwsRegion) {
     const primaryAwsRegionRegex = new RegExp(`config.region = '${primaryAwsRegion}';`, 'g')
     const apigClientModified = apigClient
       .replace(invokeUrlRegex, 'var invokeUrl = \'https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod\';')
-      .replace(primaryAwsRegionRegex, 'config.region = 'YOUR_PRIMARY_AWS_REGION';')
+      .replace(primaryAwsRegionRegex, 'config.region = \'YOUR_PRIMARY_AWS_REGION\';')
 
     fs.writeFileSync(apigClientPath, apigClientModified, 'utf8')
 }
@@ -64,13 +64,15 @@ function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName) {
     fs.writeFileSync(swaggerDefinitionPath, simpleProxyApiModified, 'utf8')
 }
 
-function modifyExpressServer(siteS3Bucket, primaryAwsRegion) {
+function modifyExpressServer(siteS3Bucket, primaryAwsRegion, apiGatewayApiId) {
     const expressServerPath = `${rootDir}/lambdas/backend/express-server.js`
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
-    const domainRegex = new RegExp(`const domain = '${siteS3Bucket}.s3-website-${primaryAwsRegion}.amazonaws.com'`, 'g')
+    const domainRegex = new RegExp(`const domain = '${siteS3Bucket}.s3-website-${primaryAwsRegion}.amazonaws.com'`)
+    const marketplaceConfirmExampleRegex = new RegExp(`// i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.${primaryAwsRegion}.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]`)
 
     const expressServerModified = expressServer
       .replace(domainRegex, 'const domain = \'YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com\'')
+      .replace(marketplaceConfirmExampleRegex, '// i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]')
 
     fs.writeFileSync(expressServerPath, expressServerModified, 'utf8')
 }
