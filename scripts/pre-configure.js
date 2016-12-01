@@ -4,55 +4,71 @@
 const fs = require('fs')
 const path = require('path')
 const inquirer = require('inquirer')
+const AWS = require('aws-sdk')
 const deconfigure = require('./deconfigure')
 const rootDir = path.resolve(__dirname, '..')
+const iam = new AWS.IAM()
 
-const questions = [{
-    name: 'accountId',
-    message: 'AWS account id:',
-    type: 'input',
-    validate: value => value.length === 12
-}, {
-    name: 'primaryAwsRegion',
-    message: 'Region:',
-    type: 'list',
-    choices: ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-central-1', 'ap-northeast-1', 'ap-northeast-2'],
-    default: 'us-east-1'
-}, {
-    name: 'artifactsS3BucketName',
-    message: 'S3 bucket for artifacts such as Lambda package and Swagger file (will be created if it doesn\'t exist):',
-    type: 'input',
-    validate: value => /^[a-zA-Z0-9.\-_]{1,255}/.test(value)
-}, {
-    name: 'clientS3BucketName',
-    message: 'S3 bucket for website (will be created; do not provide existing bucket):',
-    type: 'input',
-    validate: value => /^[a-zA-Z0-9.\-_]{1,255}/.test(value)
-}, {
-    name: 'cloudFormationStackName',
-    message: 'CloudFormation stack name:',
-    type: 'input',
-    default: 'DevPortalStack',
-    validate: value => /^[a-zA-Z][a-zA-Z0-9\-]*/.test(value)
-}, {
-    name: 'apiGatewayApiName',
-    message: 'API name:',
-    type: 'input',
-    default: 'Developer Portal'
-}/*, {
-    name: 'expressLambdaFunctionName',
-    message: 'Lambda function name:',
-    type: 'input',
-    default: 'DevPortalFunction'
-}*/]
+iam.getUser({}, (err, data) => {
+  let accountId
 
-inquirer.prompt(questions).then((answers) => {
-  deconfigure()
-  modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion, answers.apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, answers.accountId)
-  modifyUiPackageFile(answers.clientS3BucketName, answers.primaryAwsRegion)
-  modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
-  modifySwaggerFile(answers.accountId, answers.primaryAwsRegion, answers.apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
-}).catch(e => {console.log(e)})
+  if (!err && data && data.User && data.User.Arn) {
+    accountId = data.User.Arn.split(':')[4]
+  }
+
+  const questions = [{
+      name: 'primaryAwsRegion',
+      message: 'Region:',
+      type: 'list',
+      choices: ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-central-1', 'ap-northeast-1', 'ap-northeast-2'],
+      default: 'us-east-1'
+  }, {
+      name: 'artifactsS3BucketName',
+      message: 'S3 bucket for artifacts such as Lambda package and Swagger file. You can provide an existing S3 bucket name, or a new one (in which case it will be created for you):',
+      type: 'input',
+      validate: value => /^[a-zA-Z0-9.\-_]{1,255}/.test(value)
+  }, {
+      name: 'clientS3BucketName',
+      message: 'S3 bucket for developer portal web application. This must be a new bucket, and the name must be region-unique (ie. not just unique to your account), and it is therfore recommended you add a prefix or suffix, eg. my-org-developer-portal-app.:',
+      type: 'input',
+      validate: value => /^[a-zA-Z0-9.\-_]{1,255}/.test(value)
+  }, {
+      name: 'cloudFormationStackName',
+      message: 'CloudFormation stack name:',
+      type: 'input',
+      default: 'DeveloperPortal',
+      validate: value => /^[a-zA-Z][a-zA-Z0-9\-]*/.test(value)
+  }/*, {
+      name: 'apiGatewayApiName',
+      message: 'API name:',
+      type: 'input',
+      default: 'Developer Portal'
+  }, {
+      name: 'expressLambdaFunctionName',
+      message: 'Lambda function name:',
+      type: 'input',
+      default: 'DevPortalFunction'
+  }*/]
+
+  if (!accountId) {
+    questions.unshift({
+        name: 'accountId',
+        message: 'AWS account id:',
+        type: 'input',
+        validate: value => value.length === 12
+    })
+  }
+
+  inquirer.prompt(questions).then((answers) => {
+    const apiGatewayApiName = 'Developer Portal'
+    accountId = accountId || answers.accountId
+    deconfigure()
+    modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion,apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, accountId)
+    modifyUiPackageFile(answers.clientS3BucketName, answers.primaryAwsRegion)
+    modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
+    modifySwaggerFile(accountId, answers.primaryAwsRegion,apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
+  }).catch(e => {console.log(e)})
+})
 
 function modifyPackageFile(artifactsS3BucketName, clientS3BucketName, primaryAwsRegion, apiGatewayApiName, cloudFormationStackName/*, expressLambdaFunctionName*/, accountId) {
     const packageJsonPath = `${rootDir}/package.json`
