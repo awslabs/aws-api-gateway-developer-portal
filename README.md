@@ -11,7 +11,7 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 ## Setup
 
 ### Prerequisites
-First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.19) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
+__Windows OS support is being actively worked on. For now, you must run this setup on Mac OSX or Linux __. First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.19) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
 
 ### List your products (APIs/Usage Plans)
 Add your API Gateway APIs to the array in the `lambdas/backend/catalog.json` file, using the following format. If you have not yet created an API and Usage Plan, see [blog post]() for a detailed walkthrough. Alternatively, skip this step for now if you just want to get started with your developer portal (A placeholder API with swagger definition is provided for you for demonstration purposes, however, some features such as __Subscribe__ will not work)
