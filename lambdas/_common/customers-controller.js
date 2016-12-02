@@ -211,12 +211,10 @@ function getUsagePlanForProductCode(productCode, error, callback) {
             error(err)
         } else {
             console.log(`Got usage plans ${JSON.stringify(data.items)}`)
-
+            
             // note: ensure that only one usage plan maps to a given marketplace product code
             const usageplan = data.items.find(function (item) {
-                // todo: use the description field for now, but move to productCode field once SDK is updated
-                // return item.productCode !== undefined && item.description === productCode
-                return item.description !== undefined && item.description.includes(productCode)
+                return item.productCode !== undefined && item.productCode === productCode
             })
             if (usageplan !== undefined) {
                 console.log(`Found usage plan matching ${productCode}`)
