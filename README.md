@@ -68,11 +68,16 @@ To create/update the stack, run:
 npm run package-deploy
 ```
 
-To delete the stack, run:
+#### WARNING: DESTRUCTIVE OPERATIONS BELOW
+To clean up the resources created, run the following commands. Note that these commands perform a `aws s3 rb --force` operation on your S3 buckets, and will delete all contents of your artifacts and app bucket. You should absolutely not run `npm run delete-artifacts-bucket` if it is a generic artifacts bucket that contains items other than those related to the developer portal you want to delete. The same is true for the `npm run delete-app-bucket` command, however, this is less likely to have non-developer-portal assets since it was created by CloudFormation. As a result of the app S3 bucket being created by CloudFormation, if you do not delete the bucket before deleting the CloudFormation Stack (`npm run delete-stack`), the CloudFormation stack will "fail" to delete due to the S3 bucket being non-empty (everything except the S3 bucket will have been successfully deleted).
 
 ```bash
+#npm run delete-artifacts-bucket
+#npm run delete-app-bucket
 npm run delete-stack
 ```
+
+These operations will not delete any API Keys that may have been generated as a result of user registration to the developer portal. We will add a script to achieve this in a future update. For now you will need to manually delete these API Keys.
 
 __Windows users:__ use the `win-` prefixed commands, eg. `npm run win-package-deploy` and `npm run win-delete-stack`
 
