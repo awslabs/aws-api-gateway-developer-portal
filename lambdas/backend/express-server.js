@@ -6,7 +6,7 @@ const cors = require('cors')
 const util = require('util')
 const AWS = require('aws-sdk')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
-const catalog = require('./catalog.json')
+const catalog = require('./catalog')
 const customersController = require('common-lambda-assets/customers-controller.js')
 
 const app = express()
@@ -63,7 +63,7 @@ app.post('/signin', (req, res) => {
     })
 })
 
-// the API catalog could be statically defined (catalog.json), or generated from API Gateway Usage Plans (See getUsagePlans())
+// the API catalog could be statically defined (catalog/index.js), or generated from API Gateway Usage Plans (See getUsagePlans())
 app.get('/catalog', (req, res) => {
     res.status(200).json(catalog)
 })
@@ -107,7 +107,7 @@ app.put('/subscriptions/:usagePlanId', (req, res) => {
     const cognitoIdentityId = getCognitoIdentityId(req)
     const usagePlanId = req.params.usagePlanId
 
-    const usagePlanInCatalog = catalog.find(c => c.usagePlanId === usagePlanId)
+    const isUsagePlanInCatalog = Boolean(getUsagePlanFromCatalog(usagePlanId))
 
     function error(data) {
         console.log(`error: ${data}`)
@@ -118,7 +118,7 @@ app.put('/subscriptions/:usagePlanId', (req, res) => {
        res.status(201).json(data)
     }
 
-    if (!usagePlanInCatalog) {
+    if (!isUsagePlanInCatalog) {
         res.status(404).json('Invalid Usage Plan ID')
     } else {
         customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
@@ -134,10 +134,10 @@ app.get('/subscriptions/:usagePlanId/usage', (req, res) => {
         res.status(500).json(data)
     }
 
-    const usagePlanInCatalog = catalog.find(c => c.usagePlanId === usagePlanId)
+    const isUsagePlanInCatalog = Boolean(getUsagePlanFromCatalog(usagePlanId))
 
     // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
-    if (!usagePlanInCatalog) {
+    if (!isUsagePlanInCatalog) {
         res.status(404).json('Invalid Usage Plan ID')
     } else {
         customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
@@ -177,9 +177,9 @@ app.delete('/subscriptions/:usagePlanId', (req, res) => {
         res.status(200).json(data)
     }
 
-    const usagePlanInCatalog = catalog.find(c => c.usagePlanId === usagePlanId)
+    const isUsagePlanInCatalog = Boolean(getUsagePlanFromCatalog(usagePlanId))
 
-    if (!usagePlanInCatalog) {
+    if (!isUsagePlanInCatalog) {
         res.status(404).json('Invalid Usage Plan ID')
     } else {
         customersController.unsubscribe(cognitoIdentityId, usagePlanId, error, success)
@@ -248,6 +248,10 @@ app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
 
 function getCognitoIdentityId(req) {
     return req.apiGateway.event.requestContext.identity.cognitoIdentityId
+}
+
+function getUsagePlanFromCatalog(usagePlanId) {
+  return catalog.find(c => c.id === usagePlanId)
 }
 
 // The aws-serverless-express library creates a server and listens on a Unix

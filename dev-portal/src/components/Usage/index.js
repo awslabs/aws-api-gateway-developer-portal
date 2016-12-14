@@ -16,7 +16,7 @@ import { fetchUsage, mapUsageByDate } from '../../services/api-catalog'
   loadUsage(event) {
     event.preventDefault()
     this.setState({isLoading: true})
-    fetchUsage(this.props.api.usagePlanId)
+    fetchUsage(this.props.usagePlanId)
     .then((result) => {
       const data = mapUsageByDate(result.data, 'used')
       const ctx = document.getElementById('api-usage-chart-container')

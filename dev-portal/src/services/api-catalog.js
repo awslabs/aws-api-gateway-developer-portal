@@ -1,23 +1,32 @@
 import { getApiGatewayClient } from './api'
 export let subscriptions
-let apis
+let catalog
 
-export function getApis() {
-  if (apis) return Promise.resolve(apis)
+export function getCatalog() {
+  if (catalog) return Promise.resolve(catalog)
 
-  return fetchApis()
+  return fetchCatalog()
   .then(({data}) => {
-    apis = data
+    catalog = data
     return data
   })
 }
 
-export function getApi(id) {
-  return getApis()
-  .then(() => apis.find(api => api.apiId === id))
+export function getApi(apiId) {
+  return getCatalog()
+  .then(() => {
+    let _api
+
+    catalog.forEach(c => {
+      if (_api) return
+      _api = c.apis.find(a => a.id === apiId)
+    })
+
+    return _api
+  })
 }
 
-export function fetchApis() {
+export function fetchCatalog() {
   return getApiGatewayClient().then(apiGatewayClient => {
     return apiGatewayClient.get('/catalog', {}, {}, {})
   })
@@ -38,18 +47,18 @@ export function clearSubscriptions() {
   subscriptions = null
 }
 
-export function isSubscribed(api) {
-  return !!getSubscribedUsagePlan(api)
+export function isSubscribed(usagePlanId) {
+  return !!getSubscribedUsagePlan(usagePlanId)
 }
 
-export function getUsagePlanApiStages(api) {
-  const subscribedUsagePlan = getSubscribedUsagePlan(api)
+// export function getUsagePlanApiStages(usagePlanId) {
+//   const subscribedUsagePlan = getSubscribedUsagePlan(usagePlanId)
+//
+//   return (subscribedUsagePlan && subscribedUsagePlan.apiStages) || []
+// }
 
-  return (subscribedUsagePlan && subscribedUsagePlan.apiStages) || []
-}
-
-export function getSubscribedUsagePlan(api) {
-  const subscribedUsagePlan = subscriptions && subscriptions.find && subscriptions.find(s => s.id === api.usagePlanId)
+export function getSubscribedUsagePlan(usagePlanId) {
+  const subscribedUsagePlan = subscriptions && subscriptions.find && subscriptions.find(s => s.id === usagePlanId)
   return subscribedUsagePlan
 }
 
