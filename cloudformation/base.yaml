@@ -282,6 +282,7 @@ Resources:
               - cognito-idp:CreateUserPoolClient
               - cognito-idp:DeleteUserPoolClient
               - cognito-idp:UpdateUserPoolClient
+              - iam:PassRole
               Resource: '*'
 
   CognitoCustomResourceLambda:
