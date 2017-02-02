@@ -1,6 +1,6 @@
 import React from 'react'
 import { Breadcrumb, Button, Popup } from 'semantic-ui-react'
-import { Link, Redirect} from 'react-router'
+import { Link, Redirect} from 'react-router-dom'
 import { logout, showApiKey, isAuthenticated } from '../../services/self'
 import { getApi } from '../../services/api-catalog'
 
