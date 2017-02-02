@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
-import { Redirect } from 'react-router'
+import { Redirect } from 'react-router-dom'
 import { login } from '../../services/self'
 
  export default class SignIn extends React.Component {

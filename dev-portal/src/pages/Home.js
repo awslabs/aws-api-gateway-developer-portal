@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import { Container, Segment, Divider, Card } from 'semantic-ui-react'
 import SignIn from '../components/SignIn'
 import Register from '../components/Register'

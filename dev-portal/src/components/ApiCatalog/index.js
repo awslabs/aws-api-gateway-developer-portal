@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import { Button, Card, Image, Dropdown } from 'semantic-ui-react'
 import { addSubscription, unsubscribe, isSubscribed } from '../../services/api-catalog'
 import { isAuthenticated } from '../../services/self'

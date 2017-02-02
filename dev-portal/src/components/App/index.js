@@ -1,5 +1,5 @@
 import React from 'react'
-import {BrowserRouter, Match, Miss, Redirect, Link} from 'react-router'
+import { BrowserRouter, Route, Redirect, Link, Switch } from 'react-router-dom'
 import { Dimmer, Loader } from 'semantic-ui-react'
 import Home from '../../pages/Home'
 import CaseStudies from '../../pages/CaseStudies'
@@ -35,7 +35,7 @@ class MatchWhenAuthorized extends React.Component { // eslint-disable-line
   render() {
     const {component: Component, ...rest} = this.props
 
-    return <Match {...rest} render={props => {
+    return <Route {...rest} render={props => {
       if (!isAuthenticated()) return <Redirect to={{ pathname: '/', state: { from: props.location } }}/>
 
       return this.state.apiGatewayClient ? <Component {...props} />: (<Dimmer active>
@@ -67,14 +67,15 @@ export default class App extends React.Component {
           </div>
           <section className="App-intro">
               <AlertPopup />
-
-              <Match exactly pattern="/" component={Home} />
-              <Match pattern="/case-studies" component={CaseStudies} />
-              <Match pattern="/getting-started" component={GettingStarted} />
-              <Match pattern="/dashboard" component={Dashboard}/>
-              <Match exactly pattern="/apis" component={Apis}/>
-              <Match pattern="/apis/:apiId" component={ApiDetails}/>
-              <Miss component={NoMatch}/>
+              <Switch>
+                <Route exact path="/" component={Home} />
+                <Route path="/case-studies" component={CaseStudies} />
+                <Route path="/getting-started" component={GettingStarted} />
+                <Route path="/dashboard" component={Dashboard}/>
+                <Route exact path="/apis" component={Apis}/>
+                <Route path="/apis/:apiId" component={ApiDetails}/>
+                <Route component={NoMatch}/>
+              </Switch>
           </section>
         </div>
       </BrowserRouter>
