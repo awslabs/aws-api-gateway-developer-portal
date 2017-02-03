@@ -1,6 +1,6 @@
 {
   "name": "dev-portal",
-  "homepage": "http://YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com/",
+  "homepage": "http://dmc-sun-api-gateway-developer-portal-web.s3-website-ap-southeast-2.amazonaws.com/",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {

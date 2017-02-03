@@ -41,7 +41,7 @@ apigClientFactory.newClient = function (config) {
         config.sessionToken = '';
     }
     if(config.region === undefined) {
-        config.region = 'YOUR_PRIMARY_AWS_REGION';
+        config.region = 'ap-southeast-2';
     }
     //If defaultContentType is not defined then default to application/json
     if(config.defaultContentType === undefined) {
@@ -53,7 +53,7 @@ apigClientFactory.newClient = function (config) {
     }
 
     // extract endpoint and path from url
-    var invokeUrl = 'https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod';
+    var invokeUrl = 'https://j20t6je166.execute-api.ap-southeast-2.amazonaws.com/prod';
     var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
     var pathComponent = invokeUrl.substring(endpoint.length);
 
