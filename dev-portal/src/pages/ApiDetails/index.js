@@ -8,7 +8,7 @@ export default class ApiDetailsPage extends React.Component {
     super(props)
     this.state = {}
 
-    getApi(props.params.apiId)
+    getApi(props.match.params.apiId)
     .then(api => {
       this.setState({
         api

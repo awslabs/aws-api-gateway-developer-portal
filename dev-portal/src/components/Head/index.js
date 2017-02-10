@@ -9,7 +9,7 @@ export default class Head extends React.Component {
     super(props)
 
     if (this.isApiDetailsRoute()) {
-      getApi(props.params.apiId)
+      getApi(props.match.params.apiId)
       .then(api => {
         this.setState({
           apiName: api.swagger.info.title
