@@ -200,6 +200,7 @@ app.post('/marketplace-confirm/:usagePlanId', (req, res) => {
     console.log(`Marketplace token: ${marketplaceToken}`)
     const usagePlanId = req.params.usagePlanId
 
+    // TODO: update to new location of marketplace-subscribe route
     // WARNING: the redirect URL should be HTTPS as the token is subject to MITM attacks over HTTP. Token expires after 60min
     // ideally this should be saved in a secure manner (i.e. DDB) until the subscription completes
     const confirmUrl = `${baseUrl}marketplace-subscribe.html?usagePlanId=${usagePlanId}&token=${marketplaceToken}`

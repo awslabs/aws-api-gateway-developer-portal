@@ -128,6 +128,7 @@ You can sell your SaaS product through [AWS Marketplace] (https://aws.amazon.com
 Overview:
 
 1) Create a Usage Plan in API Gateway
+
 2) Create a SaaS Product in [AWS Marketplace] (https://aws.amazon.com/marketplace/management/tour/):
 
 The redirect URL should be in the format:
@@ -137,15 +138,7 @@ The product billing dimension name should be "apigateway" with description "Requ
 
 3) Update your Usage Plan with the AWS Marketplace Product Code via API Gateway "UpdateUsagePlan" API:
 
-i.e. PATCH https://apigateway.[REGION].amazonaws.com/usageplans/[USAGE_PLAN_ID]
-{
-"patchOperations" :
-[{
-	"path" : "/productCode",
-	"value" : "[MARKETPLACE_PRODUCT_CODE]",
-	"op" : "replace"
-}]
-}
+"aws apigateway update-usage-plan --usage-plan-id [USAGE_PLAN_ID] --patch-operations '[{ "path" : "/productCode", "value" : "[MARKETPLACE_PRODUCT_CODE]", "op" : "replace" }]'"
 
 4) Update marketplaceSubscriptionTopic in package.json with the AWS Marketplace Product Code
 
