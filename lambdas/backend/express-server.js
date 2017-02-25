@@ -243,6 +243,9 @@ app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
             // this is used when the subscription listener receives the subscribe notification
             const marketplaceCustomerId = data.CustomerIdentifier
             customersController.updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, success)
+            
+            // also, subscribe the customer to the usage plan!
+            customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
         }
     })
 })
