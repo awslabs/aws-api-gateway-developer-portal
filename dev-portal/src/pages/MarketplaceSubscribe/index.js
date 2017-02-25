@@ -11,13 +11,19 @@ export default class MarketplaceSubscribe extends React.Component {
     super(props)
     this.state = {}
     
-    if (props.location.search.indexOf('token') > 0) {
-      var token = props.location.search.substring('?token='.length)
-      this.state = {token: token}
+    var query = props.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+      var pair = vars[i].split("=");
+      if (pair[0] == 'usagePlanId') {
+        this.state = {usagePlanId: usagePlanId}
+      } else if (pair[0] == 'token') {
+         this.state = {token: token}
+      } 
     }
     
     if (isAuthenticated()) {
-      confirmMarketplaceSubscription(this.props.match.params.usagePlanId, token).then(() => {
+      confirmMarketplaceSubscription(this.state.usagePlanId, this.state.token).then(() => {
         window.location.href = '/apis'
       })
     }
@@ -27,9 +33,9 @@ export default class MarketplaceSubscribe extends React.Component {
     return (<div>
       <Head {...this.props} />
       { isAuthenticated() ? '' : (<Segment padded>
-        <SignIn usagePlanId={this.props.match.params.usagePlanId} token={this.state.token} />
+        <SignIn usagePlanId={this.state.usagePlanId} token={this.state.token} />
         <Divider horizontal>Or</Divider>
-        <Register usagePlanId={this.props.match.params.usagePlanId} token={this.state.token} />
+        <Register usagePlanId={this.stage.usagePlanId} token={this.state.token} />
       </Segment>) }
     </div>)
   }
