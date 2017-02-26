@@ -108,6 +108,10 @@ Resources:
             Action:
             - apigateway:*
             Resource: '*'
+          - Effect: Allow
+            Action:
+            - aws-marketplace:ResolveCustomer
+            Resource: '*'
           - Action:
             - dynamodb:GetItem
             - dynamodb:Query
