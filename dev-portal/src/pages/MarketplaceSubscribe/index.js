@@ -16,9 +16,9 @@ export default class MarketplaceSubscribe extends React.Component {
     for (var i=0;i<vars.length;i++) {
       var pair = vars[i].split("=");
       if (pair[0] == 'usagePlanId') {
-        this.state = {usagePlanId: usagePlanId}
+        this.setState({usagePlanId: usagePlanId})
       } else if (pair[0] == 'token') {
-         this.state = {token: token}
+        this.setState({token: token})
       } 
     }
     
