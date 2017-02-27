@@ -70,6 +70,16 @@ export function addSubscription(usagePlanId) {
     })
 }
 
+export function confirmMarketplaceSubscription(usagePlanId, token) {
+    if (!usagePlanId) {
+      return
+    }
+
+    return getApiGatewayClient().then(apiGatewayClient => {
+        return apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, {"token" : token})
+    })
+}
+
 export function unsubscribe(usagePlanId) {
     return getApiGatewayClient().then(apiGatewayClient => {
         return apiGatewayClient.delete(`/subscriptions/${usagePlanId}`, {}, {}).then(function(result) {
