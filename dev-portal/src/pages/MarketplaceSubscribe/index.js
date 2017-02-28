@@ -11,14 +11,17 @@ export default class MarketplaceSubscribe extends React.Component {
     super(props)
     this.state = {}
     
-    var query = props.location.search.substring(1);
-    var vars = query.split("&");
-    for (var i=0;i<vars.length;i++) {
-      var pair = vars[i].split("=");
-      if (pair[0] == 'usagePlanId') {
-        this.setState({usagePlanId: usagePlanId})
-      } else if (pair[0] == 'token') {
-        this.setState({token: token})
+    this.query = this.props.location.search.substring(1);
+    this.vars = this.query.split("&");
+    for (var i=0;i<this.vars.length;i++) {
+      if (this.vars[i].indexOf('usagePlanId') > -1) {
+         this.val = this.vars[i].substring('usagePlanId='.length)
+         this.setState({usagePlanId: this.val})
+         this.state.usagePlanId = this.val // supports isAuthenticated() block below
+      } else if (this.vars[i].indexOf('token') > -1) {
+         this.val = this.vars[i].substring('token='.length)
+         this.setState({token: this.val})
+         this.state.token = this.val // supports isAuthenticated() block below
       } 
     }
     
