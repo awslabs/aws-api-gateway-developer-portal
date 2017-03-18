@@ -12,7 +12,7 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 
 ### Prerequisites
 
-First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.19) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
+First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.37) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
 
 ### List your products (APIs/Usage Plans)
 
