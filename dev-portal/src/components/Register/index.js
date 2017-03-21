@@ -2,6 +2,8 @@ import React from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
 import { Redirect } from 'react-router-dom'
 import { register } from '../../services/self'
+import { confirmMarketplaceSubscription } from '../../services/api-catalog'
+
 
  export default class Register extends React.Component {
   state = {
@@ -19,8 +21,10 @@ import { register } from '../../services/self'
     event.preventDefault()
     this.setState({isSubmitting: true})
     register(serializedForm.email, serializedForm.password)
-    .then(() => this.setState({signedIn: true, isSubmitting: false, errorMessage: ''}))
-    .catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
+			 .then(() => {
+				  confirmMarketplaceSubscription(this.props.usagePlanId, this.props.token)
+				  this.setState({signedIn: true, isSubmitting: false, errorMessage: ''})
+			 }).catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
   }
 
   render() {
