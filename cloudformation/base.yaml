@@ -12,6 +12,10 @@ Parameters:
     Type: String
     Description: The S3 bucket in which the web application code is stored. Bucket
       names are region-unique, so you must change this.
+     
+  DevPortalSiteCloudFrontCNAME:
+    Type: String
+    Description: The CNAME of your CloudFront distribution.
 
   DevPortalCustomersTableName:
     Type: String
@@ -53,6 +57,40 @@ Resources:
                   - !Ref 'AWS::Region'
                   - .amazonaws.com
               ReplaceKeyPrefixWith: '#!/'
+  
+  WebsiteCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      Origins:
+        - DomainName: !Join
+            - ''
+            - !Ref DevPortalSiteS3Bucket
+            - .s3-website-
+            - !Ref 'AWS::Region'
+            - .amazonaws.com
+          Id: !Ref DevPortalSiteS3Bucket
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Aliases:
+        - !Ref DevPortalSiteCloudFrontCNAME
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          TargetOriginId: !Ref DevPortalSiteS3Bucket
+          ForwardedValues:
+            QueryString: 'true'
+            Cookies:
+              Forward: ALL
+          ViewerProtocolPolicy: allow-all
+        PriceClass: PriceClass_200
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: 'true'
 
   CustomersTable:
     Type: AWS::DynamoDB::Table
