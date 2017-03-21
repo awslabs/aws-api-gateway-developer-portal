@@ -2,7 +2,7 @@
 swagger: 2.0
 info:
   version: 2016-09-02T22:37:24Z
-  title: YOUR_API_GATEWAY_API_NAME
+  title: Developer Portal
 basePath: /prod
 schemes:
 - https
@@ -20,7 +20,7 @@ paths:
         responses:
           default:
             statusCode: 200
-        uri: arn:aws:apigateway:YOUR_PRIMARY_AWS_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:YOUR_PRIMARY_AWS_REGION:YOUR_ACCOUNT_ID:function:${stageVariables.DevPortalFunctionName}/invocations
+        uri: arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:637693983280:function:${stageVariables.DevPortalFunctionName}/invocations
         passthroughBehavior: when_no_match
         httpMethod: POST
         type: aws_proxy
@@ -59,7 +59,7 @@ paths:
       - application/json
       responses: {}
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:YOUR_PRIMARY_AWS_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:YOUR_PRIMARY_AWS_REGION:YOUR_ACCOUNT_ID:function:${stageVariables.DevPortalFunctionName}/invocations
+        uri: arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:637693983280:function:${stageVariables.DevPortalFunctionName}/invocations
         httpMethod: POST
         type: aws_proxy
     options:
@@ -97,7 +97,7 @@ paths:
       - application/json
       responses: {}
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:YOUR_PRIMARY_AWS_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:YOUR_PRIMARY_AWS_REGION:YOUR_ACCOUNT_ID:function:${stageVariables.DevPortalFunctionName}/invocations
+        uri: arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:637693983280:function:${stageVariables.DevPortalFunctionName}/invocations
         httpMethod: POST
         type: aws_proxy
     options:
@@ -135,7 +135,7 @@ paths:
       - application/json
       responses: {}
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:YOUR_PRIMARY_AWS_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:YOUR_PRIMARY_AWS_REGION:YOUR_ACCOUNT_ID:function:${stageVariables.DevPortalFunctionName}/invocations
+        uri: arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:637693983280:function:${stageVariables.DevPortalFunctionName}/invocations
         httpMethod: POST
         type: aws_proxy
     options:
@@ -180,7 +180,7 @@ paths:
         type: string
       responses: {}
       x-amazon-apigateway-integration:
-        uri: arn:aws:apigateway:YOUR_PRIMARY_AWS_REGION:lambda:path/2015-03-31/functions/arn:aws:lambda:YOUR_PRIMARY_AWS_REGION:YOUR_ACCOUNT_ID:function:${stageVariables.DevPortalFunctionName}/invocations
+        uri: arn:aws:apigateway:ap-southeast-2:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-2:637693983280:function:${stageVariables.DevPortalFunctionName}/invocations
         httpMethod: POST
         type: aws_proxy
     options:
