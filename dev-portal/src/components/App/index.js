@@ -7,6 +7,7 @@ import GettingStarted from '../../pages/GettingStarted'
 import Dashboard from '../../pages/Dashboard'
 import Apis from '../../pages/Apis'
 import ApiDetails from '../../pages/ApiDetails'
+import MarketplaceSubscribe from '../../pages/MarketplaceSubscribe'
 import logo from '../../logo.png'
 import AlertPopup from '../../components/AlertPopup'
 import { init, isAuthenticated } from '../../services/self'
@@ -71,6 +72,7 @@ export default class App extends React.Component {
                 <Route exact path="/" component={Home} />
                 <Route path="/case-studies" component={CaseStudies} />
                 <Route path="/getting-started" component={GettingStarted} />
+                <Route path="/marketplace-subscribe" component={MarketplaceSubscribe} />
                 <Route path="/dashboard" component={Dashboard}/>
                 <Route exact path="/apis" component={Apis}/>
                 <Route path="/apis/:apiId" component={ApiDetails}/>
