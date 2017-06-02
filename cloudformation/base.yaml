@@ -252,53 +252,6 @@ Resources:
       Runtime: nodejs4.3
       Timeout: 30
 
-  CognitoCustomResourceLambdaExecutionRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-        Path: '/'
-        Policies:
-        - PolicyName: root
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-              Resource: arn:aws:logs:*:*:*
-            - Effect: Allow
-              Action:
-              - cognito-identity:CreateIdentityPool
-              - cognito-identity:DeleteIdentityPool
-              - cognito-identity:UpdateIdentityPool
-              - cognito-identity:SetIdentityPoolRoles
-              - cognito-idp:CreateUserPool
-              - cognito-idp:DeleteUserPool
-              - cognito-idp:UpdateUserPool
-              - cognito-idp:CreateUserPoolClient
-              - cognito-idp:DeleteUserPoolClient
-              - cognito-idp:UpdateUserPoolClient
-              - iam:PassRole
-              Resource: '*'
-
-  CognitoCustomResourceLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ../lambdas/cognito-cloudformation-custom-resource
-      Handler: index.handler
-      MemorySize: 128
-      Role: !GetAtt CognitoCustomResourceLambdaExecutionRole.Arn
-      Runtime: nodejs4.3
-      Timeout: 30
-
   # PreSignupLambdaExecutionRole:
   #   Type: AWS::IAM::Role
   #   Properties:
@@ -333,46 +286,40 @@ Resources:
       Timeout: 3
 
   CognitoUserPool:
-    Type: Custom::CognitoUserPool
+    Type: AWS::Cognito::UserPool
     Properties:
-      ServiceToken: !GetAtt CognitoCustomResourceLambda.Arn
-      Options:
-        PoolName: !Ref CognitoIdentityPoolName
-        LambdaConfig:
-          PreSignUp: !GetAtt PreSignupLambdaFunction.Arn
-        Policies:
-          PasswordPolicy:
-            MinimumLength: 8
-        Schema:
-          - AttributeDataType: String
-            Name: email
-            Required: false
+      UserPoolName: !Ref CognitoIdentityPoolName
+      LambdaConfig:
+        PreSignUp: !GetAtt PreSignupLambdaFunction.Arn
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: false
 
   CognitoUserPoolClient:
-    Type: Custom::CognitoUserPoolClient
+    Type: AWS::Cognito::UserPoolClient
     Properties:
-      ServiceToken: !GetAtt CognitoCustomResourceLambda.Arn
-      Options:
-        UserPoolId: !Ref CognitoUserPool
-        ClientName: CognitoIdentityPool
-        GenerateSecret: false
-        RefreshTokenValidity: 30
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: CognitoIdentityPool
+      GenerateSecret: false
+      RefreshTokenValidity: 30
 
   CognitoIdentityPool:
-    Type: Custom::CognitoIdentityPool
+    Type: AWS::Cognito::IdentityPool
     Properties:
-      ServiceToken: !GetAtt CognitoCustomResourceLambda.Arn
-      Options:
-        IdentityPoolName: !Ref CognitoIdentityPoolName
-        AllowUnauthenticatedIdentities: false
-        CognitoIdentityProviders:
-          - ClientId: !Ref CognitoUserPoolClient
-            ProviderName: !Join
-              - ''
-              - - cognito-idp.
-                - !Ref 'AWS::Region'
-                - .amazonaws.com/
-                - !Ref CognitoUserPool
+      IdentityPoolName: !Ref CognitoIdentityPoolName
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref CognitoUserPoolClient
+          ProviderName: !Join
+            - ''
+            - - cognito-idp.
+              - !Ref 'AWS::Region'
+              - .amazonaws.com/
+              - !Ref CognitoUserPool
 
   CognitoAuthenticatedRole:
     Type: AWS::IAM::Role
@@ -409,13 +356,11 @@ Resources:
       Path: '/'
 
   CognitoIdentityPoolRoles:
-    Type: Custom::CognitoIdentityPoolRoles
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:
-      ServiceToken: !GetAtt CognitoCustomResourceLambda.Arn
-      Options:
-        IdentityPoolId: !Ref CognitoIdentityPool
-        Roles:
-          authenticated: !GetAtt CognitoAuthenticatedRole.Arn
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthenticatedRole.Arn
 
 Outputs:
   LambdaFunctionConsoleUrl:

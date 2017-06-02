@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { PureComponent } from 'react'
 import { loadSwagger } from '../../services/swagger-ui'
 import { getApi } from '../../services/api-catalog'
 import Head from '../../components/Head'
 
-export default class ApiDetailsPage extends React.Component {
+export default class ApiDetailsPage extends PureComponent {
   constructor(props) {
     super(props)
     this.state = {}
