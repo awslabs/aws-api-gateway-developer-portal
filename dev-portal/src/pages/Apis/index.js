@@ -1,11 +1,11 @@
-import React from 'react'
+import React, { PureComponent } from 'react'
 import { Dimmer, Loader } from 'semantic-ui-react'
 import ApiCatalog from '../../components/ApiCatalog'
 import { isAuthenticated } from '../../services/self'
 import { getCatalog, fetchSubscriptions } from '../../services/api-catalog'
 import Head from '../../components/Head'
 
-export default class ApisPage extends React.Component {
+export default class ApisPage extends PureComponent {
   constructor(props) {
     super(props)
     this.state = {}

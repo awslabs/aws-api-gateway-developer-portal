@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { PureComponent } from 'react'
 import { BrowserRouter, Route, Redirect, Link, Switch } from 'react-router-dom'
 import { Dimmer, Loader } from 'semantic-ui-react'
 import Home from '../../pages/Home'
@@ -14,7 +14,7 @@ import { apiGatewayClient } from '../../services/api'
 import './App.css'
 
 const NoMatch = () => <h2>Page not found</h2>
-class MatchWhenAuthorized extends React.Component { // eslint-disable-line
+class MatchWhenAuthorized extends PureComponent { // eslint-disable-line
   constructor(props) {
     super(props)
 
@@ -45,7 +45,7 @@ class MatchWhenAuthorized extends React.Component { // eslint-disable-line
   }
 }
 
-export default class App extends React.Component {
+export default class App extends PureComponent {
   constructor() {
     super()
     init()

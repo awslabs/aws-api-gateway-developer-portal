@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { PureComponent } from 'react'
 import { Breadcrumb, Button, Popup } from 'semantic-ui-react'
 import { Link, Redirect} from 'react-router-dom'
 import { logout, showApiKey, isAuthenticated } from '../../services/self'
 import { getApi } from '../../services/api-catalog'
 
-export default class Head extends React.Component {
+export default class Head extends PureComponent {
   constructor(props) {
     super(props)
 
