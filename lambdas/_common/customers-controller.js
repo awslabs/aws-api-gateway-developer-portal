@@ -1,9 +1,7 @@
 'use strict'
 const AWS = require('aws-sdk')
-const doc = require('dynamodb-doc')
 
-const dynamodb = new doc.DynamoDB()
-const dynamodbdoc = new AWS.DynamoDB.DocumentClient()
+const dynamoDb = new AWS.DynamoDB.DocumentClient()
 const apigateway = new AWS.APIGateway()
 
 const customersTable = 'DevPortalCustomers'
@@ -18,7 +16,7 @@ function ensureCustomerItem(cognitoIdentityId, keyId, error, callback) {
             Id: customerId
         }
     }
-    dynamodbdoc.get(getParams, (err, data) => {
+    dynamoDb.get(getParams, (err, data) => {
         if (err) {
             error(err)
         } else if (data.Item === undefined) {
@@ -29,7 +27,8 @@ function ensureCustomerItem(cognitoIdentityId, keyId, error, callback) {
                     ApiKeyId: keyId
                 }
             }
-            dynamodb.putItem(putParams, (customerErr, customerData) => {
+
+            dynamoDb.putItem(putParams, (customerErr, customerData) => {
                 if (customerErr) {
                     error(customerErr)
                 } else {
@@ -54,7 +53,7 @@ function getCognitoIdentityId(marketplaceCustomerId, error, callback) {
         },
         ProjectionExpression: "MarketplaceCustomerId, Id"
     }
-    dynamodbdoc.query(params, (err, data) => {
+    dynamoDb.query(params, (err, data) => {
         if (err) {
             error(err)
         } else if (data.Items === undefined || data.Items.length === 0) {
@@ -211,7 +210,7 @@ function getUsagePlanForProductCode(productCode, error, callback) {
             error(err)
         } else {
             console.log(`Got usage plans ${JSON.stringify(data.items)}`)
-            
+
             // note: ensure that only one usage plan maps to a given marketplace product code
             const usageplan = data.items.find(function (item) {
                 return item.productCode !== undefined && item.productCode === productCode
@@ -242,7 +241,7 @@ function updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, e
 
     // update DDB customer record with marketplace customer id
     // and update API Gateway API Key with marketplace customer id
-    dynamodbdoc.update(dynamoDbParams, (dynamoDbErr) => {
+    dynamoDb.update(dynamoDbParams, (dynamoDbErr) => {
         if (dynamoDbErr) {
             error(dynamoDbErr)
         } else {
@@ -310,7 +309,7 @@ function updateCustomerApiKeyId(cognitoIdentityId, apiKeyId, error, success) {
         }
     }
 
-    dynamodbdoc.update(dynamoDbParams, (dynamoDbErr) => {
+    dynamoDb.update(dynamoDbParams, (dynamoDbErr) => {
         if (dynamoDbErr) {
             error(dynamoDbErr)
         } else {

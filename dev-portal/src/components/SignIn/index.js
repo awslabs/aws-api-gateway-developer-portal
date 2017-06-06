@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
 import { Redirect } from 'react-router-dom'
 import { login } from '../../services/self'
+import { confirmMarketplaceSubscription } from '../../services/api-catalog'
 
  export default class SignIn extends PureComponent {
    state = {
@@ -19,7 +20,15 @@ import { login } from '../../services/self'
     this.setState({isSubmitting: true})
 
     login(serializedForm.email, serializedForm.password)
-    .then(() => this.setState({signedIn: true, isSubmitting: false, errorMessage: ''}))
+    .then(() => {
+        this.setState({signedIn: true, isSubmitting: false, errorMessage: ''})
+
+        const { usagePlanId, token } = this.props
+
+        if (usagePlanId && token) {
+   	       return confirmMarketplaceSubscription(usagePlanId, token)
+        }
+    })
     .catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
   }
 
