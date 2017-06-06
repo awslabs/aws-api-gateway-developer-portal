@@ -148,9 +148,9 @@ The product billing dimension name should be "apigateway" with description "Requ
 
 ### Marketplace Flow
 
-When buyers subscribe through the AWS Marketplace console, the buyers browser will send a POST request to /marketplace-confirm/[USAGE_PLAN_ID] in your backend API. By default, this operation simply redirects the buyer to marketplace-subscribe.html in the developer portal.
+When buyers subscribe through the AWS Marketplace console, the buyers browser will send a POST request to /marketplace-confirm/[USAGE_PLAN_ID] in your backend API. By default, this redirects the request to the developer portal with the `usagePlanId` and `token` in the query string.
 
-From here, the buyer is asked to login or register for the developer portal (or the existing session will be used). Once authenticated the buyer confirms the subscription and a PUT request is made to /marketplace-subscriptions/[USAGE_PLAN_ID].
+From here, the buyer is asked to login or register for the developer portal (or the existing session will be used). Once authenticated, a PUT request is made to /marketplace-subscriptions/[USAGE_PLAN_ID].
 
 This operation makes a request to Marketplace Metering Service to resolve the buyer customer ID as well as the marketplace product code being subscribed to. By default, this operation simply associates the marketplace customer ID with the currently authenticated Cognito identity in DynamoDb for later use. It also calls API Gateway to get or create an API key for this user and associates this API Key with the marketplace customer ID.
 

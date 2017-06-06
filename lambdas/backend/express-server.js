@@ -200,10 +200,9 @@ app.post('/marketplace-confirm/:usagePlanId', (req, res) => {
     console.log(`Marketplace token: ${marketplaceToken}`)
     const usagePlanId = req.params.usagePlanId
 
-    // TODO: update to new location of marketplace-subscribe route
     // WARNING: the redirect URL should be HTTPS as the token is subject to MITM attacks over HTTP. Token expires after 60min
     // ideally this should be saved in a secure manner (i.e. DDB) until the subscription completes
-    const confirmUrl = `${baseUrl}marketplace-subscribe.html?usagePlanId=${usagePlanId}&token=${marketplaceToken}`
+    const confirmUrl = `${baseUrl}?usagePlanId=${usagePlanId}&token=${marketplaceToken}`
 
     // redirect to the registration/login page
     res.redirect(302, confirmUrl)
@@ -212,9 +211,9 @@ app.post('/marketplace-confirm/:usagePlanId', (req, res) => {
 app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
     const marketplaceToken = req.body.token
     const usagePlanId = req.params.usagePlanId
+    console.log(`Marketplace token: ${marketplaceToken} usage plan id: ${usagePlanId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
-
-    console.log(`Marketplace token: ${marketplaceToken} usage plan id: ${usagePlanId} cognito id: ${cognitoIdentityId}`)
+    console.log(`cognito id: ${cognitoIdentityId}`)
 
     function error(data) {
         console.log(`error: ${data}`)
@@ -223,6 +222,10 @@ app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
 
     function success(data) {
         res.status(200).json(data)
+    }
+
+    function subscribeCustomerToUsagePlan(data) {
+        customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
     }
 
     const marketplace = new AWS.MarketplaceMetering()
@@ -235,14 +238,14 @@ app.put('/marketplace-subscriptions/:usagePlanId', (req, res) => {
     marketplace.resolveCustomer(params, (err, data) => {
         if (err) {
             console.log(`marketplace error: ${JSON.stringify(err)}`)
-            res.status(400).json(err.data.message)
+            res.status(400).json(err.message)
         } else {
             console.log(`marketplace data: ${JSON.stringify(data)}`)
 
             // persist the marketplaceCustomerId in DDB
             // this is used when the subscription listener receives the subscribe notification
             const marketplaceCustomerId = data.CustomerIdentifier
-            customersController.updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, success)
+            customersController.updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, subscribeCustomerToUsagePlan)
         }
     })
 })

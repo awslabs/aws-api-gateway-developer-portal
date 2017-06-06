@@ -4,7 +4,9 @@
   "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
   "main": "index.js",
   "config": {},
-  "scripts": {},
+  "scripts": {
+    "local": "node ./express-server-local"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.7.10",

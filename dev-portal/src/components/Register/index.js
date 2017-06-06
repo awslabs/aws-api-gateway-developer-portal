@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
 import { Redirect } from 'react-router-dom'
 import { register } from '../../services/self'
+import { confirmMarketplaceSubscription } from '../../services/api-catalog'
 
  export default class Register extends PureComponent {
   state = {
@@ -18,8 +19,17 @@ import { register } from '../../services/self'
   _handleRegister(event, serializedForm) {
     event.preventDefault()
     this.setState({isSubmitting: true})
+
     register(serializedForm.email, serializedForm.password)
-    .then(() => this.setState({signedIn: true, isSubmitting: false, errorMessage: ''}))
+    .then(() => {
+        this.setState({signedIn: true, isSubmitting: false, errorMessage: ''})
+
+        const { usagePlanId, token } = this.props
+
+        if (usagePlanId && token) {
+   	       return confirmMarketplaceSubscription(usagePlanId, token)
+        }
+    })
     .catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
   }
 
