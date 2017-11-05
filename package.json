@@ -36,7 +36,6 @@
     "subscribe-listener": "aws sns subscribe --topic-arn $npm_package_config_marketplaceSubscriptionTopic --protocol lambda --notification-endpoint arn:aws:lambda:$npm_package_config_primaryAwsRegion:$npm_package_config_accountId:function:$npm_package_config_listenerLambdaFunctionName --region us-east-1",
     "setup": "npm install && npm run pre-config && npm run create-artifacts-bucket && npm run lambdas-npm-install && npm run package-deploy && npm run post-setup",
     "post-setup": "npm run post-config && cd dev-portal && npm install && npm run upload-site && npm home",
-
     "win-pre-config": "node scripts/pre-configure.js",
     "win-post-config": "node scripts/post-configure.js",
     "win-deconfig": "node -e \"require('./scripts/deconfigure.js')()\"",
@@ -52,7 +51,6 @@
     "win-subscribe-listener": "aws sns subscribe --topic-arn %npm_package_config_marketplaceSubscriptionTopic% --protocol lambda --notification-endpoint arn:aws:lambda:%npm_package_config_primaryAwsRegion%:%npm_package_config_accountId%:function:%npm_package_config_listenerLambdaFunctionName% --region us-east-1",
     "win-setup": "npm install && npm run win-pre-config && npm run win-create-artifacts-bucket && npm run win-lambdas-npm-install && npm run win-package-deploy && npm run win-post-setup",
     "win-post-setup": "npm run win-post-config && cd dev-portal && npm install && npm run win-upload-site && npm home"
-
   },
   "license": "Apache-2.0",
   "dependencies": {
