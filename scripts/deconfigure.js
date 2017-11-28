@@ -15,8 +15,8 @@ const config = packageJson.config
 module.exports = function() {
   modifyApigClient(config.apiGatewayApiId, config.primaryAwsRegion)
   modifyDevPortalAwsService(config.cognitoIdentityPoolId, config.primaryAwsRegion, config.cognitoRegion, config.cognitoUserPoolId, config.cognitoClientId)
-  modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName)
-  modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion, config.apiGatewayApiId)
+  // modifySwaggerFile(config.accountId, config.primaryAwsRegion, config.apiGatewayApiName)
+  // modifyExpressServer(config.siteS3Bucket, config.primaryAwsRegion, config.apiGatewayApiId)
   modifyPackageFile(config)
   modifyUiPackageFile(config.siteS3Bucket, config.primaryAwsRegion)
 }
@@ -51,7 +51,7 @@ function modifyDevPortalAwsService(cognitoIdentityPoolId, primaryAwsRegion, cogn
     fs.writeFileSync(htmlPath, htmlModified, 'utf8')
 }
 
-function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName) {
+/*function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName) {
     const swaggerDefinitionPath = `${rootDir}/lambdas/backend/dev-portal-express-proxy-api.yaml`
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const accountIdRegex = new RegExp(accountId, 'g')
@@ -73,7 +73,7 @@ function modifyExpressServer(siteS3Bucket, primaryAwsRegion, apiGatewayApiId) {
       .replace(domainRegex, 'const domain = \'YOUR_CLIENT_BUCKET_NAME.s3-website-YOUR_PRIMARY_AWS_REGION.amazonaws.com\'')
 
     fs.writeFileSync(expressServerPath, expressServerModified, 'utf8')
-}
+}*/
 
 function modifyPackageFile(config) {
     const packageJsonPath = `${rootDir}/package.json`

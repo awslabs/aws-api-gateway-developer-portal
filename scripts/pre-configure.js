@@ -65,8 +65,8 @@ iam.getUser({}, (err, data) => {
     deconfigure()
     modifyPackageFile(answers.artifactsS3BucketName, answers.clientS3BucketName, answers.primaryAwsRegion,apiGatewayApiName, answers.cloudFormationStackName/*, answers.expressLambdaFunctionName*/, accountId)
     modifyUiPackageFile(answers.clientS3BucketName, answers.primaryAwsRegion)
-    modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
-    modifySwaggerFile(accountId, answers.primaryAwsRegion,apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
+    // modifyExpressServer(answers.clientS3BucketName, answers.primaryAwsRegion)
+    // modifySwaggerFile(accountId, answers.primaryAwsRegion,apiGatewayApiName/*, answers.expressLambdaFunctionName*/)
   }).catch(e => {console.log(e)})
 })
 
@@ -94,7 +94,7 @@ function modifyUiPackageFile(clientS3BucketName, primaryAwsRegion) {
 
     fs.writeFileSync(packageJsonPath, packageJsonModified, 'utf8')
 }
-
+/*
 function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
     const expressServerPath = `${rootDir}/lambdas/backend/express-server.js`
     const expressServer = fs.readFileSync(expressServerPath, 'utf8')
@@ -105,7 +105,7 @@ function modifyExpressServer(clientS3BucketName, primaryAwsRegion) {
     fs.writeFileSync(expressServerPath, expressServerModified, 'utf8')
 }
 
-function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName/*, expressLambdaFunctionName*/) {
+function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName/*, expressLambdaFunctionName* /) {
     const swaggerDefinitionPath = `${rootDir}/lambdas/backend/dev-portal-express-proxy-api.yaml`
     const swaggerDefinition = fs.readFileSync(swaggerDefinitionPath, 'utf8')
     const simpleProxyApiModified = swaggerDefinition
@@ -116,3 +116,4 @@ function modifySwaggerFile(accountId, primaryAwsRegion, apiGatewayApiName/*, exp
 
     fs.writeFileSync(swaggerDefinitionPath, simpleProxyApiModified, 'utf8')
 }
+*/
