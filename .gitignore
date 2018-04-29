@@ -5,3 +5,4 @@ packaged-sam.yaml
 cognito.js
 package-lock.json
 .idea
+*.tgz

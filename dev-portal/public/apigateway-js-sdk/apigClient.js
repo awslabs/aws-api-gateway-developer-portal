@@ -13,6 +13,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+const swizzledParams = {
+	"primaryAwsRegion": "YOUR_PRIMARY_AWS_REGION",
+	"apiGatewayApiId": "YOUR_API_GATEWAY_API_ID"
+}
 
 var apigClientFactory = {};
 apigClientFactory.newClient = function (config) {
@@ -41,7 +45,7 @@ apigClientFactory.newClient = function (config) {
         config.sessionToken = '';
     }
     if(config.region === undefined) {
-        config.region = 'YOUR_PRIMARY_AWS_REGION';
+        config.region = swizzledParams.primaryAwsRegion;
     }
     //If defaultContentType is not defined then default to application/json
     if(config.defaultContentType === undefined) {
@@ -53,7 +57,7 @@ apigClientFactory.newClient = function (config) {
     }
 
     // extract endpoint and path from url
-    var invokeUrl = 'https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod';
+    var invokeUrl = 'https://' + swizzledParams.apiGatewayApiId + '.execute-api.' + swizzledParams.primaryAwsRegion + '.amazonaws.com/prod';
     var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
     var pathComponent = invokeUrl.substring(endpoint.length);
 
