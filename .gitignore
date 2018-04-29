@@ -4,3 +4,5 @@ npm-debug.log
 packaged-sam.yaml
 cognito.js
 package-lock.json
+.idea
+*.tgz

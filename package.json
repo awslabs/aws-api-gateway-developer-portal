@@ -21,8 +21,8 @@
     "marketplaceSubscriptionTopic": "arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-PRODUCT_CODE"
   },
   "scripts": {
-    "pre-config": "node scripts/pre-configure.js",
-    "post-config": "node scripts/post-configure.js",
+    "pre-config": "swizzle init",
+    "post-config": "node scripts/generate-resources.js",
     "deconfig": "node -e \"require('./scripts/deconfigure.js')()\"",
     "package": "npm run lambdas-npm-install && aws cloudformation package --template cloudformation/base.yaml --s3-bucket $npm_package_config_artifactsS3Bucket --output-template packaged-sam.yaml --region $npm_package_config_primaryAwsRegion",
     "deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name $npm_package_config_cloudFormationStackName --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --parameter-overrides ArtifactsS3Bucket=$npm_package_config_artifactsS3Bucket DevPortalSiteS3Bucket=$npm_package_config_siteS3Bucket MarketplaceSubscriptionTopic=$npm_package_config_marketplaceSubscriptionTopic CognitoIdentityPoolName=\"$npm_package_config_identityPoolName\" DevPortalCustomersTableName=$npm_package_config_customersTableName --region $npm_package_config_primaryAwsRegion",
@@ -36,8 +36,8 @@
     "subscribe-listener": "aws sns subscribe --topic-arn $npm_package_config_marketplaceSubscriptionTopic --protocol lambda --notification-endpoint arn:aws:lambda:$npm_package_config_primaryAwsRegion:$npm_package_config_accountId:function:$npm_package_config_listenerLambdaFunctionName --region us-east-1",
     "setup": "npm install && npm run pre-config && npm run create-artifacts-bucket && npm run lambdas-npm-install && npm run package-deploy && npm run post-setup",
     "post-setup": "npm run post-config && cd dev-portal && npm install && npm run upload-site && npm home",
-    "win-pre-config": "node scripts/pre-configure.js",
-    "win-post-config": "node scripts/post-configure.js",
+    "win-pre-config": "swizzle init",
+    "win-post-config": "node scripts/generate-resources.js",
     "win-deconfig": "node -e \"require('./scripts/deconfigure.js')()\"",
     "win-package": "npm run win-lambdas-npm-install && aws cloudformation package --template cloudformation/base.yaml --s3-bucket %npm_package_config_artifactsS3Bucket% --output-template packaged-sam.yaml --region %npm_package_config_primaryAwsRegion%",
     "win-deploy": "aws cloudformation deploy --template-file packaged-sam.yaml --stack-name %npm_package_config_cloudFormationStackName% --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --parameter-overrides ArtifactsS3Bucket=%npm_package_config_artifactsS3Bucket% DevPortalSiteS3Bucket=%npm_package_config_siteS3Bucket% MarketplaceSubscriptionTopic=%npm_package_config_marketplaceSubscriptionTopic% CognitoIdentityPoolName=\"%npm_package_config_identityPoolName%\" DevPortalCustomersTableName=%npm_package_config_customersTableName% --region %npm_package_config_primaryAwsRegion%",
@@ -57,6 +57,7 @@
     "aws-sdk": "^2.7.10"
   },
   "devDependencies": {
-    "inquirer": "^1.2.1"
+    "inquirer": "^1.2.1",
+    "swizzle-params": "^1.2.4"
   }
 }
