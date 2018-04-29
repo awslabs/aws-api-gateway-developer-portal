@@ -58,6 +58,6 @@
   },
   "devDependencies": {
     "inquirer": "^1.2.1",
-    "swizzle-params": "^1.2.2"
+    "swizzle-params": "^1.2.4"
   }
 }
