@@ -5,12 +5,12 @@ Transform:
 
 Description: My Dev Portal Stack
 Parameters:
-  ArtifactsS3Bucket:
+  ArtifactsS3BucketName:
     Type: String
     Description: The S3 bucket in which the Lambda function code is stored. Bucket
       names are region-unique, so you must change this.
 
-  DevPortalSiteS3Bucket:
+  DevPortalSiteS3BucketName:
     Type: String
     Description: The S3 bucket in which the web application code is stored. Bucket
       names are region-unique, so you must change this.
@@ -18,19 +18,27 @@ Parameters:
   DevPortalCustomersTableName:
     Type: String
     Description: The name of the DynamoDB Customers table.
+    Default: "DevPortalCustomers"
 
-  MarketplaceSubscriptionTopic:
+  MarketplaceSubscriptionTopicName:
     Type: String
     Description: The marketplace SNS topic for subscription/unsubscription events
+    Default: "DevPortalMarketplaceSubscriptionTopic"
 
   CognitoIdentityPoolName:
     Type: String
-    Description: The name for your Cognito Identity Pool
+    Description: The name for your Cognito Identity Pool.
+    Default: "DevPortalUserPool"
 
   AWSRegion:
     Type: String
-    Description: The region to deploy to
+    Description: The region to deploy to.
     Default: "us-east-1"
+
+  StackName:
+    Type: String
+    Description: The name of this CFN stack. It should be unique.
+    Default: "API-GW-Developer-Portal"
 
 Resources:
   ApiGatewayApi:
@@ -273,10 +281,10 @@ Resources:
       Variables:
         DevPortalFunctionName: !Ref DevPortalLambdaFunction
 
-  WebsiteS3Bucket:
+  DevPortalSiteS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Ref DevPortalSiteS3Bucket
+      BucketName: !Ref DevPortalSiteS3BucketName
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
@@ -287,7 +295,7 @@ Resources:
             RedirectRule:
               HostName: !Join
                 - ''
-                - - !Ref DevPortalSiteS3Bucket
+                - - !Ref DevPortalSiteS3BucketName
                   - .s3-website-
                   - !Ref 'AWS::Region'
                   - .amazonaws.com
@@ -441,8 +449,8 @@ Resources:
       Principal: sns.amazonaws.com
       SourceArn: !Join
         - ''
-        - - ''
-          - !Ref MarketplaceSubscriptionTopic
+        - - 'arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-'
+          - !Ref MarketplaceSubscriptionTopicName
 
   LambdaSNSExecutionTestPermission:
     Type: AWS::Lambda::Permission
@@ -469,7 +477,7 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3Bucket
+          WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
 
       # Adds the API as a trigger
       Events:
@@ -646,14 +654,14 @@ Outputs:
     Value: !Ref ApiGatewayApi
 
   DevPortalFunctionName:
-    Description: Devleoper Portal Lambda Function Name.
+    Description: Developer Portal Lambda Function Name.
     Value: !Ref DevPortalLambdaFunction
 
   WebsiteURL:
     Value: !Join
       - ''
       - - http://
-        - !Ref DevPortalSiteS3Bucket
+        - !Ref DevPortalSiteS3BucketName
         - .s3-website-
         - !Ref 'AWS::Region'
         - .amazonaws.com
