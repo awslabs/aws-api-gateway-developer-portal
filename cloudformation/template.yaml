@@ -301,6 +301,11 @@ Resources:
                   - .amazonaws.com
               ReplaceKeyPrefixWith: '#!/'
 
+  ArtifactsS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ArtifactsS3BucketName
+
   CustomersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -355,6 +360,22 @@ Resources:
             Action:
             - apigateway:*
             Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - s3:PutObjectAcl
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
           - Effect: Allow
             Action:
             - aws-marketplace:ResolveCustomer
@@ -613,6 +634,23 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       Roles:
         authenticated: !GetAtt CognitoAuthenticatedRole.Arn
+
+  StaticAssetUploaderLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/static-asset-uploader
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Runtime: nodejs8.10
+      Timeout: 20
+
+  StaticAssetUploader:
+    Type: Custom::LambdaDependency
+    Properties:
+      ServiceToken: !GetAtt StaticAssetUploaderLambdaFunction.Arn
+      BucketName:
+        Ref: DevPortalSiteS3BucketName
 
 Outputs:
   LambdaFunctionConsoleUrl:
