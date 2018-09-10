@@ -8,7 +8,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.6.7",
-    "common-lambda-assets": "../_common"
+    "common-lambda-assets": "./_common"
   },
   "devDependencies": {}
 }
