@@ -5,7 +5,8 @@ let AWS = require('aws-sdk'),
     response = require('cfn-response'),
     fse = require('fs-extra'),
     klaw = require('klaw'),
-    through = require('through2')
+    through = require('through2'),
+    _ = require('lodash')
 
 /**
  * Uses the cfn-response library to notify CloudFormation that this custom resource is done with the task it was
@@ -38,6 +39,7 @@ function notifyCFNThatUploadFailed(error, event, context) {
  *
  * If the filePath has a leading slash, s3 interprets that leading slash as an unnamed top-level directory that
  * all other files nest under; this causes the static website to infinitely redirect.
+ *
  * @param {string} filePath
  * @returns {string} File path without a leading slash
  */
@@ -48,6 +50,7 @@ function sanitizeFilePath(filePath) {
 /**
  * Takes an absolute, lambda file path (e.g., /var/task/build/sdks/android_2016-10-21_19-26Z.zip and generalizes it
  * into a relative path suitable for use as a static s3 site key (e.g., sdks/android_2016-10-21_19-26Z.zip).
+ *
  * @param {string} filePath
  * @returns {string} Relative file path, starting at (and excluding) the first occurrence of /build/
  */
@@ -60,6 +63,7 @@ function generalizeFilePath(filePath) {
  *
  * By default, s3 sets the content type to application/octet-stream, which results in browsers downloading the assets
  * instead of serving them as a webpage.
+ *
  * @param {string} filePath
  * @returns {string} ContentType corresponding to the file extension in the file path provided
  */
@@ -89,79 +93,132 @@ const excludeDirFilter = through.obj(function (item, enc, next) {
     next()
 })
 
+/**
+ * Deletes all the objects in an S3 bucket. This is useful because the bucket must be empty (zero objects) before it
+ * can be deleted by CFN. So, when the custom resource receives a DELETE request from CFN, it first deletes all the
+ * files in the S3 bucket, then tells CFN that the deletion succeeded, at which point CFN deletes the now-empty bucket.
+ * 
+ * @param bucketName the name of the bucket to be cleaned
+ * @returns {Promise.<Object>} the object returned by the S3 SDK
+ */
+function cleanS3Bucket(bucketName) {
+    let params = {
+        Bucket: bucketName,
+    }
+
+    return s3.listObjectsV2(params).promise()
+        .then(result => {
+            console.log(`result: ${result}`)
+            let keys = _.map(result.Contents, (obj) => {
+                console.log(`obj: ${JSON.stringify(obj)}`)
+                return { Key: obj.Key }
+            }),
+            params = {
+                Bucket: bucketName,
+                Delete: {
+                    Objects: keys
+                },
+            }
+            console.log(`Attempting to delete ${keys.length} objects. The first one in the list is: ${_.get(keys, '[0].Key')}`)
+            return s3.deleteObjects(params).promise()
+                .then((result) => console.log(`deleteObjects result: ${JSON.stringify(result, null, 4)}`))
+        })
+}
+
 exports.handler = (event, context) => {
     try {
         let bucketName = event.ResourceProperties.BucketName
 
         if (event.RequestType === "Delete") {
-            // this needs to be extended to actually delete things from the bucket
-            notifyCFNThatUploadSucceeded({status: 'delete_success', bucket: bucketName}, event, context)
-        }
-
-        if (!event.ResourceProperties.BucketName) {
+            cleanS3Bucket(bucketName)
+                .then(() => {
+                    notifyCFNThatUploadSucceeded({status: 'delete_success', bucket: bucketName}, event, context)
+                })
+                .catch((error) => {
+                    notifyCFNThatUploadFailed(error, event, context)
+                })
+        } else if (!event.ResourceProperties.BucketName) {
             notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
-        }
+        } else {
+            let collector = []
 
-        let collector = []
+            klaw('./build')
+                .on('error', err => excludeDirFilter.emit('error', err))
+                .pipe(excludeDirFilter)
+                .on('data', fileStat => {
+                    collector.push(fileStat.path)
+                })
+                .on('error', error => {
+                    console.log(`Failed to traverse file system: ${error}`)
+                    notifyCFNThatUploadFailed(error, event, context)
+                })
+                .on('end', () => {
+                    let readPromises = [],
+                        uploadPromises = []
+                    for (const filePath of collector) {
+                        let thisReadPromise = fse.readFile(filePath)
 
-        klaw('./build')
-            .on('error', err => excludeDirFilter.emit('error', err))
-            .pipe(excludeDirFilter)
-            .on('data', fileStat => {
-                collector.push(fileStat.path)
-            })
-            .on('error', error => {
-                console.log(`Failed to traverse file system: ${error}`)
-                notifyCFNThatUploadFailed(error, event, context)
-            })
-            .on('end', () => {
-                let readPromises = [],
-                    uploadPromises = []
-                for(const filePath of collector) {
-                    let thisReadPromise = fse.readFile(filePath)
+                        thisReadPromise
+                            .then(readResults => {
+                                let params = {
+                                    Bucket: bucketName,
+                                    Key: sanitizeFilePath(generalizeFilePath(filePath)),
+                                    Body: readResults,
+                                    ACL: "public-read",
+                                    ContentType: determineContentType(filePath)
+                                },
+                                options = {}
+                                uploadPromises.push(s3.upload(params, options).promise())
+                            })
+                            .catch(error => {
+                                console.log(`Failed to upload: ${error}`)
+                                notifyCFNThatUploadFailed(error, event, context)
+                            })
 
-                    thisReadPromise
-                        .then(readResults => {
-                            let params = {
+                        readPromises.push(thisReadPromise)
+                    }
+
+                    console.log(`readPromises length: ${readPromises.length}`)
+
+                    Promise.all(readPromises)
+                        .then((readResults) => {
+                            console.log('All read promises resolved.')
+                            console.log(`uploadPromises length: ${uploadPromises.length}`)
+
+                            console.log('Adding config file uploadPromise.')
+                            let configObject = {
+                                restApiId: event.ResourceProperties.RestApiId,
+                                region: event.ResourceProperties.Region,
+                                identityPoolId: event.ResourceProperties.IdentityPoolId,
+                                userPoolId: event.ResourceProperties.userPoolId,
+                                userPoolClientId: event.ResourceProperties.userPoolClientId
+                            },
+                            params = {
                                 Bucket: bucketName,
-                                Key: sanitizeFilePath(generalizeFilePath(filePath)),
-                                Body: readResults,
-                                ACL: "public-read",
-                                ContentType: determineContentType(filePath)
+                                Key: 'config.js',
+                                Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
+                                ACL: "public-read"
                             },
                             options = {}
                             uploadPromises.push(s3.upload(params, options).promise())
+
+                            Promise.all(uploadPromises)
+                                .then(uploadResults => {
+                                    console.log(`All upload promises resolved.`)
+                                    console.log(`Succeeded in uploading to bucket ${bucketName}.`)
+                                    notifyCFNThatUploadSucceeded({status: 'upload_success', bucket: bucketName}, event, context)
+                                })
+                                .catch(error => {
+                                    console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
+                                    notifyCFNThatUploadFailed(error, event, context)
+                                })
                         })
                         .catch(error => {
-                            console.log(`Failed to upload: ${error}`)
+                            console.log(`Failed to read file with error: ${error}`)
                             notifyCFNThatUploadFailed(error, event, context)
                         })
-
-                    readPromises.push(thisReadPromise)
-                }
-
-                console.log(`readPromises length: ${readPromises.length}`)
-
-                Promise.all(readPromises)
-                    .then((readResults) => {
-                        console.log(`All read promises resolved.`)
-                        console.log(`uploadPromises length: ${uploadPromises.length}`)
-                        Promise.all(uploadPromises)
-                            .then(uploadResults => {
-                                console.log(`All upload promises resolved.`)
-                                console.log(`Succeeded in uploading to bucket ${bucketName}.`)
-                                notifyCFNThatUploadSucceeded({status: 'upload_success', bucket: bucketName}, event, context)
-                            })
-                            .catch(error => {
-                                console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
-                                notifyCFNThatUploadFailed(error, event, context)
-                            })
-                    })
-                    .catch(error => {
-                        console.log(`Failed to read file with error: ${error}`)
-                        notifyCFNThatUploadFailed(error, event, context)
-                    })
-            })
+                })
+        }
     } catch(error) {
         console.log(`Caught top-level error: ${error}`)
         notifyCFNThatUploadFailed(error, event, context)

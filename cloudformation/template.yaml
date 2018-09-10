@@ -378,6 +378,22 @@ Resources:
                 - '/*'
           - Effect: Allow
             Action:
+            - s3:DeleteObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - s3:DeleteObjectAcl
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
             - aws-marketplace:ResolveCustomer
             Resource: '*'
           - Action:
@@ -649,8 +665,12 @@ Resources:
     Type: Custom::LambdaDependency
     Properties:
       ServiceToken: !GetAtt StaticAssetUploaderLambdaFunction.Arn
-      BucketName:
-        Ref: DevPortalSiteS3BucketName
+      BucketName: !Ref DevPortalSiteS3Bucket
+      RestApiId: !Ref ApiGatewayApi
+      Region: !Ref 'AWS::Region'
+      IdentityPoolId: !Ref CognitoIdentityPool
+      UserPoolId: !Ref CognitoUserPool
+      UserPoolClientId: !Ref CognitoUserPoolClient
 
 Outputs:
   LambdaFunctionConsoleUrl:
