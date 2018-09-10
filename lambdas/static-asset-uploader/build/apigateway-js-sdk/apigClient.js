@@ -53,9 +53,9 @@ apigClientFactory.newClient = function (config) {
     }
 
     // extract endpoint and path from url
-    var invokeUrl = 'https://YOUR_API_GATEWAY_API_ID.execute-api.YOUR_PRIMARY_AWS_REGION.amazonaws.com/prod';
-    var endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1];
-    var pathComponent = invokeUrl.substring(endpoint.length);
+    let invokeUrl = `https://${window.config.restApiId}.execute-api.${window.config.region}.amazonaws.com/prod`,
+        endpoint = /(^https?:\/\/[^\/]+)/g.exec(invokeUrl)[1],
+        pathComponent = invokeUrl.substring(endpoint.length)
 
     var sigV4ClientConfig = {
         accessKey: config.accessKey,

@@ -54,7 +54,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "aws-sdk": "^2.7.10"
+    "aws-sdk": "^2.7.10",
+    "lodash": "^4.17.10"
   },
   "devDependencies": {
     "inquirer": "^1.2.1"
