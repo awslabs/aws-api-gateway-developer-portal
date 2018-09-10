@@ -7,7 +7,7 @@ const util = require('util')
 const AWS = require('aws-sdk')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const catalog = require('./catalog')
-const customersController = require('common-lambda-assets/customers-controller.js')
+const customersController = require('./_common/customers-controller.js')
 
 const app = express()
 const apigateway = new AWS.APIGateway()
