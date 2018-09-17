@@ -1,28 +1,24 @@
-const yaml = require('js-yaml')
-const fs = require('fs')
+let AWS = require('aws-sdk'),
+  s3 = new AWS.S3()
 
-// Load Swagger as JSON
-// const petStoreSwaggerDefinition = require('./pet-store-prod.json')
+let usagePlanCatalog = []
 
-// Load Swagger as YAML
-const petStoreSwaggerDefinition = loadYaml('./pet-store-prod.yaml')
+const usagePlans = function() {
+  if(!usagePlanCatalog.length) {
+    let params = {
+      Bucket: process.env.BucketName,
+      Key: "catalog.json"
+    }
 
-const usagePlans = [{
-  id: 'YOUR_USAGE_PLAN_ID',
-  name: 'Free',
-  apis: [{
-    id: 'YOUR_API_ID',
-    image: '/sam-logo.png',
-    swagger: petStoreSwaggerDefinition
-  }]
-}]
-
-module.exports = usagePlans
-
-function loadYaml (path) {
-  try {
-      return yaml.safeLoad(fs.readFileSync(`${__dirname}/${path}`, 'utf8'))
-  } catch (e) {
-      console.log(e)
+    return s3.getObject(params).promise()
+      .then((catalog) => {
+        console.log(`catalog: ${catalog}`)
+        usagePlanCatalog = catalog
+        return usagePlanCatalog
+      })
+  } else {
+    return Promise.resolve(usagePlanCatalog)
   }
 }
+
+module.exports = usagePlans

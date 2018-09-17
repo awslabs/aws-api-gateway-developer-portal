@@ -297,8 +297,29 @@ Resources:
 
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
+    DependsOn: CatalogUpdaterLambdaFunction
     Properties:
       BucketName: !Ref ArtifactsS3BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          -
+            Function: !GetAtt CatalogUpdaterLambdaFunction.Arn
+            Event: "s3:ObjectCreated:*"
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: prefix
+                    Value: "catalog/"
+          -
+            Function: !GetAtt CatalogUpdaterLambdaFunction.Arn
+            Event: "s3:ObjectRemoved:*"
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: prefix
+                    Value: "catalog/"
 
   CustomersTable:
     Type: AWS::DynamoDB::Table
@@ -410,6 +431,22 @@ Resources:
                 - :table/
                 - !Ref CustomersTable
                 - /index/MarketplaceCustomerIdIndex
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
 
   ApiGatewayMarketplaceMeteringRole:
     Type: AWS::IAM::Role
@@ -596,6 +633,13 @@ Resources:
               - .amazonaws.com/
               - !Ref CognitoUserPool
 
+  CognitoIdentityPoolRoles:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthenticatedRole.Arn
+
   CognitoAuthenticatedRole:
     Type: AWS::IAM::Role
     Properties:
@@ -630,12 +674,27 @@ Resources:
                 - /prod/*/*
       Path: '/'
 
-  CognitoIdentityPoolRoles:
-    Type: AWS::Cognito::IdentityPoolRoleAttachment
+  CatalogUpdaterLambdaFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      IdentityPoolId: !Ref CognitoIdentityPool
-      Roles:
-        authenticated: !GetAtt CognitoAuthenticatedRole.Arn
+      CodeUri: ../lambdas/catalog-updater
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Runtime: nodejs8.10
+      Timeout: 20
+      Environment:
+        Variables:
+          BucketName: !Ref ArtifactsS3BucketName
+
+  CatalogUpdaterLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt CatalogUpdaterLambdaFunction.Arn
+      Principal: "s3.amazonaws.com"
+      SourceAccount: !Ref AWS::AccountId
+      #SourceArn: !GetAtt MyBucket.Arn
 
   StaticAssetUploaderLambdaFunction:
     Type: AWS::Serverless::Function
