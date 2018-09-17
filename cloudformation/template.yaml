@@ -451,7 +451,10 @@ Resources:
   ApiGatewayMarketplaceMeteringRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: ApiGatewayMarketplaceMeteringRole
+      RoleName: !Join
+        - ''
+        - - !Ref AWS::StackName
+          - 'MarketplaceMeteringRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
