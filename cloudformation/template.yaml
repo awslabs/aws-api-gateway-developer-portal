@@ -34,11 +34,6 @@ Parameters:
     Description: The region to deploy to.
     Default: "us-east-1"
 
-  StackName:
-    Type: String
-    Description: The name of this CFN stack. It should be unique.
-    Default: "API-GW-Developer-Portal"
-
 Resources:
   ApiGatewayApi:
     Type: AWS::Serverless::Api
