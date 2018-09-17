@@ -386,14 +386,6 @@ Resources:
                 - '/*'
           - Effect: Allow
             Action:
-            - s3:DeleteObjectAcl
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref DevPortalSiteS3BucketName
-                - '/*'
-          - Effect: Allow
-            Action:
             - aws-marketplace:ResolveCustomer
             Resource: '*'
           - Action:
