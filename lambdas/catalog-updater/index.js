@@ -63,17 +63,30 @@ function usagePlanToCatalogObject(usagePlan, swaggerFiles) {
   let catalogObject = {
     id: usagePlan.id,
     name: usagePlan.name,
-    //TO-DO: Allow for customizing image?
-    apis: _.map(usagePlan.apiStages, (apiStage) => ({ id: usagePlan.apiId, image: '/sam-logo.png' }))
+    apis: []
   }
 
-  catalogObject.apis = _.map(catalogObject.apis, (api) => {
+  _.forEach(usagePlan.apiStages, (apiStage) => {
+    let api = {}
 
-    api.swagger = _.filter(swaggerFiles, () => {
-      return swaggerFiles.indexOf(api.id)
-    })
-
-    return api
+    _.chain(swaggerFiles)
+      .find((swaggerFile) => {
+        console.log(`swaggerFile: ${swaggerFile}`)
+        console.log(`apiId: ${apiStage.apiId}`)
+        console.log(`swaggerFile.indexOf(apiStage.apiId): ${swaggerFile.indexOf(apiStage.apiId)}`)
+        return swaggerFile.indexOf(apiStage.apiId) !== -1
+      })
+      .tap((swaggerFile) => {
+        if(swaggerFile) {
+          api.swagger = JSON.parse(swaggerFile)
+          api.id = apiStage.apiId
+          //TO-DO: Allow for customizing image?
+          api.image = '/sam-logo.png'
+          console.log(`api: ${JSON.stringify(api, null, 4)}`)
+          catalogObject.apis.push(api)
+        }
+      })
+      .value()
   })
 
   return catalogObject
