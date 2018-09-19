@@ -447,6 +447,14 @@ Resources:
               - - 'arn:aws:s3:::'
                 - !Ref ArtifactsS3BucketName
                 - '/*'
+          - Effect: Allow
+            Action:
+            - s3:DeleteObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
 
   ApiGatewayMarketplaceMeteringRole:
     Type: AWS::IAM::Role
@@ -708,9 +716,13 @@ Resources:
       Role: !GetAtt DevPortalLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 20
+      Environment:
+        Variables:
+          StaticBucketName: !Ref ArtifactsS3BucketName
 
   StaticAssetUploader:
     Type: Custom::LambdaDependency
+    DependsOn: ArtifactsS3Bucket
     Properties:
       ServiceToken: !GetAtt StaticAssetUploaderLambdaFunction.Arn
       BucketName: !Ref DevPortalSiteS3Bucket
