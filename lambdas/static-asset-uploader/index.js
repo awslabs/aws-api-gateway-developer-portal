@@ -108,7 +108,7 @@ function cleanS3Bucket(bucketName) {
 
     return s3.listObjectsV2(params).promise()
         .then(result => {
-            console.log(`result: ${result}`)
+            console.log(`result: ${JSON.stringify(result, null, 4)}`)
             let keys = _.map(result.Contents, (obj) => {
                 console.log(`obj: ${JSON.stringify(obj)}`)
                 return { Key: obj.Key }
@@ -127,10 +127,13 @@ function cleanS3Bucket(bucketName) {
 
 exports.handler = (event, context) => {
     try {
-        let bucketName = event.ResourceProperties.BucketName
+        let bucketName = event.ResourceProperties.BucketName,
+          staticBucketName = process.env.StaticBucketName
 
         if (event.RequestType === "Delete") {
+            console.log(`bucketName: ${bucketName}, staticBucketName: ${staticBucketName}`)
             cleanS3Bucket(bucketName)
+                .then(() => cleanS3Bucket(staticBucketName))
                 .then(() => {
                     notifyCFNThatUploadSucceeded({status: 'delete_success', bucket: bucketName}, event, context)
                 })
