@@ -544,11 +544,12 @@ Resources:
       Handler: index.handler
       MemorySize: 1024
       Role: !GetAtt DevPortalLambdaExecutionRole.Arn
-      Runtime: nodejs4.3
+      Runtime: nodejs6.10
       Timeout: 30
       Environment:
         Variables:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
+          StaticBucketName: !Ref ArtifactsS3BucketName
 
       # Adds the API as a trigger
       Events:
