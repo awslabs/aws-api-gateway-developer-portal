@@ -10,16 +10,20 @@ let AWS = require('aws-sdk'),
   bucketName = ''
 
 /**
- * Takes in an s3 listObjectsV2 object and returns whether or not it's a swagger or yaml file.
+ * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
+ * and whether it's in the catalog folder (S3 Key starts with "catalog/").
+ *
+ * In the future, this could be extended to look into the file for the swagger version declaration.
  *
  * @param {Object} file an s3 listObjectsV2 response object
- * @returns {boolean} whether or not the file is a swagger or yaml file
+ * @returns {boolean} whether or not the file is a swagger file (JSON/YAML)
  */
 function swaggerFileFilter(file) {
   let extension = file.Key.split('/').pop().split('.').pop(),
-    isSwagger = (extension === 'json' || extension === 'yaml' || extension === 'yml')
-  console.log(`file ${file.Key} is${isSwagger? '': ' not'} a swagger file`)
-  return isSwagger
+    isSwagger = (extension === 'json' || extension === 'yaml' || extension === 'yml'),
+    isInCatalogFolder = file.Key.startsWith('catalog/')
+  console.log(`file ${file.Key} is${isSwagger? '': ' not'} a swagger file and is${isInCatalogFolder? '': ' not'} in the correct folder.`)
+  return isSwagger && isInCatalogFolder
 }
 
 function getSwaggerFile(file) {
