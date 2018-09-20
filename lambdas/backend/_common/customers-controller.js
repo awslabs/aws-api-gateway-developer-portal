@@ -4,7 +4,7 @@ const AWS = require('aws-sdk')
 const dynamoDb = new AWS.DynamoDB.DocumentClient()
 const apigateway = new AWS.APIGateway()
 
-const customersTable = 'DevPortalCustomers'
+const customersTable = process.env.CustomersTableName || 'DevPortalCustomers'
 
 function ensureCustomerItem(cognitoIdentityId, keyId, error, callback) {
     const customerId = cognitoIdentityId// + '+' + keyId
