@@ -97,9 +97,10 @@ const excludeDirFilter = through.obj(function (item, enc, next) {
  * Deletes all the objects in an S3 bucket. This is useful because the bucket must be empty (zero objects) before it
  * can be deleted by CFN. So, when the custom resource receives a DELETE request from CFN, it first deletes all the
  * files in the S3 bucket, then tells CFN that the deletion succeeded, at which point CFN deletes the now-empty bucket.
+ * This is safe to use on both empty and non-empty buckets.
  * 
  * @param bucketName the name of the bucket to be cleaned
- * @returns {Promise.<Object>} the object returned by the S3 SDK
+ * @returns {Promise.<Object>|undefined} the object returned by the S3 SDK or, if the bucket was empty, undefined
  */
 function cleanS3Bucket(bucketName) {
     let params = {
@@ -119,9 +120,14 @@ function cleanS3Bucket(bucketName) {
                     Objects: keys
                 },
             }
-            console.log(`Attempting to delete ${keys.length} objects. The first one in the list is: ${_.get(keys, '[0].Key')}`)
-            return s3.deleteObjects(params).promise()
+
+            if(keys.length) {
+              console.log(`Attempting to delete ${keys.length} objects. The first one in the list is: ${_.get(keys, '[0].Key')}`)
+              return s3.deleteObjects(params).promise()
                 .then((result) => console.log(`deleteObjects result: ${JSON.stringify(result, null, 4)}`))
+            } else {
+              return Promise.resolve()
+            }
         })
 }
 
@@ -188,13 +194,13 @@ exports.handler = (event, context) => {
                             console.log('All read promises resolved.')
                             console.log(`uploadPromises length: ${uploadPromises.length}`)
 
-                            console.log('Adding config file uploadPromise.')
+                            console.log('Adding config.js file uploadPromise.')
                             let configObject = {
                                 restApiId: event.ResourceProperties.RestApiId,
                                 region: event.ResourceProperties.Region,
                                 identityPoolId: event.ResourceProperties.IdentityPoolId,
-                                userPoolId: event.ResourceProperties.userPoolId,
-                                userPoolClientId: event.ResourceProperties.userPoolClientId
+                                userPoolId: event.ResourceProperties.UserPoolId,
+                                userPoolClientId: event.ResourceProperties.UserPoolClientId
                             },
                             params = {
                                 Bucket: bucketName,
@@ -205,11 +211,14 @@ exports.handler = (event, context) => {
                             options = {}
                             uploadPromises.push(s3.upload(params, options).promise())
 
-                            Promise.all(uploadPromises)
+                            return Promise.all(uploadPromises)
                                 .then(uploadResults => {
                                     console.log(`All upload promises resolved.`)
                                     console.log(`Succeeded in uploading to bucket ${bucketName}.`)
-                                    notifyCFNThatUploadSucceeded({status: 'upload_success', bucket: bucketName}, event, context)
+                                    notifyCFNThatUploadSucceeded({
+                                        status: 'upload_success',
+                                        bucket: bucketName
+                                    }, event, context)
                                 })
                                 .catch(error => {
                                     console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
