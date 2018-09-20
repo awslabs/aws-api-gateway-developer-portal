@@ -550,6 +550,7 @@ Resources:
         Variables:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
+          CustomersTableName: !Ref DevPortalCustomersTableName
 
       # Adds the API as a trigger
       Events:
