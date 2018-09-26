@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+/* ================================================================
+ * detect-port by xdf(xudafeng[at]126.com)
+ *
+ * first created at : Tue Mar 17 2015 00:16:10 GMT+0800 (CST)
+ *
+ * ================================================================
+ * Copyright 2013 xdf
+ *
+ * Licensed under the MIT License
+ * You may not use this file except in compliance with the License.
+ *
+ * ================================================================ */
+
+'use strict';
+
+var fs = require('fs');
+var path = require('path');
+var program = require('commander');
+var pkg = require('../package');
+
+var options = {
+  port: 8080,
+  verbose: false
+};
+
+program
+  .usage('[options] [arguments]')
+  .option('-v, --versions',     'show version and exit')
+  .option('-p, --port <d>',     'set port for detect (default: 8080)')
+  .option('--verbose',          'show more debugging information')
+  .helpInformation = function() {
+    return [
+      '',
+      '  \u001b[37m' + pkg.description + '\u001b[0m',
+      '',
+      '  Usage:',
+      '    ' + this._name + ' or detect-port ' + this.usage(),
+      '',
+      '  Options:',
+      '' + this.optionHelp().replace(/^/gm, '    '),
+      '',
+      '  Further help:',
+      '',
+      '    \u001b[4m' + pkg.homepage + '\u001b[0m',
+      '',
+      ''
+    ].join('\n');
+  };
+
+program.parse(process.argv);
+
+if (program.versions) {
+  console.log('%s version: %s', pkg.name, pkg.version);
+  process.exit(0);
+}
+
+var camelcase = function(str) {
+  return str.split('-').reduce(function(str, word){
+    return str + word[0].toUpperCase() + word.slice(1);
+  });
+};
+
+var getConfig = function(program) {
+  var cfg = {};
+
+  program.options.forEach(function(item) {
+    var key = camelcase(item.name());
+
+    if(key in program) {
+
+      if (typeof program[key] !== 'function') {
+        cfg[key] = program[key];
+      }
+    }
+  });
+  return cfg;
+};
+
+var merge = function(r, s) {
+  for (var i in s) {
+    r[i] = s[i];
+  }
+};
+
+merge(options, getConfig(program));
+
+global.__detect = global.__detect || {};
+global.__detect.options = options;
+
+var detect = require('../lib');
+var port = options.port;
+
+detect(port, function(error, _port) {
+  if (port === _port) {
+    console.log('port: %d was not occupied', port);
+  } else {
+    console.log('port: %d was occupied, try port: %d', port, _port);
+  }
+});
