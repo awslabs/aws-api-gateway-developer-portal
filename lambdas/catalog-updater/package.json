@@ -1,7 +1,7 @@
 {
-  "name": "aws-serverless-dev-portal-example",
+  "name": "serverless-developer-portal-catalog-updater",
   "version": "1.0.0",
-  "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
+  "description": "API Gateway Serverless Developer Portal component responsible for updating the catalog of usage plans and swagger files",
   "main": "index.js",
   "config": {},
   "scripts": {},

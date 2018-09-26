@@ -66,7 +66,6 @@ app.post('/signin', (req, res) => {
 // the API catalog could be statically defined (catalog/index.js), or generated from API Gateway Usage Plans (See getUsagePlans())
 app.get('/catalog', (req, res) => {
     catalog().then((catalog) => {
-        console.log(`/catalog, catalog: ${JSON.stringify(catalog, null, 4)}`)
         res.status(200).json(catalog)
     })
 })

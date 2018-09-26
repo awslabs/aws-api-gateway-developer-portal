@@ -1,7 +1,7 @@
 {
-  "name": "aws-serverless-dev-portal-example",
+  "name": "serverless-developer-portal-static-asset-uploader",
   "version": "1.0.0",
-  "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
+  "description": "API Gateway Serverless Developer Portal component responsible for uploading static assets to S3",
   "main": "index.js",
   "config": {},
   "scripts": {},
