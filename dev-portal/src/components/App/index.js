@@ -67,17 +67,22 @@ export default class App extends PureComponent {
             <Grid stretched style={{ height: '100vh' }}>
               <Grid.Column width={3} stretched color='black'>
                 <Menu attached compact inverted vertical fluid color='black'>
-                  <Menu.Item name='home' as={Link} to="/" />
+                  <Menu.Item 
+                    name='home' 
+                    as={Link} 
+                    to="/">Home</Menu.Item>
                   <Menu.Item
                     name='getting started'
-                    as={Link} to="getting-started" />
+                    as={Link} 
+                    to="getting-started">Getting Started</Menu.Item>
                   <Menu.Item
                     name='case studies'
-                    as={Link} to="/case-studies" />
+                    as={Link} 
+                    to="/case-studies">Case Studies</Menu.Item>
                   <Menu.Item
                     name='APIs'
                     as={Link}
-                    to="/apis" />
+                    to="/apis">APIs</Menu.Item>
                 </Menu>
               </Grid.Column>
               <Grid.Column width={10}>
