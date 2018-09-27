@@ -1,11 +1,13 @@
 import React, { PureComponent } from 'react'
 import { Link } from 'react-router-dom'
-import { Container, Segment, Divider, Card } from 'semantic-ui-react'
+import { Segment, Divider, Card } from 'semantic-ui-react'
 import SignIn from '../components/SignIn'
 import Register from '../components/Register'
 import { isAuthenticated } from '../services/self'
 import { confirmMarketplaceSubscription } from '../services/api-catalog'
 import { getQueryString } from '../services/misc'
+import Head from '../components/Head'
+
 
 export default class HomePage extends PureComponent {
   constructor() {
@@ -26,7 +28,8 @@ export default class HomePage extends PureComponent {
 
   render() {
     return (
-      <Container>
+      <div>
+        <Head {...this.props} />
         <Card.Group itemsPerRow={3} stackable style={{textAlign: 'center'}}>
           <Card>
             <Card.Content>
@@ -52,7 +55,7 @@ export default class HomePage extends PureComponent {
           <Divider horizontal>Or</Divider>
           <Register usagePlanId={this.state.usagePlanId} token={this.state.token} />
         </Segment>) }
-      </Container>
+      </div>
     )
   }
 }

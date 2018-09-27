@@ -1,13 +1,12 @@
 import React, { PureComponent } from 'react'
 import { BrowserRouter, Route, Redirect, Link, Switch } from 'react-router-dom'
-import { Dimmer, Loader } from 'semantic-ui-react'
+import { Dimmer, Loader, Menu, Grid } from 'semantic-ui-react'
 import Home from '../../pages/Home'
 import CaseStudies from '../../pages/CaseStudies'
 import GettingStarted from '../../pages/GettingStarted'
 import Dashboard from '../../pages/Dashboard'
 import Apis from '../../pages/Apis'
 import ApiDetails from '../../pages/ApiDetails'
-import logo from '../../logo.png'
 import AlertPopup from '../../components/AlertPopup'
 import { init, isAuthenticated } from '../../services/self'
 import { apiGatewayClient } from '../../services/api'
@@ -21,11 +20,11 @@ class MatchWhenAuthorized extends PureComponent { // eslint-disable-line
     const apiGatewayClientInterval = window.setInterval(() => {
       if (apiGatewayClient) {
         window.clearInterval(apiGatewayClientInterval)
-        this.setState({apiGatewayClient})
+        this.setState({ apiGatewayClient })
       }
     }, 100)
 
-    this.state = {apiGatewayClient, apiGatewayClientInterval}
+    this.state = { apiGatewayClient, apiGatewayClientInterval }
   }
 
   componentWillUnmount() {
@@ -33,12 +32,12 @@ class MatchWhenAuthorized extends PureComponent { // eslint-disable-line
   }
 
   render() {
-    const {component: Component, ...rest} = this.props
+    const { component: Component, ...rest } = this.props
 
     return <Route {...rest} render={props => {
-      if (!isAuthenticated()) return <Redirect to={{ pathname: '/', state: { from: props.location } }}/>
+      if (!isAuthenticated()) return <Redirect to={{ pathname: '/', state: { from: props.location } }} />
 
-      return this.state.apiGatewayClient ? <Component {...props} />: (<Dimmer active>
+      return this.state.apiGatewayClient ? <Component {...props} /> : (<Dimmer active>
         <Loader content='Loading' />
       </Dimmer>)
     }} />
@@ -59,26 +58,46 @@ export default class App extends PureComponent {
 
   render() {
     return (
-      <BrowserRouter>
-        <div className="App">
-          <div className="App-header">
-            <Link to="/"><img src={logo} className="App-logo" alt="logo" /></Link>
-            <h2>Welcome to our Developer Portal</h2>
+      <div>
+        <BrowserRouter>
+          <div className="App">
+            <div className="App-header">
+              <h2>💻 Developer Portal</h2>
+            </div>
+            <Grid stretched style={{ height: '100vh' }}>
+              <Grid.Column width={3} stretched color='black'>
+                <Menu attached compact inverted vertical fluid color='black'>
+                  <Menu.Item name='home' as={Link} to="/" />
+                  <Menu.Item
+                    name='getting started'
+                    as={Link} to="getting-started" />
+                  <Menu.Item
+                    name='case studies'
+                    as={Link} to="/case-studies" />
+                  <Menu.Item
+                    name='APIs'
+                    as={Link}
+                    to="/apis" />
+                </Menu>
+              </Grid.Column>
+              <Grid.Column width={10}>
+                <section className="App-intro">
+                  <AlertPopup />
+                  <Switch>
+                    <Route exact path="/" component={Home} />
+                    <Route path="/case-studies" component={CaseStudies} />
+                    <Route path="/getting-started" component={GettingStarted} />
+                    <Route path="/dashboard" component={Dashboard} />
+                    <Route exact path="/apis" component={Apis} />
+                    <Route path="/apis/:apiId" component={ApiDetails} />
+                    <Route component={NoMatch} />
+                  </Switch>
+                </section>
+              </Grid.Column>
+            </Grid>
           </div>
-          <section className="App-intro">
-              <AlertPopup />
-              <Switch>
-                <Route exact path="/" component={Home} />
-                <Route path="/case-studies" component={CaseStudies} />
-                <Route path="/getting-started" component={GettingStarted} />
-                <Route path="/dashboard" component={Dashboard}/>
-                <Route exact path="/apis" component={Apis}/>
-                <Route path="/apis/:apiId" component={ApiDetails}/>
-                <Route component={NoMatch}/>
-              </Switch>
-          </section>
-        </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </div>
     )
     /*
 

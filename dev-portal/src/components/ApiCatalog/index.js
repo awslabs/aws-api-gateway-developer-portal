@@ -27,12 +27,12 @@ const SubscribedApiActionsDropdown = ({usagePlan, api}) => (
 
 
 const ApiCard = ({usagePlan, api}) => (
-<Card key={api.id} style={{textAlign: 'center'}}>
-  <Link to={`apis/${api.id}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}>{ api.image ? <Image src={api.image} style={{margin: 'auto'}} /> : ''}</Link>
+<Card key={api.id}>
   <Card.Content>
+    <Link to={`apis/${api.id}`} style={{background: 'rgba(0, 0, 0, 0.05)'}}>{ api.image ? <Image src={api.image} style={{margin: 'auto'}} floated='right' size='mini'/> : ''}</Link>
     <Card.Header><Link to={`apis/${api.id}`}>{api.swagger.info.title}</Link></Card.Header>
     <Card.Meta>
-      <span className='date'>Version {api.swagger.info.version}</span>
+      <span className='date'>Last updated {api.swagger.info.version}</span>
     </Card.Meta>
     <Card.Description>{api.swagger.info.description}</Card.Description>
   </Card.Content>
