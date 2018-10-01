@@ -1,5 +1,0 @@
-{
-    "name": "sjcl",
-    "version": "1.0.6",
-    "main": ["./sjcl.js"]
-}
