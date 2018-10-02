@@ -1,25 +1,33 @@
 {
-  "name": "dev-portal",
+  "name": "dev-portal2",
   "version": "0.1.0",
   "private": true,
-  "devDependencies": {
-    "react-scripts": "0.7.0"
-  },
   "dependencies": {
-    "amazon-cognito-identity-js": "1.7.0",
-    "aws-sdk": "2.7.6",
-    "chart.js": "2.4.0",
-    "jquery": "3.1.1",
-    "react": "15.4.1",
-    "react-dom": "15.4.1",
-    "react-router-dom": "4.1.1",
-    "semantic-ui-css": "2.2.4",
-    "semantic-ui-react": "0.61.2"
+    "amazon-cognito-identity-js": "^2.0.30",
+    "aws-sdk": "^2.326.0",
+    "chart.js": "^2.7.2",
+    "jquery": "^3.3.1",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "2.0.3",
+    "semantic-ui-css": "^2.4.0",
+    "semantic-ui-react": "^0.82.5",
+    "swagger-ui": "^3.19.2"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
+    "build": "react-scripts build; cp -r ./build ../lambdas/static-asset-uploader",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
-  }
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }

@@ -6,11 +6,8 @@
   "config": {
     "marketplaceSubscriptionTopic": "arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-PRODUCT_CODE"
   },
-  "scripts": {
-  },
+  "scripts": {},
   "license": "Apache-2.0",
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

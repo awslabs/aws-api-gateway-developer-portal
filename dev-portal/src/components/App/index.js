@@ -53,8 +53,8 @@ export default class App extends PureComponent {
     // We are using an S3 redirect rule to prefix the url path with #!
     // This then converts it back to a URL path for React routing
     // NOTE: For local development, you will get a Page Not Found when refreshing the Swagger UI page when it has a #!
-    const hashRoute = location.hash.substring(2)
-    history.pushState({}, 'home page', hashRoute)
+    // const hashRoute = window.location.hash.substring(2)
+    // history.pushState({}, 'home page', hashRoute)
   }
 
   render() {
@@ -80,9 +80,5 @@ export default class App extends PureComponent {
         </div>
       </BrowserRouter>
     )
-    /*
-
-
-     */
   }
 }
