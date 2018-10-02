@@ -13,13 +13,13 @@ import { confirmMarketplaceSubscription } from '../../services/api-catalog'
    }
    open = () => this.setState({ isSubmitting: false, errorMessage: '', isOpen: true })
    close = () => this.setState({ isOpen: false })
-   handleLogin = (event, serializedForm) => this._handleLogin(event, serializedForm)
 
-  _handleLogin(event, serializedForm) {
+   handleChange = (event, { name, value }) => this.setState({ [name]: value })
+   handleLogin = (event) => {
     event.preventDefault()
     this.setState({isSubmitting: true})
 
-    login(serializedForm.email, serializedForm.password)
+    login(this.state.email, this.state.password)
     .then(() => {
         this.setState({signedIn: true, isSubmitting: false, errorMessage: ''})
 
@@ -46,8 +46,8 @@ import { confirmMarketplaceSubscription } from '../../services/api-catalog'
         <Modal.Header>Sign in</Modal.Header>
         <Modal.Content>
           <Form onSubmit={this.handleLogin} error={!!this.state.errorMessage} loading={this.state.isSubmitting}>
-            <Form.Input label='Email' name='email' />
-            <Form.Input type='password' label='Password' name='password' autoComplete='false' />
+            <Form.Input label='Email' name='email' onChange={this.handleChange} />
+            <Form.Input type='password' label='Password' name='password' autoComplete='false' onChange={this.handleChange} />
             <Message error content={this.state.errorMessage} />
             <Modal.Actions style={{textAlign: 'right'}}>
               <Button type='button' onClick={this.close}>Close</Button>

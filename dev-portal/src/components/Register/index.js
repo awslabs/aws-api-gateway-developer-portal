@@ -14,13 +14,13 @@ import { confirmMarketplaceSubscription } from '../../services/api-catalog'
 
   open = () => this.setState({ isSubmitting: false, errorMessage: '', isOpen: true })
   close = () => this.setState({ isOpen: false })
-  handleRegister = (...args) => this._handleRegister(...args)
 
-  _handleRegister(event, serializedForm) {
+  handleChange = (event, { name, value }) => this.setState({ [name]: value })
+  handleRegister = (event) => {
     event.preventDefault()
-    this.setState({isSubmitting: true})
+    this.setState({ isSubmitting: true })
 
-    register(serializedForm.email, serializedForm.password)
+    register(this.state.email, this.state.password)
     .then(() => {
         this.setState({signedIn: true, isSubmitting: false, errorMessage: ''})
 
@@ -47,8 +47,8 @@ import { confirmMarketplaceSubscription } from '../../services/api-catalog'
         <Modal.Header>Register</Modal.Header>
         <Modal.Content>
           <Form onSubmit={this.handleRegister} error={!!this.state.errorMessage} loading={this.state.isSubmitting}>
-            <Form.Input label='Email' name='email' />
-            <Form.Input type='password' label='Password' name='password' autoComplete='false' />
+            <Form.Input label='Email' name='email' onChange={this.handleChange} />
+            <Form.Input type='password' label='Password' name='password' autoComplete='false' onChange={this.handleChange} />
             <Message error content={this.state.errorMessage} />
             <Modal.Actions style={{textAlign: 'right'}}>
               <Button type='button' onClick={this.close}>Close</Button>
