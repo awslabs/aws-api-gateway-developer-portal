@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react'
 import SwaggerUI from 'swagger-ui'
 
-import SwaggerUIStandalonePreset from 'swagger-ui/dist/swagger-ui-standalone-preset'
 import 'swagger-ui/dist/swagger-ui.css'
 
 import { getApi } from '../../services/api-catalog'
