@@ -3,6 +3,8 @@
 /dev-portal/node_modules
 /dev-portal/coverage
 /dev-portal/build
+/dev-portal/build.config.js
+/dev-portal/public/config.js
 
 # misc
 npm-debug.log

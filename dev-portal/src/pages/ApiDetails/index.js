@@ -1,8 +1,6 @@
 import React, { PureComponent } from 'react'
 import SwaggerUI from 'swagger-ui'
-
 import 'swagger-ui/dist/swagger-ui.css'
-
 import { getApi } from '../../services/api-catalog'
 import Head from '../../components/Head'
 
@@ -10,7 +8,6 @@ export default class ApiDetailsPage extends PureComponent {
   componentDidMount = () => {
     getApi(this.props.match.params.apiId)
     .then(api => {
-      console.log(api)
       SwaggerUI({
 
         dom_id: '#swagger-ui-container',
