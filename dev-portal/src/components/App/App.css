@@ -1,17 +1,12 @@
-.App {
-}
-
 .App-logo {
   animation: App-logo-spin alternate infinite 2s ease-in-out;
   height: 80px;
 }
 
 .App-header {
-  background-color: #222;
-  height: 150px;
+  background-color: rgb(27, 28, 29);
   padding: 20px;
   color: white;
-  text-align: center;
 }
 
 .App-header h2 {
