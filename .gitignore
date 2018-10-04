@@ -9,6 +9,6 @@
 # misc
 npm-debug.log
 .DS_Store
-packaged-sam.yaml
+packaged.yaml
 cognito.js
 .idea

@@ -5,8 +5,7 @@ const { relative, resolve } = require('path')
 
 const buildConfig = require('../build.config.js')
 
-let a = (path) => resolve(__dirname, path)
-let r = (path) => relative(process.cwd(), a(path)) || '.'
+let r = (path) => relative(process.cwd(), resolve(__dirname, path)) || '.'
 let samTemplate = buildConfig.samTemplate || r(`../../cloudformation/template.yaml`)
 let packageConfig = buildConfig.packageConfig || r(`../../cloudformation/packaged.yaml`)
 let stackName = buildConfig.stackName
@@ -29,25 +28,14 @@ function execute(cmd) {
   })
 }
 
-function inSequence(array) {
-  let results = []
-  return array.reduce(
-    (previousPromise, nextPromise) => previousPromise
-      .then(nextPromise)
-      .then(
-        nextResults => (results.push(nextResults), nextResults)), 
-    Promise.resolve()
-  ).then(() => results)
-}
-
 function main() {
-  inSequence([
-    () => execute(`cd ${r(`../`)} && ./node_modules/react-scripts/bin/react-scripts.js build`),
-    () => execute(`cp -r ${r(`../build`)} ${r(`../../lambdas/static-asset-uploader`)}`),
-    () => execute(`sam package --template-file ${samTemplate} --output-template-file ${packageConfig} --s3-bucket ${buildAssetsBucket}`),
-    () => execute(`sam deploy --template-file ${packageConfig} --stack-name ${stackName} --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="${siteAssetsBucket}" ArtifactsS3BucketName="${apiAssetsBucket}"`),
-    () => execute(`aws cloudformation describe-stacks --stack-name ${stackName}`),
-    (result) => {
+  Promise.resolve()
+    .then(() => execute(`cd ${r(`../`)} && ./node_modules/react-scripts/bin/react-scripts.js build`))
+    .then(() => execute(`cp -r ${r(`../build`)} ${r(`../../lambdas/static-asset-uploader`)}`))
+    .then(() => execute(`sam package --template-file ${samTemplate} --output-template-file ${packageConfig} --s3-bucket ${buildAssetsBucket}`))
+    .then(() => execute(`sam deploy --template-file ${packageConfig} --stack-name ${stackName} --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="${siteAssetsBucket}" ArtifactsS3BucketName="${apiAssetsBucket}"`))
+    .then(() => execute(`aws cloudformation describe-stacks --stack-name ${stackName}`))
+    .then((result) => {
       let config = {}
 
       JSON.parse(result.stdout).Stacks[0].Outputs.forEach(output => {
@@ -62,15 +50,14 @@ function main() {
 
       config.region = config.identityPoolId.split(':')[0]
       let configFile = `window.config = ${JSON.stringify(config, null, 2)}`
-      writeFile(r(`../public/config.js`), configFile)
-    }
-  ])
-  .then(() => console.log('\n' + fgGreen + 'Process Complete! Run `npm run start` to launch run the dev portal locally.\n' + reset))
-  .catch(err => {
-    console.log(fgRed)
-    console.log(err)
-    console.log(reset)
-  })
+      return writeFile(r(`../public/config.js`), configFile)
+    })
+    .then(() => console.log('\n' + fgGreen + 'Process Complete! Run `npm run start` to launch run the dev portal locally.\n' + reset))
+    .catch(err => {
+      console.log(fgRed)
+      console.log(err)
+      console.log(reset)
+    })
 }
 
 if (samTemplate && packageConfig && stackName && buildAssetsBucket && siteAssetsBucket && apiAssetsBucket) {

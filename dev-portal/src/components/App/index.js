@@ -51,58 +51,55 @@ export default class App extends PureComponent {
 
     // We are using an S3 redirect rule to prefix the url path with #!
     // This then converts it back to a URL path for React routing
-    // NOTE: For local development, you will get a Page Not Found when refreshing the Swagger UI page when it has a #!
-    // const hashRoute = window.location.hash.substring(2)
-    // history.pushState({}, 'home page', hashRoute)
+    const hashRoute = window.location.hash.substring(2)
+    window.history.pushState({}, 'home page', hashRoute)
   }
 
   render() {
     return (
-      <div>
-        <BrowserRouter>
-          <div className="App">
-            <div className="App-header">
-              <h2>Developer Portal</h2>
-            </div>
-            <Grid stretched style={{ height: '100vh' }}>
-              <Grid.Column width={3} stretched color='black'>
-                <Menu attached compact inverted vertical fluid color='black'>
-                  <Menu.Item 
-                    name='home' 
-                    as={Link} 
-                    to="/">Home</Menu.Item>
-                  <Menu.Item
-                    name='getting started'
-                    as={Link} 
-                    to="getting-started">Getting Started</Menu.Item>
-                  <Menu.Item
-                    name='case studies'
-                    as={Link} 
-                    to="/case-studies">Case Studies</Menu.Item>
-                  <Menu.Item
-                    name='APIs'
-                    as={Link}
-                    to="/apis">APIs</Menu.Item>
-                </Menu>
-              </Grid.Column>
-              <Grid.Column width={13}>
-                <section className="App-intro">
-                  <AlertPopup />
-                  <Switch>
-                    <Route exact path="/" component={Home} />
-                    <Route path="/case-studies" component={CaseStudies} />
-                    <Route path="/getting-started" component={GettingStarted} />
-                    <Route path="/dashboard" component={Dashboard} />
-                    <Route exact path="/apis" component={Apis} />
-                    <Route path="/apis/:apiId" component={ApiDetails} />
-                    <Route component={NoMatch} />
-                  </Switch>
-                </section>
-              </Grid.Column>
-            </Grid>
+      <BrowserRouter>
+        <div className="App">
+          <div className="App-header">
+            <h2>Developer Portal</h2>
           </div>
-        </BrowserRouter>
-      </div>
+          <Grid stretched style={{ height: '100vh' }}>
+            <Grid.Column width={3} stretched color='black'>
+              <Menu attached compact inverted vertical fluid color='black'>
+                <Menu.Item 
+                  name='home' 
+                  as={Link} 
+                  to="/">Home</Menu.Item>
+                <Menu.Item
+                  name='getting started'
+                  as={Link} 
+                  to="getting-started">Getting Started</Menu.Item>
+                <Menu.Item
+                  name='case studies'
+                  as={Link} 
+                  to="/case-studies">Case Studies</Menu.Item>
+                <Menu.Item
+                  name='APIs'
+                  as={Link}
+                  to="/apis">APIs</Menu.Item>
+              </Menu>
+            </Grid.Column>
+            <Grid.Column width={13}>
+              <section className="App-intro">
+                <AlertPopup />
+                <Switch>
+                  <Route exact path="/" component={Home} />
+                  <Route path="/case-studies" component={CaseStudies} />
+                  <Route path="/getting-started" component={GettingStarted} />
+                  <Route path="/dashboard" component={Dashboard} />
+                  <Route exact path="/apis" component={Apis} />
+                  <Route path="/apis/:apiId" component={ApiDetails} />
+                  <Route component={NoMatch} />
+                </Switch>
+              </section>
+            </Grid.Column>
+          </Grid>
+        </div>
+      </BrowserRouter>
     )
   }
 }
