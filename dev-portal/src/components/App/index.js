@@ -85,7 +85,7 @@ export default class App extends PureComponent {
                     to="/apis">APIs</Menu.Item>
                 </Menu>
               </Grid.Column>
-              <Grid.Column width={10}>
+              <Grid.Column width={13}>
                 <section className="App-intro">
                   <AlertPopup />
                   <Switch>
