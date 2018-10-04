@@ -62,7 +62,7 @@ export default class App extends PureComponent {
         <BrowserRouter>
           <div className="App">
             <div className="App-header">
-              <h2>💻 Developer Portal</h2>
+              <h2>Developer Portal</h2>
             </div>
             <Grid stretched style={{ height: '100vh' }}>
               <Grid.Column width={3} stretched color='black'>
