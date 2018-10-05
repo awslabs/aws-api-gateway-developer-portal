@@ -3,7 +3,7 @@
 /dev-portal/node_modules
 /dev-portal/coverage
 /dev-portal/build
-/dev-portal/build.config.js
+/dev-portal/deployer.config.js
 /dev-portal/public/config.js
 
 # misc

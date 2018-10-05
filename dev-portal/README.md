@@ -1,24 +1,34 @@
 ## Development guide
 
-```sh
-# Generate a new build from your assets...
-npm run build
+### npm Scripts
 
-# Package all assets via the SAM cli
-sam package --template-file ./cloudformation/template.yaml --output-template-file packaged.yaml --s3-bucket my-cool-dev-portal-build-assets
+### `build` -- `npm run build`
 
-# Deploy the packaged assets.
-sam deploy --template-file ./packaged.yaml --stack-name "my-cool-dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="my-cool-dev-portal-site-assets" ArtifactsS3BucketName="my-cool-dev-portal-api-assets"
+Builds a production-quality build and copies it to the lambda uploader.
 
-# get the outputs
-aws cloudformation describe-stacks --stack-name my-cool-dev-portal
+### `deploy` -- `npm run deploy`
 
-# fill config.js with the appropriate values listed in the 'outputs'
-```
+Starts a `sam package` and `sam deploy`. Does not build, but does write the config after a successful deploy.
 
-To use the build script, create a `build.config.js` file inside dev-portal.
+### `write-config` -- `npm run write-config`
+
+Gets the output from the CFN stack and writes a local version of the config.js file, so that you can run locally.
+
+### `release` -- `npm run release`
+
+Synonymous with `npm run build; npm run deploy; npm run write-config`.
+
+### `start` -- `npm run start`
+
+Starts up the local development server. Must have a `config.js` file locally for this to work.
+
+### If you have already deployed a Development Portal...
+
+1. Create a `build.config.js` file inside `/dev-portal/` with the following structure
 
 ```js
+// replace each name with your bucket names
+
 module.exports = {
   stackName: `my-cool-dev-portal`,
   buildAssetsBucket: `my-cool-dev-portal-build-assets`,
@@ -27,4 +37,4 @@ module.exports = {
 }
 ```
 
-Then, just run `node scripts/build.js`.
+2. Run `npm run deploy`.
