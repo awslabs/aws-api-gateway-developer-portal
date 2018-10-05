@@ -9,7 +9,6 @@
   "dependencies": {
     "aws-sdk": "^2.6.7",
     "cfn-response": "^1.0.1",
-    "common-lambda-assets": "../_common",
     "fs-extra": "^7.0.0",
     "klaw": "^3.0.0",
     "through2": "^2.0.3"
