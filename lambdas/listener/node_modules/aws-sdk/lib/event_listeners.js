@@ -155,10 +155,18 @@ AWS.EventListeners = {
 
     add('SET_CONTENT_LENGTH', 'afterBuild', function SET_CONTENT_LENGTH(req) {
       var authtype = getOperationAuthtype(req);
-      if (req.httpRequest.headers['Content-Length'] === undefined
-          && authtype.indexOf('unsigned-body') === -1) {
-        var length = AWS.util.string.byteLength(req.httpRequest.body);
-        req.httpRequest.headers['Content-Length'] = length;
+      if (req.httpRequest.headers['Content-Length'] === undefined) {
+        try {
+          var length = AWS.util.string.byteLength(req.httpRequest.body);
+          req.httpRequest.headers['Content-Length'] = length;
+        } catch (err) {
+          if (authtype.indexOf('unsigned-body') === -1) {
+            throw err;
+          } else {
+            // Body isn't signed and may not need content length (lex)
+            return;
+          }
+        }
       }
     });
 
@@ -240,6 +248,10 @@ AWS.EventListeners = {
       function callback(httpResp) {
         resp.httpResponse.stream = httpResp;
         var stream = resp.request.httpRequest.stream;
+        var service = resp.request.service;
+        var api = service.api;
+        var operationName = resp.request.operation;
+        var operation = api.operations[operationName] || {};
 
         httpResp.on('headers', function onHeaders(statusCode, headers, statusMessage) {
           resp.request.emit(
@@ -249,6 +261,15 @@ AWS.EventListeners = {
 
           if (!resp.httpResponse.streaming) {
             if (AWS.HttpClient.streamsApiVersion === 2) { // streams2 API check
+              // if we detect event streams, we're going to have to
+              // return the stream immediately
+              if (operation.hasEventOutput && service.successfulResponse(resp)) {
+                // skip reading the IncomingStream
+                resp.request.emit('httpDone');
+                done();
+                return;
+              }
+
               httpResp.on('readable', function onReadable() {
                 var data = httpResp.read();
                 if (data !== null) {
@@ -265,6 +286,10 @@ AWS.EventListeners = {
 
         httpResp.on('end', function onEnd() {
           if (!stream || !stream.didCallback) {
+            if (AWS.HttpClient.streamsApiVersion === 2 && (operation.hasEventOutput && service.successfulResponse(resp))) {
+              // don't concatenate response chunks when streaming event stream data when response is successful
+              return;
+            }
             resp.request.emit('httpDone');
             done();
           }
