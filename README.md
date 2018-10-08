@@ -28,25 +28,23 @@ Run:
 sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
-Followed by:
+Then, replace "custom-prefix" in the command below with some prefix that is globally unique, like your org name or username and run:
 
 ```bash
 sam deploy --template-file ./packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts"
 ```
 
-Make sure to replace "custom-prefix" in the command above with some prefix that is globally unique, like your org name or username.
-
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
 
 You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
 
-### Populate the swagger catalog
+### Populate the Swagger catalog
 
-The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's swagger (must export as JSON, with API GW extensions) from the stage, and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder.
+The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder.
 
-Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
+Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
 
-The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
+The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a Swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
 
 ### Testing your APIs
 
@@ -70,7 +68,7 @@ All the components in the developer portal are managed by the SAM stack defined 
 
 ### UI (/app)
 
-The UI is a simple React application hosted in an S3 bucket. The assets are uploaded to the S3 bucket  The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
+The UI is a simple React application hosted in an S3 bucket. The assets are uploaded to the S3 bucket by the static-asset-uploader lambda function. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
 
 ### Application Backend (/lambdas/backend)
 
