@@ -7,12 +7,12 @@ Parameters:
   ArtifactsS3BucketName:
     Type: String
     Description: The S3 bucket in which the Lambda function code is stored. Bucket
-      names are region-unique, so you must change this.
+      names are globally unique, so you must change this.
 
   DevPortalSiteS3BucketName:
     Type: String
     Description: The S3 bucket in which the web application code is stored. Bucket
-      names are region-unique, so you must change this.
+      names are globally unique, so you must change this.
 
   DevPortalCustomersTableName:
     Type: String

@@ -12,27 +12,45 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 
 ### Prerequisites
 
-First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html). Clone this repo into a local directory.
+First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html). Note that while the instructions specify Docker as a pre-requisite, Docker is only necessary for local development via SAM local. Feel free to skip installing Docker when you first set up the developer portal.
 
-Then, ensure that you have an S3 bucket to put zipped lambda functions into. It can be private, and will be referred to in this readme as "your-lambda-artifacts-bucket-name".
+Then, clone this repo into a local directory. Ensure that you have an S3 bucket to put zipped lambda functions into. It can be private, and will be referred to in this readme as "your-lambda-artifacts-bucket-name".
+
+If you have not used the AWS CLI or SAM CLI before, you may need to [configure your AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html).
+
+If you have previously set up a v1 developer portal (non-SAM deployed), you will need to either remove all the v1 developer portal resources (dynamo tables, roles, etc.) or provide new names for the v2 developer portal by passing in parameter overrides for every resource.
 
 ### Setup and deploy
 
 Run:
 
 ```bash
-sam package --template-file ./cloudformation/template.yaml --output-template-file packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
+sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
 Followed by:
 
 ```bash
-sam deploy --template-file ./packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="dev-portal-static-assets" ArtifactsS3BucketName="dev-portal-artifacts"
+sam deploy --template-file ./packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts"
 ```
+
+Make sure to replace "custom-prefix" in the command above with some prefix that is globally unique, like your org name or username.
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
 
-You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal.
+You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
+
+### Populate the swagger catalog
+
+The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's swagger (must export as JSON, with API GW extensions) from the stage, and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder.
+
+Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
+
+The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
+
+### Testing your APIs
+
+When logged into the developer portal with an account that has a provisioned api key, you should be able to test your APIs by selecting a resource/method in them and clicking "Try it out!". Note that this requires CORS to be set up on your API to allow the developer portal to call it. Note that the default PetStore has CORS enabled on all resources but `/`.
 
 ## Before going to production
 
@@ -48,11 +66,11 @@ Additional Resources:
 
 ### SAM Stack (template.yaml)
 
-Most components in the developer portal are managed by the SAM stack defined in template.yaml. New application components can be added to this template. Configuration values are fed to this template from the parameter overrides provided on the command line. If overrides are not provided, default values are used.
+All the components in the developer portal are managed by the SAM stack defined in template.yaml. New application components can be added to this template. Configuration values are fed to this template from the parameter overrides provided on the command line. If overrides are not provided, default values are used.
 
 ### UI (/app)
 
-The UI is a simple React application hosted in a public S3 bucket. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
+The UI is a simple React application hosted in an S3 bucket. The assets are uploaded to the S3 bucket  The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
 
 ### Application Backend (/lambdas/backend)
 
@@ -73,6 +91,10 @@ From the listener function you can manage your Usage Plan Keys through API Gatew
 ## Debugging
 
 You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See this [blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
+
+## Tear-down
+
+Deleting developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table, which will list the provisioned api keys.
 
 ## Marketplace SaaS Setup Instructions
 
