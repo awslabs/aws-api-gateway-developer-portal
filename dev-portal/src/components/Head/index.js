@@ -31,10 +31,6 @@ export default class Head extends PureComponent {
     return this.props.pattern === '/getting-started'
   }
 
-  isCaseStudiesRoute() {
-    return this.props.pattern === '/case-studies'
-  }
-
   isApisListRoute() {
     return this.props.pattern === '/apis'
   }

@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react'
 import { BrowserRouter, Route, Redirect, Link, Switch } from 'react-router-dom'
 import { Dimmer, Loader, Menu, Grid } from 'semantic-ui-react'
 import Home from '../../pages/Home'
-import CaseStudies from '../../pages/CaseStudies'
 import GettingStarted from '../../pages/GettingStarted'
 import Dashboard from '../../pages/Dashboard'
 import Apis from '../../pages/Apis'
@@ -74,10 +73,6 @@ export default class App extends PureComponent {
                   as={Link} 
                   to="getting-started">Getting Started</Menu.Item>
                 <Menu.Item
-                  name='case studies'
-                  as={Link} 
-                  to="/case-studies">Case Studies</Menu.Item>
-                <Menu.Item
                   name='APIs'
                   as={Link}
                   to="/apis">APIs</Menu.Item>
@@ -88,7 +83,6 @@ export default class App extends PureComponent {
                 <AlertPopup />
                 <Switch>
                   <Route exact path="/" component={Home} />
-                  <Route path="/case-studies" component={CaseStudies} />
                   <Route path="/getting-started" component={GettingStarted} />
                   <Route path="/dashboard" component={Dashboard} />
                   <Route exact path="/apis" component={Apis} />

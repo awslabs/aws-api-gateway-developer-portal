@@ -33,12 +33,6 @@ export default class HomePage extends PureComponent {
         <Card.Group itemsPerRow={3} stackable style={{textAlign: 'center'}}>
           <Card>
             <Card.Content>
-              <Card.Header><Link to='/case-studies'>Case Studies</Link></Card.Header>
-              <Card.Description>Want to learn about what you can achieve by integrating with our APIs? The possibilities are endless, but <Link to='/case-studies'>here are just a few examples</Link>.</Card.Description>
-            </Card.Content>
-          </Card>
-          <Card>
-            <Card.Content>
               <Card.Header><Link to='/apis'>APIs</Link></Card.Header>
               <Card.Description><Link to='/apis'>See what APIs we have on offer</Link>, including extensive documentation. Sign in to manage your subscriptions, see your current usage, get your API Key, and test against our live API.</Card.Description>
             </Card.Content>
