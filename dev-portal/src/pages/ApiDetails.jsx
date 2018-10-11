@@ -1,8 +1,7 @@
 import React, { PureComponent } from 'react'
 import SwaggerUI from 'swagger-ui'
 import 'swagger-ui/dist/swagger-ui.css'
-import { getApi } from '../../services/api-catalog'
-import Head from '../../components/Head'
+import { getApi } from 'services/api-catalog'
 
 export default class ApiDetailsPage extends PureComponent {
   componentDidMount = () => {
@@ -18,7 +17,6 @@ export default class ApiDetailsPage extends PureComponent {
   render() {
     return (
       <div>
-        <Head {...this.props} />
         <section className="swagger-section" style={{overflow: 'auto'}}>
           <div className="swagger-ui-wrap" id="swagger-ui-container"></div>
         </section>

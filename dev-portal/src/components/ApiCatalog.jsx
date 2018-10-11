@@ -1,9 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Card, Image, Dropdown } from 'semantic-ui-react'
-import { addSubscription, unsubscribe, isSubscribed } from '../../services/api-catalog'
-import { isAuthenticated } from '../../services/self'
-import Usage from '../Usage'
+import { addSubscription, unsubscribe, isSubscribed } from 'services/api-catalog'
+import { isAuthenticated } from 'services/self'
+
+// components
+import Usage from './Usage'
 
 function handleSubscribe(event, usagePlan) {
   event.preventDefault()

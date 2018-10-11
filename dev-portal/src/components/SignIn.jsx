@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
 import { Redirect } from 'react-router-dom'
-import { login } from '../../services/self'
-import { confirmMarketplaceSubscription } from '../../services/api-catalog'
+import { login } from 'services/self'
+import { confirmMarketplaceSubscription } from 'services/api-catalog'
 
  export default class SignIn extends PureComponent {
    state = {
@@ -41,7 +41,7 @@ import { confirmMarketplaceSubscription } from '../../services/api-catalog'
         open={isOpen}
         onOpen={this.open}
         onClose={this.close}
-        trigger={<Button primary fluid>Sign In</Button>}
+        trigger={this.props.trigger}
       >
         <Modal.Header>Sign in</Modal.Header>
         <Modal.Content>
