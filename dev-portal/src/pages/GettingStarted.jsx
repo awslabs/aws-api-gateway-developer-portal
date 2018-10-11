@@ -1,9 +1,7 @@
 import React from 'react'
-import Head from '../../components/Head'
 
 export default (props) => (
   <div>
-    <Head {...props} />
     <h2>Getting Started</h2>
     <p>Sample data. You can modify this static content in `/dev-portal/src/pages/GettingStarted/index.js` folder.</p>
     <h3>Get Started with our PetStore API</h3>

@@ -7,3 +7,27 @@ body {
 h1, h2, h3, h4, h5 {
   line-height: initial
 }
+
+.App-logo {
+  animation: App-logo-spin alternate infinite 2s ease-in-out;
+  height: 80px;
+}
+
+.App-header {
+  background-color: rgb(27, 28, 29);
+  padding: 20px;
+  color: white;
+}
+
+.App-header h2 {
+  margin: 0;
+}
+
+.App-intro {
+  padding: 1rem;
+}
+
+@keyframes App-logo-spin {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}

@@ -1,10 +1,6 @@
 import React, { PureComponent } from 'react'
 import { Message } from 'semantic-ui-react'
 
-// const style = {
-//   padding: '0 1rem 1rem 1rem'
-// }
-
 export default class AlertPopup extends PureComponent {
   state = {
     isVisible: false,

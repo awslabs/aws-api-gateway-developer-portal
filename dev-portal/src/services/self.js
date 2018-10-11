@@ -77,61 +77,52 @@ export function register(email, password) {
 }
 
 export function login(email, password) {
-    const authenticationData = {
+    const authenticationDetails = new AuthenticationDetails({
       Username: email,
       Password: password
-    }
-    const authenticationDetails = new AuthenticationDetails(authenticationData)
-    userPool = new CognitoUserPool(poolData)
-    const userData = {
-      Username: email,
-      Pool: userPool
-    }
+    })
 
-    cognitoUser = new CognitoUser(userData)
+    cognitoUser = new CognitoUser({
+      Username: email,
+      Pool: new CognitoUserPool(poolData)
+    })
+
     return new Promise((resolve, reject) => {
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
-          // cognitoUser = result.user
-          console.log('access token + ' + result.getAccessToken().getJwtToken())
 
-          const cognitoLoginKey = getCognitoLoginKey()
-          const Logins = {}
-          Logins[cognitoLoginKey] = result.getIdToken().getJwtToken()
           AWS.config.credentials = new AWS.CognitoIdentityCredentials({
             IdentityPoolId: cognitoIdentityPoolId,
-            Logins: Logins
+            Logins: {
+              [getCognitoLoginKey()]: result.getIdToken().getJwtToken()
+            }
           })
 
           AWS.config.credentials.refresh((error) => {
             if (error) {
               console.error(error)
             } else {
-              console.log('Successfully logged in')
-
               initApiGatewayClient(AWS.config.credentials)
 
-              apiGatewayClient.post('/signin', {}, {}, {}).then((result) => {
-                resolve(result)
-              }).catch((err) => {
-                reject(err)
-              })
+              apiGatewayClient.post('/signin', {}, {}, {})
+                .then(resolve)
+                .catch(reject)
             }
           })
         },
 
-        onFailure: (err) => {
-          reject(err)
-        }
+        onFailure: reject
     })
   })
 }
 
 export function logout() {
-  cognitoUser.signOut()
-  cognitoUser = null
-  clearSubscriptions()
-  localStorage.clear()
+  if (cognitoUser) {
+    cognitoUser.signOut()
+    cognitoUser = null
+    clearSubscriptions()
+    localStorage.clear()
+  }
 }
 
 export function showApiKey() {
