@@ -691,10 +691,10 @@ Resources:
     Properties:
       CodeUri: ../lambdas/static-asset-uploader
       Handler: index.handler
-      MemorySize: 128
+      MemorySize: 512
       Role: !GetAtt DevPortalLambdaExecutionRole.Arn
       Runtime: nodejs8.10
-      Timeout: 20
+      Timeout: 300
       Environment:
         Variables:
           StaticBucketName: !Ref ArtifactsS3BucketName

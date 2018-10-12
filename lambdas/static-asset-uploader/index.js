@@ -189,7 +189,7 @@ exports.handler = (event, context) => {
 
                     console.log(`readPromises length: ${readPromises.length}`)
 
-                    Promise.all(readPromises)
+                    return Promise.all(readPromises)
                         .then((readResults) => {
                             console.log('All read promises resolved.')
                             console.log(`uploadPromises length: ${uploadPromises.length}`)
