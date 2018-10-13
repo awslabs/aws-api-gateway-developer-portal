@@ -4,7 +4,7 @@ import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cogn
 // services
 import { store } from 'services/state'
 import { initApiGatewayClient, apiGatewayClient } from 'services/api'
-import { updateCatalogAndApisList, updateSubscriptions } from 'services/api-catalog'
+import { updateAllUserData } from 'services/api-catalog'
 import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/aws'
 
 const poolData = {
@@ -50,8 +50,7 @@ export function init() {
           console.error(error)
         } else {
           initApiGatewayClient(AWS.config.credentials)
-          updateCatalogAndApisList()
-          updateSubscriptions()
+          updateAllUserData()
         }
       })
     })

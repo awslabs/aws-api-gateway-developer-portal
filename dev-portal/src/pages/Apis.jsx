@@ -8,7 +8,8 @@ import 'swagger-ui/dist/swagger-ui.css'
 import { Container, Header, Icon } from 'semantic-ui-react'
 
 // services
-import { selectApi } from 'services/api-catalog'
+import { getApi } from 'services/api-catalog'
+import { isAuthenticated } from 'services/self'
 
 // components
 import ApisMenu from 'components/ApisMenu'
@@ -23,13 +24,20 @@ export default observer(class ApisPage extends React.Component {
   componentDidUpdate() { this.updateApi() }
 
   updateApi = () => {
-    selectApi(this.props.match.params.apiId || 'ANY')
+    getApi(this.props.match.params.apiId || 'ANY', true)
       .then(api => {
-        if (api) SwaggerUI({
-          dom_id: '#swagger-ui-container',
-          plugins: [SwaggerLayoutPlugin],
-          spec: api.swagger
-        })
+        if (api) {
+          let swaggerUiConfig = {
+            dom_id: '#swagger-ui-container',
+            plugins: [SwaggerLayoutPlugin],
+            supportedSubmitMethods: [],
+            spec: api.swagger
+          }
+          if (isAuthenticated()) {
+            delete swaggerUiConfig.supportedSubmitMethods
+          }
+          SwaggerUI(swaggerUiConfig)
+        }
       })
   }
 
