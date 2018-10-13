@@ -1,7 +1,7 @@
-import React, { PureComponent } from 'react'
+import React from 'react'
 import { Message } from 'semantic-ui-react'
 
-export default class AlertPopup extends PureComponent {
+export default class AlertPopup extends React.Component {
   state = {
     isVisible: false,
     message: ''

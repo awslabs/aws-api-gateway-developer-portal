@@ -13,7 +13,7 @@ import SignOut from './SignOut'
 export const NavBar = () => {
   let authed = isAuthenticated()
   return (
-    <Menu inverted style={{ margin: 0, borderRadius: 0 }}>
+    <Menu inverted borderless attached style={{ flex: "0 0 auto" }}>
       <Menu.Item as={Link} to="/">
         <Image size='mini' src={logo} />
         Developer Portal

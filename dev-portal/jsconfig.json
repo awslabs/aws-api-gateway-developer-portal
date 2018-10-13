@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "jsx": "react",
+    "paths": {
+      "*": ["src/*"],
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "offline-module-cache",
+    "offline-module-mirror",
+    "build"
+  ]
+}

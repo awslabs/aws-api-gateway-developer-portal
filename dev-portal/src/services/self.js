@@ -1,8 +1,11 @@
 import AWS from 'aws-sdk'
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
-import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from './aws'
-import { initApiGatewayClient, apiGatewayClient } from './api'
-import { clearSubscriptions } from './api-catalog'
+
+// services
+import { store } from 'services/state'
+import { initApiGatewayClient, apiGatewayClient } from 'services/api'
+import { updateCatalogAndApisList, updateSubscriptions } from 'services/api-catalog'
+import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/aws'
 
 const poolData = {
   UserPoolId: cognitoUserPoolId,
@@ -47,18 +50,13 @@ export function init() {
           console.error(error)
         } else {
           initApiGatewayClient(AWS.config.credentials)
+          updateCatalogAndApisList()
+          updateSubscriptions()
         }
       })
     })
   } else {
     initApiGatewayClient()
-    // if (!/index\.html/.test(window.location.href)) {
-    //   // window.location = 'index.html'
-    //   return
-    // } else {
-    //   window.localStorage.removeItem('aws.cognito.identity-id.' + cognitoIdentityPoolId)
-    //   window.localStorage.removeItem('aws.cognito.identity-providers.' + cognitoIdentityPoolId)
-    // }
   }
 }
 
@@ -104,9 +102,11 @@ export function login(email, password) {
             } else {
               initApiGatewayClient(AWS.config.credentials)
 
-              apiGatewayClient.post('/signin', {}, {}, {})
-                .then(resolve)
-                .catch(reject)
+              apiGatewayClient().then(apiGatewayClient => 
+                apiGatewayClient.post('/signin', {}, {}, {})
+                  .then(resolve)
+                  .catch(reject)
+              )
             }
           })
         },
@@ -120,11 +120,13 @@ export function logout() {
   if (cognitoUser) {
     cognitoUser.signOut()
     cognitoUser = null
-    clearSubscriptions()
+    store.subscriptions = []
     localStorage.clear()
   }
 }
 
 export function showApiKey() {
-  return apiGatewayClient.get('/apikey', {}, {}, {}).then(({data}) => data.value)
+  return apiGatewayClient().then(apiGatewayClient => 
+    apiGatewayClient.get('/apikey', {}, {}, {}).then(({data}) => data.value)
+  )
 }

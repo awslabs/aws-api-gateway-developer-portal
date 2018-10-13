@@ -8,6 +8,13 @@ h1, h2, h3, h4, h5 {
   line-height: initial
 }
 
+#root {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .App-logo {
   animation: App-logo-spin alternate infinite 2s ease-in-out;
   height: 80px;
