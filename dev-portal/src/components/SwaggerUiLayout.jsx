@@ -11,7 +11,6 @@ import { isAuthenticated } from 'services/self'
 import { observer } from 'mobx-react'
 import { store } from 'services/state.js'
 
-
 // Create the plugin that provides our layout component
 export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoReplacement } })
 
@@ -22,15 +21,29 @@ const InfoReplacement = ({ specSelectors }) => {
   const basePath = specSelectors.basePath()
   const host = specSelectors.host()
   const externalDocs = specSelectors.externalDocs()
-  
+
   return (
-    <Container fluid textAlign='left' style={{ padding: "40px 0px" }}>
-      <Image size='small' floated="left" src={store.api.image} style={{ marginRight: "40px" }} />
-      <Header as='h1'>{store.api.swagger.info.title}</Header>
-      <p>API Version: {store.api.swagger.info.version}</p>
-      <p>API Endpoint: https://{host}{basePath}</p>
-      <p>{externalDocs}</p>
-      <SubscriptionButtons />
+    <Container fluid textAlign='left' className="fixfloat" style={{ padding: "40px 0px" }}>
+      <div style={{ display: "flex" }}>
+        <div style={{ flex: "0 0 auto", marginRight: "20px" }}>
+          <Image size='small' src={store.api.image} />
+        </div>
+        <div>
+          <Header as='h1'>{store.api.swagger.info.title}</Header>
+          <div style={{ display: "flex" }}>
+            <div style={{ marginRight: "20px" }}>
+              <p style={{ fontWeight: "bold" }}>Version</p>
+              <p style={{ fontWeight: "bold" }}>Endpoint</p>
+            </div>
+            <div>
+              <p>{store.api.swagger.info.version}</p>
+              <p>https://{host}{basePath}</p>
+            </div>
+          </div>
+          <p>{externalDocs}</p>
+          <SubscriptionButtons />
+        </div>
+      </div>
     </Container>
   )
 }
@@ -45,8 +58,8 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
         api.subscribed ? (
           <Button onClick={() => unsubscribe(api.usagePlan.id)}>Unsubscribe</Button>
         ) : (
-            <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
-          )
+          <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
+        )
       ) : null
     )
   }

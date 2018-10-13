@@ -3,120 +3,80 @@ import { store } from './state'
 
 /* Catalog and API Utils */
 
-// wrap the catalogPromiseCache
-export const updateCatalogAndApisList = ((() => {
-  let catalogPromiseCache
-
-  return function(bustCache = false) {
-    let catalogOrPromise = store.catalog.length ? store.catalog : catalogPromiseCache
-    if (!bustCache && catalogOrPromise) return Promise.resolve(catalogOrPromise)
-
-    return catalogPromiseCache = apiGatewayClient()
-      .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
-      .then(({ data = [] }) => {
-        // attach usage plan data to each api
-        store.catalog = data.map(usagePlan => {
-          usagePlan.apis = usagePlan.apis.map(api => {
-            // remove the apis from the cloned usagePlan so we don't go circular
-            api.usagePlan = cloneJson(usagePlan)
-            delete api.usagePlan.apis
-            return api
-          })
-
-          return usagePlan
-        })
-
-        updateSubscriptionStatus()
-
-        store.apiList = store.catalog.reduce((acc, usagePlan) => acc.concat(usagePlan.apis), [])
-
-        return store.catalog
-      })
-  }
-})())
-
-// will return the first api if no id provided
-export function getApi(apiId, useFirst) {
-  return updateCatalogAndApisList() // we're only waiting so that we can make sure this has been set
-  .then(() => {
-
-    console.log(store.apiList)
-
-    let catalog = store.catalog
-    if (catalog && catalog.length) {
-      let api
-      
-      catalog.find(c => (api = c.apis.find(a => a.id === apiId)))
-      
-      return api
-    }
-  })
+/**
+ * 
+ * Does all operations to get user data at once.
+ * 
+ * @param {Boolean} bustCache=true   Ignore the cache and re-make the calls? Defaults to true.
+ */
+export function updateAllUserData(bustCache = true) {
+  return Promise.all([
+    updateCatalogAndApisList(bustCache),
+    updateSubscriptions(bustCache)
+  ])
 }
 
 /**
- * Updates the viewed api to the api id provided. If that api ID
+ * 
+ * Update the catalog for the current user. Both request and response are cached, so unless the cache is busted, this should only ever make one network call.
+ * 
+ * @param {Boolean} [bustCache=false]   Ignore the cache and re-make the network call. Defaults to false.
+ * 
  */
-export function updateApi(apiId) {
-  return getApi(apiId)
-    .then(api => store.api = api)
-}
+export function updateCatalogAndApisList(bustCache = false) {
+  let catalogOrPromise = store.catalog.length ? store.catalog : catalogPromiseCache
+  if (!bustCache && catalogOrPromise) return Promise.resolve(catalogOrPromise)
 
-export function selectApi(apiId) {
+  return catalogPromiseCache = apiGatewayClient()
+    .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
+    .then(({ data = [] }) =>  store.catalog = data)
+}
+let catalogPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
+
+/**
+ * Return the API with the provided apiId. Can also provide the special strings "FIRST" or "ANY" to get the first API returned. Can select the api returned as a side-effect.
+ * 
+ * @param {String} apiId   An apiId or the special strings 'FIRST' or 'ANY'. 'FIRST' and 'ANY' both return the first api encountered.
+ * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
+ */
+export function getApi(apiId, selectIt = false) {
   return updateCatalogAndApisList()
     .then(() => {
-      if (store.api && store.api.id === apiId)
-        return store.api
+      let thisApi
   
       if (store.apiList.length) {
-        if (apiId === 'ANY') {
-          return store.api = store.apiList[0]
+        if (apiId === 'ANY' || apiId === 'FIRST') {
+          thisApi = store.apiList[0]
         }
 
         else {
-          return store.api = store.apiList.find(api => api.id === apiId)
+          thisApi = store.apiList.find(api => api.id === apiId)
         }
       }
+
+      if (selectIt) store.api = thisApi
+
+      return thisApi
     })
 }
 
 /**
  * Fetch and update subscriptions store. Uses caching to determine if it should actually fetch or return the stored result.
  * 
- * @param {Boolean} bustCache=false   Pass true to ignore the cached value, and refetch. Will set store to the new value.
+ * @param {Boolean} [bustCache=false]   Ignore the cache and re-make the network call. Defaults to false.
  */
-export const updateSubscriptions = ((() => {
-  let subscriptionsPromiseCache
+export function updateSubscriptions(bustCache = false) {
+  let subscriptionsOrPromise = store.subscriptions.length ? store.subscriptions : subscriptionsPromiseCache
+  if (!bustCache && subscriptionsOrPromise) return Promise.resolve(subscriptionsOrPromise)
 
-  return function(bustCache = false) {
-    let subscriptionsOrPromise = store.subscriptions.length ? store.subscriptions : subscriptionsPromiseCache
-    if (!bustCache && subscriptionsOrPromise) return Promise.resolve(subscriptionsOrPromise)
-
-    let localClient
-
-    return subscriptionsPromiseCache = apiGatewayClient()
-      .then(apiGatewayClient => (localClient = apiGatewayClient))
-      .then(() => localClient.get('/subscriptions', {}, {}, {}))
-      .then(({ data }) => {
-        store.subscriptions = data
-
-        updateSubscriptionStatus()
-      })
-  }
-})())
-
-function updateSubscriptionStatus() {
-  if (store.catalog)
-    store.catalog.forEach(usagePlan => usagePlan.apis.forEach(api => {
-      api.subscribed = isSubscribed(usagePlan.id)
-    }))
+  return subscriptionsPromiseCache = apiGatewayClient()
+    .then(apiGatewayClient => apiGatewayClient.get('/subscriptions', {}, {}, {}))
+    .then(({ data }) => store.subscriptions = data)
 }
-
-export function isSubscribed(usagePlanId) {
-  return !!getSubscribedUsagePlan(usagePlanId)
-}
+let subscriptionsPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
 
 export function getSubscribedUsagePlan(usagePlanId) {
-  return store.subscriptions.find(s => s.id === usagePlanId)
+  return store.subscriptions.find(sub => sub.id === usagePlanId)
 }
 
 export function subscribe(usagePlanId) {
@@ -136,6 +96,8 @@ export function unsubscribe(usagePlanId) {
     .then(() => localClient.delete(`/subscriptions/${usagePlanId}`, {}, {}))
     .then(() => updateSubscriptions(true))
 }
+
+// marketplace integration
 
 export function confirmMarketplaceSubscription(usagePlanId, token) {
   if (!usagePlanId) {
@@ -200,8 +162,4 @@ function mapApiKeyUsageByDate(apiKeyUsage, startDate, usedOrRemaining) {
     apiKeyDate.setDate(apiKeyDate.getDate() + 1)
     return item
   })
-}
-
-function cloneJson(object) {
-  return JSON.parse(JSON.stringify(object))
 }
