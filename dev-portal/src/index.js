@@ -10,7 +10,6 @@ import Home from 'pages/Home'
 import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
-import ApiDetails from 'pages/ApiDetails'
 
 // components
 import AlertPopup from 'components/AlertPopup'
@@ -41,7 +40,7 @@ class App extends React.Component {
           <Route path="/getting-started" component={GettingStarted} />
           <Route path="/dashboard" component={Dashboard} />
           <Route exact path="/apis" component={Apis} />
-          <Route path="/apis/:apiId" component={ApiDetails} />
+          <Route path="/apis/:apiId" component={Apis} />
           <Route component={() => <h2>Page not found</h2>} />
         </Switch>
         </React.Fragment>
