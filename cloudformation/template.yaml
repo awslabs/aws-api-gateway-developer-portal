@@ -506,7 +506,7 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt PreSignupLambdaFunction.Arn
+      FunctionName: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
       Principal: cognito-idp.amazonaws.com
       SourceArn: !Join
         - ''
@@ -582,10 +582,10 @@ Resources:
       Runtime: nodejs8.10
       Timeout: 30
 
-  PreSignupLambdaFunction:
+  CognitoUserPoolsConfirmationStrategyFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../lambdas/cognito-user-pools-auto-confirm
+      CodeUri: ../lambdas/cognito-user-pools-confirmation-strategy
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt DevPortalLambdaExecutionRole.Arn
@@ -597,7 +597,7 @@ Resources:
     Properties:
       UserPoolName: !Ref CognitoIdentityPoolName
       LambdaConfig:
-        PreSignUp: !GetAtt PreSignupLambdaFunction.Arn
+        PreSignUp: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
       Policies:
         PasswordPolicy:
           MinimumLength: 8
