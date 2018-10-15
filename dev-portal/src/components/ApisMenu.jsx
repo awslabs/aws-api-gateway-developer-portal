@@ -24,9 +24,9 @@ export default observer(class ApisMenu extends React.Component {
         style={{ margin: 0, borderRadius: 0 }}
         {...props}
       >
-        {!store.apiList && (
+        {!store.apiList ? (
           <Loader active />
-        ) || (store.apiList && (
+        ) : (store.apiList && (
           store.apiList.length ? store.apiList.map((api, index) => (
             <Menu.Item
               key={api.id}

@@ -77,9 +77,12 @@ function createApiList(catalog) {
  */
 function updateSubscriptionStatus() {
   if (storeCache.catalog)
-    storeCache.catalog.forEach(usagePlan => usagePlan.apis.forEach(api => {
-      api.subscribed = !!getSubscribedUsagePlan(usagePlan.id)
-    }))
+    storeCache.catalog.forEach(usagePlan => {
+      let subscribed = !!getSubscribedUsagePlan(usagePlan.id)
+      usagePlan.subscribed = subscribed
+      
+      usagePlan.apis.forEach(api => api.subscribed = subscribed)
+  })
 }
 
 export default store
