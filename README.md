@@ -90,6 +90,9 @@ From the listener function you can manage your Usage Plan Keys through API Gatew
 
 You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See this [blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
 
+## Customization
+The developer portal is easily customized. Make changes in your cloned copy of the repository, version with git, and package & deploy with SAM. To pull in new versions of the dev portal, merge or rebase in the upstream changes. Please do not edit AWS resources in place; instead edit the relevant files locally and re-package & re-deploy. Additionally, the developer portal website's static assets will not automatically update. Please see `./dev-portal/README.md` for details.
+
 ## Tear-down
 
 Deleting developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table, which will list the provisioned api keys.
