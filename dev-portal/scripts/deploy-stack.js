@@ -13,7 +13,7 @@ const apiAssetsBucket = deployerConfig.apiAssetsBucket
 function main() {
   Promise.resolve()
     .then(() => execute(`sam package --template-file ${samTemplate} --output-template-file ${packageConfig} --s3-bucket ${buildAssetsBucket}`, true))
-    .then(() => execute(`sam deploy --template-file ${packageConfig} --stack-name ${stackName} --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="${siteAssetsBucket}" ArtifactsS3BucketName="${apiAssetsBucket}"`, true))
+    .then(() => execute(`sam deploy --template-file ${packageConfig} --stack-name ${stackName} --capabilities CAPABILITY_NAMED_IAM --parameter-overrides StaticAssetRebuildToken="${Date.now()}" DevPortalSiteS3BucketName="${siteAssetsBucket}" ArtifactsS3BucketName="${apiAssetsBucket}"`, true))
     .then(() => writeConfig(true))
     .then(() => console.log('\n' + 'Process Complete! Run `npm run start` to launch run the dev portal locally.\n'.green()))
     .catch(err => {

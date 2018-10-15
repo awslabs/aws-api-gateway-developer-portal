@@ -19,6 +19,11 @@ Parameters:
     Description: The name of the DynamoDB Customers table.
     Default: "DevPortalCustomers"
 
+  StaticAssetRebuildToken:
+    Type: String
+    Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
+    Default: defaultRebuildToken
+
   MarketplaceSubscriptionTopicName:
     Type: String
     Description: The marketplace SNS topic for subscription/unsubscription events
@@ -710,6 +715,7 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
+      RebuildToken: !Ref StaticAssetRebuildToken
 
 Outputs:
   LambdaFunctionConsoleUrl:

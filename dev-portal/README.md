@@ -22,6 +22,10 @@ Synonymous with `npm run build; npm run deploy; npm run write-config`.
 
 Starts up the local development server. Must have a `config.js` file locally for this to work.
 
+### Notes on static assets
+
+The static assets are only re-uploaded on deployment if the previous deployment and the current deployment were provided different `StaticAssetRebuildToken` parameters. The `npm run deploy` script automatically creates a unique `StaticAssetRebuildToken` for you.
+
 ### If you have already deployed a Development Portal...
 
 1. Create a `build.config.js` file inside `/dev-portal/` with the following structure
