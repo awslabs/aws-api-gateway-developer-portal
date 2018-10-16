@@ -12,7 +12,8 @@ import { store } from './state'
 export function updateAllUserData(bustCache = true) {
   return Promise.all([
     updateCatalogAndApisList(bustCache),
-    updateSubscriptions(bustCache)
+    updateSubscriptions(bustCache),
+    updateApiKey(bustCache)
   ])
 }
 
@@ -60,6 +61,8 @@ export function getApi(apiId, selectIt = false) {
     })
 }
 
+/* Subscription Utils */
+
 /**
  * Fetch and update subscriptions store. Uses caching to determine if it should actually fetch or return the stored result.
  * 
@@ -97,17 +100,20 @@ export function unsubscribe(usagePlanId) {
     .then(() => updateSubscriptions(true))
 }
 
-// marketplace integration
+/**
+ * 
+ * Fetches and updates the apiKey in the store. Both request and response are cached, so unless the cache is busted, this should only ever make one network call.
+ * 
+ */
+export function updateApiKey(bustCache) {
+  let apiKeyOrPromise = store.apiKey ? store.apiKey : apiKeyPromiseCache
+  if (!bustCache && apiKeyOrPromise) return Promise.resolve(apiKeyOrPromise)
 
-export function confirmMarketplaceSubscription(usagePlanId, token) {
-  if (!usagePlanId) {
-    return
-  }
-  
-  return apiGatewayClient().then(apiGatewayClient => {
-    return apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, {"token" : token})
-  })
+  return apiGatewayClient()
+    .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
+    .then(({data}) => store.apiKey = data.value)
 }
+let apiKeyPromiseCache
 
 export function fetchUsage(usagePlanId) {
   const date = new Date()
@@ -161,5 +167,17 @@ function mapApiKeyUsageByDate(apiKeyUsage, startDate, usedOrRemaining) {
     const item = [date, usage[usedOrRemainingIndex]]
     apiKeyDate.setDate(apiKeyDate.getDate() + 1)
     return item
+  })
+}
+
+/* Marketplace integration */
+
+export function confirmMarketplaceSubscription(usagePlanId, token) {
+  if (!usagePlanId) {
+    return
+  }
+  
+  return apiGatewayClient().then(apiGatewayClient => {
+    return apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, {"token" : token})
   })
 }

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Grid, Header, Segment, Loader, Message } from 'semantic-ui-react'
+import { Grid, Header, Popup, Loader, Message, List, Divider } from 'semantic-ui-react'
 
 import Chart from 'chart.js'
 import { fetchUsage, mapUsageByDate } from 'services/api-catalog'
@@ -12,8 +12,6 @@ import { store } from 'services/state'
 import _ from 'lodash'
 
 function loadUsage(usagePlan, canvasId) {
-
-  console.log(React.Component)
   fetchUsage(usagePlan.id)
     .then((result) => {
       const data = mapUsageByDate(result.data, 'used')
@@ -50,30 +48,54 @@ function loadUsage(usagePlan, canvasId) {
 }
 
 export default observer(() => {
-
   return (
-    <Grid>
+    <Grid container>
+      <Grid.Row>
+        <Grid.Column style={{ paddingTop: "40px" }}>
+            <Header size="medium">API Key</Header>
+            <code style={{
+              background: "black",
+              border: "1px solid gray",
+              padding: "7px 8px",
+              color: "lightgray",
+              borderRadius: "5px"
+            }}>
+              {store.apiKey}
+            </code>
+        </Grid.Column>
+      </Grid.Row>
+      <Divider />
+      <Grid.Row>
+
       {store.catalog
         .filter(usagePlan => usagePlan.subscribed)
-        .map(usagePlan => {
+        // .reduce((acc, usagePlan) => acc.concat(usagePlan, usagePlan, usagePlan, usagePlan, usagePlan), [])
+        .map((usagePlan, index) => {
 
-        let apis = usagePlan.apis.reduce((acc, api) => {
-          return acc + ' ' + api.swagger.info.title
-        }, '')
-
-        let canvasId = `api-usage-chart-container-${usagePlan.id}`
-
-        console.log('render')
+        let firstApiName = usagePlan.apis[0].swagger.info.title
+        let extraApiCount = usagePlan.apis.length - 1
+        let apiList = usagePlan.apis.reduce((acc, api) => acc.concat(
+          <List.Item key={api.id}>{api.swagger.info.title}</List.Item>
+        ), [])
+        let canvasId = `api-usage-chart-container-${usagePlan.id}` + index
 
         loadUsage(usagePlan, canvasId)
 
         return (
-          <Grid.Column mobile={16} tablet={8} computer={4} key={usagePlan.id}>
-            <Segment>
-              <Header size="medium">
-                {usagePlan.name}
-              </Header>
-              <Header size="small">For APIs {apis}</Header>
+          <Grid.Column width={16} widescreen={8} key={usagePlan.id} style={{ marginBottom: "40px" }}>
+            <Header size="medium">
+              Usage for {extraApiCount ? (
+                <Popup
+                  trigger={ <a style={{ cursor: "pointer" }}>{firstApiName} and {extraApiCount} more...</a> }
+                  content={ <List> {apiList} </List> }
+                  on={['hover', 'click']}
+                  position="right center"
+                />
+              ) : (
+                firstApiName
+              )}
+            </Header>
+              
               { !usagePlan.usage ? (
                 <Loader active />
               ) : ( 
@@ -81,11 +103,11 @@ export default observer(() => {
                   <Message error content={usagePlan.error.toString()} />
                 ) : null
               )}
-              <canvas id={canvasId} width='400' height='400' />
-            </Segment>
+              <canvas id={canvasId} />
           </Grid.Column>
         )
       })}
+      </Grid.Row>
     </Grid>
   )
 })

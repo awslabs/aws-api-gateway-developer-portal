@@ -5,7 +5,7 @@ import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cogn
 import { store } from 'services/state'
 import { initApiGatewayClient, apiGatewayClient } from 'services/api'
 import { updateAllUserData } from 'services/api-catalog'
-import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/aws'
+import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
 
 const poolData = {
   UserPoolId: cognitoUserPoolId,
@@ -122,10 +122,4 @@ export function logout() {
     store.subscriptions = []
     localStorage.clear()
   }
-}
-
-export function showApiKey() {
-  return apiGatewayClient().then(apiGatewayClient => 
-    apiGatewayClient.get('/apikey', {}, {}, {}).then(({data}) => data.value)
-  )
 }
