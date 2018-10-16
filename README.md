@@ -101,13 +101,13 @@ Deleting developer portal should be as easy as deleting the cloudformation stack
 
 **NOTE**: These instructions are now out of date!
 
-You can sell your SaaS product through [AWS Marketplace] (https://aws.amazon.com/marketplace/management/tour/) and have the developer portal manage the subscription/unsubscription workflows. API Gateway will automatically provide authorization and metering for your product and subscribers will be automatically billed through AWS Marketplace.
+You can sell your SaaS product through [AWS Marketplace](https://aws.amazon.com/marketplace/management/tour/) and have the developer portal manage the subscription/unsubscription workflows. API Gateway will automatically provide authorization and metering for your product and subscribers will be automatically billed through AWS Marketplace.
 
 Overview:
 
 1) Create a Usage Plan in API Gateway
 
-2) Create a SaaS Product in [AWS Marketplace] (https://aws.amazon.com/marketplace/management/tour/):
+2) Create a SaaS Product in [AWS Marketplace](https://aws.amazon.com/marketplace/management/tour/):
 
 The redirect URL should be in the format:
 https://YOUR_DEVELOPER_PORTAL_API_ID.execute-api.[REGION].amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]
