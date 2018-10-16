@@ -24,9 +24,9 @@ Parameters:
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
     Default: defaultRebuildToken
 
-  MarketplaceSubscriptionTopicName:
+  MarketplaceSubscriptionTopicProductCode:
     Type: String
-    Description: The marketplace SNS topic for subscription/unsubscription events
+    Description: The marketplace SNS topic suffix for subscription/unsubscription events
     Default: "DevPortalMarketplaceSubscriptionTopic"
 
   CognitoIdentityPoolName:
@@ -526,7 +526,7 @@ Resources:
       SourceArn: !Join
         - ''
         - - 'arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-'
-          - !Ref MarketplaceSubscriptionTopicName
+          - !Ref MarketplaceSubscriptionTopicProductCode
 
   LambdaSNSExecutionTestPermission:
     Type: AWS::Lambda::Permission
@@ -715,6 +715,7 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
+      MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
 
 Outputs:

@@ -3,9 +3,6 @@
   "version": "2.0.0",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
-  "config": {
-    "marketplaceSubscriptionTopic": "arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-PRODUCT_CODE"
-  },
   "scripts": {},
   "license": "Apache-2.0",
   "dependencies": {},

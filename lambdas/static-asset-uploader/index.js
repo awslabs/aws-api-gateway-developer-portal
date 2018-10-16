@@ -209,6 +209,14 @@ exports.handler = (event, context) => {
                                 ACL: "public-read"
                             },
                             options = {}
+
+                            let suffix = event.ResourceProperties.MarketplaceSuffix
+                            if(suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
+                                configObject.marketplaceSubscriptionTopic
+                                    = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
+                            }
+
+
                             uploadPromises.push(s3.upload(params, options).promise())
 
                             return Promise.all(uploadPromises)
