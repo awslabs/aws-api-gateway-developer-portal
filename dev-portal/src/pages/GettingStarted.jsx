@@ -2,41 +2,22 @@ import React from 'react'
 
 import { Link } from 'react-router-dom'
 
-import { Container, Header, Menu, Segment } from 'semantic-ui-react'
+import { Header, Segment } from 'semantic-ui-react'
 
 export default (props) => (
   <div style={{ display: "flex", flex: "1 1 auto", overflow: "hidden" }}>
-    <Menu
-      inverted
-      vertical
-      attached
-      style={{ margin: 0, borderRadius: 0 }}
-      {...props}
-    >
-      <Menu.Item
-        as={Link}
-        to={`#part`}
-      >
-        Getting Started
-      </Menu.Item>
-    </Menu>
-
     <div style={{ padding: "40px", overflow: "auto" }}>
       <Header as='h1'>Getting Started</Header>
 
       <Segment vertical>
-        <Header as="h2">Create an Account</Header>
+        <Header as="h2">Create an account and get an API Key</Header>
         <p>
-          Create an account and get an <a href='https://docs.aws.amazon.com/apigateway/api-reference/resource/api-key/' target='_blank' rel="noopener noreferrer">API Key</a>.
+          Creating an account will generate your API Key -- a unique key that you will allow you to access our APIs. When building your application, you will provide this api in the `x-api-key` header of your requests. To view your API Key, you can go to <Link to="/dashboard">your dashboard</Link> after logging in.
         </p>
-      </Segment>
-      <Segment vertical>
-        <Header as="h2">View and Subscribe to our APIs</Header>
+        
+        <Header as="h3">Subscribe to APIs you want to use</Header>
         <p>
-          View our APIs here. Once you find what you need, subscribe to the API to activate your API key for that API.
-        </p>
-        <p>
-          This section might be combined with the above section.
+          Subscribing 'registers' your API Key to a specific API, allowing you to make calls to that API for both testing using the Developer Portal and building your applications.
         </p>
       </Segment>
       <Segment vertical>

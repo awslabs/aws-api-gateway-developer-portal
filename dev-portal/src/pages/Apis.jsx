@@ -31,12 +31,13 @@ export default observer(class ApisPage extends React.Component {
             dom_id: '#swagger-ui-container',
             plugins: [SwaggerLayoutPlugin],
             supportedSubmitMethods: [],
-            spec: api.swagger
+            spec: api.swagger,
+            onComplete: () => uiHandler.preauthorizeApiKey("api_key", store.apiKey)
           }
           if (isAuthenticated()) {
             delete swaggerUiConfig.supportedSubmitMethods
           }
-          SwaggerUI(swaggerUiConfig)
+          let uiHandler = SwaggerUI(swaggerUiConfig)
         }
       })
   }
