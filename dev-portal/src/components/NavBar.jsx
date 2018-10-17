@@ -21,10 +21,17 @@ export const NavBar = () => {
       <Menu.Item as={Link} to="/getting-started">Getting Started</Menu.Item>
       <Menu.Item as={Link} to="/apis">APIs</Menu.Item>
       <Menu.Menu position="right">
-        { !authed && <SignIn trigger={<Menu.Item as="a" key="login">Sign In</Menu.Item>} />}
-        { !authed && <Register trigger={<Menu.Item as="a" key="register">Register</Menu.Item>} /> }
-        { authed && <SignOut trigger={<Menu.Item as="a" key="logout">Sign Out</Menu.Item>} />}
-        { authed && <Menu.Item as={Link} to="/dashboard" key="dashboard">My Dashboard</Menu.Item>}
+        { authed ? (
+          <React.Fragment>
+            <SignOut trigger={<Menu.Item as="a" key="logout">Sign Out</Menu.Item>} />
+            <Menu.Item as={Link} to="/dashboard" key="dashboard">My Dashboard</Menu.Item>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <SignIn trigger={<Menu.Item as="a" key="login">Sign In</Menu.Item>} />
+            <Register trigger={<Menu.Item as="a" key="register">Register</Menu.Item>} /> 
+          </React.Fragment>
+        )}
       </Menu.Menu>
     </Menu>
   )
