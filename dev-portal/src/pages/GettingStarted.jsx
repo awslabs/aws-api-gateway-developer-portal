@@ -2,47 +2,35 @@ import React from 'react'
 
 import { Link } from 'react-router-dom'
 
-import { Header, Segment } from 'semantic-ui-react'
+import { Header, Container } from 'semantic-ui-react'
 
-export default (props) => (
-  <div style={{ display: "flex", flex: "1 1 auto", overflow: "hidden" }}>
-    <div style={{ padding: "40px", overflow: "auto" }}>
-      <Header as='h1'>Getting Started</Header>
+import { isAuthenticated } from 'services/self'
 
-      <Segment vertical>
-        <Header as="h2">Create an account and get an API Key</Header>
-        <p>
-          Creating an account will generate your API Key -- a unique key that you will allow you to access our APIs. When building your application, you will provide this api in the `x-api-key` header of your requests. To view your API Key, you can go to <Link to="/dashboard">your dashboard</Link> after logging in.
-        </p>
-        
-        <Header as="h3">Subscribe to APIs you want to use</Header>
-        <p>
-          Subscribing 'registers' your API Key to a specific API, allowing you to make calls to that API for both testing using the Developer Portal and building your applications.
-        </p>
-      </Segment>
-      <Segment vertical>
-        <Header as="h2">Build an App</Header>
+export default (props) => {
+  let authed = isAuthenticated()
+  return (
+  <Container style={{ padding: "40px" }}>
+    <Header as='h2'>Getting Started</Header>
 
-        <p>This part of the document should have code samples on how to integrate here. If we provide a hook to download the SDKs, we should point that out here.</p>
-        <p>Build your application. Use the x-api-key header to send the API key in your requests.</p>
+    <Header as="h3">Create an account and subscribe to APIs</Header>
+    <p>
+      To use any of our APIs you must have a developer account. A developer account gives you an API Key, access to use and test our APIs, and metrics on your usage. { !authed && (`Create or sign in using the buttons in the top right.`)}
+    </p>
 
-      </Segment>
-      <Segment vertical>
-        <Header as="h2">Next Steps</Header>
+    <p>
+      When you first register, your new API Key won't be tied to any of our APIs. To activate it for an API, navigate to <Link to="/apis">APIs</Link>, then find the API you want to use and click `subscribe`. Your API Key is now subscribed to the API and you can make calls to all methods on the API.
+    </p>
 
-        <Header as="h3">Throttling Limits</Header>
+    <p>  
+      Figuring out how to use APIs can be hard. Use the “Try it out!” feature to get examples of the request and response shapes of our APIs. The Developer Portal will make an API call to the backend service using your API key and shows a sample <code>curl</code> request with all necessary input parameters and the real response.
+    </p>
 
-        <p>What do do if you hit throttling limits.</p>
-        <p>The API plans that you subscribe to are governed by throttling limits and quotas as described in the API description. If you have exhausted your limits and want temporary extensions, contact us.</p>
+    <p>
+      If you need your API Key for any reason, you can always find it on <Link to="/dashboard">your dashboard</Link> after logging in.
+    </p>
 
-        <Header as="h3">Built an App?</Header>
-        <p>Successfully built an app? <a href='http://docs.aws.amazon.com/apigateway/latest/developerguide/sell-api-as-saas-on-aws-marketplace.html' target='_blank' rel="noopener noreferrer">Register as a seller</a> in AWS Marketplace and sell your application!</p>
+    <Header as="h3">Monitor your usage</Header>
 
-        <Header>Questions?</Header>
-        <p>
-          Questions or comments? Reach out to us on our <a href='https://forums.aws.amazon.com/forum.jspa?forumID=199' target='_blank' rel="noopener noreferrer">forums</a>.
-        </p>
-      </Segment>
-    </div>
-  </div>
-)
+    <p>Typically each API has a usage limit set for each API Key. As you scale up your usage of the APIs, you can monitor your usage towards the limits on <Link to="/dashboard">your dashboard</Link>.</p>
+  </Container>
+)}

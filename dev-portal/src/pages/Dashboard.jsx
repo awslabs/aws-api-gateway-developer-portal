@@ -31,9 +31,12 @@ function loadUsage(usagePlan, canvasId) {
             {
               label: 'Usage',
               data: data.map(d => d[1]),
+              lineTension: 0,
               backgroundColor: 'rgba(255, 99, 132, 0.2)',
               borderColor: 'rgba(255,99,132,1)',
-              borderWidth: 1
+              borderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6
             }
           ]
         },
