@@ -30,7 +30,7 @@ export function updateCatalogAndApisList(bustCache = false) {
 
   return catalogPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
-    .then(({ data = [] }) =>  store.catalog = data)
+    .then(({ data = [] }) => (store.catalog = data))
 }
 let catalogPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
 
@@ -74,7 +74,7 @@ export function updateSubscriptions(bustCache = false) {
 
   return subscriptionsPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/subscriptions', {}, {}, {}))
-    .then(({ data }) => store.subscriptions = data)
+    .then(({ data }) => (store.subscriptions = data))
 }
 let subscriptionsPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
 
@@ -83,20 +83,14 @@ export function getSubscribedUsagePlan(usagePlanId) {
 }
 
 export function subscribe(usagePlanId) {
-  let localClient
-
   return apiGatewayClient()
-    .then(apiGatewayClient => (localClient = apiGatewayClient))
-    .then(() => localClient.put('/subscriptions/' + usagePlanId, {}, {}))
+    .then(apiGatewayClient => apiGatewayClient.put('/subscriptions/' + usagePlanId, {}, {}))
     .then(() => updateSubscriptions(true))
 }
 
 export function unsubscribe(usagePlanId) {
-  let localClient
-
   return apiGatewayClient()
-    .then(apiGatewayClient => (localClient = apiGatewayClient))
-    .then(() => localClient.delete(`/subscriptions/${usagePlanId}`, {}, {}))
+    .then(apiGatewayClient => apiGatewayClient.delete(`/subscriptions/${usagePlanId}`, {}, {}))
     .then(() => updateSubscriptions(true))
 }
 
@@ -111,7 +105,7 @@ export function updateApiKey(bustCache) {
 
   return apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
-    .then(({data}) => store.apiKey = data.value)
+    .then(({data}) => (store.apiKey = data.value))
 }
 let apiKeyPromiseCache
 
@@ -119,9 +113,8 @@ export function fetchUsage(usagePlanId) {
   const date = new Date()
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toJSON().split('T')[0]
   const end = new Date().toJSON().split('T')[0]
-  return apiGatewayClient().then(apiGatewayClient => {
-    return apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', { start, end }, {})
-  })
+  return apiGatewayClient()
+    .then(apiGatewayClient => apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', { start, end }, {}))
 }
 
 export function mapUsageByDate(usage, usedOrRemaining) {
@@ -177,7 +170,6 @@ export function confirmMarketplaceSubscription(usagePlanId, token) {
     return
   }
   
-  return apiGatewayClient().then(apiGatewayClient => {
-    return apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, {"token" : token})
-  })
+  return apiGatewayClient()
+    .then(apiGatewayClient => apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, {"token" : token}))
 }
