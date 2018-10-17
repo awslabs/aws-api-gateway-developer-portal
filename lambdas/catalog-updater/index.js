@@ -1,7 +1,7 @@
 'use strict';
 
 // TODO: This whole lambda may need to be 'debounced' in the future via SNS/SQS
-// Right now it runs once per file, and thus may have nasty race conditions
+// Right now it runs once per file, on every file, and thus may have nasty race conditions
 
 let AWS = require('aws-sdk'),
   s3 = new AWS.S3(),
@@ -26,16 +26,57 @@ function swaggerFileFilter(file) {
   return isSwagger && isInCatalogFolder
 }
 
+
+/**
+ * Takes an s3 file representation and fetches the file's body, putting into a new, internal file representation.
+ *
+ * Example internal file representation:
+ * {
+ *   body: '{ "swagger": 2.0, ... }',
+ *   // note that apiStageKey may be undefined if we couldn't determine an exact apiStage!
+ *   apiStageKey: 'a3d2ef:prod'
+ * }
+ *
+ * @param file an s3 file representation
+ * @returns {Promise.<Object>} a promise that resolves to an internal file representation
+ */
 function getSwaggerFile(file) {
   let params = {
     Bucket: bucketName,
     Key: file.Key
-  }
+  },
+  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}:.*/,
+  extractApiIdRegex = /\n\s*"?host.*:\s*"?(.*)\.execute-api\./,
+  extractStageRegex = /\n\s*"?basePath.*:\s*"?\/?([^"]*)"?,?/
+
 
   return s3.getObject(params).promise()
-    .then((obj) => {
-      console.log(`swaggerFile: ${JSON.stringify(obj)}`)
-      return obj
+    .then((s3Repr) => {
+      let result = { body: s3Repr.Body.toString() }
+      console.log(`Processing file ${file.Key}:`)
+      console.log(`file.Key.split('catalog/').pop(): ${file.Key.split('catalog/').pop()}`)
+      console.log(`file.Key.split('catalog/').pop().match(isApiStageKeyRegex): ${file.Key.split('catalog/').pop().match(isApiStageKeyRegex)}`)
+
+      // if the file was saved with its name as an API:STAGE key, we should use that
+      if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
+        // from strings like catalog/a1b2c3d4e5:prod.json, remove catalog and .json
+        // we can trust that there's not a period in the stage name, as API GW doesn't allow that
+        result.apiStageKey = file.Key.split('catalog/').pop().split('.')[0]
+        console.log(`File ${file.Key} was saved with an API:STAGE name of ${result.apiStageKey}.`)
+      }
+
+      // otherwise, if the host and basepath fields are present in the swagger, we should use those fields
+      else if (result.body.match(extractApiIdRegex) && result.body.match(extractStageRegex)) {
+
+        result.apiStageKey = result.body.match(extractApiIdRegex).pop() + ':' + result.body.match(extractStageRegex).pop()
+        console.log(`File ${file.Key} has an identifying API:STAGE host of ${result.apiStageKey}.`)
+      }
+
+      if(!result.apiStageKey) {
+        console.error(`Could not uniquely resolve API:STAGE for file ${file.Key}.`)
+      }
+
+      return result
     })
     .catch((error) => {
       console.log(`error retrieving swagger file ${file.Key}: ${error}`)
@@ -49,40 +90,54 @@ function getSwaggerFile(file) {
  * {
  *   id: 'YOUR_USAGE_PLAN_ID',
  *   name: 'Free',
+ *   // throttle could be undefined
+ *   throttle: {
+ *      burstLimit: 5,
+ *      rateLimit: 0.33
+ *   },
+ *   // quota could be undefined
+ *   quota: {
+ *      limit : 100,
+ *      offset : 0,
+ *      // "DAY", "WEEK", or "MONTH"
+ *      period : "WEEK"
+ *   },
  *   apis: [{
  *     id: 'YOUR_API_ID',
+ *     stage: 'YOUR_STAGE_NAME'
  *     image: '/sam-logo.png',
- *     swagger: petStoreSwaggerDefinition
+ *     swagger: '{ "swagger": 2.0, ... }'
  *   }]
  * }
  * @param {Object} usagePlan the API GW CS representation of a usage plan
- * @param {Array} swaggerFiles array of swagger file bodies retrieved from s3
+ * @param {Array} swaggerFileReprs array of swagger file representations, each with a body and path parameter
  * @returns {Object} a 'catalog object' with id, name, and apis properties
  */
-function usagePlanToCatalogObject(usagePlan, swaggerFiles) {
+function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
   let catalogObject = {
     id: usagePlan.id,
     name: usagePlan.name,
+    throttle: usagePlan.throttle,
+    quota: usagePlan.quota,
     apis: []
   }
 
   _.forEach(usagePlan.apiStages, (apiStage) => {
     let api = {}
 
-    _.chain(swaggerFiles)
-      .find((swaggerFile) => {
-        console.log(`swaggerFile: ${swaggerFile}`)
-        console.log(`apiId: ${apiStage.apiId}`)
-        console.log(`swaggerFile.indexOf(apiStage.apiId): ${swaggerFile.indexOf(apiStage.apiId)}`)
-        return swaggerFile.indexOf(apiStage.apiId) !== -1
+    _.chain(swaggerFileReprs)
+      .find((swaggerFileRepr) => {
+        return swaggerFileRepr.apiStageKey === `${apiStage.apiId}:${apiStage.stage}`
       })
-      .tap((swaggerFile) => {
-        if(swaggerFile) {
-          api.swagger = JSON.parse(swaggerFile)
+      .tap((swaggerFileRepr) => {
+        if(swaggerFileRepr) {
+          let swaggerOrError = _.attempt(JSON.parse, swaggerFileRepr.body)
+          // parse the JSON if it's JSON, otherwise, leave it as a string
+          _.isError(swaggerOrError) ? api.swagger = swaggerFileRepr.body : api.swagger = swaggerOrError
           api.id = apiStage.apiId
-          //TO-DO: Allow for customizing image?
+          api.stage = apiStage.stage
+          //TODO: Allow for customizing image?
           api.image = '/sam-logo.png'
-          console.log(`api: ${JSON.stringify(api, null, 4)}`)
           catalogObject.apis.push(api)
         }
       })
@@ -112,17 +167,11 @@ exports.handler = (event, context) => {
           .map(getSwaggerFile)
           .value()
 
-        console.log(`promises: ${JSON.stringify(promises)}`)
         return Promise.all(promises)
       })
       .then((swaggerFiles) => {
         console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
         let catalogObjects = []
-
-        swaggerFiles.forEach((file, index) => {
-          swaggerFiles[index] = file.Body.toString()
-          console.log(`swaggerFile #${index+1}: ${swaggerFiles[index].substring(0, 100)}`)
-        })
 
         return gateway.getUsagePlans({}).promise()
           .then((result) => {
