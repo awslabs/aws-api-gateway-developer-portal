@@ -45,7 +45,7 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}:.*/,
+  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
   extractApiIdRegex = /\n\s*"?host.*:\s*"?(.*)\.execute-api\./,
   extractStageRegex = /\n\s*"?basePath.*:\s*"?\/?([^"]*)"?,?/
 
@@ -54,26 +54,24 @@ function getSwaggerFile(file) {
     .then((s3Repr) => {
       let result = { body: s3Repr.Body.toString() }
       console.log(`Processing file ${file.Key}:`)
-      console.log(`file.Key.split('catalog/').pop(): ${file.Key.split('catalog/').pop()}`)
-      console.log(`file.Key.split('catalog/').pop().match(isApiStageKeyRegex): ${file.Key.split('catalog/').pop().match(isApiStageKeyRegex)}`)
 
       // if the file was saved with its name as an API:STAGE key, we should use that
       if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
         // from strings like catalog/a1b2c3d4e5:prod.json, remove catalog and .json
         // we can trust that there's not a period in the stage name, as API GW doesn't allow that
         result.apiStageKey = file.Key.split('catalog/').pop().split('.')[0]
-        console.log(`File ${file.Key} was saved with an API:STAGE name of ${result.apiStageKey}.`)
+        console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
 
       // otherwise, if the host and basepath fields are present in the swagger, we should use those fields
       else if (result.body.match(extractApiIdRegex) && result.body.match(extractStageRegex)) {
 
         result.apiStageKey = result.body.match(extractApiIdRegex).pop() + ':' + result.body.match(extractStageRegex).pop()
-        console.log(`File ${file.Key} has an identifying API:STAGE host of ${result.apiStageKey}.`)
+        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
       }
 
       if(!result.apiStageKey) {
-        console.error(`Could not uniquely resolve API:STAGE for file ${file.Key}.`)
+        console.error(`Could not uniquely resolve API_STAGE for file ${file.Key}.`)
       }
 
       return result
