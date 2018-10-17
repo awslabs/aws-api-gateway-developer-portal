@@ -1,28 +1,30 @@
-const yaml = require('js-yaml')
-const fs = require('fs')
+let AWS = require('aws-sdk'),
+  s3 = new AWS.S3()
 
-// Load Swagger as JSON
-// const petStoreSwaggerDefinition = require('./pet-store-prod.json')
+let usagePlanCatalog = []
 
-// Load Swagger as YAML
-const petStoreSwaggerDefinition = loadYaml('./pet-store-prod.yaml')
+const usagePlans = function() {
+  // TODO: This was previously cached, and could be again, except that there's no mechanism to cache-bust the lambda
+  // function when the user updates the catalog. This led to confusing behavior, so I removed it.
+  console.log(`usagePlanCatalog: ${JSON.stringify(usagePlanCatalog, null, 4)}`)
+  let params = {
+    Bucket: process.env.StaticBucketName,
+    Key: "catalog.json"
+  }
 
-const usagePlans = [{
-  id: 'YOUR_USAGE_PLAN_ID',
-  name: 'Free',
-  apis: [{
-    id: 'YOUR_API_ID',
-    image: '/sam-logo.png',
-    swagger: petStoreSwaggerDefinition
-  }]
-}]
+  console.log(`params: ${JSON.stringify(params, null, 4)}`)
+
+  return s3.getObject(params).promise()
+    .then((catalog) => {
+      let cleanCatalog = JSON.parse(catalog.Body.toString())
+      console.log(`catalog: ${cleanCatalog}`)
+      usagePlanCatalog = cleanCatalog
+      return usagePlanCatalog
+    })
+    .catch((error) => {
+      console.log(`error: ${error}`)
+      return Promise.reject(error)
+    })
+}
 
 module.exports = usagePlans
-
-function loadYaml (path) {
-  try {
-      return yaml.safeLoad(fs.readFileSync(`${__dirname}/${path}`, 'utf8'))
-  } catch (e) {
-      console.log(e)
-  }
-}

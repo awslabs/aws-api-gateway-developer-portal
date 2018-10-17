@@ -1,0 +1,14 @@
+{
+  "name": "serverless-developer-portal-catalog-updater",
+  "version": "1.0.0",
+  "description": "API Gateway Serverless Developer Portal component responsible for updating the catalog of usage plans and swagger files",
+  "main": "index.js",
+  "config": {},
+  "scripts": {},
+  "license": "Apache-2.0",
+  "dependencies": {
+    "aws-sdk": "^2.6.7",
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {}
+}

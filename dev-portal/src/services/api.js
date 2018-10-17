@@ -1,23 +1,32 @@
-import { awsRegion } from './aws'
-export let apiGatewayClient
+import AWS from 'aws-sdk'
+
+export const awsRegion = window.config.region
+export const cognitoRegion = window.config.region
+export const cognitoUserPoolId = window.config.userPoolId
+export const cognitoIdentityPoolId = window.config.identityPoolId
+export const cognitoClientId = window.config.userPoolClientId
+
+AWS.config.region = cognitoRegion
+
+let cachedClient
 
 export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToken } = {}) {
-  apiGatewayClient = window.apigClientFactory.newClient({
-      accessKey: accessKeyId,
-      secretKey: secretAccessKey,
-      sessionToken: sessionToken,
-      region: awsRegion
-    })
+  cachedClient = window.apigClientFactory.newClient({
+    accessKey: accessKeyId,
+    secretKey: secretAccessKey,
+    sessionToken: sessionToken,
+    region: awsRegion
+  })
 }
 
-export function getApiGatewayClient() {
-  if (apiGatewayClient) return Promise.resolve(apiGatewayClient)
-
+export function apiGatewayClient() {
+  if (cachedClient) return Promise.resolve(cachedClient)
+  
   return new Promise(resolve => {
-    const poller = window.setInterval(() => {
-      if (apiGatewayClient) {
-        window.clearInterval(poller)
-        resolve(apiGatewayClient)
+    const poller = setInterval(() => {
+      if (cachedClient) {
+        clearInterval(poller)
+        resolve(cachedClient)
       }
     }, 100)
   })

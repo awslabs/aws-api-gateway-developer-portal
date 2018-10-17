@@ -1,6 +1,6 @@
 ## Introduction
 
-aws-serverless-developer-portal is a reference implementation for a developer portal application that allows users to register, discover, and subscribe to your API Products (API Gateway Usage Plans), manage their API Keys, and view their usage metrics for your APIs.
+aws-serverless-developer-portal is a developer portal application that allows users to register, discover, and subscribe to your API Products (via API Gateway Usage Plans), manage their API Keys, and view their usage metrics for your APIs.
 
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
 
@@ -12,39 +12,43 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 
 ### Prerequisites
 
-First, ensure you have the [latest AWS CLI installed](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) (version >= 1.11.37) as well as [Node.js](https://nodejs.org/en/download/) 4+. Then, clone this repo into a local directory
+First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html). Note that while the instructions specify Docker as a pre-requisite, Docker is only necessary for local development via SAM local. Feel free to skip installing Docker when you first set up the developer portal.
 
-### List your products (APIs/Usage Plans)
+Then, clone this repo into a local directory. Ensure that you have an S3 bucket to put zipped lambda functions into. It can be private, and will be referred to in this readme as "your-lambda-artifacts-bucket-name".
 
-Add your API Gateway Usage Plans and APIs to `lambdas/backend/catalog/index.js`, using the format below, and add your Swagger files to `lambdas/backend/catalog/` directory. If you have not yet created an API and Usage Plan, see [Generate Your Own API Gateway Developer Portal](https://aws.amazon.com/blogs/compute/generate-your-own-api-gateway-developer-portal/) for a detailed walkthrough. Alternatively, skip this step for now if you just want to get started with your developer portal (A placeholder API with swagger definition is provided for you for demonstration purposes, however, some features such as __Subscribe__ will not work)
+If you have not used the AWS CLI or SAM CLI before, you may need to [configure your AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html).
 
-```json
-{
-  "id": "YOUR_USAGE_PLAN_ID",
-  "name": "Free",
-  "apis": [{
-    "id": "YOUR_API_ID",
-    "image": "/sam-logo.png",
-    "swagger": petStoreSwaggerDefinition
-  }]
-}
-```
-
-__TIP:__ If you put your api product images in the `dev-portal/public` directory, you can simply do `"image": "/your-api-product-image.svg"`. `image` is also optional.
-
-Add your swagger definition to the `swagger` property to enable documentation for your API.
+If you have previously set up a v1 developer portal (non-SAM deployed), you will need to either remove all the v1 developer portal resources (dynamo tables, roles, etc.) or provide new names for the v2 developer portal by passing in parameter overrides for every resource.
 
 ### Setup and deploy
 
 Run:
 
 ```bash
-npm run setup# Window users: all commands must use the `win-` prefix version, eg. npm run win-setup
+sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
-Follow the prompts and enter your region, and names for your S3 buckets and CloudFormation stack. The names you provide for the S3 buckets must be unique to that region (ie. not just unique to your account) so it is recommended to add a prefix or suffix (eg. my-org-dev-portal). You can choose to provide an existing bucket for the __artifacts__ S3 bucket name, or a new one (in which case it will be created for you). The __site__ S3 bucket must __NOT__ exist, as this is managed by the CloudFormation stack.
+Then, replace "custom-prefix" in the command below with some prefix that is globally unique, like your org name or username and run:
 
-After this command completes, it will open your developer portal web app in your default browser.
+```bash
+sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts"
+```
+
+The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
+
+You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
+
+### Populate the Swagger catalog
+
+The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, rename it in the format `apiId:stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1:production.json`.
+
+Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
+
+The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a Swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
+
+### Testing your APIs
+
+When logged into the developer portal with an account that has a provisioned api key, you should be able to test your APIs by selecting a resource/method in them and clicking "Try it out!". Note that this requires CORS to be set up on your API to allow the developer portal to call it. Note that the default PetStore has CORS enabled on all resources but `/`.
 
 ## Before going to production
 
@@ -58,32 +62,13 @@ Additional Resources:
 
 ## Components
 
-### Cloudformation Stack (cloudformation/base.json)
+### SAM Stack (template.yaml)
 
-Most components in the developer portal are managed by the CloudFormation stack defined in cloudformation.json. New application components can be added to this template. Configuration values are fed to this template from the configuration properties in package.json.
-
-To create/update the stack, run:
-
-```bash
-npm run package-deploy
-```
-
-#### WARNING: DESTRUCTIVE OPERATIONS BELOW
-To clean up the resources created, run the following commands. Note that these commands perform a `aws s3 rb --force` operation on your S3 buckets, and will delete all contents of your artifacts and app bucket. You should absolutely not run `npm run delete-artifacts-bucket` if it is a generic artifacts bucket that contains items other than those related to the developer portal you want to delete. The same is true for the `npm run delete-app-bucket` command, however, this is less likely to have non-developer-portal assets since it was created by CloudFormation. As a result of the app S3 bucket being created by CloudFormation, if you do not delete the bucket before deleting the CloudFormation Stack (`npm run delete-stack`), the CloudFormation stack will "fail" to delete due to the S3 bucket being non-empty (everything except the S3 bucket will have been successfully deleted).
-
-```bash
-#npm run delete-artifacts-bucket
-#npm run delete-app-bucket
-npm run delete-stack
-```
-
-These operations will not delete any API Keys that may have been generated as a result of user registration to the developer portal. We will add a script to achieve this in a future update. For now you will need to manually delete these API Keys.
-
-__Windows users:__ use the `win-` prefixed commands, eg. `npm run win-package-deploy` and `npm run win-delete-stack`
+All the components in the developer portal are managed by the SAM stack defined in template.yaml. New application components can be added to this template. Configuration values are fed to this template from the parameter overrides provided on the command line. If overrides are not provided, default values are used.
 
 ### UI (/app)
 
-The UI is a simple React application hosted in a public S3 bucket. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
+The UI is a simple React application hosted in an S3 bucket. The assets are uploaded to the S3 bucket by the static-asset-uploader lambda function. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
 
 ### Application Backend (/lambdas/backend)
 
@@ -93,7 +78,7 @@ The backend function runs with escalated privileges (defined as LambdaExecutionR
 
 All resources in the API require AWS SigV4 authentication (i.e. via Cognito) with the exception of /register and the marketplace redirection resource.
 
-By default, the backend implementation assumes a one-to-one association between authenticated users (Cognito identities) and API Gateway API Keys. A given user can be subscribed to multiple usage plans using the same API Key. However, the implementation can be changed to support multiple API Keys per user (for example, API Key per user per Usage Plan).
+By default, the backend implementation assumes a one-to-one association between authenticated users (Cognito identities) and API Gateway API Keys. A given user can be subscribed to multiple usage plans using the same API Key.
 
 ### AWS Marketplace SNS Listener Function (Optional) (/listener)
 
@@ -101,35 +86,28 @@ The listener Lambda function will be triggered when customers subscribe or unsub
 
 From the listener function you can manage your Usage Plan Keys through API Gateway to grant/revoke access to your APIs as well as implement any other subscription/unsubscription business logic. If you have multiple marketplace products, you will need to subscribe the listener function to the SNS topic for each product.
 
-## Deploying Changes
-
-Deploy changes to the application UI:
-
-```bash
-npm run upload-site
-```
-
-Deploy changes to CloudFormation, Swagger, or lambda functions:
-
-```bash
-npm run package-deploy
-```
-
-__Windows users:__ use the `win-` prefixed commands, eg. `npm run win-package-deploy` and `npm run win-delete-stack`
-
 ## Debugging
 
 You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See this [blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
 
+## Customization
+The developer portal is easily customized. Make changes in your cloned copy of the repository, version with git, and package & deploy with SAM. To pull in new versions of the dev portal, merge or rebase in the upstream changes. Please do not edit AWS resources in place; instead edit the relevant files locally and re-package & re-deploy. Additionally, the developer portal website's static assets will not automatically update. Please see `./dev-portal/README.md` for details.
+
+## Tear-down
+
+Deleting developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table, which will list the provisioned api keys.
+
 ## Marketplace SaaS Setup Instructions
 
-You can sell your SaaS product through [AWS Marketplace] (https://aws.amazon.com/marketplace/management/tour/) and have the developer portal manage the subscription/unsubscription workflows. API Gateway will automatically provide authorization and metering for your product and subscribers will be automatically billed through AWS Marketplace.
+**NOTE**: These instructions are now out of date!
+
+You can sell your SaaS product through [AWS Marketplace](https://aws.amazon.com/marketplace/management/tour/) and have the developer portal manage the subscription/unsubscription workflows. API Gateway will automatically provide authorization and metering for your product and subscribers will be automatically billed through AWS Marketplace.
 
 Overview:
 
 1) Create a Usage Plan in API Gateway
 
-2) Create a SaaS Product in [AWS Marketplace] (https://aws.amazon.com/marketplace/management/tour/):
+2) Create a SaaS Product in [AWS Marketplace](https://aws.amazon.com/marketplace/management/tour/):
 
 The redirect URL should be in the format:
 https://YOUR_DEVELOPER_PORTAL_API_ID.execute-api.[REGION].amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]

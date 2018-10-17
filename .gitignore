@@ -1,6 +1,14 @@
-node_modules
+# devportal specific
+# we're committing the artifacts, don't need the modules
+/dev-portal/node_modules
+/dev-portal/coverage
+/dev-portal/build
+/dev-portal/deployer.config.js
+/dev-portal/public/config.js
+
+# misc
 npm-debug.log
 .DS_Store
-packaged-sam.yaml
+packaged.yaml
 cognito.js
-package-lock.json
+.idea
