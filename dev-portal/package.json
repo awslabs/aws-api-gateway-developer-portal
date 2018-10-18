@@ -6,7 +6,6 @@
     "amazon-cognito-identity-js": "^2.0.30",
     "aws-sdk": "^2.326.0",
     "chart.js": "^2.7.2",
-    "jquery": "^3.3.1",
     "lodash": "^4.17.11",
     "mobx": "^5.5.0",
     "mobx-react": "^5.2.8",
@@ -20,9 +19,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build; cp -r ./build ../lambdas/static-asset-uploader",
+    "build": "react-scripts build; rm -rf ../lambdas/static-asset-uploader/build; cp -r ./build ../lambdas/static-asset-uploader",
     "deploy": "node ./scripts/deploy-stack.js",
-    "write-config": "node -e 'required(\"./scripts/write-config.js\")'",
+    "write-config": "node -e 'require(\"./scripts/write-config.js\")'",
     "release": "npm run build && npm run deploy",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

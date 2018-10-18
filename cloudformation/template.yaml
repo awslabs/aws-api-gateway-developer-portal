@@ -292,13 +292,13 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
-      AccessControl: PublicRead
+      # AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
         RoutingRules:
           - RoutingRuleCondition:
-              HttpErrorCodeReturnedEquals: 404
+              HttpErrorCodeReturnedEquals: 403
             RedirectRule:
               HostName: !Join
                 - ''
@@ -477,10 +477,15 @@ Resources:
           - Effect: Allow
             Action:
             - s3:ListBucket
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref ArtifactsS3BucketName
+            Resource: 
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref ArtifactsS3BucketName
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref DevPortalSiteS3BucketName
           - Effect: Allow
             Action:
             - s3:GetObject
@@ -549,7 +554,6 @@ Resources:
               - ''
               - - 'arn:aws:s3:::'
                 - !Ref DevPortalSiteS3BucketName
-                - '/*'
           - Effect: Allow
             Action:
             - s3:DeleteObject

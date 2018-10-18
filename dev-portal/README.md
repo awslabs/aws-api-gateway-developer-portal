@@ -28,7 +28,7 @@ The static assets are only re-uploaded on deployment if the previous deployment 
 
 ### If you have already deployed a Development Portal...
 
-1. Create a `build.config.js` file inside `/dev-portal/` with the following structure
+1. Create a `deployer.config.js` file inside `/dev-portal/` with the following structure
 
 ```js
 // replace each name with your bucket names
