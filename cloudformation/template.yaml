@@ -354,7 +354,7 @@ Resources:
           ReadCapacityUnits: '5'
           WriteCapacityUnits: '5'
 
-  DevPortalLambdaExecutionRole:
+  BackendLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -382,40 +382,24 @@ Resources:
             Resource: '*'
           - Effect: Allow
             Action:
-            - s3:PutObject
+            - s3:GetObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
-                - !Ref DevPortalSiteS3BucketName
-                - '/*'
-          - Effect: Allow
-            Action:
-            - s3:PutObjectAcl
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref DevPortalSiteS3BucketName
-                - '/*'
-          - Effect: Allow
-            Action:
-            - s3:DeleteObject
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref DevPortalSiteS3BucketName
+                - !Ref ArtifactsS3BucketName
                 - '/*'
           - Effect: Allow
             Action:
             - aws-marketplace:ResolveCustomer
             Resource: '*'
-          - Action:
+          - Effect: Allow
+            Action:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:Scan
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
-            Effect: Allow
             Resource: !Join
               - ''
               - - 'arn:aws:dynamodb:'
@@ -424,9 +408,9 @@ Resources:
                 - !Ref 'AWS::AccountId'
                 - :table/
                 - !Ref CustomersTable
-          - Action:
+          - Effect: Allow
+            Action:
             - dynamodb:Query
-            Effect: Allow
             Resource: !Join
               - ''
               - - 'arn:aws:dynamodb:'
@@ -436,6 +420,52 @@ Resources:
                 - :table/
                 - !Ref CustomersTable
                 - /index/MarketplaceCustomerIdIndex
+
+  CognitoStrategyLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+
+  CatalogUpdaterLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
           - Effect: Allow
             Action:
             - s3:ListBucket
@@ -454,7 +484,83 @@ Resources:
                 - '/*'
           - Effect: Allow
             Action:
+#            scope this down
+            - apigateway:*
+            Resource: '*'
+
+  AssetUploaderLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - s3:PutObjectAcl
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
             - s3:DeleteObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - s3:DeleteObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
@@ -548,7 +654,7 @@ Resources:
       CodeUri: ../lambdas/backend
       Handler: index.handler
       MemorySize: 1024
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt BackendLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 30
       Environment:
@@ -578,7 +684,7 @@ Resources:
       CodeUri: ../lambdas/listener
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt BackendLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 30
 
@@ -588,7 +694,7 @@ Resources:
       CodeUri: ../lambdas/cognito-user-pools-confirmation-strategy
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt CognitoStrategyLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 3
 
@@ -675,7 +781,7 @@ Resources:
       CodeUri: ../lambdas/catalog-updater
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt CatalogUpdaterLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 20
       Environment:
@@ -697,7 +803,7 @@ Resources:
       CodeUri: ../lambdas/static-asset-uploader
       Handler: index.handler
       MemorySize: 512
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt AssetUploaderLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 300
       Environment:
