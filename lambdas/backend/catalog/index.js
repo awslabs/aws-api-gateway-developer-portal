@@ -22,8 +22,16 @@ const usagePlans = function() {
       return usagePlanCatalog
     })
     .catch((error) => {
+      // don't break if there's no catalog file
+      if (error.code === "NoSuchKey") {
+        console.log('error: No catalog.json file found. Please upload an api definition to `catalog/`.')
+
+        return []
+      }
+      
       console.log(`error: ${error}`)
-      return Promise.reject(error)
+      
+      throw error
     })
 }
 
