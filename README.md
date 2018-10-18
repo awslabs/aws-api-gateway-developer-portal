@@ -5,7 +5,6 @@ aws-serverless-developer-portal is a developer portal application that allows us
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
 
 ![Alt text](/screen-home.png?raw=true)
-![Alt text](/screen-apis.png?raw=true)
 ![Alt text](/screen-documentation.png?raw=true)
 
 ## Setup
@@ -23,13 +22,13 @@ If you have previously set up a v1 developer portal (non-SAM deployed), you will
 ### Setup and deploy
 
 Run:
-
+>Replace the `your-lambda-artifacts-bucket-name` with a bucket that you manage and must already exist
 ```bash
 sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
-Then, replace "custom-prefix" in the command below with some prefix that is globally unique, like your org name or username and run:
-
+Then run: 
+>Replace `custom-prefix` in the command below with some prefix that is globally unique, like your org name or username and run
 ```bash
 sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts"
 ```
