@@ -88,10 +88,12 @@ function determineContentType(filePath) {
  * See the documentation on klaw: https://github.com/jprichardson/node-klaw
  * See the documentation on through2's transformFunction API: https://github.com/rvagg/through2#readme
  */
-const excludeDirFilter = through.obj(function (item, enc, next) {
-    if (!item.stats.isDirectory()) this.push(item)
-    next()
-})
+const excludeDirFilter = () => {
+    return through.obj(function (item, enc, next) {
+        if (!item.stats.isDirectory()) this.push(item)
+        next()
+    })
+}
 
 /**
  * Deletes all the objects in an S3 bucket. This is useful because the bucket must be empty (zero objects) before it
@@ -152,13 +154,13 @@ exports.handler = (event, context) => {
             let collector = []
 
             klaw('./build')
-                .on('error', err => excludeDirFilter.emit('error', err))
-                .pipe(excludeDirFilter)
+                .on('error', (err, item) => excludeDirFilter.emit('error', err, item))
+                .pipe(excludeDirFilter())
                 .on('data', fileStat => {
                     collector.push(fileStat.path)
                 })
-                .on('error', error => {
-                    console.log(`Failed to traverse file system: ${error}`)
+                .on('error', (error, item) => {
+                    console.log(`Failed to traverse file system on path ${item && item.path}: ${error}`)
                     notifyCFNThatUploadFailed(error, event, context)
                 })
                 .on('end', () => {
