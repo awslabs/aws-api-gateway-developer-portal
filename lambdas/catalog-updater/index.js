@@ -55,7 +55,7 @@ function getSwaggerFile(file) {
       let result = { body: s3Repr.Body.toString() }
       console.log(`Processing file ${file.Key}:`)
 
-      // if the file was saved with its name as an API:STAGE key, we should use that
+      // if the file was saved with its name as an API_STAGE key, we should use that
       if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
         // from strings like catalog/a1b2c3d4e5:prod.json, remove catalog and .json
         // we can trust that there's not a period in the stage name, as API GW doesn't allow that
@@ -66,7 +66,7 @@ function getSwaggerFile(file) {
       // otherwise, if the host and basepath fields are present in the swagger, we should use those fields
       else if (result.body.match(extractApiIdRegex) && result.body.match(extractStageRegex)) {
 
-        result.apiStageKey = result.body.match(extractApiIdRegex).pop() + ':' + result.body.match(extractStageRegex).pop()
+        result.apiStageKey = result.body.match(extractApiIdRegex).pop() + '_' + result.body.match(extractStageRegex).pop()
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
       }
 
@@ -125,7 +125,7 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
 
     _.chain(swaggerFileReprs)
       .find((swaggerFileRepr) => {
-        return swaggerFileRepr.apiStageKey === `${apiStage.apiId}:${apiStage.stage}`
+        return swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`
       })
       .tap((swaggerFileRepr) => {
         if(swaggerFileRepr) {
