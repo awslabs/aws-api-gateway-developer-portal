@@ -24,12 +24,12 @@ const usagePlans = function() {
     .catch((error) => {
       // don't break if there's no catalog file
       if (error.code === "NoSuchKey") {
-        console.log('error: No catalog.json file found. Please upload an api definition to `catalog/`.')
+        console.error('error: No catalog.json file found. Please upload an api definition to `catalog/`.')
 
         return []
       }
       
-      console.log(`error: ${error}`)
+      console.error(`error: ${error}`)
       
       throw error
     })
