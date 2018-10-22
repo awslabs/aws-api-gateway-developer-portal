@@ -39,7 +39,7 @@ You can override any of the parameters in the template using the `--parameter-ov
 
 ### Populate the Swagger catalog
 
-The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, rename it in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`.
+The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, rename it in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`. Note that this is case sensitive!
 
 Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
 
