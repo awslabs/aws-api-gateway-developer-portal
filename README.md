@@ -35,6 +35,12 @@ sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-port
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
 
+To get the URL for the newly created developer portal instance, find the websiteURL field in the cloudformation console's outputs or run this command:
+
+```bash
+aws cloudformation describe-stacks --query "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
+```
+
 You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
 
 ### Populate the Swagger catalog
