@@ -39,6 +39,14 @@ Parameters:
     Description: The region to deploy to.
     Default: "us-east-1"
 
+  CustomDomainName:
+    Type: String
+    Description: Optionally provide a custom domain name associated with an ACM cert to create a developer portal at that domain name (provide with the format foo.bar.net). Leave blank to create a developer portal without a custom domain name. Standing up a developer portal stack with a custom domain name will take significantly longer than without.
+    Default: ''
+
+Conditions:
+  UseCustomDomainName: !Not [ !Equals [!Ref CustomDomainName, ''] ]
+
 Resources:
   ApiGatewayApi:
     Type: AWS::Serverless::Api
@@ -823,6 +831,60 @@ Resources:
       UserPoolClientId: !Ref CognitoUserPoolClient
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
+
+  CustomDomainCloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: DevPortalSiteS3Bucket
+    Condition: UseCustomDomainName
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref CustomDomainName
+          - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: true
+          TargetOriginId: 'dev-portal-site-s3-bucket'
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        Origins:
+          - DomainName: !Join [ '', [ !Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com' ] ]
+            Id: 'dev-portal-site-s3-bucket'
+            S3OriginConfig:
+              OriginAccessIdentity: !Join [ '', [ 'origin-access-identity/cloudfront/', !Ref CustomDomainDistributionAccessIdentity ] ]
+
+  CustomDomainDistributionAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Condition: UseCustomDomainName
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'CloudFront OAI for ${CustomDomainName}'
+
+  CustomDomainHostedZone:
+    Type: AWS::Route53::HostedZone
+    Condition: UseCustomDomainName
+    Properties:
+      Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+
+  CustomDomainRecordSet:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: UseCustomDomainName
+    Properties:
+      HostedZoneName: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+      RecordSets:
+        - Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+          Type: A
+          AliasTarget:
+            DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
+            # this is a "magic string" for using CFN aliases; see this link:
+            # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
+            HostedZoneId: 'Z2FDTNDATAQYW2'
+        - Name: !Join [ '', [ 'www.', !Ref CustomDomainName, '.' ] ]
+          Type: A
+          AliasTarget:
+            DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
+            HostedZoneId: 'Z2FDTNDATAQYW2'
 
 Outputs:
   LambdaFunctionConsoleUrl:
