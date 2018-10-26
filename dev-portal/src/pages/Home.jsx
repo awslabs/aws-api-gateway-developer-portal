@@ -6,12 +6,10 @@ import { Link } from 'react-router-dom'
 // semantic-ui
 import { Header, Segment, Container, Image, Button } from 'semantic-ui-react'
 
-import logo from '../logo.png'
-
 export const HomePage = () => (
   <React.Fragment>
     <Segment vertical textAlign='center' style={{ color: "whitesmoke", backgroundColor: "slategray", padding: "40px 0px", margin: "0px !important" }}>
-      <Image centered size='small' src={logo} />
+      <Image centered size='small' src='/custom-content/home-image.png' />
       <Header as='h1' style={{ color: "whitesmoke" }}>
         {/* The main header on the home page of your developer portal. */}
         Developer Portal
