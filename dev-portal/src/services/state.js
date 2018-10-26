@@ -21,6 +21,7 @@ export const store = observable({
   set catalog(catalog = []) {
     storeCache.catalog = addUsagePlanToApis(catalog)
     store.apiList = createApiList(storeCache.catalog)
+    fetchApiImage(store.apiList)
     updateSubscriptionStatus()
 
     return storeCache.catalog
@@ -68,6 +69,20 @@ function addUsagePlanToApis(catalog) {
 
 function createApiList(catalog) {
   return catalog.reduce((acc, usagePlan) => acc.concat(usagePlan.apis), [])
+}
+
+function fetchApiImage() {
+  store.apiList.forEach(api => {
+    let specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
+
+    if(!api.logo)
+      fetch(specificLogo, { headers: { Accept: "image/png" } }).then(response => {
+        if (response.ok)
+          api.logo = specificLogo
+
+        else api.logo = '/custom-content/api-logos/default.png'
+      })
+  })
 }
 
 /**
