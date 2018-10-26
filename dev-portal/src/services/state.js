@@ -75,8 +75,10 @@ function fetchApiImage() {
   store.apiList.forEach(api => {
     let specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
 
-    if(!api.logo)
-      fetch(specificLogo, { headers: { Accept: "image/png" } }).then(response => {
+    // fetch automatically follows redirects; setting redirect to `manual` prevents this
+    // we need to prevent it so that we can accurately determine if the image exists
+    if (!api.logo)
+      fetch(specificLogo, { headers: { Accept: "image/png" }, redirect: "manual" }).then(response => {
         if (response.ok)
           api.logo = specificLogo
 
