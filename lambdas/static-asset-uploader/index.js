@@ -8,17 +8,22 @@ let AWS = require('aws-sdk'),
     through = require('through2'),
     _ = require('lodash')
 
+let crypto = require('crypto')
+
 /**
  * Uses the cfn-response library to notify CloudFormation that this custom resource is done with the task it was
  * invoked to do. This could be the response to a create / update request (which would upload files from S3) or a
  * delete request (which would delete files from S3).
+ * 
+ * Send through a hash to tell CFN that we're not going to delete this resource.
  *
  * @param {Object} responseData extra information about the processing for CFN; must be an object
  * @param {Object} event the CFN request object that kicked off this custom resource
  * @param {Object} context lambda function context
  */
 function notifyCFNThatUploadSucceeded(responseData, event, context) {
-    response.send(event, context, response.SUCCESS, responseData)
+    var hash = crypto.createHash('md5').update(JSON.stringify(responseData)).digest('hex')
+    response.send(event, context, response.SUCCESS, responseData, hash)
 }
 
 /**
@@ -88,9 +93,43 @@ function determineContentType(filePath) {
  * See the documentation on klaw: https://github.com/jprichardson/node-klaw
  * See the documentation on through2's transformFunction API: https://github.com/rvagg/through2#readme
  */
-const excludeDirFilter = () => {
+const excludeDirFactory = () => {
     return through.obj(function (item, enc, next) {
         if (!item.stats.isDirectory()) this.push(item)
+        next()
+    })
+}
+
+/**
+ * Decides if we should overwrite the custom-content. (Yes if it's a Create call or if the RebuildMode is set to `overwrite-content`.)
+ *
+ * Uses through2 to create the stream handler from a function. Note that this function must be provided a stream of
+ * fs.Stats objects (i.e., the objects in the stream must have a stats property with an isDirectory method).
+ *
+ * See the documentation on klaw: https://github.com/jprichardson/node-klaw
+ * See the documentation on through2's transformFunction API: https://github.com/rvagg/through2#readme
+ */
+const excludeCustomContentFactory = (eventType, rebuildMode) => {
+    return through.obj(function (item, enc, next) {
+        // always write everything on Creates
+        if (eventType === "Create") {
+            console.log('pushing b/c Create', item.path)
+            this.push(item)
+        } 
+        // always write everything on an overwrite
+        else if (rebuildMode === "overwrite-content") {
+            this.push(item)
+        }
+
+        // only write non custom-content files on everything else
+        else if ( !/build\/custom-content/.test(item.path) ) {
+            console.log('pushing b/c not custom', item.path)
+            this.push(item)
+        } 
+        
+        else {
+            console.log('not pushing', item.path)
+        }
         next()
     })
 }
@@ -153,9 +192,14 @@ exports.handler = (event, context) => {
         } else {
             let collector = []
 
+            let excludeDirFilter = excludeDirFactory()
+            let excludeCustomContentFilter = excludeCustomContentFactory(event.RequestType, event.ResourceProperties.RebuildMode)
+
             klaw('./build')
                 .on('error', (err, item) => excludeDirFilter.emit('error', err, item))
-                .pipe(excludeDirFilter())
+                .pipe(excludeDirFilter)
+                .on('error', (err, item) => excludeCustomContentFilter.emit('error', err, item))
+                .pipe(excludeCustomContentFilter)
                 .on('data', fileStat => {
                     collector.push(fileStat.path)
                 })
