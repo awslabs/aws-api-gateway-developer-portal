@@ -24,6 +24,11 @@ Parameters:
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
     Default: defaultRebuildToken
 
+  StaticAssetRebuildMode:
+    Type: String
+    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite_content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
+    Default: ''
+
   MarketplaceSubscriptionTopicProductCode:
     Type: String
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
@@ -546,7 +551,6 @@ Resources:
               - ''
               - - 'arn:aws:s3:::'
                 - !Ref DevPortalSiteS3BucketName
-                - '/*'
           - Effect: Allow
             Action:
             - s3:DeleteObject
@@ -554,6 +558,7 @@ Resources:
               - ''
               - - 'arn:aws:s3:::'
                 - !Ref DevPortalSiteS3BucketName
+                - '/*'
           - Effect: Allow
             Action:
             - s3:DeleteObject
@@ -835,6 +840,7 @@ Resources:
       UserPoolClientId: !Ref CognitoUserPoolClient
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
+      RebuildMode: !Ref StaticAssetRebuildMode
 
   CustomDomainCloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
