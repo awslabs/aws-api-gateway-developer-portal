@@ -26,7 +26,7 @@ const InfoReplacement = ({ specSelectors }) => {
     <Container fluid textAlign='left' className="fixfloat" style={{ padding: "40px 0px" }}>
       <div style={{ display: "flex" }}>
         <div style={{ flex: "0 0 auto", marginRight: "20px" }}>
-          <Image size='small' src={store.api.image} />
+          <Image size='small' src={store.api.logo} />
         </div>
         <div>
           <Header as='h1'>{store.api.swagger.info.title}</Header>

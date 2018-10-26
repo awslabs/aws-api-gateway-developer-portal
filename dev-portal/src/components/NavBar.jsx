@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { Menu, Image } from 'semantic-ui-react'
 
 import { isAuthenticated } from 'services/self'
-import logo from 'logo.png'
 
 // components
 import SignIn from './SignIn'
@@ -15,7 +14,7 @@ export const NavBar = () => {
   return (
     <Menu inverted borderless attached style={{ flex: "0 0 auto" }}>
       <Menu.Item as={Link} to="/">
-        <Image size='mini' src={logo} />
+        <Image size='mini' src="/custom-content/nav-logo.png" style={{ paddingRight: "10px" }} />
         Developer Portal
       </Menu.Item>
       <Menu.Item as={Link} to="/getting-started">Getting Started</Menu.Item>
