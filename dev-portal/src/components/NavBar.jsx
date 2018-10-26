@@ -4,21 +4,27 @@ import { Menu, Image } from 'semantic-ui-react'
 
 import { isAuthenticated } from 'services/self'
 
+// mobx
+import { observer } from 'mobx-react'
+
+// fragments
+import { fragments } from 'services/get-fragments'
+
 // components
 import SignIn from './SignIn'
 import Register from './Register'
 import SignOut from './SignOut'
 
-export const NavBar = () => {
+export const NavBar = observer(() => {
   let authed = isAuthenticated()
   return (
     <Menu inverted borderless attached style={{ flex: "0 0 auto" }}>
       <Menu.Item as={Link} to="/">
         <Image size='mini' src="/custom-content/nav-logo.png" style={{ paddingRight: "10px" }} />
-        Developer Portal
+        {fragments.Home.title}
       </Menu.Item>
-      <Menu.Item as={Link} to="/getting-started">Getting Started</Menu.Item>
-      <Menu.Item as={Link} to="/apis">APIs</Menu.Item>
+      <Menu.Item as={Link} to="/getting-started">{fragments.GettingStarted.title}</Menu.Item>
+      <Menu.Item as={Link} to="/apis">{fragments.APIs.title}</Menu.Item>
       <Menu.Menu position="right">
         { authed ? (
           <React.Fragment>
@@ -34,6 +40,6 @@ export const NavBar = () => {
       </Menu.Menu>
     </Menu>
   )
-}
+})
 
 export default NavBar
