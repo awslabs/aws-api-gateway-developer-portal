@@ -2,6 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
 
+// content-fragments (import here to start this ASAP)
+import 'services/get-fragments'
+
 // semantic-ui
 import 'semantic-ui-css/semantic.css'
 
