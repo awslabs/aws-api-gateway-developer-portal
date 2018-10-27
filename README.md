@@ -129,15 +129,34 @@ You can update the logo that appears in the navbar, the image that appears on th
 
 #### Styling
 
-Replace the `styles.css` with your own CSS Styling. Note that this stylesheet is loaded **before** all other styles in the project. Be sure to make sure your styles do not collide.
+Replace the `/custom-content/styles.css` with your own CSS Styling. Note that this stylesheet is loaded **before** all other styles in the project. Be sure to make sure your styles do not collide.
 
 #### Content
 
-Content on the Home page, the Getting Started page can be modified by updating the markdown files in `/custom-content/content-fragments`. Each file begins with some amount of yaml frontmatter. 
+Content on the Home page, the Getting Started page can be modified by updating the markdown files in `/custom-content/content-fragments`. 
 
-> You can nest HTML inside each markdown fragment if you need more complex layouts.
+Each file begins [yaml front matter](https://jekyllrb.com/docs/front-matter/) block. This front matter is used to fill in data beyond the content of the page. 
 
-The `Home` page takes the following front-matter:
+```yaml
+---
+title: Navbar Header # Display in the navbar 
+header: Main Page Header # Main headline on the page
+---
+
+Your content starts here.
+```
+
+The content of the page is rendered using [GitHub-flavoured markdown](https://github.github.com/gfm/). You can also nest HTML inside each markdown fragment if you need more complex layouts.
+
+```md
+# My Content Header!
+
+Some content content...
+
+[<button>A button that's a link!</button>](https://aws.amazon.com/api-gateway/)
+```
+
+The `Home` page takes the following front matter:
 
 - `title`: Text that appears in the navbar.
 - `header`: Main headline on the Home page.
@@ -145,10 +164,10 @@ The `Home` page takes the following front-matter:
 - `gettingStartedButton`: Text of the "Getting Started" button.
 - `apiListButton`: Text of the "Our APIs" button.
 
-The `APIs` page takes the following front-matter:
+The `APIs` page takes the following front matter:
 - `title`: Text that appears in the navbar.
 
-The `GettingStarted` page takes the following front-matter:
+The `GettingStarted` page takes the following front matter:
 - `title`: Text that appears in the navbar.
 
 ### Advanced customization
