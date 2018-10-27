@@ -49,8 +49,13 @@ Parameters:
     Description: Optionally provide a custom domain name associated with an ACM cert to create a developer portal at that domain name (provide with the format foo.bar.net). Leave blank to create a developer portal without a custom domain name. Standing up a developer portal stack with a custom domain name will take significantly longer than without.
     Default: ''
 
+  CustomDomainNameAcmCertArn:
+    Type: String
+    Description: If you provided a domain name associated with an acm cert, then you must also specify here the acm cert's arn. Leave this blank to create a developer portal without a custom domain name.
+    Default: ''
+
 Conditions:
-  UseCustomDomainName: !Not [ !Equals [!Ref CustomDomainName, ''] ]
+  UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
 
 Resources:
   ApiGatewayApi:
@@ -863,6 +868,9 @@ Resources:
             Id: 'dev-portal-site-s3-bucket'
             S3OriginConfig:
               OriginAccessIdentity: !Join [ '', [ 'origin-access-identity/cloudfront/', !Ref CustomDomainDistributionAccessIdentity ] ]
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
+          SslSupportMethod: 'sni-only'
 
   CustomDomainDistributionAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
