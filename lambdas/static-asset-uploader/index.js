@@ -172,6 +172,108 @@ function cleanS3Bucket(bucketName) {
         })
 }
 
+function createCatalogDirectory(staticBucketName) {
+    let params = { Bucket: staticBucketName, Key: 'catalog/', Body: '' }
+    return s3.upload(params).promise()
+}
+
+function uploadStaticAssets(bucketName, event, context) {
+    let collector = []
+
+    let excludeDirFilter = excludeDirFactory()
+    let excludeCustomContentFilter = excludeCustomContentFactory(event.RequestType, event.ResourceProperties.RebuildMode)
+
+    return klaw('./build')
+        .on('error', (err, item) => excludeDirFilter.emit('error', err, item))
+        .pipe(excludeDirFilter)
+        .on('error', (err, item) => excludeCustomContentFilter.emit('error', err, item))
+        .pipe(excludeCustomContentFilter)
+        .on('data', fileStat => {
+            collector.push(fileStat.path)
+        })
+        .on('error', (error, item) => {
+            console.log(`Failed to traverse file system on path ${item && item.path}: ${error}`)
+            notifyCFNThatUploadFailed(error, event, context)
+        })
+        .on('end', () => {
+            let readPromises = [],
+                uploadPromises = []
+            for (const filePath of collector) {
+                let thisReadPromise = fse.readFile(filePath)
+
+                thisReadPromise
+                    .then(readResults => {
+                        let params = {
+                                Bucket: bucketName,
+                                Key: sanitizeFilePath(generalizeFilePath(filePath)),
+                                Body: readResults,
+                                ACL: "public-read",
+                                ContentType: determineContentType(filePath)
+                            },
+                            options = {}
+                        uploadPromises.push(s3.upload(params, options).promise())
+                    })
+                    .catch(error => {
+                        console.log(`Failed to upload: ${error}`)
+                        notifyCFNThatUploadFailed(error, event, context)
+                    })
+
+                readPromises.push(thisReadPromise)
+            }
+
+            console.log(`readPromises length: ${readPromises.length}`)
+
+            return Promise.all(readPromises)
+                .then((readResults) => {
+                    console.log('All read promises resolved.')
+                    console.log(`uploadPromises length: ${uploadPromises.length}`)
+
+                    console.log('Adding config.js file uploadPromise.')
+                    let configObject = {
+                            restApiId: event.ResourceProperties.RestApiId,
+                            region: event.ResourceProperties.Region,
+                            identityPoolId: event.ResourceProperties.IdentityPoolId,
+                            userPoolId: event.ResourceProperties.UserPoolId,
+                            userPoolClientId: event.ResourceProperties.UserPoolClientId
+                        },
+                        params = {
+                            Bucket: bucketName,
+                            Key: 'config.js',
+                            Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
+                            ACL: "public-read"
+                        },
+                        options = {}
+
+                    let suffix = event.ResourceProperties.MarketplaceSuffix
+                    if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
+                        configObject.marketplaceSubscriptionTopic
+                            = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
+                    }
+
+
+                    uploadPromises.push(s3.upload(params, options).promise())
+
+                    return Promise.all(uploadPromises)
+                        .then(uploadResults => {
+                            console.log(`All upload promises resolved.`)
+                            console.log(`Succeeded in uploading to bucket ${bucketName}.`)
+                            notifyCFNThatUploadSucceeded({
+                                status: 'upload_success',
+                                bucket: bucketName
+                            }, event, context)
+                        })
+                        .catch(error => {
+                            console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
+                            notifyCFNThatUploadFailed(error, event, context)
+                        })
+                })
+                .catch(error => {
+                    console.log(`Failed to read file with error: ${error}`)
+                    notifyCFNThatUploadFailed(error, event, context)
+                })
+        })
+}
+
 exports.handler = (event, context) => {
     try {
         let bucketName = event.ResourceProperties.BucketName,
@@ -190,100 +292,8 @@ exports.handler = (event, context) => {
         } else if (!event.ResourceProperties.BucketName) {
             notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
         } else {
-            let collector = []
-
-            let excludeDirFilter = excludeDirFactory()
-            let excludeCustomContentFilter = excludeCustomContentFactory(event.RequestType, event.ResourceProperties.RebuildMode)
-
-            klaw('./build')
-                .on('error', (err, item) => excludeDirFilter.emit('error', err, item))
-                .pipe(excludeDirFilter)
-                .on('error', (err, item) => excludeCustomContentFilter.emit('error', err, item))
-                .pipe(excludeCustomContentFilter)
-                .on('data', fileStat => {
-                    collector.push(fileStat.path)
-                })
-                .on('error', (error, item) => {
-                    console.log(`Failed to traverse file system on path ${item && item.path}: ${error}`)
-                    notifyCFNThatUploadFailed(error, event, context)
-                })
-                .on('end', () => {
-                    let readPromises = [],
-                        uploadPromises = []
-                    for (const filePath of collector) {
-                        let thisReadPromise = fse.readFile(filePath)
-
-                        thisReadPromise
-                            .then(readResults => {
-                                let params = {
-                                    Bucket: bucketName,
-                                    Key: sanitizeFilePath(generalizeFilePath(filePath)),
-                                    Body: readResults,
-                                    ACL: "public-read",
-                                    ContentType: determineContentType(filePath)
-                                },
-                                options = {}
-                                uploadPromises.push(s3.upload(params, options).promise())
-                            })
-                            .catch(error => {
-                                console.log(`Failed to upload: ${error}`)
-                                notifyCFNThatUploadFailed(error, event, context)
-                            })
-
-                        readPromises.push(thisReadPromise)
-                    }
-
-                    console.log(`readPromises length: ${readPromises.length}`)
-
-                    return Promise.all(readPromises)
-                        .then((readResults) => {
-                            console.log('All read promises resolved.')
-                            console.log(`uploadPromises length: ${uploadPromises.length}`)
-
-                            console.log('Adding config.js file uploadPromise.')
-                            let configObject = {
-                                restApiId: event.ResourceProperties.RestApiId,
-                                region: event.ResourceProperties.Region,
-                                identityPoolId: event.ResourceProperties.IdentityPoolId,
-                                userPoolId: event.ResourceProperties.UserPoolId,
-                                userPoolClientId: event.ResourceProperties.UserPoolClientId
-                            },
-                            params = {
-                                Bucket: bucketName,
-                                Key: 'config.js',
-                                Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
-                                ACL: "public-read"
-                            },
-                            options = {}
-
-                            let suffix = event.ResourceProperties.MarketplaceSuffix
-                            if(suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
-                                configObject.marketplaceSubscriptionTopic
-                                    = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
-                            }
-
-
-                            uploadPromises.push(s3.upload(params, options).promise())
-
-                            return Promise.all(uploadPromises)
-                                .then(uploadResults => {
-                                    console.log(`All upload promises resolved.`)
-                                    console.log(`Succeeded in uploading to bucket ${bucketName}.`)
-                                    notifyCFNThatUploadSucceeded({
-                                        status: 'upload_success',
-                                        bucket: bucketName
-                                    }, event, context)
-                                })
-                                .catch(error => {
-                                    console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
-                                    notifyCFNThatUploadFailed(error, event, context)
-                                })
-                        })
-                        .catch(error => {
-                            console.log(`Failed to read file with error: ${error}`)
-                            notifyCFNThatUploadFailed(error, event, context)
-                        })
-                })
+            createCatalogDirectory(staticBucketName)
+                .then(uploadStaticAssets(bucketName, event, context))
         }
     } catch(error) {
         console.log(`Caught top-level error: ${error}`)
