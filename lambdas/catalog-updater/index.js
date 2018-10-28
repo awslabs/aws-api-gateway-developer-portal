@@ -10,6 +10,7 @@ let AWS = require('aws-sdk'),
   s3 = new AWS.S3(),
   gateway = new AWS.APIGateway(),
   _ = require('lodash'),
+  yaml = require('js-yaml'),
   bucketName = ''
 
 
@@ -64,15 +65,28 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-    isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
-    extractApiIdRegex = /\n\s*"?host.*:\s*"?(.*)\.execute-api\./,
-    extractStageRegex = /\n\s*"?basePath.*:\s*"?\/?([^"]*)"?,?/
+  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
+  extractApiIdRegex = /(https?:\/\/)?(.*)\.execute-api\./,
+  extractStageRegex = /\/?([^"]*)/
 
 
   return s3.getObject(params).promise()
     .then((s3Repr) => {
-      let result = { body: s3Repr.Body.toString() }
+      let result = {};
+
       console.log(`Processing file ${file.Key}:`)
+
+      try {
+        result.body = JSON.parse(s3Repr.Body.toString());
+      } catch(jsonErr) {
+        try {
+          result.body = yaml.safeLoad(s3Repr.Body.toString());
+        } catch(yamlErr) {
+          throw new Error(`Could not parse file ${file.Key}
+          YAML parse error: ${yamlErr}
+          JSON parse error: ${jsonErr}`)
+        }
+      }
 
       // if the file was saved with its name as an API_STAGE key, we should use that
       if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
@@ -82,10 +96,25 @@ function getSwaggerFile(file) {
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
 
-      // otherwise, if the host and basepath fields are present in the swagger, we should use those fields
-      else if (result.body.match(extractApiIdRegex) && result.body.match(extractStageRegex)) {
+      // for Swagger 2, the api ID might be in the body.host field,
+      // and the stage might be in the body.basePath field
+      else if (result.body.host && result.body.basePath) {
+        let apiId, stage;
 
-        result.apiStageKey = result.body.match(extractApiIdRegex).pop() + '_' + result.body.match(extractStageRegex).pop()
+        apiId = result.body.host.match(extractApiIdRegex).pop()
+        stage = result.body.basePath.match(extractStageRegex).pop()
+        result.apiStageKey = `${apiId}_${stage}`
+        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
+      }
+
+      // for OAS 3, the api ID might be in the body.servers[0].url field,
+      // and the stage might be in the body.servers[0].variables.basePath.default field
+      else if (result.body.servers[0].url && result.body.servers[0].variables.basePath.default) {
+        let apiId, stage;
+
+        apiId = result.body.servers[0].url.match(extractApiIdRegex).pop()
+        stage = result.body.servers[0].variables.basePath.default.match(extractStageRegex).pop()
+        result.apiStageKey = `${apiId}_${stage}`
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
       }
 
@@ -148,10 +177,8 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
         return swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`
       })
       .tap((swaggerFileRepr) => {
-        if (swaggerFileRepr) {
-          let swaggerOrError = _.attempt(JSON.parse, swaggerFileRepr.body)
-          // parse the JSON if it's JSON, otherwise, leave it as a string
-          _.isError(swaggerOrError) ? api.swagger = swaggerFileRepr.body : api.swagger = swaggerOrError
+        if(swaggerFileRepr) {
+          api.swagger = swaggerFileRepr.body
           api.id = apiStage.apiId
           api.stage = apiStage.stage
           //TODO: Allow for customizing image?
