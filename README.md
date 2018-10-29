@@ -135,7 +135,7 @@ Replace the `/custom-content/styles.css` with your own CSS Styling. Note that th
 
 Content on the Home page, the Getting Started page can be modified by updating the markdown files in `/custom-content/content-fragments`. 
 
-Each file begins [yaml front matter](https://jekyllrb.com/docs/front-matter/) block. This front matter is used to fill in data beyond the content of the page. 
+Each file begins with a [yaml front matter](https://jekyllrb.com/docs/front-matter/) block. This front matter is used to fill in data beyond the content of the page. 
 
 ```yaml
 ---
