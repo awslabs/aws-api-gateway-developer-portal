@@ -264,7 +264,7 @@ function getCognitoIdentityId(req) {
 
 function getUsagePlanFromCatalog(usagePlanId) {
   return catalog()
-    .then((catalog) => catalog.find(usagePlan => usagePlan.id === usagePlanId))
+    .then((catalog) => catalog.apiGateway.find(usagePlan => usagePlan.id === usagePlanId))
 }
 
 // The aws-serverless-express library creates a server and listens on a Unix

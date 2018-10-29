@@ -9,6 +9,22 @@ let AWS = require('aws-sdk'),
   _ = require('lodash'),
   bucketName = ''
 
+
+  // See: https://github.com/darkskyapp/string-hash/blob/master/index.js
+  function hash(str) {
+    var hash = 5381,
+        i    = str.length;
+  
+    while(i) {
+      hash = (hash * 33) ^ str.charCodeAt(--i);
+    }
+  
+    /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+     * integers. Since we want the results to be always positive, convert the
+     * signed int to an unsigned by doing an unsigned bitshift. */
+    return hash >>> 0;
+  }
+  
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
  * and whether it's in the catalog folder (S3 Key starts with "catalog/").
@@ -22,7 +38,7 @@ function swaggerFileFilter(file) {
   let extension = file.Key.split('/').pop().split('.').pop(),
     isSwagger = (extension === 'json' || extension === 'yaml' || extension === 'yml'),
     isInCatalogFolder = file.Key.startsWith('catalog/')
-  console.log(`file ${file.Key} is${isSwagger? '': ' not'} a swagger file and is${isInCatalogFolder? '': ' not'} in the correct folder.`)
+  console.log(`file ${file.Key} is${isSwagger ? '' : ' not'} a swagger file and is${isInCatalogFolder ? '' : ' not'} in the correct folder.`)
   return isSwagger && isInCatalogFolder
 }
 
@@ -45,9 +61,9 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
-  extractApiIdRegex = /\n\s*"?host.*:\s*"?(.*)\.execute-api\./,
-  extractStageRegex = /\n\s*"?basePath.*:\s*"?\/?([^"]*)"?,?/
+    isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
+    extractApiIdRegex = /\n\s*"?host.*:\s*"?(.*)\.execute-api\./,
+    extractStageRegex = /\n\s*"?basePath.*:\s*"?\/?([^"]*)"?,?/
 
 
   return s3.getObject(params).promise()
@@ -70,8 +86,9 @@ function getSwaggerFile(file) {
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
       }
 
-      if(!result.apiStageKey) {
-        console.error(`Could not uniquely resolve API_STAGE for file ${file.Key}.`)
+      if (!result.apiStageKey) {
+        result.generic = true
+        result.id = hash(file.Key)
       }
 
       return result
@@ -128,7 +145,7 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
         return swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`
       })
       .tap((swaggerFileRepr) => {
-        if(swaggerFileRepr) {
+        if (swaggerFileRepr) {
           let swaggerOrError = _.attempt(JSON.parse, swaggerFileRepr.body)
           // parse the JSON if it's JSON, otherwise, leave it as a string
           _.isError(swaggerOrError) ? api.swagger = swaggerFileRepr.body : api.swagger = swaggerOrError
@@ -153,31 +170,46 @@ exports.handler = (event, context) => {
     let params = {
       Bucket: bucketName
     },
-    promises = []
+      promises = []
 
     return s3.listObjectsV2(params).promise()
       .then((result) => {
         console.log(`result: ${JSON.stringify(result, null, 4)}`)
         let promises =
           _
-          .chain(result.Contents)
-          .filter(swaggerFileFilter)
-          .map(getSwaggerFile)
-          .value()
+            .chain(result.Contents)
+            .filter(swaggerFileFilter)
+            .map(getSwaggerFile)
+            .value()
 
         return Promise.all(promises)
       })
       .then((swaggerFiles) => {
         console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
-        let catalogObjects = []
+        let catalogObjects = {
+          apiGateway: [],
+          generic: []
+        }
 
         return gateway.getUsagePlans({}).promise()
           .then((result) => {
             console.log(`usagePlans: ${JSON.stringify(result.items, null, 4)}`)
             let usagePlans = result.items
             for (let i = 0; i < usagePlans.length; i++) {
-              catalogObjects[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles)
+              catalogObjects.apiGateway[i] = usagePlanToCatalogObject(
+                usagePlans[i], swaggerFiles.filter(s => !s.generic))
             }
+
+            catalogObjects.generic.push(
+              ...swaggerFiles.filter(s => s.generic).map(s => {
+                //TODO: Allow for customizing image?
+                s.image = '/sam-logo.png'
+                s.swagger = JSON.parse(s.body)
+                delete s.body
+                return s
+              })
+            )
+
             console.log(`catalogObjects: ${JSON.stringify(catalogObjects, null, 4)}`)
 
             return catalogObjects
@@ -187,11 +219,11 @@ exports.handler = (event, context) => {
       })
       .then((catalogObjects) => {
         let params = {
-            Bucket: bucketName,
-            Key: 'catalog.json',
-            Body: JSON.stringify(catalogObjects),
-            ContentType: 'application/json'
-          },
+          Bucket: bucketName,
+          Key: 'catalog.json',
+          Body: JSON.stringify(catalogObjects),
+          ContentType: 'application/json'
+        },
           options = {}
         return s3.upload(params, options).promise()
           .then((response) => console.log(`s3 upload succeeded: ${JSON.stringify(response, null, 4)}`))
