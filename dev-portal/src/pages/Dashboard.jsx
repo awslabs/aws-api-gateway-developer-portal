@@ -3,10 +3,11 @@
 
 import React from 'react'
 
-import { Grid, Header, Popup, Loader, Message, List, Divider } from 'semantic-ui-react'
+import { Grid, Header, Popup, Loader, Message, List, Divider, Icon } from 'semantic-ui-react'
 
 import Chart from 'chart.js'
 import { fetchUsage, mapUsageByDate } from 'services/api-catalog'
+import { toTitleCase } from 'services/misc'
 
 import { observer } from 'mobx-react'
 
@@ -26,30 +27,59 @@ function loadUsage(usagePlan, canvasId) {
       if (oldDataString !== newDataString)
         usagePlan.usage = { data }
 
+      const labels = data.map(d => new Date(d[0]).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }))
+      const used = data.map(d => d[1])
+      const remaining = data.map(d => d[2])
+      const max = Math.max(...used, ...remaining)
+
       const chartConfig = {
         type: 'line',
         data: {
-          labels: data.map(d => new Date(parseInt(d[0], 10)).toLocaleDateString()),
+          labels,
           datasets: [
             {
-              label: 'Usage',
-              data: data.map(d => d[1]),
+              label: `Requests used` + (usagePlan.quota ? ` (per ${toTitleCase(usagePlan.quota.period)})` : ''),
+              data: used,
               lineTension: 0,
-              backgroundColor: 'rgba(255, 99, 132, 0.2)',
-              borderColor: 'rgba(255,99,132,1)',
+              backgroundColor: '#00bfff',
+              borderColor: '#00bfff',
+              pointBackgroundColor: 'transparent',
+              pointBorderColor: 'transparent',
               borderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6
+              pointRadius: 10,
+              pointHoverRadius: 10
+
+            },
+            {
+              label: `Remaining requests` + (usagePlan.quota ? ` (per ${toTitleCase(usagePlan.quota.period)})` : ''),
+              data: remaining,
+              lineTension: 0,
+              backgroundColor: 'transparent',
+              borderColor: 'red',
+              pointBackgroundColor: 'transparent',
+              pointBorderColor: 'transparent',
+              borderWidth: 2,
+              pointRadius: 10,
+              pointHoverRadius: 10
             }
           ]
         },
-        options: { scales: { yAxes: [ { ticks: { beginAtZero: true } } ] } }
+        options: { 
+          scales: { yAxes: [ { ticks: {
+            beginAtZero: true,
+            suggestedMax: max + (max * 0.02)
+          } } ] }
+        }
       }
 
       new Chart(ctx, chartConfig)
     })
     .catch((error) => {
-      usagePlan.usage = { error }
+      console.error(error)
+      if (!usagePlan.usage)
+        usagePlan.usage = { }
+
+      usagePlan.usage.error = error
     })
 }
 
@@ -100,6 +130,13 @@ export default observer(() => {
                 firstApiName
               )}
             </Header>
+            {usagePlan.throttle && (
+              <Message info>
+              <p>
+                Requests limited to {usagePlan.throttle.rateLimit} per second, and {usagePlan.throttle.burstLimit} in a burst.
+              </p>
+              </Message>
+            )}
               
               { !usagePlan.usage ? (
                 <Loader active />
