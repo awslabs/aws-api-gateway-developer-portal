@@ -1,0 +1,13 @@
+define(['./lowerCase', './upperCase'], function(lowerCase, upperCase){
+    /**
+     * UPPERCASE first char of each word.
+     * - ported from Miller Medeiros Eclipse Monkey Scripts
+     * @example properCase('loRem iPSum') -> 'Lorem Ipsum'
+     * @param {string} str
+     * @return {string}
+     */
+    function properCase(str){
+        return lowerCase(str).replace(/^\w|\s\w/g, upperCase); //replace first char of each word to UPPERCASE
+    }
+    return properCase;
+});
