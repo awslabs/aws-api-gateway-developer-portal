@@ -70,7 +70,7 @@ export default observer(() => {
       <Divider />
       <Grid.Row>
 
-      {store.catalog
+      {store.catalog.apiGateway
         .filter(usagePlan => usagePlan.subscribed)
         // .reduce((acc, usagePlan) => acc.concat(usagePlan, usagePlan, usagePlan, usagePlan, usagePlan), [])
         .map((usagePlan, index) => {

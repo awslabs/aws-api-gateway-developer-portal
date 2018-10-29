@@ -22,7 +22,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build; cp -r ./build ../lambdas/static-asset-uploader",
     "deploy": "node ./scripts/deploy-stack.js",
-    "write-config": "node -e 'required(\"./scripts/write-config.js\")'",
+    "write-config": "node -e 'require(\"./scripts/write-config.js\")'",
     "release": "npm run build && npm run deploy",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -35,5 +35,8 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "mobx-react-devtools": "^6.0.3"
+  }
 }

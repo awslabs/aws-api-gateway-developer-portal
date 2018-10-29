@@ -32,17 +32,17 @@ class App extends React.Component {
   render() {
     return (
       <BrowserRouter>
-      <React.Fragment>
-        <NavBar />
-        <AlertPopup />
-        <Switch>
-          <Route exact path="/" component={Home} />
-          <Route path="/getting-started" component={GettingStarted} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route exact path="/apis" component={Apis} />
-          <Route path="/apis/:apiId" component={Apis} />
-          <Route component={() => <h2>Page not found</h2>} />
-        </Switch>
+        <React.Fragment>
+          <NavBar />
+          <AlertPopup />
+          <Switch>
+            <Route exact path="/" component={Home} />
+            <Route path="/getting-started" component={GettingStarted} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route exact path="/apis" component={Apis} />
+            <Route path="/apis/:apiId" component={Apis} />
+            <Route component={() => <h2>Page not found</h2>} />
+          </Switch>
         </React.Fragment>
       </BrowserRouter>
     )
