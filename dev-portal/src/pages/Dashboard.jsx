@@ -70,7 +70,7 @@ export default observer(() => {
       <Divider />
       <Grid.Row>
 
-      {store.catalog
+      {store.catalog.apiGateway
         .filter(usagePlan => usagePlan.subscribed)
         .map((usagePlan, index) => {
 

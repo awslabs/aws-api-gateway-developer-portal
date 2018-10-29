@@ -49,13 +49,17 @@ export function getApi(apiId, selectIt = false) {
     .then(() => {
       let thisApi
   
-      if (store.apiList.length) {
+      if (store.apiList.apiGateway.length) {
         if (apiId === 'ANY' || apiId === 'FIRST') {
-          thisApi = store.apiList[0]
+          thisApi = store.apiList.apiGateway[0]
         }
 
         else {
-          thisApi = store.apiList.find(api => api.id === apiId)
+          thisApi = store.apiList.apiGateway.find(api => api.id === apiId)
+        }
+
+        if (thisApi === undefined) {
+          thisApi = store.apiList.generic.find(api => api.id.toString() === apiId)
         }
       }
 

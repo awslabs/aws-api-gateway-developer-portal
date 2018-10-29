@@ -38,13 +38,16 @@ export const store = observable({
   },
   get subscriptions() { return storeCache.subscriptions },
 }, {
-  catalog: computed,
-  subscriptions: computed
-})
+    catalog: computed,
+    subscriptions: computed
+  })
 
 // This is the cache for the actual catalog and subscriptions. DO NOT MODIFY and DO NOT USE.
 const storeCache = observable({
-  catalog: [],
+  catalog: {
+    apiGateway: [],
+    generic: []
+  },
   subscriptions: []
 })
 
@@ -54,21 +57,27 @@ const storeCache = observable({
  * - Makes sure each api has a non-recursive 'usagePlan' object
  * - recalculates the `apiList`
  */
-function addUsagePlanToApis(catalog) {
-  return catalog.map(usagePlan => {
-    usagePlan.apis = usagePlan.apis.map(api => {
-      api.usagePlan = _.cloneDeep(usagePlan)
-      // remove the apis from the cloned usagePlan so we don't go circular
-      delete api.usagePlan.apis
-      return api
-    })
+function addUsagePlanToApis({ apiGateway, generic }) {
+  return {
+    apiGateway: apiGateway.map(usagePlan => {
+      usagePlan.apis = usagePlan.apis.map(api => {
+        api.usagePlan = _.cloneDeep(usagePlan)
+        // remove the apis from the cloned usagePlan so we don't go circular
+        delete api.usagePlan.apis
+        return api
+      })
 
-    return usagePlan
-  })
+      return usagePlan
+    }),
+    generic: [...generic]
+  }
 }
 
-function createApiList(catalog) {
-  return catalog.reduce((acc, usagePlan) => acc.concat(usagePlan.apis), [])
+function createApiList({apiGateway, generic}) {
+  return {
+    apiGateway: apiGateway.reduce((acc, usagePlan) => acc.concat(usagePlan.apis), []),
+    generic: [...generic]
+  }
 }
 
 function fetchApiImage() {
@@ -94,12 +103,12 @@ function fetchApiImage() {
  */
 function updateSubscriptionStatus() {
   if (storeCache.catalog)
-    storeCache.catalog.forEach(usagePlan => {
+    storeCache.catalog.apiGateway.forEach(usagePlan => {
       let subscribed = !!getSubscribedUsagePlan(usagePlan.id)
       usagePlan.subscribed = subscribed
-      
+
       usagePlan.apis.forEach(api => api.subscribed = subscribed)
-  })
+    })
 }
 
 export default store

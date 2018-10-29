@@ -56,13 +56,13 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
   render() {
     const { api } = store
     return (
-      (api && isAuthenticated()) ? (
+      (api && isAuthenticated()) ? !api.generic ? (
         api.subscribed ? (
           <Button onClick={() => unsubscribe(api.usagePlan.id)}>Unsubscribe</Button>
         ) : (
           <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
         )
-      ) : null
+      ) : <Header as='h4' color='red'>Cannot subscribe to an API not managed by API Gateway</Header> : null
     )
   }
 })
