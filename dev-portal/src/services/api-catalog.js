@@ -123,52 +123,49 @@ let apiKeyPromiseCache
 export function fetchUsage(usagePlanId) {
   const date = new Date()
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toJSON().split('T')[0]
-  const end = new Date().toJSON().split('T')[0]
+  const end = date.toJSON().split('T')[0]
   return apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', { start, end }, {}))
 }
 
 export function mapUsageByDate(usage, usedOrRemaining) {
-  const apiKeyDates = {}
-  Object.keys(usage.items).forEach(apiKeyId => {
-    apiKeyDates[apiKeyId] = mapApiKeyUsageByDate(usage.items[apiKeyId], usage.startDate, usedOrRemaining)
-  })
-  
   const dates = {}
-  Object.keys(apiKeyDates).forEach((apiKeyId, index) => {
-    const apiKeyUsage = apiKeyDates[apiKeyId]
+  Object.keys(usage.items).forEach(apiKeyId => {
+    const apiKeyUsage = mapApiKeyUsageByDate(usage.items[apiKeyId], usage.startDate, usedOrRemaining)
+
+    // handles the bizarre case that the user has more than one api key
+    // currently not possible (and my never be), so we probably don't need it
     apiKeyUsage.forEach(dailyUsage => {
       const date = dailyUsage[0]
-      const value = dailyUsage[1]
+      const used = dailyUsage[1]
+      const remaining = dailyUsage[2]
       
       if (!dates[date])
-      dates[date] = 0
-      dates[date] += value
+      dates[date] = { used: 0, remaining: 0 }
+
+      dates[date].used += used
+      dates[date].remaining += remaining
     })
   })
   
-  const usageByDate = Object.keys(dates).sort().map(date => [date, dates[date]])
+  const usageByDate = Object.keys(dates).sort().map(date => [
+    parseInt(date, 10), 
+    dates[date].used, 
+    dates[date].remaining 
+  ])
   
   return usageByDate
 }
 
-function mapApiKeyUsageByDate(apiKeyUsage, startDate, usedOrRemaining) {
-  const dateParts = startDate.split('-')
-  const year = dateParts[0]
-  const month = dateParts[1]
-  const day = dateParts[2]
-  const apiKeyDate = new Date(year, month - 1, day)
-  apiKeyDate.setHours(0, 0, 0, 0)
-  const usedOrRemainingIndex = usedOrRemaining === 'used'
-  ? 0
-  : 1
+function mapApiKeyUsageByDate(apiKeyUsage, startDate) {
+  const apiKeyDate = new Date(startDate)
   
   if (apiKeyUsage && !Array.isArray(apiKeyUsage[0]))
-  apiKeyUsage = [apiKeyUsage]
+    apiKeyUsage = [apiKeyUsage]
   
   return apiKeyUsage.map((usage) => {
     const date = apiKeyDate.setDate(apiKeyDate.getDate())
-    const item = [date, usage[usedOrRemainingIndex]]
+    const item = [date, ...usage]
     apiKeyDate.setDate(apiKeyDate.getDate() + 1)
     return item
   })
