@@ -42,3 +42,9 @@ module.exports = {
 ```
 
 2. Run `npm run deploy`.
+
+### Batch-adding license information
+Run these commands, then git add -p and filter out unnecessary changes. This will sometimes change the file's final line ending, mangle internal regex, etc., so do be attentive to the diffs.
+- `for file in **/*.js; do echo -e "// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.\n// SPDX-License-Identifier: Apache-2.0\n\n$(cat $file)" > $file; done`
+- `for file in **/*.jsx; do echo -e "// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.\n// SPDX-License-Identifier: Apache-2.0\n\n$(cat $file)" > $file; done`
+- `for file in *.css; do echo -e "/* Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.\nSPDX-License-Identifier: Apache-2.0*/\n\n$(cat $file)" > $file; done`
