@@ -1,6 +1,12 @@
 # devportal specific
+
 # we're committing the artifacts, don't need the modules
-/dev-portal/node_modules
+!dev-portal/node_modules/
+dev-portal/node_modules/*
+!dev-portal/node_modules/swagger-ui/
+dev-portal/node_modules/swagger-ui/*
+!dev-portal/node_modules/swagger-ui/dist/
+
 /dev-portal/coverage
 /dev-portal/build
 /dev-portal/deployer.config.js
