@@ -81,7 +81,7 @@ function createApiList({apiGateway, generic}) {
 }
 
 function fetchApiImage() {
-  store.apiList.forEach(api => {
+  store.apiList.apiGateway.forEach(api => {
     let specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
 
     // fetch automatically follows redirects; setting redirect to `manual` prevents this
