@@ -17,7 +17,7 @@ export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoRep
 // replaces the InfoContainer component
 // https://github.com/swagger-api/swagger-ui/blob/dd3afdc45656bda2a64ae6a7f9bdad006ea98149/src/core/components/layouts/base.jsx
 
-const InfoReplacement = ({ specSelectors }) => {
+const InfoReplacement = observer(({ specSelectors }) => {
   const basePath = specSelectors.basePath()
   const host = specSelectors.host()
   const externalDocs = specSelectors.externalDocs()
@@ -26,7 +26,7 @@ const InfoReplacement = ({ specSelectors }) => {
     <Container fluid textAlign='left' className="fixfloat" style={{ padding: "40px 0px" }}>
       <div style={{ display: "flex" }}>
         <div style={{ flex: "0 0 auto", marginRight: "20px" }}>
-          <Image size='small' src={store.api.image} />
+          <Image size='small' src={store.api.logo} />
         </div>
         <div>
           <Header as='h1'>{store.api.swagger.info.title}</Header>
@@ -48,7 +48,7 @@ const InfoReplacement = ({ specSelectors }) => {
       </div>
     </Container>
   )
-}
+})
 
 const SubscriptionButtons = observer(class SubscriptionButtons extends React.Component {
   state = {}

@@ -6,9 +6,12 @@
 /dev-portal/deployer.config.js
 /dev-portal/public/config.js
 
+/lambdas/static-asset-uploader/build/config.js
+
 # misc
 npm-debug.log
 .DS_Store
 packaged.yaml
 cognito.js
 .idea
+.vscode

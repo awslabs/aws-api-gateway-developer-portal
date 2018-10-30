@@ -35,11 +35,17 @@ sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-port
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
 
+To get the URL for the newly created developer portal instance, find the websiteURL field in the cloudformation console's outputs or run this command:
+
+```bash
+aws cloudformation describe-stacks --query "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
+```
+
 You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
 
 ### Populate the Swagger catalog
 
-The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, rename it in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`.
+The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, rename it in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`. Note that this is case sensitive!
 
 Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
 
@@ -51,13 +57,15 @@ When logged into the developer portal with an account that has a provisioned api
 
 ## Before going to production
 
-You should [configure your domain name to point to your S3 website](http://docs.aws.amazon.com/AmazonS3/latest/dev/website-hosting-custom-domain-walkthrough.html) URL and enable SSL before officially launching your developer portal.
+You should [request and verify an ACM managed certificate for your custom domain name.](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html) Then, redeploy the CFN stack with the domain name and ACM cert ARN as parameter overrides:
 
-Additional Resources:
+```bash
+sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CustomDomainName="my.acm.managed.domain.name.com" CustomDomainNameAcmCertArn="arn:aws:acm:us-east-1:111111111111:certificate/12345678-1234-1234-1234-1234567890ab"
+```
 
- - [Getting Started with Amazon CloudFront and AWS Certificate Manager](http://docs.aws.amazon.com/acm/latest/userguide/gs-cf.html)
+This will create a cloudfront distribution in front of the S3 bucket serving the site, set up a Route53 hosted zone with records aliased to that distribution, and require HTTPS to communicate with the developer portal S3 bucket.
 
- - [New – AWS Certificate Manager – Deploy SSL/TLS-Based Apps on AWS](https://aws.amazon.com/blogs/aws/new-aws-certificate-manager-deploy-ssltls-based-apps-on-aws/)
+After the deployment finishes, go to the Route53 console, find the nameservers for the hosted zone created by the deployment, and add those as the nameservers for your domain name through your registrar. The specifics of this process will vary by registrar.
 
 ## Components
 
@@ -90,7 +98,86 @@ From the listener function you can manage your Usage Plan Keys through API Gatew
 You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See this [blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
 
 ## Customization
-The developer portal is easily customized. Make changes in your cloned copy of the repository, version with git, and package & deploy with SAM. To pull in new versions of the dev portal, merge or rebase in the upstream changes. Please do not edit AWS resources in place; instead edit the relevant files locally and re-package & re-deploy. Additionally, the developer portal website's static assets will not automatically update. Please see `./dev-portal/README.md` for details.
+The Developer Portal supports limited customization. After deployment, you can overwrite certain files in the S3 bucket to update images, styling and the content of specific pages. All customizations live in the `custom-content` folder.
+
+> By default, the easy customizations described below **won't be updated by subsequent deployments**. This makes it safe to deploy architectural changes to the Developer Portal without overwriting your branding and content changes. To override this behavior, see [Advanced Customization](#advanced-customization) below.
+
+#### Images
+
+You can update the logo that appears in the navbar, the image that appears on the Home page, and the images that appear for each api on the API details pages. 
+
+> All images must be `.png`.
+
+- `/custom-content/nav-logo.png`
+
+  The logo in that appears in the navbar. Replace it to use your own image.
+
+- `/custom-content/home-image.png`
+
+  Primary image displayed on the Home page. Replace it to use your own image.
+
+- `/custom-content/api-logos/default.png` 
+
+  The default image used when a specific api image is not provided. Replace it to use your own image.
+
+- `/custom-content/api-logos/{apiId}_{stage}.png`
+
+  A custom image for a given API and Stage. If provided will be displayed instead of the `default.png`
+
+  e.g. `/custom-content/api-logos/s8df5s3dd_Prod.png`
+
+
+#### Styling
+
+Replace the `/custom-content/styles.css` with your own CSS Styling. Note that this stylesheet is loaded **before** all other styles in the project. Be sure to make sure your styles do not collide.
+
+#### Content
+
+Content on the Home page, the Getting Started page can be modified by updating the markdown files in `/custom-content/content-fragments`. 
+
+Each file begins with a [yaml front matter](https://jekyllrb.com/docs/front-matter/) block. This front matter is used to fill in data beyond the content of the page. 
+
+```yaml
+---
+title: Navbar Header # Display in the navbar 
+header: Main Page Header # Main headline on the page
+---
+
+Your content starts here.
+```
+
+The content of the page is rendered using [GitHub-flavoured markdown](https://github.github.com/gfm/). You can also nest HTML inside each markdown fragment if you need more complex layouts.
+
+```md
+# My Content Header!
+
+Some content content...
+
+[<button>A button that's a link!</button>](https://aws.amazon.com/api-gateway/)
+```
+
+The `Home` page takes the following front matter:
+
+- `title`: Text that appears in the navbar.
+- `header`: Main headline on the Home page.
+- `tagline`: Secondary headline on the Home page.
+- `gettingStartedButton`: Text of the "Getting Started" button.
+- `apiListButton`: Text of the "Our APIs" button.
+
+The `APIs` page takes the following front matter:
+- `title`: Text that appears in the navbar.
+
+The `GettingStarted` page takes the following front matter:
+- `title`: Text that appears in the navbar.
+
+### Advanced customization
+
+In addition to the easy customization described above, you can make changes in your cloned copy of the repository, version with git, and package & deploy with SAM. **You must include the `StaticAssetRebuildToken` as part of the deployment.**
+
+To pull in new versions of the dev portal, merge or rebase in the upstream changes.
+
+> By default, the easy customizations described above **won't be updated by subsequent deployments**. If you would prefer to overwrite all files in the s3 bucket on a deploy, pass the `StaticAssetRebuildMode=overwrite` argument to your `sam deploy` command in addition to the `StaticAssetRebuildToken`. See [Advanced Customization](#advanced-customization) below.
+
 
 ## Tear-down
 

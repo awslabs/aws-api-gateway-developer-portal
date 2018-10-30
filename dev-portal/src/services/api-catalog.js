@@ -31,6 +31,10 @@ export function updateCatalogAndApisList(bustCache = false) {
   return catalogPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
     .then(({ data = [] }) => (store.catalog = data))
+    .catch(() => {
+      // catch a failed request and set catalog to a blank array
+      return (store.catalog = [])
+    })
 }
 let catalogPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
 

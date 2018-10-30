@@ -24,6 +24,11 @@ Parameters:
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
     Default: defaultRebuildToken
 
+  StaticAssetRebuildMode:
+    Type: String
+    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite_content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
+    Default: ''
+
   MarketplaceSubscriptionTopicProductCode:
     Type: String
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
@@ -38,6 +43,19 @@ Parameters:
     Type: String
     Description: The region to deploy to.
     Default: "us-east-1"
+
+  CustomDomainName:
+    Type: String
+    Description: Optionally provide a custom domain name associated with an ACM cert to create a developer portal at that domain name (provide with the format foo.bar.net). Leave blank to create a developer portal without a custom domain name. Standing up a developer portal stack with a custom domain name will take significantly longer than without.
+    Default: ''
+
+  CustomDomainNameAcmCertArn:
+    Type: String
+    Description: If you provided a domain name associated with an acm cert, then you must also specify here the acm cert's arn. Leave this blank to create a developer portal without a custom domain name.
+    Default: ''
+
+Conditions:
+  UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
 
 Resources:
   ApiGatewayApi:
@@ -284,13 +302,13 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
-      AccessControl: PublicRead
+      # AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
         RoutingRules:
           - RoutingRuleCondition:
-              HttpErrorCodeReturnedEquals: 404
+              HttpErrorCodeReturnedEquals: 403
             RedirectRule:
               HostName: !Join
                 - ''
@@ -354,7 +372,7 @@ Resources:
           ReadCapacityUnits: '5'
           WriteCapacityUnits: '5'
 
-  DevPortalLambdaExecutionRole:
+  BackendLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -382,6 +400,141 @@ Resources:
             Resource: '*'
           - Effect: Allow
             Action:
+            - s3:GetObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+            - aws-marketplace:ResolveCustomer
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            Resource: !Join
+              - ''
+              - - 'arn:aws:dynamodb:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - :table/
+                - !Ref CustomersTable
+          - Effect: Allow
+            Action:
+            - dynamodb:Query
+            Resource: !Join
+              - ''
+              - - 'arn:aws:dynamodb:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - :table/
+                - !Ref CustomersTable
+                - /index/MarketplaceCustomerIdIndex
+
+  CognitoStrategyLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+
+  CatalogUpdaterLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: 
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref ArtifactsS3BucketName
+              - !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref DevPortalSiteS3BucketName
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
+          - Effect: Allow
+            Action:
+#            scope this down
+            - apigateway:*
+            Resource: '*'
+
+  AssetUploaderLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
             - s3:PutObject
             Resource: !Join
               - ''
@@ -398,6 +551,13 @@ Resources:
                 - '/*'
           - Effect: Allow
             Action:
+            - s3:ListBucket
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref DevPortalSiteS3BucketName
+          - Effect: Allow
+            Action:
             - s3:DeleteObject
             Resource: !Join
               - ''
@@ -406,36 +566,12 @@ Resources:
                 - '/*'
           - Effect: Allow
             Action:
-            - aws-marketplace:ResolveCustomer
-            Resource: '*'
-          - Action:
-            - dynamodb:GetItem
-            - dynamodb:Query
-            - dynamodb:Scan
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
-            Effect: Allow
+            - s3:DeleteObject
             Resource: !Join
               - ''
-              - - 'arn:aws:dynamodb:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - :table/
-                - !Ref CustomersTable
-          - Action:
-            - dynamodb:Query
-            Effect: Allow
-            Resource: !Join
-              - ''
-              - - 'arn:aws:dynamodb:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - :table/
-                - !Ref CustomersTable
-                - /index/MarketplaceCustomerIdIndex
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
           - Effect: Allow
             Action:
             - s3:ListBucket
@@ -447,14 +583,6 @@ Resources:
             Action:
             - s3:GetObject
             - s3:PutObject
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref ArtifactsS3BucketName
-                - '/*'
-          - Effect: Allow
-            Action:
-            - s3:DeleteObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
@@ -548,7 +676,7 @@ Resources:
       CodeUri: ../lambdas/backend
       Handler: index.handler
       MemorySize: 1024
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt BackendLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 30
       Environment:
@@ -578,7 +706,7 @@ Resources:
       CodeUri: ../lambdas/listener
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt BackendLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 30
 
@@ -588,7 +716,7 @@ Resources:
       CodeUri: ../lambdas/cognito-user-pools-confirmation-strategy
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt CognitoStrategyLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 3
 
@@ -675,7 +803,7 @@ Resources:
       CodeUri: ../lambdas/catalog-updater
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt CatalogUpdaterLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 20
       Environment:
@@ -697,7 +825,7 @@ Resources:
       CodeUri: ../lambdas/static-asset-uploader
       Handler: index.handler
       MemorySize: 512
-      Role: !GetAtt DevPortalLambdaExecutionRole.Arn
+      Role: !GetAtt AssetUploaderLambdaExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 300
       Environment:
@@ -717,6 +845,64 @@ Resources:
       UserPoolClientId: !Ref CognitoUserPoolClient
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
+      RebuildMode: !Ref StaticAssetRebuildMode
+
+  CustomDomainCloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: DevPortalSiteS3Bucket
+    Condition: UseCustomDomainName
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref CustomDomainName
+          - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: true
+          TargetOriginId: 'dev-portal-site-s3-bucket'
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        Origins:
+          - DomainName: !Join [ '', [ !Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com' ] ]
+            Id: 'dev-portal-site-s3-bucket'
+            S3OriginConfig:
+              OriginAccessIdentity: !Join [ '', [ 'origin-access-identity/cloudfront/', !Ref CustomDomainDistributionAccessIdentity ] ]
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
+          SslSupportMethod: 'sni-only'
+
+  CustomDomainDistributionAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Condition: UseCustomDomainName
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'CloudFront OAI for ${CustomDomainName}'
+
+  CustomDomainHostedZone:
+    Type: AWS::Route53::HostedZone
+    Condition: UseCustomDomainName
+    Properties:
+      Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+
+  CustomDomainRecordSet:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: UseCustomDomainName
+    Properties:
+      HostedZoneName: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+      RecordSets:
+        - Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+          Type: A
+          AliasTarget:
+            DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
+            # this is a "magic string" for using CFN aliases; see this link:
+            # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
+            HostedZoneId: 'Z2FDTNDATAQYW2'
+        - Name: !Join [ '', [ 'www.', !Ref CustomDomainName, '.' ] ]
+          Type: A
+          AliasTarget:
+            DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
+            HostedZoneId: 'Z2FDTNDATAQYW2'
 
 Outputs:
   LambdaFunctionConsoleUrl:

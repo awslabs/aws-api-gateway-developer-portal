@@ -72,7 +72,6 @@ export default observer(() => {
 
       {store.catalog.apiGateway
         .filter(usagePlan => usagePlan.subscribed)
-        // .reduce((acc, usagePlan) => acc.concat(usagePlan, usagePlan, usagePlan, usagePlan, usagePlan), [])
         .map((usagePlan, index) => {
 
         let firstApiName = usagePlan.apis[0].swagger.info.title
