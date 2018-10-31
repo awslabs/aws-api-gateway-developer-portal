@@ -319,12 +319,7 @@ Resources:
           - RoutingRuleCondition:
               HttpErrorCodeReturnedEquals: 403
             RedirectRule:
-              HostName: !Join
-                - ''
-                - - !Ref DevPortalSiteS3BucketName
-                  - .s3-website-
-                  - !Ref 'AWS::Region'
-                  - .amazonaws.com
+              HostName: !If [ UseCustomDomainName, !Ref CustomDomainName, !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-website-', !Ref 'AWS::Region', '.amazonaws.com']]]
               ReplaceKeyPrefixWith: '#!/'
 
   ArtifactsS3Bucket:
@@ -873,10 +868,10 @@ Resources:
         DefaultRootObject: index.html
         Enabled: true
         Origins:
-          - DomainName: !Join [ '', [ !Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com' ] ]
+          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-website-', !Ref 'AWS::Region', '.amazonaws.com']]
             Id: 'dev-portal-site-s3-bucket'
-            S3OriginConfig:
-              OriginAccessIdentity: !Join [ '', [ 'origin-access-identity/cloudfront/', !Ref CustomDomainDistributionAccessIdentity ] ]
+            CustomOriginConfig:
+              OriginProtocolPolicy: 'http-only'
         ViewerCertificate:
           AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
           SslSupportMethod: 'sni-only'
