@@ -98,7 +98,9 @@ From the listener function you can manage your Usage Plan Keys through API Gatew
 You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See this [blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
 
 ## Customization
-The Developer Portal supports limited customization. After deployment, you can overwrite certain files in the S3 bucket to update images, styling and the content of specific pages. All customizations live in the `custom-content` folder.
+The Developer Portal supports limited customization. After deployment, you can overwrite certain files in the S3 bucket to update images, styling and the content of specific pages. All customizations live in the `custom-content` folder. 
+
+> By default, on upload to the S3 bucket, the permissions are restricted. Make sure that "Everyone" has Read permissions to the files in the S3 bucket otherwise you might see some components not displaying properly. 
 
 > By default, the easy customizations described below **won't be updated by subsequent deployments**. This makes it safe to deploy architectural changes to the Developer Portal without overwriting your branding and content changes. To override this behavior, see [Advanced Customization](#advanced-customization) below.
 
