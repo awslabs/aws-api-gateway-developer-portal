@@ -909,48 +909,6 @@ Resources:
             HostedZoneId: 'Z2FDTNDATAQYW2'
 
 Outputs:
-  LambdaFunctionConsoleUrl:
-    Description: Console URL for the Lambda Function.
-    Value: !Join
-      - ''
-      - - https://
-        - !Ref 'AWS::Region'
-        - '.console.aws.amazon.com/lambda/home?region='
-        - !Ref 'AWS::Region'
-        - '#/functions/'
-        - !Ref DevPortalLambdaFunction
-
-  ApiGatewayApiConsoleUrl:
-    Description: Console URL for the API Gateway API's Stage.
-    Value: !Join
-      - ''
-      - - https://
-        - !Ref 'AWS::Region'
-        - '.console.aws.amazon.com/apigateway/home?region='
-        - !Ref 'AWS::Region'
-        - '#/apis/'
-        - !Ref ApiGatewayApi
-        - '/stages/prod'
-
-  ApiUrl:
-    Description: Invoke URL for your API. Clicking this link will perform a GET request
-      on the root resource of your API.
-    Value: !Join
-      - ''
-      - - https://
-        - !Ref ApiGatewayApi
-        - '.execute-api.'
-        - !Ref 'AWS::Region'
-        - '.amazonaws.com/prod'
-
-  ApiId:
-    Description: API Gateway API ID.
-    Value: !Ref ApiGatewayApi
-
-  DevPortalFunctionName:
-    Description: Developer Portal Lambda Function Name.
-    Value: !Ref DevPortalLambdaFunction
-
   WebsiteURL:
     Value: !Join
       - ''
@@ -960,19 +918,3 @@ Outputs:
         - !Ref 'AWS::Region'
         - .amazonaws.com
     Description: URL for website hosted on S3
-
-  CognitoUserPoolId:
-    Description: Cognito User Pool ID
-    Value: !Ref CognitoUserPool
-
-  CognitoUserPoolClientId:
-    Description: Cognito User Pool App Client ID
-    Value: !Ref CognitoUserPoolClient
-
-  CognitoIdentityPoolId:
-    Description: Cognito Identity Pool ID
-    Value: !Ref CognitoIdentityPool
-
-  CustomersTable:
-    Description: CustomersTable
-    Value: !Ref CustomersTable
