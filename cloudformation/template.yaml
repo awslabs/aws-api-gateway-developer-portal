@@ -57,7 +57,7 @@ Parameters:
   SkipRoute53NameserverCreation:
     Type: String
     Description: Only applicable if creating a custom domain name for your dev portal. If true, skips creating a Route53 HostedZone and RecordSet. You'll need to provide your own nameserver hosting in place of Route53.
-    Default: 'false'
+    Default: 'true'
 
 Conditions:
   UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
