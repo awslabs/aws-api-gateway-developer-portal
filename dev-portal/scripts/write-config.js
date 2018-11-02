@@ -10,23 +10,34 @@ const buildConfig = require('../deployer.config.js')
 let stackName = buildConfig.stackName
 
 function writeConfig (swallowOutput) {
-  return execute(`aws cloudformation describe-stacks --stack-name ${stackName}`, swallowOutput)
+  return execute(`aws cloudformation describe-stack-resources --stack-name ${stackName}`, swallowOutput)
   .then((result) => {
     let configData = {}
 
-    JSON.parse(result.stdout).Stacks[0].Outputs.forEach(output => {
-      switch (output.OutputKey) {
-        case 'ApiId': return configData.restApiId = output.OutputValue
-        case 'CognitoUserPoolId': return configData.userPoolId = output.OutputValue
-        case 'CognitoIdentityPoolId': return configData.identityPoolId = output.OutputValue
-        case 'CognitoUserPoolClientId': return configData.userPoolClientId = output.OutputValue
-        default: return
-      }
+    JSON.parse(result.stdout).StackResources.forEach(output => {
+      switch (output.LogicalResourceId) {
+        case 'ApiGatewayApi':
+          return configData.restApiId = output.PhysicalResourceId
+        case 'CognitoUserPool':
+          return configData.userPoolId = output.PhysicalResourceId
+        case 'CognitoIdentityPool':
+          return configData.identityPoolId = output.PhysicalResourceId
+        case 'CognitoUserPoolClient':
+          return configData.userPoolClientId = output.PhysicalResourceId
+        default:
+          return
+        }
     })
 
-    configData.region = configData.identityPoolId.split(':')[0]
+    configData.region = outputs[0].StackId.split(':')[3]
+
+    if(!swallowOutput) console.log(JSON.stringify(configData, null, 4))
+
     let configFile = `window.config = ${JSON.stringify(configData, null, 2)}`
     return writeFile(r(`../public/config.js`), configFile)
+  })
+  .catch((err) => {
+    console.log(err)
   })
 }
 
