@@ -1,11 +1,12 @@
 {
-  "name": "aws-serverless-dev-portal-example",
+  "name": "serverless-developer-backend",
   "version": "1.0.0",
-  "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
+  "description": "developer portal component responsible for backend application logic",
   "main": "index.js",
   "config": {},
   "scripts": {
-    "local": "node ./express-server-local"
+    "local": "node ./express-server-local",
+    "get-dependencies": "npm install"
   },
   "license": "Apache-2.0",
   "dependencies": {
