@@ -842,7 +842,7 @@ Resources:
           StaticBucketName: !Ref ArtifactsS3BucketName
 
   StaticAssetUploader:
-    Type: Custom::LambdaDependency
+    Type: AWS::CloudFormation::CustomResource
     DependsOn: ArtifactsS3Bucket
     Properties:
       ServiceToken: !GetAtt StaticAssetUploaderLambdaFunction.Arn
