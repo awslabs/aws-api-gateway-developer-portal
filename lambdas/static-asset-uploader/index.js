@@ -228,7 +228,6 @@ function uploadStaticAssets(bucketName, event, context) {
                     console.log('All read promises resolved.')
                     console.log(`uploadPromises length: ${uploadPromises.length}`)
 
-                    console.log('Adding config.js file uploadPromise.')
                     let configObject = {
                             restApiId: event.ResourceProperties.RestApiId,
                             region: event.ResourceProperties.Region,
@@ -243,6 +242,8 @@ function uploadStaticAssets(bucketName, event, context) {
                             ACL: "public-read"
                         },
                         options = {}
+
+                    console.log(`Adding uploadPromise for config.js file: ${configObject}`)
 
                     let suffix = event.ResourceProperties.MarketplaceSuffix
                     if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
