@@ -3,7 +3,11 @@
   "version": "2.1.0",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
-  "scripts": {},
+  "scripts": {
+    "get-dependencies": "npm run get-dev-portal-dependencies; npm run get-lambda-dependencies;",
+    "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}); npm run get-dependencies' \\;",
+    "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)"
+  },
   "license": "Apache-2.0",
   "dependencies": {},
   "devDependencies": {}

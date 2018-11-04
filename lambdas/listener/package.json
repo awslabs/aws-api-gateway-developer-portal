@@ -1,10 +1,12 @@
 {
-  "name": "aws-serverless-dev-portal-example",
+  "name": "serverless-developer-portal-marketplace-listener",
   "version": "1.0.0",
-  "description": "Example application for running a Serverless Developer Portal with API Gateway and Lambda",
+  "description": "developer portal component responsible for aws marketplace integration",
   "main": "index.js",
   "config": {},
-  "scripts": {},
+  "scripts": {
+    "get-dependencies": "npm install"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.6.7"
