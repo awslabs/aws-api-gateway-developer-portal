@@ -54,16 +54,16 @@ Parameters:
     Description: If you provided a domain name associated with an acm cert, then you must also specify here the acm cert's arn. Leave this blank to create a developer portal without a custom domain name.
     Default: ''
 
-  SkipRoute53NameserverCreation:
+  UseRoute53Nameservers:
     Type: String
     Description: Only applicable if creating a custom domain name for your dev portal. If true, skips creating a Route53 HostedZone and RecordSet. You'll need to provide your own nameserver hosting in place of Route53.
-    Default: 'true'
+    Default: 'false'
 
 Conditions:
   UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
   # the second clause is a copy of the UseCustomDomainName condition
   # re-using it doesn't seem possible?
-  UseRoute53: !And [!Equals [!Ref SkipRoute53NameserverCreation, 'false'], !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]]
+  UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]]
 
 Resources:
   ApiGatewayApi:
