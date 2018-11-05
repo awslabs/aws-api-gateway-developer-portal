@@ -57,17 +57,17 @@ When logged into the developer portal with an account that has a provisioned api
 
 ## Before going to production
 
-You should [request and verify an ACM managed certificate for your custom domain name.](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html) Then, redeploy the CFN stack with the domain name and ACM cert ARN as parameter overrides. Additionally, you can control if Route 53 nameservers are created using the `SkipRoute53NameserverCreation` override. A value of false will result in the creation of a Route 53 hosted zone and record set; true will skip the creation of these resources.
+You should [request and verify an ACM managed certificate for your custom domain name.](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html) Then, redeploy the CFN stack with the domain name and ACM cert ARN as parameter overrides. Additionally, you can control if Route 53 nameservers are created using the `UseRoute53Nameservers` override. A value of true will result in the creation of a Route 53 hosted zone and record set; false will skip the creation of these resources.
 
 ```bash
-sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CustomDomainName="my.acm.managed.domain.name.com" CustomDomainNameAcmCertArn="arn:aws:acm:us-east-1:111111111111:certificate/12345678-1234-1234-1234-1234567890ab" SkipRoute53NameserverCreation="true"
+sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CustomDomainName="my.acm.managed.domain.name.com" CustomDomainNameAcmCertArn="arn:aws:acm:us-east-1:111111111111:certificate/12345678-1234-1234-1234-1234567890ab" UseRoute53Nameservers="false"
 ```
 
 This creates a cloudfront distribution in front of the S3 bucket serving the site, optionally sets up a Route53 hosted zone with records aliased to that distribution, and require HTTPS to communicate with the cloudfront distribution.
 
-If you chose `SkipRoute53NameserverCreation=false`, after the deployment finishes, go to the Route53 console, find the nameservers for the hosted zone created by the deployment, and add those as the nameservers for your domain name through your registrar. The specifics of this process will vary by registrar.
+If you chose `UseRoute53Nameservers=true`, after the deployment finishes, go to the Route53 console, find the nameservers for the hosted zone created by the deployment, and add those as the nameservers for your domain name through your registrar. The specifics of this process will vary by registrar.
 
-If you chose `SkipRoute53NameserverCreation=true`, instead point your nameservers at the cloudfront distribution's URL.
+If you chose `UseRoute53Nameservers=false`, instead point your nameservers at the cloudfront distribution's URL.
 
 ## Components
 
