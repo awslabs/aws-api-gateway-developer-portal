@@ -65,7 +65,7 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
         ) : (
           <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
         )
-      ) : <Header as='h4' color='red'>Cannot subscribe to an API not managed by API Gateway</Header> : null
+      ) : <Header as='h4' color='darkgrey'>This API is not configured for subscription from the portal.</Header> : null
     )
   }
 })

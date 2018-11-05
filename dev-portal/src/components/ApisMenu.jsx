@@ -11,7 +11,7 @@ import { Menu, Loader } from 'semantic-ui-react'
 import { observer } from 'mobx-react'
 import { store } from 'services/state'
 
-const MenuHeader = ({ children }) => <Menu.Header style={{ padding: "13px 5px", color: "#0FF" }} color='teal'>
+const MenuHeader = ({ children }) => <Menu.Header style={{ padding: "13px 5px 13px 16px", color: '#0FF' }} color='lightsteelblue'>
   {children}</Menu.Header>
 
 export default observer(class ApisMenu extends React.Component {
@@ -38,7 +38,7 @@ export default observer(class ApisMenu extends React.Component {
     const { path, ...props } = this.props
     return (
       <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0 }} {...props}>
-        <MenuHeader>Subscribable APIs</MenuHeader>
+        <MenuHeader>Subscribable</MenuHeader>
         {
           !store.apiList ? (<Loader active />) : (
             store.apiList.apiGateway && (
@@ -58,7 +58,7 @@ export default observer(class ApisMenu extends React.Component {
             )
           )
         }
-        {store.apiList && store.apiList.generic && <MenuHeader>Generic APIs</MenuHeader>}
+        {store.apiList && store.apiList.generic && <MenuHeader>Not Subscribable</MenuHeader>}
         {
           store.apiList && store.apiList.generic ?
             store.apiList.generic.map(({ id, swagger }) => (
