@@ -243,7 +243,7 @@ function uploadStaticAssets(bucketName, event, context) {
                         },
                         options = {}
 
-                    console.log(`Adding uploadPromise for config.js file: ${configObject}`)
+                    console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)
 
                     let suffix = event.ResourceProperties.MarketplaceSuffix
                     if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
