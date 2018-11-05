@@ -14,21 +14,21 @@ let AWS = require('aws-sdk'),
   bucketName = ''
 
 
-  // See: https://github.com/darkskyapp/string-hash/blob/master/index.js
-  function hash(str) {
-    var hash = 5381,
-        i    = str.length;
-  
-    while(i) {
-      hash = (hash * 33) ^ str.charCodeAt(--i);
-    }
-  
-    /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
-     * integers. Since we want the results to be always positive, convert the
-     * signed int to an unsigned by doing an unsigned bitshift. */
-    return hash >>> 0;
+// See: https://github.com/darkskyapp/string-hash/blob/master/index.js
+function hash(str) {
+  var hash = 5381,
+    i = str.length;
+
+  while (i) {
+    hash = (hash * 33) ^ str.charCodeAt(--i);
   }
-  
+
+  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+   * integers. Since we want the results to be always positive, convert the
+   * signed int to an unsigned by doing an unsigned bitshift. */
+  return hash >>> 0;
+}
+
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
  * and whether it's in the catalog folder (S3 Key starts with "catalog/").
@@ -65,9 +65,9 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
-  extractApiIdRegex = /(https?:\/\/)?(.*)\.execute-api\./,
-  extractStageRegex = /\/?([^"]*)/
+    isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
+    extractApiIdRegex = /(https?:\/\/)?(.*)\.execute-api\./,
+    extractStageRegex = /\/?([^"]*)/
 
 
   return s3.getObject(params).promise()
@@ -78,24 +78,33 @@ function getSwaggerFile(file) {
 
       try {
         result.body = JSON.parse(s3Repr.Body.toString());
-      } catch(jsonErr) {
+      } catch (jsonErr) {
         try {
           result.body = yaml.safeLoad(s3Repr.Body.toString());
-        } catch(yamlErr) {
+        } catch (yamlErr) {
           throw new Error(`Could not parse file ${file.Key}
           YAML parse error: ${yamlErr}
           JSON parse error: ${jsonErr}`)
         }
       }
 
+      // Convert the paths property of the Swagger file to a string and check
+      // if the paths have a method with a property containing "x-amazon-apigateway-integration".
+      // If not, it is considered a generic API
+      const isGenericApi = !JSON.stringify(result.body.paths).includes("x-amazon-apigateway-integration")
+
+      if (isGenericApi) {
+        console.log(`Generic Swagger definition found: ${file.Key}`)
+        result.generic = true
+        result.id = hash(file.Key)
+      }
       // if the file was saved with its name as an API_STAGE key, we should use that
-      if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
-        // from strings like catalog/a1b2c3d4e5:prod.json, remove catalog and .json
-        // we can trust that there's not a period in the stage name, as API GW doesn't allow that
+      // from strings like catalog/a1b2c3d4e5:prod.json, remove catalog and .json
+      // we can trust that there's not a period in the stage name, as API GW doesn't allow that
+      else if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
         result.apiStageKey = file.Key.split('catalog/').pop().split('.')[0]
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
-
       // for Swagger 2, the api ID might be in the body.host field,
       // and the stage might be in the body.basePath field
       else if (result.body.host && result.body.basePath) {
@@ -106,7 +115,6 @@ function getSwaggerFile(file) {
         result.apiStageKey = `${apiId}_${stage}`
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
       }
-
       // for OAS 3, the api ID might be in the body.servers[0].url field,
       // and the stage might be in the body.servers[0].variables.basePath.default field
       else if (result.body.servers[0].url && result.body.servers[0].variables.basePath.default) {
@@ -116,11 +124,6 @@ function getSwaggerFile(file) {
         stage = result.body.servers[0].variables.basePath.default.match(extractStageRegex).pop()
         result.apiStageKey = `${apiId}_${stage}`
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
-      }
-
-      if (!result.apiStageKey) {
-        result.generic = true
-        result.id = hash(file.Key)
       }
 
       return result
@@ -177,7 +180,7 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
         return swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`
       })
       .tap((swaggerFileRepr) => {
-        if(swaggerFileRepr) {
+        if (swaggerFileRepr) {
           api.swagger = swaggerFileRepr.body
           api.id = apiStage.apiId
           api.stage = apiStage.stage
@@ -234,7 +237,7 @@ exports.handler = (event, context) => {
               ...swaggerFiles.filter(s => s.generic).map(s => {
                 //TODO: Allow for customizing image?
                 s.image = '/sam-logo.png'
-                s.swagger = JSON.parse(s.body)
+                s.swagger = s.body
                 delete s.body
                 return s
               })
