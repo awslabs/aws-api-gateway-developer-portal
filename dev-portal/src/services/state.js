@@ -10,6 +10,8 @@ export const store = observable({
   api: undefined,
   apiList: undefined,
 
+  cognitoUser: undefined,
+
   /**
    * We have a bunch of side-effects we need to run when we're setting `catalog` and 
    * `subscriptions`. That's accomplished by using getters and setters. We're storing

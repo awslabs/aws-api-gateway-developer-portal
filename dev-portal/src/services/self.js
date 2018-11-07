@@ -15,11 +15,10 @@ const poolData = {
   ClientId: cognitoClientId
 }
 
-let cognitoUser
 let userPool
 
 export function isAuthenticated() {
-  return cognitoUser
+  return store.cognitoUser
 }
 
 function getCognitoLoginKey() {
@@ -29,10 +28,10 @@ function getCognitoLoginKey() {
 export function init() {
   // attempt to refresh credentials from active session
   userPool = new CognitoUserPool(poolData)
-  cognitoUser = userPool.getCurrentUser()
+  store.cognitoUser = userPool.getCurrentUser()
 
-  if (cognitoUser !== null) {
-    cognitoUser.getSession(function(err, session) {
+  if (store.cognitoUser !== null) {
+    store.cognitoUser.getSession(function(err, session) {
       if (err) {
         logout()
         console.error(err)
@@ -82,13 +81,13 @@ export function login(email, password) {
       Password: password
     })
 
-    cognitoUser = new CognitoUser({
+    store.cognitoUser = new CognitoUser({
       Username: email,
       Pool: new CognitoUserPool(poolData)
     })
 
     return new Promise((resolve, reject) => {
-      cognitoUser.authenticateUser(authenticationDetails, {
+      store.cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
 
           AWS.config.credentials = new AWS.CognitoIdentityCredentials({
@@ -119,9 +118,9 @@ export function login(email, password) {
 }
 
 export function logout() {
-  if (cognitoUser) {
-    cognitoUser.signOut()
-    cognitoUser = null
+  if (store.cognitoUser) {
+    store.cognitoUser.signOut()
+    store.cognitoUser = null
     store.subscriptions = []
     localStorage.clear()
   }
