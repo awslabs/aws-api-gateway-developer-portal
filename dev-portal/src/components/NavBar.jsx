@@ -19,7 +19,6 @@ import Register from './Register'
 import SignOut from './SignOut'
 
 export const NavBar = observer(() => {
-  let authed = isAuthenticated()
   return (
     <Menu inverted borderless attached style={{ flex: "0 0 auto" }}>
       <Menu.Item as={Link} to="/">
@@ -29,7 +28,7 @@ export const NavBar = observer(() => {
       <Menu.Item as={Link} to="/getting-started">{fragments.GettingStarted.title}</Menu.Item>
       <Menu.Item as={Link} to="/apis">{fragments.APIs.title}</Menu.Item>
       <Menu.Menu position="right">
-        { authed ? (
+        { isAuthenticated() ? (
           <React.Fragment>
             <SignOut trigger={<Menu.Item as="a" key="logout">Sign Out</Menu.Item>} />
             <Menu.Item as={Link} to="/dashboard" key="dashboard">My Dashboard</Menu.Item>
