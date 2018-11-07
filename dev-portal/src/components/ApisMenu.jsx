@@ -11,7 +11,7 @@ import { Menu, Loader } from 'semantic-ui-react'
 import { observer } from 'mobx-react'
 import { store } from 'services/state'
 
-const MenuHeader = ({ children }) => <Menu.Header style={{ padding: "13px 5px 13px 16px", color: '#0FF' }} color='lightsteelblue'>
+const MenuHeader = ({ children }) => <Menu.Header style={{ padding: "13px 5px 13px 16px", color: 'lightsteelblue' }} >
   {children}</Menu.Header>
 
 export default observer(class ApisMenu extends React.Component {
