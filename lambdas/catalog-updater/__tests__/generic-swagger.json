@@ -1,0 +1,45 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2018-11-11T04:31:01Z",
+    "title": "PetStore"
+  },
+  "host": "4ke5srsid9.execute-api.us-west-2.amazonaws.com",
+  "basePath": "/asfd",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "text/html"
+        ],
+        "parameters": [
+          {
+            "name": "foo",
+            "in": "header",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Content-Type": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

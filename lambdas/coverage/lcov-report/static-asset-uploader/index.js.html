@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for static-asset-uploader/index.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">All files</a> / <a href="index.html">static-asset-uploader</a> index.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">62.28% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>71/114</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">87.88% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>29/33</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">53.13% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>17/32</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">60.19% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>65/108</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">'use strict';
+&nbsp;
+let AWS = require('aws-sdk'),
+    response = require('cfn-response'),
+    fse = require('fs-extra'),
+    klaw = require('klaw'),
+    through = require('through2'),
+    _ = require('lodash'),
+    crypto = require('crypto')
+&nbsp;
+/**
+ * Uses the cfn-response library to notify CloudFormation that this custom resource is done with the task it was
+ * invoked to do. This could be the response to a create / update request (which would upload files from S3) or a
+ * delete request (which would delete files from S3).
+ * 
+ * Send through a hash to tell CFN that we're not going to delete this resource.
+ *
+ * @param {Object} responseData extra information about the processing for CFN; must be an object
+ * @param {Object} event the CFN request object that kicked off this custom resource
+ * @param {Object} context lambda function context
+ */
+function notifyCFNThatUploadSucceeded(responseData, event, context) {
+    let hash = crypto.createHash('md5').update(JSON.stringify(responseData)).digest('hex')
+    response.send(event, context, response.SUCCESS, responseData, hash)
+}
+&nbsp;
+/**
+ * Uses the cfn-response library to notify CloudFormation that this custom resource failed to do the task it was
+ * invoked to do.
+ *
+ * @param {Error|string} error either an error object or a string representing it
+ * @param {Object} event the CFN request object that kicked off this custom resource
+ * @param {Object} context lambda function context
+ */
+function notifyCFNThatUploadFailed(error, event, context) {
+    let errorMessage = error.stack ? error.stack : error
+    response.send(event, context, response.FAILED, { error: errorMessage })
+}
+&nbsp;
+/**
+ * Removes the leading slash from a filePath if it exists.
+ *
+ * If the filePath has a leading slash, s3 interprets that leading slash as an unnamed top-level directory that
+ * all other files nest under; this causes the static website to infinitely redirect.
+ *
+ * @param {string} filePath
+ * @returns {string} File path without a leading slash
+ */
+function sanitizeFilePath(filePath) {
+    while(filePath[0] === '/') {
+        filePath = filePath.slice(1)
+    }
+    return filePath
+}
+&nbsp;
+/**
+ * Takes an absolute, lambda file path (e.g., /var/task/build/sdks/android_2016-10-21_19-26Z.zip and generalizes it
+ * into a relative path suitable for use as a static s3 site key (e.g., sdks/android_2016-10-21_19-26Z.zip).
+ *
+ * @param {string} filePath
+ * @returns {string} Relative file path, starting at (and excluding) the first occurrence of /build/
+ */
+function generalizeFilePath(filePath) {
+    return filePath.substring(filePath.indexOf('/build/')+'/build/'.length)
+}
+&nbsp;
+/**
+ * Determines the correct content type for a file, using the extension in the file's (absolute or relative) path.
+ *
+ * By default, s3 sets the content type to application/octet-stream, which results in browsers downloading the assets
+ * instead of serving them as a webpage.
+ *
+ * @param {string} filePath
+ * @returns {string} ContentType corresponding to the file extension in the file path provided
+ */
+function determineContentType(filePath) {
+    let extension = filePath.split('.').pop(),
+        contentType = 'application/octet-stream'
+&nbsp;
+    if (extension === 'html') contentType = 'text/html'
+    if (extension === 'css') contentType = 'text/css'
+    if (extension === 'js') contentType = 'application/javascript'
+    if (extension === 'png' || extension === 'jpeg' || extension === 'gif') contentType = 'image/' + extension
+    // note that jpg is a valid file extension
+    // but the contentType should be image/jpeg !
+    if (extension === 'jpg') contentType = 'image/' + 'jpeg'
+&nbsp;
+    return contentType
+}
+&nbsp;
+/**
+ * Filters directories out of the stream produced by klaw.
+ *
+ * Uses through2 to create the stream handler from a function. Note that this function must be provided a stream of
+ * fs.Stats objects (i.e., the objects in the stream must have a stats property with an isDirectory method).
+ *
+ * See the documentation on klaw: https://github.com/jprichardson/node-klaw
+ * See the documentation on through2's transformFunction API: https://github.com/rvagg/through2#readme
+ */
+const excludeDirFactory = () =&gt; {
+    return through.obj(function (item, enc, next) {
+        if (!item.stats.isDirectory()) this.push(item)
+        next()
+    })
+}
+&nbsp;
+/**
+ * Decides if we should overwrite the custom-content. (Yes if it's a Create call or if the RebuildMode is set to `overwrite-content`.)
+ *
+ * Uses through2 to create the stream handler from a function. Note that this function must be provided a stream of
+ * fs.Stats objects (i.e., the objects in the stream must have a stats property with an isDirectory method).
+ *
+ * See the documentation on klaw: https://github.com/jprichardson/node-klaw
+ * See the documentation on through2's transformFunction API: https://github.com/rvagg/through2#readme
+ */
+const excludeCustomContentFactory = (eventType, rebuildMode) =&gt; {
+    return through.obj(function (item, enc, next) {
+        // always write everything on Creates
+        if (eventType === "Create") {
+            console.log('pushing b/c Create', item.path)
+            this.push(item)
+        } 
+        // always write everything on an overwrite
+        else if (rebuildMode === "overwrite-content") {
+            this.push(item)
+        }
+&nbsp;
+        // only write non custom-content files on everything else
+        else if ( !/build\/custom-content/.test(item.path) ) {
+            console.log('pushing b/c not custom', item.path)
+            this.push(item)
+        } 
+        
+        else {
+            console.log('not pushing', item.path)
+        }
+        next()
+    })
+}
+&nbsp;
+/**
+ * Deletes all the objects in an S3 bucket. This is useful because the bucket must be empty (zero objects) before it
+ * can be deleted by CFN. So, when the custom resource receives a DELETE request from CFN, it first deletes all the
+ * files in the S3 bucket, then tells CFN that the deletion succeeded, at which point CFN deletes the now-empty bucket.
+ * This is safe to use on both empty and non-empty buckets.
+ * 
+ * @param bucketName the name of the bucket to be cleaned
+ * @returns {Promise.&lt;Object&gt;|undefined} the object returned by the S3 SDK or, if the bucket was empty, undefined
+ */
+function cleanS3Bucket(bucketName) {
+    let params = {
+        Bucket: bucketName,
+    }
+&nbsp;
+    return exports.s3.listObjectsV2(params).promise()
+        .then(result =&gt; {
+            console.log(`result: ${JSON.stringify(result, null, 4)}`)
+            let keys = _.map(result.Contents, (obj) =&gt; {
+                console.log(`obj: ${JSON.stringify(obj)}`)
+                return { Key: obj.Key }
+            }),
+            params = {
+                Bucket: bucketName,
+                Delete: {
+                    Objects: keys
+                },
+            }
+&nbsp;
+            if(keys.length) {
+              console.log(`Attempting to delete ${keys.length} objects. The first one in the list is: ${_.get(keys, '[0].Key')}`)
+              return exports.s3.deleteObjects(params).promise()
+                .then((result) =&gt; console.log(`deleteObjects result: ${JSON.stringify(result, null, 4)}`))
+            } else {
+              return Promise.resolve()
+            }
+        })
+}
+&nbsp;
+function createCatalogDirectory(staticBucketName) {
+    let params = { Bucket: staticBucketName, Key: 'catalog/', Body: '' }
+    return exports.s3.upload(params).promise()
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >addConfigFile(</span>event) {
+    let configObject = <span class="cstat-no" title="statement not covered" >{</span>
+            restApiId: event.ResourceProperties.RestApiId,
+            region: event.ResourceProperties.Region,
+            identityPoolId: event.ResourceProperties.IdentityPoolId,
+            userPoolId: event.ResourceProperties.UserPoolId,
+            userPoolClientId: event.ResourceProperties.UserPoolClientId
+        },
+        params = <span class="cstat-no" title="statement not covered" >{</span>
+            Bucket: bucketName,
+            Key: 'config.js',
+            Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
+            ACL: "public-read"
+        },
+        options = <span class="cstat-no" title="statement not covered" >{}</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)</span>
+&nbsp;
+    let suffix = <span class="cstat-no" title="statement not covered" >event.ResourceProperties.MarketplaceSuffix</span>
+<span class="cstat-no" title="statement not covered" >    if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {</span>
+<span class="cstat-no" title="statement not covered" >        configObject.marketplaceSubscriptionTopic</span>
+            = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return s3.upload(params, options).promise()</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >processFile(</span>fileStat, readPromises, uploadPromises, bucketName) {
+    let filePath = <span class="cstat-no" title="statement not covered" >fileStat.path,</span>
+        thisReadPromise = <span class="cstat-no" title="statement not covered" >fse.readFile(filePath)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    thisReadPromise</span>
+        .then(<span class="fstat-no" title="function not covered" >re</span>adResults =&gt; {
+            let params = <span class="cstat-no" title="statement not covered" >{</span>
+                    Bucket: bucketName,
+                    Key: sanitizeFilePath(generalizeFilePath(filePath)),
+                    Body: readResults,
+                    ACL: "public-read",
+                    ContentType: determineContentType(filePath)
+                },
+                options = <span class="cstat-no" title="statement not covered" >{}</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            uploadPromises.push(s3.upload(params, options).promise())</span>
+        })
+        .catch(<span class="fstat-no" title="function not covered" >er</span>ror =&gt; {
+<span class="cstat-no" title="statement not covered" >            console.log(`Failed to upload: ${error}`)</span>
+<span class="cstat-no" title="statement not covered" >            notifyCFNThatUploadFailed(error, event, context)</span>
+        })
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    readPromises.push(thisReadPromise)</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >waitForUpload(</span>readPromises, uploadPromises, bucketName) {
+<span class="cstat-no" title="statement not covered" >    console.log(`readPromises length: ${readPromises.length}`)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return Promise.all(readPromises)</span>
+        .then(<span class="fstat-no" title="function not covered" >()</span> =&gt; {
+<span class="cstat-no" title="statement not covered" >            console.log('All read promises resolved.')</span>
+<span class="cstat-no" title="statement not covered" >            console.log(`uploadPromises length: ${uploadPromises.length}`)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            uploadPromises.push(addConfigFile(event))</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            return Promise.all(uploadPromises)</span>
+                .then(<span class="fstat-no" title="function not covered" >()</span> =&gt; {
+<span class="cstat-no" title="statement not covered" >                    console.log(`All upload promises resolved.`)</span>
+<span class="cstat-no" title="statement not covered" >                    console.log(`Succeeded in uploading to bucket ${bucketName}.`)</span>
+<span class="cstat-no" title="statement not covered" >                    exports.notifyCFNThatUploadSucceeded({</span>
+                        status: 'upload_success',
+                        bucket: bucketName
+                    }, event, context)
+                })
+                .catch(<span class="fstat-no" title="function not covered" >er</span>ror =&gt; {
+<span class="cstat-no" title="statement not covered" >                    console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)</span>
+<span class="cstat-no" title="statement not covered" >                    exports.notifyCFNThatUploadFailed(error, event, context)</span>
+                })
+        })
+        .catch(<span class="fstat-no" title="function not covered" >er</span>ror =&gt; {
+<span class="cstat-no" title="statement not covered" >            console.log(`Failed to read file with error: ${error}`)</span>
+<span class="cstat-no" title="statement not covered" >            exports.notifyCFNThatUploadFailed(error, event, context)</span>
+        })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >uploadStaticAssets(</span>bucketName, event, context) {
+    let excludeDirFilter = <span class="cstat-no" title="statement not covered" >excludeDirFactory()</span>
+    let excludeCustomContentFilter = <span class="cstat-no" title="statement not covered" >excludeCustomContentFactory(event.RequestType, event.ResourceProperties.RebuildMode)</span>
+    let readPromises = <span class="cstat-no" title="statement not covered" >[],</span>
+        uploadPromises = <span class="cstat-no" title="statement not covered" >[]</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return klaw('./build')</span>
+        .on('error', <span class="fstat-no" title="function not covered" >(e</span>rr, item) =&gt; <span class="cstat-no" title="statement not covered" >excludeDirFilter.emit('error', err, item))</span>
+        .pipe(excludeDirFilter)
+        .on('error', <span class="fstat-no" title="function not covered" >(e</span>rr, item) =&gt; <span class="cstat-no" title="statement not covered" >excludeCustomContentFilter.emit('error', err, item))</span>
+        .pipe(excludeCustomContentFilter)
+        .on('data', <span class="fstat-no" title="function not covered" >(d</span>ata) =&gt; <span class="cstat-no" title="statement not covered" >processFile(data, readPromises, uploadPromises, bucketName))</span>
+        .on('error', <span class="fstat-no" title="function not covered" >(e</span>rror, item) =&gt; {
+<span class="cstat-no" title="statement not covered" >            console.log(`Failed to traverse file system on path ${item &amp;&amp; item.path}: ${error}`)</span>
+<span class="cstat-no" title="statement not covered" >            notifyCFNThatUploadFailed(error, event, context)</span>
+        })
+        .on('end', waitForUpload(readPromises, uploadPromises, bucketName))
+}
+&nbsp;
+function handler(event, context) {
+    try {
+        let bucketName = event.ResourceProperties.BucketName,
+          staticBucketName = process.env.StaticBucketName
+&nbsp;
+        if (event.RequestType === "Delete") {
+            console.log(`bucketName: ${bucketName}, staticBucketName: ${staticBucketName}`)
+            return exports.cleanS3Bucket(bucketName)
+                .then(() =&gt; exports.cleanS3Bucket(staticBucketName))
+                .then(() =&gt; {
+                    exports.notifyCFNThatUploadSucceeded({status: 'delete_success', bucket: bucketName}, event, context)
+                })
+                .catch(<span class="fstat-no" title="function not covered" >(e</span>rror) =&gt; {
+<span class="cstat-no" title="statement not covered" >                    exports.notifyCFNThatUploadFailed(error, event, context)</span>
+                })
+        } else if (!event.ResourceProperties.BucketName) {
+            exports.notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
+        } else {
+            exports.createCatalogDirectory(staticBucketName)
+                .then(exports.uploadStaticAssets(bucketName, event, context))
+        }
+    } catch(error) {
+<span class="cstat-no" title="statement not covered" >        console.log(`Caught top-level error: ${error}`)</span>
+<span class="cstat-no" title="statement not covered" >        notifyCFNThatUploadFailed(error, event, context)</span>
+    }
+}
+&nbsp;
+exports = module.exports = {
+    s3: new AWS.S3(),
+    handler,
+    sanitizeFilePath,
+    determineContentType,
+    cleanS3Bucket,
+    createCatalogDirectory,
+    generalizeFilePath,
+    notifyCFNThatUploadSucceeded,
+    notifyCFNThatUploadFailed,
+    excludeDirFactory,
+    excludeCustomContentFactory,
+    uploadStaticAssets
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Sat Nov 17 2018 17:30:27 GMT-0800 (PST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

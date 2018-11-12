@@ -1,0 +1,80 @@
+{
+  "_args": [
+    [
+      "release-zalgo@1.0.0",
+      "/usr/src/npm/nyc"
+    ]
+  ],
+  "_from": "release-zalgo@1.0.0",
+  "_id": "release-zalgo@1.0.0",
+  "_inBundle": true,
+  "_integrity": "sha1-CXALflB0Mpc5Mw5TXFqQ+2eFFzA=",
+  "_location": "/nyc/release-zalgo",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "release-zalgo@1.0.0",
+    "name": "release-zalgo",
+    "escapedName": "release-zalgo",
+    "rawSpec": "1.0.0",
+    "saveSpec": null,
+    "fetchSpec": "1.0.0"
+  },
+  "_requiredBy": [
+    "/nyc/package-hash"
+  ],
+  "_resolved": "https://registry.npmjs.org/release-zalgo/-/release-zalgo-1.0.0.tgz",
+  "_spec": "1.0.0",
+  "_where": "/usr/src/npm/nyc",
+  "author": {
+    "name": "Mark Wubben",
+    "url": "https://novemberborn.net/"
+  },
+  "bugs": {
+    "url": "https://github.com/novemberborn/release-zalgo/issues"
+  },
+  "dependencies": {
+    "es6-error": "^4.0.1"
+  },
+  "description": "Helps you write code with promise-like chains that can run both synchronously and asynchronously",
+  "devDependencies": {
+    "@novemberborn/as-i-preach": "^7.0.0",
+    "ava": "^0.18.0",
+    "coveralls": "^2.11.15",
+    "nyc": "^10.1.2"
+  },
+  "engines": {
+    "node": ">=4"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "homepage": "https://github.com/novemberborn/release-zalgo#readme",
+  "keywords": [
+    "babel"
+  ],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "release-zalgo",
+  "nyc": {
+    "reporter": [
+      "html",
+      "lcov",
+      "text"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novemberborn/release-zalgo.git"
+  },
+  "scripts": {
+    "coverage": "nyc npm test",
+    "lint": "as-i-preach",
+    "posttest": "as-i-preach",
+    "test": "ava"
+  },
+  "standard-engine": "@novemberborn/as-i-preach",
+  "version": "1.0.0"
+}

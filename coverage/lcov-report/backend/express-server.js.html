@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for backend/express-server.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">All files</a> / <a href="index.html">backend</a> express-server.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/21</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/0</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/21</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+&nbsp;
+'use strict';
+&nbsp;
+const express = <span class="cstat-no" title="statement not covered" >require('express')</span>
+const bodyParser = <span class="cstat-no" title="statement not covered" >require('body-parser')</span>
+const cors = <span class="cstat-no" title="statement not covered" >require('cors')</span>
+const util = <span class="cstat-no" title="statement not covered" >require('util')</span>
+const awsServerlessExpressMiddleware = <span class="cstat-no" title="statement not covered" >require('aws-serverless-express/middleware')</span>
+const handlers = <span class="cstat-no" title="statement not covered" >require('./express-route-handlers.js')</span>
+&nbsp;
+const app = <span class="cstat-no" title="statement not covered" >express()</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >app.use(cors())</span>
+<span class="cstat-no" title="statement not covered" >app.use(bodyParser.json())</span>
+<span class="cstat-no" title="statement not covered" >app.use(bodyParser.urlencoded({ extended: true }))</span>
+<span class="cstat-no" title="statement not covered" >app.use(awsServerlessExpressMiddleware.eventContext())</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >app.post('/signin', handlers.postSignIn)</span>
+<span class="cstat-no" title="statement not covered" >app.get('/catalog', handlers.getCatalog)</span>
+<span class="cstat-no" title="statement not covered" >app.get('/apikey', handlers.getApiKey)</span>
+<span class="cstat-no" title="statement not covered" >app.get('/subscriptions', handlers.getSubscriptions)</span>
+<span class="cstat-no" title="statement not covered" >app.put('/subscriptions/:usagePlanId', handlers.putSubscription)</span>
+<span class="cstat-no" title="statement not covered" >app.get('/subscriptions/:usagePlanId/usage', handlers.getUsage)</span>
+<span class="cstat-no" title="statement not covered" >app.delete('/subscriptions/:usagePlanId', handlers.deleteSubscription)</span>
+<span class="cstat-no" title="statement not covered" >app.post('/marketplace-confirm/:usagePlanId', handlers.postMarketplaceConfirm)</span>
+<span class="cstat-no" title="statement not covered" >app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscription)</span>
+&nbsp;
+// The aws-serverless-express library creates a server and listens on a Unix
+// Domain Socket for you, so you can remove the usual call to app.listen.
+// app.listen(3000)
+&nbsp;
+// Export your express server so you can import it in the lambda function.
+<span class="cstat-no" title="statement not covered" >module.exports = app</span>
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Thu Nov 15 2018 23:44:36 GMT-0800 (PST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

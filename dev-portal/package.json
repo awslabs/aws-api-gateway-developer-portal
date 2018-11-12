@@ -27,6 +27,7 @@
     "write-config": "node -e 'require(\"./scripts/write-config.js\")(true)'",
     "release": "npm run build && npm run deploy",
     "test": "react-scripts test",
+    "cover": "react-scripts test --coverage",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

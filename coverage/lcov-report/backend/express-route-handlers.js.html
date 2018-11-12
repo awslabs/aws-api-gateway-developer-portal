@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for backend/express-route-handlers.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">All files</a> / <a href="index.html">backend</a> express-route-handlers.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/107</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/18</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/38</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/106</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262</td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const customersController = <span class="cstat-no" title="statement not covered" >require('./_common/customers-controller.js')</span>
+const catalog = <span class="cstat-no" title="statement not covered" >require('./catalog/index.js')</span>
+const AWS = <span class="cstat-no" title="statement not covered" >require('aws-sdk')</span>
+const apigateway = <span class="cstat-no" title="statement not covered" >new AWS.APIGateway()</span>
+&nbsp;
+&nbsp;
+// replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
+const domain = `<span class="cstat-no" title="statement not covered" >${process.env.CLIENT_BUCKET_NAME}.s3-website-${process.env.AWS_DEFAULT_REGION}.amazonaws.com`</span>
+const baseUrl = `<span class="cstat-no" title="statement not covered" >http://${domain}/`</span>
+&nbsp;
+function <span class="fstat-no" title="function not covered" >getCognitoIdentityId(req) {</span>
+<span class="cstat-no" title="statement not covered" >    return req.apiGateway.event.requestContext.identity.cognitoIdentityId</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >getUsagePlanFromCatalog(usagePlanId) {</span>
+<span class="cstat-no" title="statement not covered" >    return catalog()</span>
+        .then((<span class="fstat-no" title="function not covered" >catalog) =&gt; <span class="cstat-no" title="statement not covered" >catalog.apiGateway.find(<span class="fstat-no" title="function not covered" >usagePlan =&gt; <span class="cstat-no" title="statement not covered" ></span>usagePlan.id === usagePlanId))</span></span></span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >postSignIn(req, res) {</span>
+    const cognitoIdentityId = <span class="cstat-no" title="statement not covered" >getCognitoIdentityId(req)</span>
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >errFunc(data) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json(data)</span>
+    }
+&nbsp;
+    // ensure an API Key exists for this customer and that the Cognito identity and API Key Id are tracked in DDB
+<span class="cstat-no" title="statement not covered" >    customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (<span class="fstat-no" title="function not covered" >data) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >        console.log(`Get Api Key data ${JSON.stringify(data)}`)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (data.items.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >            console.log(`No API Key found for customer ${cognitoIdentityId}`)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            customersController.createApiKey(cognitoIdentityId, errFunc, (<span class="fstat-no" title="function not covered" >createData) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >                console.log(`Create API Key data: ${createData}`)</span>
+                const keyId = <span class="cstat-no" title="statement not covered" >createData.id</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >                console.log(`Got key ID ${keyId}`)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >                customersController.ensureCustomerItem(cognitoIdentityId, keyId, errFunc, <span class="fstat-no" title="function not covered" >() =&gt; </span>{</span>
+<span class="cstat-no" title="statement not covered" >                    res.status(200).json({})</span>
+                })
+            })
+        } else {
+            const keyId = <span class="cstat-no" title="statement not covered" >data.items[0].id</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            customersController.ensureCustomerItem(cognitoIdentityId, keyId, errFunc, <span class="fstat-no" title="function not covered" >() =&gt; </span>{</span>
+<span class="cstat-no" title="statement not covered" >                res.status(200).json({})</span>
+            })
+        }
+    })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >getCatalog(req, res) {</span>
+<span class="cstat-no" title="statement not covered" >    catalog()</span>
+        .then(<span class="fstat-no" title="function not covered" >catalog =&gt; <span class="cstat-no" title="statement not covered" ></span>res.status(200).json(catalog))</span>
+        .catch(<span class="fstat-no" title="function not covered" >error =&gt; <span class="cstat-no" title="statement not covered" ></span>res.status(error.statusCode).json(error))</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >getApiKey(req, res) {</span>
+    const cognitoIdentityId = <span class="cstat-no" title="statement not covered" >getCognitoIdentityId(req)</span>
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >errFunc(data) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json(data)</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (<span class="fstat-no" title="function not covered" >data) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >        if (data.items.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >            res.status(404).json('No API Key for customer')</span>
+        } else {
+            const item = <span class="cstat-no" title="statement not covered" >data.items[0]</span>
+            const key = <span class="cstat-no" title="statement not covered" >{</span>
+                id: item.id,
+                value: item.value
+            }
+<span class="cstat-no" title="statement not covered" >            res.status(200).json(key)</span>
+        }
+    })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >getSubscriptions(req, res) {</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`GET /subscriptions for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)</span>
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >errFunc(data) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json(data)</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    customersController.getUsagePlansForCustomer(req.apiGateway.event.requestContext.identity.cognitoIdentityId, errFunc, (<span class="fstat-no" title="function not covered" >data) =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >        res.status(200).json(data.items)</span>
+    })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >putSubscription(req, res) {</span>
+    const cognitoIdentityId = <span class="cstat-no" title="statement not covered" >getCognitoIdentityId(req)</span>
+    const usagePlanId = <span class="cstat-no" title="statement not covered" >req.params.usagePlanId</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    getUsagePlanFromCatalog(usagePlanId).then((<span class="fstat-no" title="function not covered" >usagePlan) =&gt; {</span></span>
+        const isUsagePlanInCatalog = <span class="cstat-no" title="statement not covered" >Boolean(usagePlan)</span>
+&nbsp;
+        function <span class="fstat-no" title="function not covered" >error(data) {</span>
+<span class="cstat-no" title="statement not covered" >            console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >            res.status(500).json(data)</span>
+        }
+&nbsp;
+        function <span class="fstat-no" title="function not covered" >success(data) {</span>
+<span class="cstat-no" title="statement not covered" >            res.status(201).json(data)</span>
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (!isUsagePlanInCatalog) {</span>
+<span class="cstat-no" title="statement not covered" >            res.status(404).json('Invalid Usage Plan ID')</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >            customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)</span>
+        }
+    })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >getUsage(req, res) {</span>
+    const cognitoIdentityId = <span class="cstat-no" title="statement not covered" >getCognitoIdentityId(req)</span>
+    const usagePlanId = <span class="cstat-no" title="statement not covered" >req.params.usagePlanId</span>
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >errFunc(data) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json(data)</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    getUsagePlanFromCatalog(usagePlanId).then((<span class="fstat-no" title="function not covered" >usagePlan) =&gt; {</span></span>
+        const isUsagePlanInCatalog = <span class="cstat-no" title="statement not covered" >Boolean(usagePlan)</span>
+&nbsp;
+        // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
+<span class="cstat-no" title="statement not covered" >        if (!isUsagePlanInCatalog) {</span>
+<span class="cstat-no" title="statement not covered" >            res.status(404).json('Invalid Usage Plan ID')</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >            customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (<span class="fstat-no" title="function not covered" >data) =&gt; {</span></span>
+                const keyId = <span class="cstat-no" title="statement not covered" >data.items[0].id</span>
+&nbsp;
+                const params = <span class="cstat-no" title="statement not covered" >{</span>
+                    endDate: req.query.end,
+                    startDate: req.query.start,
+                    usagePlanId,
+                    keyId,
+                    limit: 1000
+                }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >                apigateway.getUsage(params, <span class="fstat-no" title="function not covered" >(e</span>rr, usageData) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >                    if (err) {</span>
+<span class="cstat-no" title="statement not covered" >                        console.log(`get usage err ${JSON.stringify(err)}`)</span>
+<span class="cstat-no" title="statement not covered" >                        errFunc(err)</span>
+                    } else {
+<span class="cstat-no" title="statement not covered" >                        console.log(`get usage data ${JSON.stringify(usageData)}`)</span>
+<span class="cstat-no" title="statement not covered" >                        res.status(200).json(usageData)</span>
+                    }
+                })
+            })
+        }
+    })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >deleteSubscription(req, res) {</span>
+    const cognitoIdentityId = <span class="cstat-no" title="statement not covered" >getCognitoIdentityId(req)</span>
+    const usagePlanId = <span class="cstat-no" title="statement not covered" >req.params.usagePlanId</span>
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >error(data) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json(data)</span>
+    }
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >success(data) {</span>
+<span class="cstat-no" title="statement not covered" >        res.status(200).json(data)</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    getUsagePlanFromCatalog(usagePlanId).then((<span class="fstat-no" title="function not covered" >usagePlan) =&gt; {</span></span>
+        const isUsagePlanInCatalog = <span class="cstat-no" title="statement not covered" >Boolean(usagePlan)</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (!isUsagePlanInCatalog) {</span>
+<span class="cstat-no" title="statement not covered" >            res.status(404).json('Invalid Usage Plan ID')</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >            customersController.unsubscribe(cognitoIdentityId, usagePlanId, error, success)</span>
+        }
+    })
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >postMarketplaceConfirm(req, res) {</span>
+    // no auth
+    // this is the redirect URL for AWS Marketplace products
+    // i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.us-east-1.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]
+    const marketplaceToken = <span class="cstat-no" title="statement not covered" >req.body['x-amzn-marketplace-token']</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    if (marketplaceToken === null || marketplaceToken === undefined) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`Couldn't find marketplace token. Event: ${util.inspect(req.apiGateway.event, {</span>
+            depth: null,
+            colors: true
+        })}`)
+<span class="cstat-no" title="statement not covered" >        res.status(400).json({message: 'Missing AWS Marketplace token'})</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    console.log(`Marketplace token: ${marketplaceToken}`)</span>
+    const usagePlanId = <span class="cstat-no" title="statement not covered" >req.params.usagePlanId</span>
+&nbsp;
+    // WARNING: the redirect URL should be HTTPS as the token is subject to MITM attacks over HTTP. Token expires after 60min
+    // ideally this should be saved in a secure manner (i.e. DDB) until the subscription completes
+    const confirmUrl = `<span class="cstat-no" title="statement not covered" >${baseUrl}?usagePlanId=${usagePlanId}&amp;token=${marketplaceToken}`</span>
+&nbsp;
+    // redirect to the registration/login page
+<span class="cstat-no" title="statement not covered" >    res.redirect(302, confirmUrl)</span>
+}
+&nbsp;
+function <span class="fstat-no" title="function not covered" >putMarketplaceSubscription(req, res) {</span>
+    const marketplaceToken = <span class="cstat-no" title="statement not covered" >req.body.token</span>
+    const usagePlanId = <span class="cstat-no" title="statement not covered" >req.params.usagePlanId</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`Marketplace token: ${marketplaceToken} usage plan id: ${usagePlanId}`)</span>
+    const cognitoIdentityId = <span class="cstat-no" title="statement not covered" >getCognitoIdentityId(req)</span>
+<span class="cstat-no" title="statement not covered" >    console.log(`cognito id: ${cognitoIdentityId}`)</span>
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >error(data) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`error: ${data}`)</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json(data)</span>
+    }
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >success(data) {</span>
+<span class="cstat-no" title="statement not covered" >        res.status(200).json(data)</span>
+    }
+&nbsp;
+    function <span class="fstat-no" title="function not covered" >subscribeCustomerToUsagePlan(data) {</span>
+<span class="cstat-no" title="statement not covered" >        customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)</span>
+    }
+&nbsp;
+    const marketplace = <span class="cstat-no" title="statement not covered" >new AWS.MarketplaceMetering()</span>
+&nbsp;
+    const params = <span class="cstat-no" title="statement not covered" >{</span>
+        RegistrationToken: marketplaceToken
+    }
+&nbsp;
+    // call MMS to crack token into marketplace customer ID and product code
+<span class="cstat-no" title="statement not covered" >    marketplace.resolveCustomer(params, <span class="fstat-no" title="function not covered" >(e</span>rr, data) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        if (err) {</span>
+<span class="cstat-no" title="statement not covered" >            console.log(`marketplace error: ${JSON.stringify(err)}`)</span>
+<span class="cstat-no" title="statement not covered" >            res.status(400).json(err.message)</span>
+        } else {
+<span class="cstat-no" title="statement not covered" >            console.log(`marketplace data: ${JSON.stringify(data)}`)</span>
+&nbsp;
+            // persist the marketplaceCustomerId in DDB
+            // this is used when the subscription listener receives the subscribe notification
+            const marketplaceCustomerId = <span class="cstat-no" title="statement not covered" >data.CustomerIdentifier</span>
+<span class="cstat-no" title="statement not covered" >            customersController.updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, subscribeCustomerToUsagePlan)</span>
+        }
+    })
+}
+&nbsp;
+<span class="cstat-no" title="statement not covered" >exports = module.exports = {</span>
+    postSignIn,
+    getCatalog,
+    getApiKey,
+    getSubscriptions,
+    putSubscription,
+    getUsage,
+    deleteSubscription,
+    postMarketplaceConfirm,
+    putMarketplaceSubscription
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Sat Nov 17 2018 17:13:02 GMT-0800 (PST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

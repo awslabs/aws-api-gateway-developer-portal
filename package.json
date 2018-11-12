@@ -6,9 +6,14 @@
   "scripts": {
     "get-dependencies": "npm run get-dev-portal-dependencies; npm run get-lambda-dependencies;",
     "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}); npm run get-dependencies' \\;",
-    "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)"
+    "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)",
+    "test": "jest",
+    "coverage": "npm run test -- --coverage"
   },
   "license": "Apache-2.0",
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "jest": "^23.6.0",
+    "memorystream": "^0.3.1"
+  }
 }

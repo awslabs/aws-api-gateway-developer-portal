@@ -7,8 +7,6 @@
 // Right now it runs once per file, on every file, and thus may have nasty race conditions
 
 let AWS = require('aws-sdk'),
-  s3 = new AWS.S3(),
-  gateway = new AWS.APIGateway(),
   _ = require('lodash'),
   yaml = require('js-yaml'),
   bucketName = ''
@@ -16,17 +14,17 @@ let AWS = require('aws-sdk'),
 
 // See: https://github.com/darkskyapp/string-hash/blob/master/index.js
 function hash(str) {
-  var hash = 5381,
+  let hashed = 5381,
     i = str.length;
 
   while (i) {
-    hash = (hash * 33) ^ str.charCodeAt(--i);
+    hashed = (hashed * 33) ^ str.charCodeAt(--i);
   }
 
   /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
    * integers. Since we want the results to be always positive, convert the
    * signed int to an unsigned by doing an unsigned bitshift. */
-  return hash >>> 0;
+  return hashed >>> 0;
 }
 
 /**
@@ -48,13 +46,16 @@ function swaggerFileFilter(file) {
 
 
 /**
- * Takes an s3 file representation and fetches the file's body, putting into a new, internal file representation.
+ * Takes an s3 file representation and fetches the file's body, putting it into a new, internal file representation.
  *
  * Example internal file representation:
  * {
  *   body: '{ "swagger": 2.0, ... }',
  *   // note that apiStageKey may be undefined if we couldn't determine an exact apiStage!
- *   apiStageKey: 'a3d2ef:prod'
+ *   apiStageKey: 'a3d2ef_prod'
+ *   // if the api is generic, it'll have these properties
+ *   generic: true,
+ *   id: 'somehugehash'
  * }
  *
  * @param file an s3 file representation
@@ -69,12 +70,11 @@ function getSwaggerFile(file) {
     extractApiIdRegex = /(https?:\/\/)?(.*)\.execute-api\./,
     extractStageRegex = /\/?([^"]*)/
 
-
-  return s3.getObject(params).promise()
+  return exports.s3.getObject(params).promise()
     .then((s3Repr) => {
       let result = {};
 
-      console.log(`Processing file ${file.Key}:`)
+      console.log(`Processing file: ${file.Key}`)
 
       try {
         result.body = JSON.parse(s3Repr.Body.toString());
@@ -99,7 +99,7 @@ function getSwaggerFile(file) {
         result.id = hash(file.Key)
       }
       // if the file was saved with its name as an API_STAGE key, we should use that
-      // from strings like catalog/a1b2c3d4e5:prod.json, remove catalog and .json
+      // from strings like catalog/a1b2c3d4e5_prod.json, remove catalog and .json
       // we can trust that there's not a period in the stage name, as API GW doesn't allow that
       else if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
         result.apiStageKey = file.Key.split('catalog/').pop().split('.')[0]
@@ -128,8 +128,9 @@ function getSwaggerFile(file) {
 
       return result
     })
-    .catch((error) => {
+    .catch(/* istanbul ignore next */(error) => {
       console.log(`error retrieving swagger file ${file.Key}: ${error}`)
+      throw error
     })
 }
 
@@ -180,14 +181,12 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
         return swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`
       })
       .tap((swaggerFileRepr) => {
-        if (swaggerFileRepr) {
           api.swagger = swaggerFileRepr.body
           api.id = apiStage.apiId
           api.stage = apiStage.stage
           //TODO: Allow for customizing image?
           api.image = '/sam-logo.png'
           catalogObject.apis.push(api)
-        }
       })
       .value()
   })
@@ -195,61 +194,60 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
   return catalogObject
 }
 
-exports.handler = (event, context) => {
-  try {
+function buildCatalog(swaggerFiles) {
+  console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
+
+  let catalog = {
+    apiGateway: [],
+    generic: []
+  }
+
+  return exports.gateway.getUsagePlans({}).promise()
+    .then((result) => {
+      console.log(`usagePlans: ${JSON.stringify(result.items, null, 4)}`)
+      let usagePlans = result.items
+      for (let i = 0; i < usagePlans.length; i++) {
+          catalog.apiGateway[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles)
+      }
+
+        catalog.generic.push(
+        ...swaggerFiles.filter(s => s.generic).map(s => {
+          //TODO: Allow for customizing image?
+          s.image = '/sam-logo.png'
+          s.swagger = s.body
+          delete s.body
+          return s
+        })
+      )
+
+      console.log(`catalog: ${JSON.stringify(catalog, null, 4)}`)
+
+      return catalog
+    })
+    .catch(/* istanbul ignore next */(error) => {
+      console.log(`error getting usage plans: ${error}`)
+      throw error
+    })
+}
+
+function handler(event, context) {
     console.log(`event: ${JSON.stringify(event, null, 4)}`)
     // this is really fragile
     bucketName = _.get(event, 'Records[0].s3.bucket.name')
     let params = {
       Bucket: bucketName
-    },
-      promises = []
+    }
 
-    return s3.listObjectsV2(params).promise()
+    return exports.s3.listObjectsV2(params).promise()
       .then((result) => {
         console.log(`result: ${JSON.stringify(result, null, 4)}`)
-        let promises =
-          _
-            .chain(result.Contents)
-            .filter(swaggerFileFilter)
-            .map(getSwaggerFile)
-            .value()
+        let promises = result.Contents
+          .filter(exports.swaggerFileFilter)
+          .map(exports.getSwaggerFile)
 
         return Promise.all(promises)
       })
-      .then((swaggerFiles) => {
-        console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
-        let catalogObjects = {
-          apiGateway: [],
-          generic: []
-        }
-
-        return gateway.getUsagePlans({}).promise()
-          .then((result) => {
-            console.log(`usagePlans: ${JSON.stringify(result.items, null, 4)}`)
-            let usagePlans = result.items
-            for (let i = 0; i < usagePlans.length; i++) {
-              catalogObjects.apiGateway[i] = usagePlanToCatalogObject(
-                usagePlans[i], swaggerFiles.filter(s => !s.generic))
-            }
-
-            catalogObjects.generic.push(
-              ...swaggerFiles.filter(s => s.generic).map(s => {
-                //TODO: Allow for customizing image?
-                s.image = '/sam-logo.png'
-                s.swagger = s.body
-                delete s.body
-                return s
-              })
-            )
-
-            console.log(`catalogObjects: ${JSON.stringify(catalogObjects, null, 4)}`)
-
-            return catalogObjects
-          })
-          .catch((error) => console.log(`error getting usage plans: ${error}`))
-
-      })
+      .then(exports.buildCatalog)
       .then((catalogObjects) => {
         let params = {
           Bucket: bucketName,
@@ -257,15 +255,27 @@ exports.handler = (event, context) => {
           Body: JSON.stringify(catalogObjects),
           ContentType: 'application/json'
         },
-          options = {}
-        return s3.upload(params, options).promise()
+        options = {}
+
+        return exports.s3.upload(params, options).promise()
           .then((response) => console.log(`s3 upload succeeded: ${JSON.stringify(response, null, 4)}`))
-          .catch((error) => console.log(`error uploading catalog to s3: ${error}`))
+          .catch(/* istanbul ignore next */(error) => console.log(`error uploading catalog to s3: ${error}`))
       })
-      .catch((error) => {
+      .catch(/* istanbul ignore next */(error) => {
         console.log(`error operating on bucket ${bucketName}: ${error}`)
+        throw error
       })
-  } catch (error) {
-    console.log(`Caught top-level error: ${error}`)
-  }
+}
+
+// make available for unit testing
+// see: https://stackoverflow.com/questions/45111198/how-to-mock-functions-in-the-same-module-using-jest
+// and also: https://luetkemj.github.io/170421/mocking-modules-in-jest/
+exports = module.exports = {
+  swaggerFileFilter,
+  getSwaggerFile,
+  buildCatalog,
+  s3: new AWS.S3(),
+  gateway: new AWS.APIGateway(),
+  handler,
+  hash
 }
