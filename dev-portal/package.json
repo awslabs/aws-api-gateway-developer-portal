@@ -1,6 +1,6 @@
 {
   "name": "dev-portal",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "dependencies": {
     "amazon-cognito-identity-js": "^2.0.30",
