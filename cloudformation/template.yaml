@@ -599,7 +599,7 @@ Resources:
       RoleName: !Join
         - ''
         - - !Ref AWS::StackName
-          - 'MarketplaceMeteringRole'
+          - 'MeteringRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
