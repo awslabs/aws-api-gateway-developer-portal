@@ -11,9 +11,9 @@
     "coverage": "npm run test -- --coverage"
   },
   "license": "Apache-2.0",
-  "dependencies": {},
   "devDependencies": {
     "jest": "^23.6.0",
+    "lerna": "^3.4.3",
     "memorystream": "^0.3.1"
   }
 }
