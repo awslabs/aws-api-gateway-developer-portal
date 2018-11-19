@@ -6,7 +6,8 @@
   "config": {},
   "scripts": {
     "local": "node ./express-server-local",
-    "get-dependencies": "npm install"
+    "get-dependencies": "npm install",
+    "test": "echo no tests for backend yet"
   },
   "license": "Apache-2.0",
   "dependencies": {

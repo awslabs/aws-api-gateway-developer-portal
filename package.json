@@ -7,11 +7,13 @@
     "get-dependencies": "npm run get-dev-portal-dependencies; npm run get-lambda-dependencies;",
     "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}); npm run get-dependencies' \\;",
     "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)",
-    "test": "jest",
-    "coverage": "npm run test -- --coverage"
+    "test": "node scripts/test.js",
+    "coverage": "node scripts/test.js --coverage=true",
+    "cover": "npm run coverage"
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "fs-extra": "^7.0.1",
     "jest": "^23.6.0",
     "lerna": "^3.4.3",
     "memorystream": "^0.3.1"
