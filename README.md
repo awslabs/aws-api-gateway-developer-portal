@@ -1,6 +1,8 @@
 ## Introduction
 
-aws-serverless-developer-portal is a developer portal application that allows users to register, discover, and subscribe to your API Products (via API Gateway Usage Plans), manage their API Keys, and view their usage metrics for your APIs.
+The Amazon API Gateway Serverless Developer Portal is an application that you use for developer engagement by making your API Gateway APIs available to your customers through self-service discovery of those APIs. Your customers can use the developer portal to browse API documentation, register for – and immediately receive – their own API key that can be used to build applications, test published APIs, and monitor their own API usage. 
+
+For more information about Amazon API Gateway, visit the API Gateway [product page](https://aws.amazon.com/api-gateway/).
 
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
 
@@ -8,8 +10,11 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 ![Alt text](/screen-documentation.png?raw=true)
 
 ## Setup
+### Deploy with SAR
+You can deploy the Serverless Developer Portal through SAR in a few clicks! See the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html).
 
-### Prerequisites
+### Deploy with SAM
+#### Prerequisites
 
 First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html). Note that while the instructions specify Docker as a pre-requisite, Docker is only necessary for local development via SAM local. Feel free to skip installing Docker when you first set up the developer portal.
 
@@ -19,7 +24,7 @@ If you have not used the AWS CLI or SAM CLI before, you may need to [configure y
 
 If you have previously set up a v1 developer portal (non-SAM deployed), you will need to either remove all the v1 developer portal resources (dynamo tables, roles, etc.) or provide new names for the v2 developer portal by passing in parameter overrides for every resource.
 
-### Setup and deploy
+#### Setup and deploy
 
 Run:
 >Replace the `your-lambda-artifacts-bucket-name` with a bucket that you manage and must already exist
@@ -70,6 +75,8 @@ If you chose `UseRoute53Nameservers=true`, after the deployment finishes, go to 
 If you chose `UseRoute53Nameservers=false`, instead point your nameservers at the cloudfront distribution's URL.
 
 ## Components
+
+![Alt text](/images/highLevelDiagram.png?raw=true)
 
 ### SAM Stack (template.yaml)
 
