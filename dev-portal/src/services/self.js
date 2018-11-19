@@ -81,14 +81,16 @@ export function login(email, password) {
       Password: password
     })
 
-    store.cognitoUser = new CognitoUser({
+    let localCognitoUser = new CognitoUser({
       Username: email,
       Pool: new CognitoUserPool(poolData)
     })
 
     return new Promise((resolve, reject) => {
-      store.cognitoUser.authenticateUser(authenticationDetails, {
+      localCognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
+
+          store.cognitoUser = localCognitoUser
 
           AWS.config.credentials = new AWS.CognitoIdentityCredentials({
             IdentityPoolId: cognitoIdentityPoolId,
