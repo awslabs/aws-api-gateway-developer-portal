@@ -5,7 +5,7 @@ import AWS from 'aws-sdk'
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
 
 // services
-import { store } from 'services/state'
+import { store, clearStore } from 'services/state'
 import { initApiGatewayClient, apiGatewayClient } from 'services/api'
 import { updateAllUserData } from 'services/api-catalog'
 import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
@@ -122,8 +122,7 @@ export function login(email, password) {
 export function logout() {
   if (store.cognitoUser) {
     store.cognitoUser.signOut()
-    store.cognitoUser = null
-    store.subscriptions = []
+    store.clear()
     localStorage.clear()
   }
 }
