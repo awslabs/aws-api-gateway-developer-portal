@@ -5,7 +5,7 @@ import AWS from 'aws-sdk'
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
 
 // services
-import { store, clearStore } from 'services/state'
+import { store } from 'services/state'
 import { initApiGatewayClient, apiGatewayClient } from 'services/api'
 import { updateAllUserData } from 'services/api-catalog'
 import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
@@ -104,6 +104,8 @@ export function login(email, password) {
               console.error(error)
             } else {
               initApiGatewayClient(AWS.config.credentials)
+
+              updateAllUserData()
 
               apiGatewayClient().then(apiGatewayClient => 
                 apiGatewayClient.post('/signin', {}, {}, {})
