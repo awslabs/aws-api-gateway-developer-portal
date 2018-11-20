@@ -61,7 +61,7 @@ The `catalog.json` file will be automatically re-built every time a file is adde
 When logged into the developer portal with an account that has a provisioned api key, you should be able to test your APIs by selecting a resource/method in them and clicking "Try it out!". Note that this requires CORS to be set up on your API to allow the developer portal to call it. Note that the default PetStore has CORS enabled on all resources but `/`.
 
 ## Before going to production
-
+### Setup a custom domain for your Developer Portal
 You should [request and verify an ACM managed certificate for your custom domain name.](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html) Then, redeploy the CFN stack with the domain name and ACM cert ARN as parameter overrides. Additionally, you can control if Route 53 nameservers are created using the `UseRoute53Nameservers` override. A value of true will result in the creation of a Route 53 hosted zone and record set; false will skip the creation of these resources.
 
 ```bash
@@ -73,6 +73,11 @@ This creates a cloudfront distribution in front of the S3 bucket serving the sit
 If you chose `UseRoute53Nameservers=true`, after the deployment finishes, go to the Route53 console, find the nameservers for the hosted zone created by the deployment, and add those as the nameservers for your domain name through your registrar. The specifics of this process will vary by registrar.
 
 If you chose `UseRoute53Nameservers=false`, instead point your nameservers at the cloudfront distribution's URL.
+### Add custom content and brand the Developer Portal
+See [Customization section](#customization)
+
+### Add an approval workflow to register new users
+See [Components section](#cognito-user-pool-confirmation-strategy-lambdacognito-user-pools-confirmation-strategy)
 
 ## Components
 
@@ -96,7 +101,13 @@ All resources in the API require AWS SigV4 authentication (i.e. via Cognito) wit
 
 By default, the backend implementation assumes a one-to-one association between authenticated users (Cognito identities) and API Gateway API Keys. A given user can be subscribed to multiple usage plans using the same API Key.
 
-### AWS Marketplace SNS Listener Function (Optional) (/listener)
+### Cognito User Pool Confirmation Strategy (/lambda/cognito-user-pools-confirmation-strategy)
+
+This lambda function (right now) is called for every registration request, but always returns true. This is a placeholder function for you to edit with your own logic for approval. We expect there won't be a single approval/workflow logic that will work for everyone, so we created a placeholder Lambda function that you can easily extend to have your own logic.
+
+If you're consuming the dev portal via SAM, you should be able to change the contents of the lambdas/cognito-user-pools-confirmation-strategy/index.js file, then run a CloudFormation stack update with the new lambda body.
+
+### AWS Marketplace SNS Listener Function (Optional) (/lambda/listener)
 
 The listener Lambda function will be triggered when customers subscribe or unsubscribe to your product through the AWS Marketplace console. AWS Marketplace will generate a unique SNS Topic where events will be published for your product. This is configurable via 'marketplaceSubscriptionTopic' configuration in package.json. After changing this you will need to run 'npm run update-stack' and 'npm run subscribe-listener' to subscribe the listener function.
 
