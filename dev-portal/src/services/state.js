@@ -7,10 +7,20 @@ import _ from 'lodash'
 import { getSubscribedUsagePlan } from 'services/api-catalog'
 
 export const store = observable({
-  api: undefined,
-  apiList: undefined,
+  initialize() {
+    this.api = undefined
+    this.apiKey = undefined
+    this.apiList = undefined
+    this.cognitoUser = undefined
+    this.catalog = undefined
+    this.subscriptions = undefined
 
-  cognitoUser: undefined,
+    return this
+  },
+
+  clear() {
+    return this.initialize()
+  },
 
   /**
    * We have a bunch of side-effects we need to run when we're setting `catalog` and 
@@ -23,7 +33,7 @@ export const store = observable({
   // 1 - update each api to have a usagePlan object nested in them
   // 2 - update the apiList based on the catalog 
   // 3 - update the subscribed status of each api
-  set catalog(catalog = []) {
+  set catalog(catalog = {}) {
     storeCache.catalog = addUsagePlanToApis(catalog)
     store.apiList = createApiList(storeCache.catalog)
     fetchApiImage(store.apiList)
@@ -41,7 +51,7 @@ export const store = observable({
 
     return storeCache.subscriptions
   },
-  get subscriptions() { return storeCache.subscriptions },
+  get subscriptions() { return storeCache.subscriptions }
 }, {
     catalog: computed,
     subscriptions: computed
@@ -62,7 +72,7 @@ const storeCache = observable({
  * - Makes sure each api has a non-recursive 'usagePlan' object
  * - recalculates the `apiList`
  */
-function addUsagePlanToApis({ apiGateway, generic }) {
+function addUsagePlanToApis({ apiGateway = [], generic = [] }) {
   return {
     apiGateway: apiGateway.map(usagePlan => {
       usagePlan.apis = usagePlan.apis.map(api => {
@@ -74,7 +84,7 @@ function addUsagePlanToApis({ apiGateway, generic }) {
 
       return usagePlan
     }),
-    generic: [...generic]
+    generic
   }
 }
 
@@ -116,4 +126,4 @@ function updateSubscriptionStatus() {
     })
 }
 
-export default store
+export default store.initialize()
