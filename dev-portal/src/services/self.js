@@ -124,7 +124,7 @@ export function login(email, password) {
 export function logout() {
   if (store.cognitoUser) {
     store.cognitoUser.signOut()
-    store.clear()
+    store.resetUserData()
     localStorage.clear()
   }
 }

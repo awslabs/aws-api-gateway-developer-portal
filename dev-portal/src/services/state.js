@@ -1,113 +1,128 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { observable, computed } from 'mobx'
+import { observable, reaction } from 'mobx'
 import _ from 'lodash'
 
 import { getSubscribedUsagePlan } from 'services/api-catalog'
 
+/**
+ * A function that returns a new object contain the default store
+ */
+function storeDefaults() {
+  return {
+    api: undefined,
+    apiKey: undefined,
+    
+    apiList: {
+      loaded: false,
+      apiGateway: [],
+      generic: []
+    },
+
+    cognitoUser: undefined,
+
+    usagePlans: [],
+
+    subscriptions: []
+  }
+}
+
+/**
+ * Trick for logging the store: clone the object. i.e. _.cloneDeep(store) or JSON.parse(JSON.stringify(store))
+ */
 export const store = observable({
+  ...(storeDefaults()),
+
   initialize() {
-    this.api = undefined
-    this.apiKey = undefined
-    this.apiList = undefined
-    this.cognitoUser = undefined
-    this.catalog = undefined
-    this.subscriptions = undefined
+    Object.assign(this, storeDefaults())
 
     return this
   },
 
+  /**
+   * Reset the entire store to the original values
+   */
   clear() {
     return this.initialize()
   },
 
   /**
-   * We have a bunch of side-effects we need to run when we're setting `catalog` and 
-   * `subscriptions`. That's accomplished by using getters and setters. We're storing
-   * the actual data in `storeCache` so that people can't update `catalog` and 
-   * `subscriptions` without hitting the side-effects.
+   * Reset specific keys on the store to their initial values
+   * 
+   * @param {string[]} keys   The keys that should be reset. Accepts lodash paths. (e.g. )
    */
-
-  // Catalog side-effects
-  // 1 - update each api to have a usagePlan object nested in them
-  // 2 - update the apiList based on the catalog 
-  // 3 - update the subscribed status of each api
-  set catalog(catalog = {}) {
-    storeCache.catalog = addUsagePlanToApis(catalog)
-    store.apiList = createApiList(storeCache.catalog)
-    fetchApiImage(store.apiList)
-    updateSubscriptionStatus()
-
-    return storeCache.catalog
+  reset(...keys) {
+    const defaults = storeDefaults()
+    keys.forEach(key =>_.set(this, key, _.get(defaults, key)))
+    return this
   },
-  get catalog() { return storeCache.catalog },
 
-  // Subscription side-effects
-  // 1 - update the subscribed status of each api
-  set subscriptions(subscriptions = []) {
-    storeCache.subscriptions = subscriptions
-    updateSubscriptionStatus()
-
-    return storeCache.subscriptions
-  },
-  get subscriptions() { return storeCache.subscriptions }
-}, {
-    catalog: computed,
-    subscriptions: computed
-  })
-
-// This is the cache for the actual catalog and subscriptions. DO NOT MODIFY and DO NOT USE.
-const storeCache = observable({
-  catalog: {
-    apiGateway: [],
-    generic: []
-  },
-  subscriptions: []
+  resetUserData() {
+    this.reset('apiKey', 'cognitoUser', 'subscriptions')
+  }
 })
 
 /**
- * A function that takes an input catalog and performs some side-effects on it.
  * 
- * - Makes sure each api has a non-recursive 'usagePlan' object
- * - recalculates the `apiList`
+ * A short-hand function for creating reactions with protections against cyclical errors.
+ * 
+ * @param {Function} triggerFn   A function that determines when fire the effectFn and what to pass to the effectFn.
+ * @param {Function} effectFn   The side-effect to run when the data tracked by the triggerFn is changed.
+ * 
+ * A note on MobX reactions: the side effect will "only react to data that was accessed in the data expression" and will only fire "when the data returned by the expression has changed". (https://mobx.js.org/refguide/reaction.html)
  */
-function addUsagePlanToApis({ apiGateway = [], generic = [] }) {
-  return {
-    apiGateway: apiGateway.map(usagePlan => {
-      usagePlan.apis = usagePlan.apis.map(api => {
-        api.usagePlan = _.cloneDeep(usagePlan)
-        // remove the apis from the cloned usagePlan so we don't go circular
-        delete api.usagePlan.apis
-        return api
-      })
+function reactTo(triggerFn, effectFn) {
+  // note -- had issues with cyclical reactions in the past
+  // the comments below will fix them if they come up again
+  // DO NOT REMOVE THEM
 
-      return usagePlan
-    }),
-    generic
-  }
+  // function restartReaction() {
+    reaction(
+      triggerFn,
+      (data, action) => {
+        // action.dispose() // clear this "listener" so we don't cycle
+        
+        effectFn(data, action)
+
+        // restartReaction() // restart the reaction after doing stuff to the data
+      }
+    )
+  // }
+
+  // restartReaction()
 }
-
-function createApiList({apiGateway, generic}) {
-  return {
-    apiGateway: apiGateway.reduce((acc, usagePlan) => acc.concat(usagePlan.apis), []),
-    generic: [...generic]
+reactTo(
+  () => ({ subscriptions: store.subscriptions, usagePlans: store.usagePlans }),
+  ({ usagePlans }) => {
+    updateSubscriptionStatus(usagePlans)
   }
-}
+)
 
-function fetchApiImage() {
-  store.apiList.apiGateway.forEach(api => {
-    let specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
+reactTo(
+  () => store.apiList,
+  apiList => {
+    fetchApiImage(apiList)
+  }
+)
 
-    // fetch automatically follows redirects; setting redirect to `manual` prevents this
-    // we need to prevent it so that we can accurately determine if the image exists
-    if (!api.logo)
+/**
+ * 
+ */
+function fetchApiImage(apiList) {
+  ([].concat(apiList.apiGateway, apiList.generic)).forEach(api => {
+    if (!api.logo) {
+      let specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
+  
+      // fetch automatically follows redirects; setting redirect to `manual` prevents this
+      // we need to prevent it so that we can accurately determine if the image exists
       fetch(specificLogo, { headers: { Accept: "image/png" }, redirect: "manual" }).then(response => {
         if (response.ok)
           api.logo = specificLogo
 
         else api.logo = '/custom-content/api-logos/default.png'
       })
+    }
   })
 }
 
@@ -116,9 +131,9 @@ function fetchApiImage() {
  * 
  * Should be run every time either the catalog updates or the 
  */
-function updateSubscriptionStatus() {
-  if (storeCache.catalog)
-    storeCache.catalog.apiGateway.forEach(usagePlan => {
+function updateSubscriptionStatus(usagePlans) {
+  if (usagePlans)
+    usagePlans.forEach(usagePlan => {
       let subscribed = !!getSubscribedUsagePlan(usagePlan.id)
       usagePlan.subscribed = subscribed
 

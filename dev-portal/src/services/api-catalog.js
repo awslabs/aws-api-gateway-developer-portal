@@ -1,6 +1,8 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import _ from 'lodash'
+
 import { apiGatewayClient } from './api'
 import { store } from './state'
 
@@ -14,7 +16,7 @@ import { store } from './state'
  */
 export function updateAllUserData(bustCache = true) {
   return Promise.all([
-    updateCatalogAndApisList(bustCache),
+    updateUsagePlansAndApisList(bustCache),
     updateSubscriptions(bustCache),
     updateApiKey(bustCache)
   ])
@@ -27,19 +29,47 @@ export function updateAllUserData(bustCache = true) {
  * @param {Boolean} [bustCache=false]   Ignore the cache and re-make the network call. Defaults to false.
  * 
  */
-export function updateCatalogAndApisList(bustCache = false) {
-  let catalogOrPromise = store.catalog.length ? store.catalog : catalogPromiseCache
-  if (!bustCache && catalogOrPromise) return Promise.resolve(catalogOrPromise)
+export function updateUsagePlansAndApisList(bustCache = false) {
+  // if we've already tried, just return that promise
+  if (!bustCache && catalogPromiseCache) return catalogPromiseCache
 
   return catalogPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
-    .then(({ data = [] }) => (store.catalog = data))
+    .then(({ data = [] }) => {
+      store.usagePlans = data.apiGateway
+
+      if (!store.apiList) store.apiList = {}
+      store.apiList.apiGateway = getApiGatewayApisFromUsagePlans(store.usagePlans) // MUST create
+      store.apiList.generic = data.generic
+      store.apiList.loaded = true
+    })
     .catch(() => {
-      // catch a failed request and set catalog to a blank array
-      return (store.catalog = [])
+      store.apiList = null
+      store.usagePlans = null
+      store.apiList.loaded = true
     })
 }
 let catalogPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
+
+/**
+ * A function that takes an input usage plans and creates an list of apis out of it.
+ * 
+ * - Makes sure each api has a non-recursive 'usagePlan' object
+ * 
+ * returns an array of apis
+ */
+function getApiGatewayApisFromUsagePlans(usagePlans) {
+  return usagePlans.reduce((acc, usagePlan) => {
+
+    usagePlan.apis.forEach(api => {
+      api.usagePlan = _.cloneDeep(usagePlan)
+      // remove the apis from the cloned usagePlan so we don't go circular
+      delete api.usagePlan.apis
+    })
+
+    return acc.concat(usagePlan.apis)
+  }, [])
+}
 
 /**
  * Return the API with the provided apiId. Can also provide the special strings "FIRST" or "ANY" to get the first API returned. Can select the api returned as a side-effect.
@@ -48,7 +78,7 @@ let catalogPromiseCache // WARNING: Don't touch this. Should only be used by upd
  * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
  */
 export function getApi(apiId, selectIt = false) {
-  return updateCatalogAndApisList()
+  return updateUsagePlansAndApisList()
     .then(() => {
       let thisApi
 
