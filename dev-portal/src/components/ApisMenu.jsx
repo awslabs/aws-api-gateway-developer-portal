@@ -11,69 +11,73 @@ import { Menu, Loader } from 'semantic-ui-react'
 import { observer } from 'mobx-react'
 import { store } from 'services/state'
 
-const MenuHeader = ({ children }) => <Menu.Header style={{ padding: "13px 5px 13px 16px", color: 'lightsteelblue' }} >
-  {children}</Menu.Header>
+// utilities
+import _ from 'lodash'
 
-export default observer(class ApisMenu extends React.Component {
-  state = {
-    selectedApi: ''
-  }
+function isActive (apiId, selectedApiId) {
+  return (selectedApiId) ? apiId === selectedApiId : false
+}
 
-  componentDidMount() {
-    if (this.props.path.params)
-      this.setState(prev => ({
-        ...prev,
-        selectedApi: this.props.path.params.apiId
-      }))
-  }
+export default observer(function ApisMenu() {
+  const { path, ...props } = this.props
 
-  handleClick = (id) => {
-    console.log(`${id}`)
-    this.setState(prev => ({...prev, selectedApi: id}))
-  }
+  console.log(store)
 
-  isActive = (apiId) => apiId === this.state.selectedApi
+  const loadingApis = !store.apiList.loaded
+  const hasGatewayApis = !!_.get(store, 'apiList.apiGateway.length')
+  const hasGenericApis = !!_.get(store, 'apiList.generic.length')
 
-  render() {
-    const { path, ...props } = this.props
-    return (
-      <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0 }} {...props}>
-        <MenuHeader>Subscribable</MenuHeader>
-        {
-          !store.apiList ? (<Loader active />) : (
-            store.apiList.apiGateway && (
-              store.apiList.apiGateway.length ? store.apiList.apiGateway.map((api) => (
-                <Menu.Item
-                  key={api.id}
-                  as={Link}
-                  to={`/apis/${api.id}`}
-                  active={this.isActive(api.id.toString())}
-                  onClick={() => this.handleClick(api.id)}
-                >
-                  {api.swagger.info.title}
-                </Menu.Item>
-              )) : (
-                  <p style={{ padding: "13px 16px", color: "whitesmoke" }}>No APIs Published</p>
-                )
-            )
-          )
-        }
-        {store.apiList && store.apiList.generic && <MenuHeader>Not Subscribable</MenuHeader>}
-        {
-          store.apiList && store.apiList.generic ?
-            store.apiList.generic.map(({ id, swagger }) => (
-              <Menu.Item
-                key={id}
-                as={Link}
-                to={`/apis/${id}`}
-                active={this.isActive(id.toString())}
-                onClick={() => this.handleClick(id)}
-              >
-                {swagger.info.title}
-              </Menu.Item>
-            )) : undefined
-        }
-      </Menu>
-    )
-  }
+  // either grab the selectedApiId from the path OR
+  // grab it from the first apiGateway api OR
+  // grab it from the first generic api
+  const selectedApiId = (
+    this.props.path.params.apiId ||
+    (hasGatewayApis && store.apiList.apiGateway[0].id) ||
+    (hasGenericApis && store.apiList.generic[0].id)
+  )
+
+  // If we're still loading, display a spinner.
+  // If we're not loading, and we don't have any apis, display a message.
+  // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis 
+  return (
+    <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0 }} {...props}>
+      {loadingApis ? (
+        <Loader active />
+      ) : (
+        (hasGatewayApis || hasGenericApis) ? (
+          <React.Fragment>
+            {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} />}
+            {hasGenericApis && <ApiSubsection title="Not Subscribable" listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
+          </React.Fragment>
+        ) : (
+          <p style={{ padding: "13px 16px", color: "whitesmoke" }}>No APIs Published</p>
+        )
+      )}
+    </Menu>
+  )
 })
+
+function ApiSubsection({ title, listOfApis, selectedApiId }) {
+  return (
+    <React.Fragment>
+      <Menu.Header
+        style={{
+          padding: "13px 5px 13px 16px",
+          color: 'lightsteelblue'
+        }}
+      >
+        {title}
+      </Menu.Header>
+      {listOfApis.map(api => (
+        <Menu.Item
+          key={api.id}
+          as={Link}
+          to={`/apis/${api.id}`}
+          active={isActive(api.id.toString(), selectedApiId.toString())}
+        >
+          {api.swagger.info.title}
+        </Menu.Item>
+      ))}
+    </React.Fragment>
+  )
+}
