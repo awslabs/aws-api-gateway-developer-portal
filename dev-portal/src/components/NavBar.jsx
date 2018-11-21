@@ -5,7 +5,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, Image } from 'semantic-ui-react'
 
-import { isAuthenticated } from 'services/self'
+import { isAuthenticated, logout } from 'services/self'
 
 // mobx
 import { observer } from 'mobx-react'
@@ -16,7 +16,6 @@ import { fragments } from 'services/get-fragments'
 // components
 import SignIn from './SignIn'
 import Register from './Register'
-import SignOut from './SignOut'
 
 export const NavBar = observer(() => {
   return (
@@ -30,13 +29,13 @@ export const NavBar = observer(() => {
       <Menu.Menu position="right">
         { isAuthenticated() ? (
           <React.Fragment>
-            <SignOut trigger={<Menu.Item as="a" key="logout">Sign Out</Menu.Item>} />
-            <Menu.Item as={Link} to="/dashboard" key="dashboard">My Dashboard</Menu.Item>
+            <Menu.Item as="a" onClick={logout}>Sign Out</Menu.Item>
+            <Menu.Item as={Link} to="/dashboard">My Dashboard</Menu.Item>
           </React.Fragment>
         ) : (
           <React.Fragment>
-            <SignIn trigger={<Menu.Item as="a" key="login">Sign In</Menu.Item>} />
-            <Register trigger={<Menu.Item as="a" key="register">Register</Menu.Item>} /> 
+            <SignIn trigger={<Menu.Item as="a">Sign In</Menu.Item>} />
+            <Register trigger={<Menu.Item as="a">Register</Menu.Item>} /> 
           </React.Fragment>
         )}
       </Menu.Menu>
