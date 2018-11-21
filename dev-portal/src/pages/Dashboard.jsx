@@ -3,7 +3,7 @@
 
 import React from 'react'
 
-import { Grid, Header, Popup, Loader, Message, List, Divider, Icon } from 'semantic-ui-react'
+import { Grid, Header, Popup, Loader, Message, List, Divider } from 'semantic-ui-react'
 
 import Chart from 'chart.js'
 import { fetchUsage, mapUsageByDate } from 'services/api-catalog'
