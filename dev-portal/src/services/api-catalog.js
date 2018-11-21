@@ -51,18 +51,16 @@ export function getApi(apiId, selectIt = false) {
   return updateCatalogAndApisList()
     .then(() => {
       let thisApi
+
+      let allApis = [].concat(store.apiList.apiGateway, store.apiList.generic)
   
-      if (store.apiList.apiGateway.length) {
+      if (allApis.length) {
         if (apiId === 'ANY' || apiId === 'FIRST') {
-          thisApi = store.apiList.apiGateway[0]
+          thisApi = allApis[0]
         }
 
         else {
-          thisApi = store.apiList.apiGateway.find(api => api.id === apiId)
-        }
-
-        if (thisApi === undefined) {
-          thisApi = store.apiList.generic.find(api => api.id.toString() === apiId)
+          thisApi = allApis.find(api => api.id.toString() === apiId)
         }
       }
 
