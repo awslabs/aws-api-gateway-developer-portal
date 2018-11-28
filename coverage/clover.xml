@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1542509740242" clover="3.2.0">
-  <project timestamp="1542509740242" name="All files">
-    <metrics statements="193" coveredstatements="147" conditionals="54" coveredconditionals="49" methods="49" coveredmethods="34" elements="296" coveredelements="230" complexity="0" loc="193" ncloc="193" packages="3" files="3" classes="3">
+<coverage generated="1543354261039" clover="3.2.0">
+  <project timestamp="1543354261040" name="All files">
+    <metrics statements="193" coveredstatements="162" conditionals="54" coveredconditionals="50" methods="49" coveredmethods="37" elements="296" coveredelements="249" complexity="0" loc="193" ncloc="193" packages="3" files="3" classes="3">
       <package name="catalog-updater">
         <metrics statements="83" coveredstatements="80" conditionals="21" coveredconditionals="20" methods="16" coveredmethods="16"/>
         <file name="index.js" path="/Volumes/encased/dev-portal/aws-api-gateway-developer-portal/lambdas/catalog-updater/index.js">
@@ -100,9 +100,9 @@
         </file>
       </package>
       <package name="static-asset-uploader">
-        <metrics statements="108" coveredstatements="65" conditionals="33" coveredconditionals="29" methods="32" coveredmethods="17"/>
+        <metrics statements="108" coveredstatements="80" conditionals="33" coveredconditionals="30" methods="32" coveredmethods="20"/>
         <file name="index.js" path="/Volumes/encased/dev-portal/aws-api-gateway-developer-portal/lambdas/static-asset-uploader/index.js">
-          <metrics statements="108" coveredstatements="65" conditionals="33" coveredconditionals="29" methods="32" coveredmethods="17"/>
+          <metrics statements="108" coveredstatements="80" conditionals="33" coveredconditionals="30" methods="32" coveredmethods="20"/>
           <line num="3" count="1" type="stmt"/>
           <line num="4" count="1" type="stmt"/>
           <line num="5" count="1" type="stmt"/>
@@ -156,23 +156,23 @@
           <line num="174" count="1" type="stmt"/>
           <line num="180" count="1" type="stmt"/>
           <line num="181" count="1" type="stmt"/>
-          <line num="185" count="0" type="stmt"/>
-          <line num="192" count="0" type="stmt"/>
-          <line num="198" count="0" type="stmt"/>
-          <line num="200" count="0" type="stmt"/>
-          <line num="202" count="0" type="stmt"/>
-          <line num="203" count="0" type="cond" truecount="0" falsecount="2"/>
-          <line num="204" count="0" type="stmt"/>
-          <line num="208" count="0" type="stmt"/>
-          <line num="212" count="0" type="stmt"/>
-          <line num="213" count="0" type="stmt"/>
-          <line num="215" count="0" type="stmt"/>
-          <line num="217" count="0" type="stmt"/>
-          <line num="224" count="0" type="stmt"/>
-          <line num="226" count="0" type="stmt"/>
+          <line num="185" count="1" type="stmt"/>
+          <line num="192" count="1" type="stmt"/>
+          <line num="198" count="1" type="stmt"/>
+          <line num="200" count="1" type="stmt"/>
+          <line num="202" count="1" type="stmt"/>
+          <line num="203" count="1" type="cond" truecount="1" falsecount="1"/>
+          <line num="204" count="1" type="stmt"/>
+          <line num="208" count="1" type="stmt"/>
+          <line num="212" count="1" type="stmt"/>
+          <line num="213" count="1" type="stmt"/>
+          <line num="215" count="1" type="stmt"/>
+          <line num="217" count="1" type="stmt"/>
+          <line num="224" count="1" type="stmt"/>
+          <line num="226" count="1" type="stmt"/>
           <line num="229" count="0" type="stmt"/>
           <line num="230" count="0" type="stmt"/>
-          <line num="233" count="0" type="stmt"/>
+          <line num="233" count="1" type="stmt"/>
           <line num="237" count="0" type="stmt"/>
           <line num="239" count="0" type="stmt"/>
           <line num="241" count="0" type="stmt"/>
