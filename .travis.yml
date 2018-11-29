@@ -1,3 +1,9 @@
 language: node_js
 node_js:
   - "node"
+
+before_install:
+  - cd dev-portal
+  - npm install --only=dev
+  - cd ..
+  - npm install --only=dev
