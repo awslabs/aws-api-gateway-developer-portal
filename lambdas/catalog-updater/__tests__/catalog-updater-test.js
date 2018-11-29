@@ -154,14 +154,12 @@ describe('buildCatalog', () => {
                     apis: [{
                         swagger: 'prodSwaggerBody',
                         id: 'a1b2c3d4e5',
-                        stage: 'prod',
-                        image: '/sam-logo.png'
+                        stage: 'prod'
                     }]
                 }],
                 generic: [{
                     swagger: 'genericSwaggerBody',
                     id: 'somehugehash',
-                    image: '/sam-logo.png',
                     generic: true
                 }]
             }
