@@ -2,8 +2,12 @@ language: node_js
 node_js:
   - "node"
 
+cache: npm
+
 before_install:
   - cd dev-portal
-  - npm install --only=dev
+  # install everything in dev portal
+  - npm install
   - cd ..
+  # lambda function test dependencies are currently installed at the top-level
   - npm install --only=dev
