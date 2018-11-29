@@ -1,14 +1,12 @@
 'use strict';
 
 let AWS = require('aws-sdk'),
-    s3 = new AWS.S3(),
     response = require('cfn-response'),
     fse = require('fs-extra'),
     klaw = require('klaw'),
     through = require('through2'),
-    _ = require('lodash')
-
-let crypto = require('crypto')
+    _ = require('lodash'),
+    crypto = require('crypto')
 
 /**
  * Uses the cfn-response library to notify CloudFormation that this custom resource is done with the task it was
@@ -22,7 +20,7 @@ let crypto = require('crypto')
  * @param {Object} context lambda function context
  */
 function notifyCFNThatUploadSucceeded(responseData, event, context) {
-    var hash = crypto.createHash('md5').update(JSON.stringify(responseData)).digest('hex')
+    let hash = crypto.createHash('md5').update(JSON.stringify(responseData)).digest('hex')
     response.send(event, context, response.SUCCESS, responseData, hash)
 }
 
@@ -49,7 +47,10 @@ function notifyCFNThatUploadFailed(error, event, context) {
  * @returns {string} File path without a leading slash
  */
 function sanitizeFilePath(filePath) {
-    return filePath[0] === '/' ? filePath.slice(1) : filePath
+    while(filePath[0] === '/') {
+        filePath = filePath.slice(1)
+    }
+    return filePath
 }
 
 /**
@@ -73,13 +74,16 @@ function generalizeFilePath(filePath) {
  * @returns {string} ContentType corresponding to the file extension in the file path provided
  */
 function determineContentType(filePath) {
-    let extension = filePath.split('.').pop() || '',
+    let extension = filePath.split('.').pop(),
         contentType = 'application/octet-stream'
 
     if (extension === 'html') contentType = 'text/html'
     if (extension === 'css') contentType = 'text/css'
     if (extension === 'js') contentType = 'application/javascript'
-    if (extension === 'png' || extension === 'jpg' || extension === 'gif') contentType = 'image/' + extension
+    if (extension === 'png' || extension === 'jpeg' || extension === 'gif') contentType = 'image/' + extension
+    // note that jpg is a valid file extension
+    // but the contentType should be image/jpeg !
+    if (extension === 'jpg') contentType = 'image/' + 'jpeg'
 
     return contentType
 }
@@ -148,7 +152,7 @@ function cleanS3Bucket(bucketName) {
         Bucket: bucketName,
     }
 
-    return s3.listObjectsV2(params).promise()
+    return exports.s3.listObjectsV2(params).promise()
         .then(result => {
             console.log(`result: ${JSON.stringify(result, null, 4)}`)
             let keys = _.map(result.Contents, (obj) => {
@@ -164,7 +168,7 @@ function cleanS3Bucket(bucketName) {
 
             if(keys.length) {
               console.log(`Attempting to delete ${keys.length} objects. The first one in the list is: ${_.get(keys, '[0].Key')}`)
-              return s3.deleteObjects(params).promise()
+              return exports.s3.deleteObjects(params).promise()
                 .then((result) => console.log(`deleteObjects result: ${JSON.stringify(result, null, 4)}`))
             } else {
               return Promise.resolve()
@@ -174,130 +178,148 @@ function cleanS3Bucket(bucketName) {
 
 function createCatalogDirectory(staticBucketName) {
     let params = { Bucket: staticBucketName, Key: 'catalog/', Body: '' }
-    return s3.upload(params).promise()
+    return exports.s3.upload(params).promise()
+}
+
+function addConfigFile(event) {
+    let configObject = {
+            restApiId: event.ResourceProperties.RestApiId,
+            region: event.ResourceProperties.Region,
+            identityPoolId: event.ResourceProperties.IdentityPoolId,
+            userPoolId: event.ResourceProperties.UserPoolId,
+            userPoolClientId: event.ResourceProperties.UserPoolClientId
+        },
+        params = {
+            Bucket: bucketName,
+            Key: 'config.js',
+            Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
+            ACL: "public-read"
+        },
+        options = {}
+
+    console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)
+
+    let suffix = event.ResourceProperties.MarketplaceSuffix
+    if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
+        configObject.marketplaceSubscriptionTopic
+            = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
+    }
+
+    return s3.upload(params, options).promise()
+}
+
+function processFile(fileStat, readPromises, uploadPromises, bucketName) {
+    let filePath = fileStat.path,
+        thisReadPromise = fse.readFile(filePath)
+
+    thisReadPromise
+        .then(readResults => {
+            let params = {
+                    Bucket: bucketName,
+                    Key: sanitizeFilePath(generalizeFilePath(filePath)),
+                    Body: readResults,
+                    ACL: "public-read",
+                    ContentType: determineContentType(filePath)
+                },
+                options = {}
+
+            uploadPromises.push(s3.upload(params, options).promise())
+        })
+        .catch(error => {
+            console.log(`Failed to upload: ${error}`)
+            notifyCFNThatUploadFailed(error, event, context)
+        })
+
+    readPromises.push(thisReadPromise)
+}
+
+function waitForUpload(readPromises, uploadPromises, bucketName) {
+    console.log(`readPromises length: ${readPromises.length}`)
+
+    return Promise.all(readPromises)
+        .then(() => {
+            console.log('All read promises resolved.')
+            console.log(`uploadPromises length: ${uploadPromises.length}`)
+
+            uploadPromises.push(addConfigFile(event))
+
+            return Promise.all(uploadPromises)
+                .then(() => {
+                    console.log(`All upload promises resolved.`)
+                    console.log(`Succeeded in uploading to bucket ${bucketName}.`)
+                    exports.notifyCFNThatUploadSucceeded({
+                        status: 'upload_success',
+                        bucket: bucketName
+                    }, event, context)
+                })
+                .catch(error => {
+                    console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
+                    exports.notifyCFNThatUploadFailed(error, event, context)
+                })
+        })
+        .catch(error => {
+            console.log(`Failed to read file with error: ${error}`)
+            exports.notifyCFNThatUploadFailed(error, event, context)
+        })
 }
 
 function uploadStaticAssets(bucketName, event, context) {
-    let collector = []
-
     let excludeDirFilter = excludeDirFactory()
     let excludeCustomContentFilter = excludeCustomContentFactory(event.RequestType, event.ResourceProperties.RebuildMode)
+    let readPromises = [],
+        uploadPromises = []
 
     return klaw('./build')
         .on('error', (err, item) => excludeDirFilter.emit('error', err, item))
         .pipe(excludeDirFilter)
         .on('error', (err, item) => excludeCustomContentFilter.emit('error', err, item))
         .pipe(excludeCustomContentFilter)
-        .on('data', fileStat => {
-            collector.push(fileStat.path)
-        })
+        .on('data', (data) => processFile(data, readPromises, uploadPromises, bucketName))
         .on('error', (error, item) => {
             console.log(`Failed to traverse file system on path ${item && item.path}: ${error}`)
             notifyCFNThatUploadFailed(error, event, context)
         })
-        .on('end', () => {
-            let readPromises = [],
-                uploadPromises = []
-            for (const filePath of collector) {
-                let thisReadPromise = fse.readFile(filePath)
-
-                thisReadPromise
-                    .then(readResults => {
-                        let params = {
-                                Bucket: bucketName,
-                                Key: sanitizeFilePath(generalizeFilePath(filePath)),
-                                Body: readResults,
-                                ACL: "public-read",
-                                ContentType: determineContentType(filePath)
-                            },
-                            options = {}
-                        uploadPromises.push(s3.upload(params, options).promise())
-                    })
-                    .catch(error => {
-                        console.log(`Failed to upload: ${error}`)
-                        notifyCFNThatUploadFailed(error, event, context)
-                    })
-
-                readPromises.push(thisReadPromise)
-            }
-
-            console.log(`readPromises length: ${readPromises.length}`)
-
-            return Promise.all(readPromises)
-                .then((readResults) => {
-                    console.log('All read promises resolved.')
-                    console.log(`uploadPromises length: ${uploadPromises.length}`)
-
-                    let configObject = {
-                            restApiId: event.ResourceProperties.RestApiId,
-                            region: event.ResourceProperties.Region,
-                            identityPoolId: event.ResourceProperties.IdentityPoolId,
-                            userPoolId: event.ResourceProperties.UserPoolId,
-                            userPoolClientId: event.ResourceProperties.UserPoolClientId
-                        },
-                        params = {
-                            Bucket: bucketName,
-                            Key: 'config.js',
-                            Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
-                            ACL: "public-read"
-                        },
-                        options = {}
-
-                    console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)
-
-                    let suffix = event.ResourceProperties.MarketplaceSuffix
-                    if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
-                        configObject.marketplaceSubscriptionTopic
-                            = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
-                    }
-
-
-                    uploadPromises.push(s3.upload(params, options).promise())
-
-                    return Promise.all(uploadPromises)
-                        .then(uploadResults => {
-                            console.log(`All upload promises resolved.`)
-                            console.log(`Succeeded in uploading to bucket ${bucketName}.`)
-                            notifyCFNThatUploadSucceeded({
-                                status: 'upload_success',
-                                bucket: bucketName
-                            }, event, context)
-                        })
-                        .catch(error => {
-                            console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
-                            notifyCFNThatUploadFailed(error, event, context)
-                        })
-                })
-                .catch(error => {
-                    console.log(`Failed to read file with error: ${error}`)
-                    notifyCFNThatUploadFailed(error, event, context)
-                })
-        })
+        .on('end', waitForUpload(readPromises, uploadPromises, bucketName))
 }
 
-exports.handler = (event, context) => {
+function handler(event, context) {
     try {
         let bucketName = event.ResourceProperties.BucketName,
           staticBucketName = process.env.StaticBucketName
 
         if (event.RequestType === "Delete") {
             console.log(`bucketName: ${bucketName}, staticBucketName: ${staticBucketName}`)
-            cleanS3Bucket(bucketName)
-                .then(() => cleanS3Bucket(staticBucketName))
+            return exports.cleanS3Bucket(bucketName)
+                .then(() => exports.cleanS3Bucket(staticBucketName))
                 .then(() => {
-                    notifyCFNThatUploadSucceeded({status: 'delete_success', bucket: bucketName}, event, context)
+                    exports.notifyCFNThatUploadSucceeded({status: 'delete_success', bucket: bucketName}, event, context)
                 })
                 .catch((error) => {
-                    notifyCFNThatUploadFailed(error, event, context)
+                    exports.notifyCFNThatUploadFailed(error, event, context)
                 })
         } else if (!event.ResourceProperties.BucketName) {
-            notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
+            exports.notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
         } else {
-            createCatalogDirectory(staticBucketName)
-                .then(uploadStaticAssets(bucketName, event, context))
+            exports.createCatalogDirectory(staticBucketName)
+                .then(exports.uploadStaticAssets(bucketName, event, context))
         }
     } catch(error) {
         console.log(`Caught top-level error: ${error}`)
         notifyCFNThatUploadFailed(error, event, context)
     }
+}
+
+exports = module.exports = {
+    s3: new AWS.S3(),
+    handler,
+    sanitizeFilePath,
+    determineContentType,
+    cleanS3Bucket,
+    createCatalogDirectory,
+    generalizeFilePath,
+    notifyCFNThatUploadSucceeded,
+    notifyCFNThatUploadFailed,
+    excludeDirFactory,
+    excludeCustomContentFactory,
+    uploadStaticAssets
 }
