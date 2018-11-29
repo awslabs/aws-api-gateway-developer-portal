@@ -35,7 +35,10 @@ export default observer(class ApisPage extends React.Component {
             plugins: [SwaggerLayoutPlugin],
             supportedSubmitMethods: [],
             spec: api.swagger,
-            onComplete: () => uiHandler.preauthorizeApiKey("api_key", store.apiKey)
+            onComplete: () => {
+              if (store.apiKey)
+                uiHandler.preauthorizeApiKey("api_key", store.apiKey)
+            }
           }
           if (isAuthenticated()) {
             delete swaggerUiConfig.supportedSubmitMethods
