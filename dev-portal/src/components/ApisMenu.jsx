@@ -19,10 +19,6 @@ function isActive (apiId, selectedApiId) {
 }
 
 export default observer(function ApisMenu() {
-  const { path, ...props } = this.props
-
-  console.log(store)
-
   const loadingApis = !store.apiList.loaded
   const hasGatewayApis = !!_.get(store, 'apiList.apiGateway.length')
   const hasGenericApis = !!_.get(store, 'apiList.generic.length')
@@ -40,7 +36,7 @@ export default observer(function ApisMenu() {
   // If we're not loading, and we don't have any apis, display a message.
   // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis 
   return (
-    <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0 }} {...props}>
+    <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0 }} {...this.props}>
       {loadingApis ? (
         <Loader active />
       ) : (
