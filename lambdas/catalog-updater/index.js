@@ -88,48 +88,54 @@ function getSwaggerFile(file) {
         }
       }
 
-      // Convert the paths property of the Swagger file to a string and check
-      // if the paths have a method with a property containing "x-amazon-apigateway-integration".
-      // If not, it is considered a generic API
-      const isGenericApi = !JSON.stringify(result.body.paths).includes("x-amazon-apigateway-integration")
-
-      if (isGenericApi) {
-        console.log(`Generic Swagger definition found: ${file.Key}`)
-        result.generic = true
-        result.id = hash(file.Key)
+      let swagger = {
+        host:  _.get(result, 'body.host', '').match(extractApiIdRegex),
+        basePath: _.get(result, 'body.basePath', '').match(extractStageRegex)
       }
+
+      let oas = {
+        host: _.get(result, 'body.servers[0].url', '').match(extractApiIdRegex),
+        basePath: _.get(result, 'body.servers[0].variables.basePath.default', '').match(extractStageRegex)
+      }
+
       // if the file was saved with its name as an API_STAGE key, we should use that
       // from strings like catalog/a1b2c3d4e5_prod.json, remove catalog and .json
       // we can trust that there's not a period in the stage name, as API GW doesn't allow that
-      else if (file.Key.split('catalog/').pop().match(isApiStageKeyRegex)) {
-        result.apiStageKey = file.Key.split('catalog/').pop().split('.')[0]
+      if (file.Key.replace('catalog/', '').match(isApiStageKeyRegex)) {
+        result.apiStageKey = file.Key.replace('catalog/', '').split('.')[0]
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
       // for Swagger 2, the api ID might be in the body.host field,
       // and the stage might be in the body.basePath field
-      else if (result.body.host && result.body.basePath) {
+      else if (swagger.host && swagger.basePath) {
         let apiId, stage;
 
-        apiId = result.body.host.match(extractApiIdRegex).pop()
-        stage = result.body.basePath.match(extractStageRegex).pop()
+        apiId = swagger.host.pop()
+        stage = swagger.basePath.pop()
         result.apiStageKey = `${apiId}_${stage}`
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
       }
       // for OAS 3, the api ID might be in the body.servers[0].url field,
       // and the stage might be in the body.servers[0].variables.basePath.default field
-      else if (result.body.servers[0].url && result.body.servers[0].variables.basePath.default) {
+      else if (oas.host && oas.basePath) {
         let apiId, stage;
 
-        apiId = result.body.servers[0].url.match(extractApiIdRegex).pop()
-        stage = result.body.servers[0].variables.basePath.default.match(extractStageRegex).pop()
+        apiId = oas.host.pop()
+        stage = oas.basePath.pop()
         result.apiStageKey = `${apiId}_${stage}`
         console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
+      }
+      // if none of the above checks worked, assume it's a generic api
+      else {
+        console.log(`Generic Swagger definition found: ${file.Key}`)
+        result.generic = true
+        result.id = hash(file.Key)
       }
 
       return result
     })
     .catch(/* istanbul ignore next */(error) => {
-      console.log(`error retrieving swagger file ${file.Key}: ${error}`)
+      console.log(`error retrieving swagger file ${file.Key}:\n`, error)
     })
 }
 
@@ -154,8 +160,7 @@ function getSwaggerFile(file) {
  *   },
  *   apis: [{
  *     id: 'YOUR_API_ID',
- *     stage: 'YOUR_STAGE_NAME'
- *     image: '/sam-logo.png',
+ *     stage: 'YOUR_STAGE_NAME',
  *     swagger: '{ "swagger": 2.0, ... }'
  *   }]
  * }
@@ -183,8 +188,6 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
           api.swagger = swaggerFileRepr.body
           api.id = apiStage.apiId
           api.stage = apiStage.stage
-          //TODO: Allow for customizing image?
-          api.image = '/sam-logo.png'
           catalogObject.apis.push(api)
       })
       .value()
@@ -211,8 +214,6 @@ function buildCatalog(swaggerFiles) {
 
         catalog.generic.push(
         ...swaggerFiles.filter(s => s.generic).map(s => {
-          //TODO: Allow for customizing image?
-          s.image = '/sam-logo.png'
           s.swagger = s.body
           delete s.body
           return s
@@ -224,7 +225,7 @@ function buildCatalog(swaggerFiles) {
       return catalog
     })
     .catch(/* istanbul ignore next */(error) => {
-      console.log(`error getting usage plans: ${error}`)
+      console.log('error getting usage plans:', error)
     })
 }
 
@@ -232,9 +233,7 @@ function handler(event, context) {
     console.log(`event: ${JSON.stringify(event, null, 4)}`)
     // this is really fragile
     bucketName = _.get(event, 'Records[0].s3.bucket.name')
-    let params = {
-      Bucket: bucketName
-    }
+    let params = { Bucket: bucketName }
 
     return exports.s3.listObjectsV2(params).promise()
       .then((result) => {
