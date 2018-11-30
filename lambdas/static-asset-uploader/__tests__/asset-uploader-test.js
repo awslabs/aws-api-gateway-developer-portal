@@ -1,14 +1,6 @@
 const index = require('../index')
-const MemoryStream = require('memorystream');
-
-//TODO: into a helper library with this!
-function promiser(mockResolveValue) {
-    return {
-        promise: function () {
-            return Promise.resolve(mockResolveValue)
-        }
-    }
-}
+const MemoryStream = require('memorystream')
+const promiser = require('../../setup-jest').promiser
 
 describe('sanitizeFilePath', () => {
     test('removes all leading slashes from a filepath', () => {
