@@ -161,6 +161,8 @@ describe('handler', () => {
         expect(index.cleanS3Bucket).toHaveBeenCalledWith('bucketName')
         expect(index.cleanS3Bucket).toHaveBeenCalledWith('staticBucketName')
         expect(index.notifyCFNThatUploadSucceeded).toHaveBeenCalledWith(expect.any(Object), event, context)
+
+        delete process.env.StaticBucketName
     })
 
     test('should, on update or create, create a catalog directory', async () => {
@@ -182,6 +184,8 @@ describe('handler', () => {
 
         expect(index.createCatalogDirectory).toHaveBeenCalledWith('staticBucketName')
         expect(index.uploadStaticAssets).toHaveBeenCalledWith('bucketName', event, context)
+
+        delete process.env.StaticBucketName
     })
 
     test('should notify CFN of failure if bucket name is not defined in the event', async () => {
