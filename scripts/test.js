@@ -6,6 +6,11 @@ const { spawn } = require('child_process'),
 // output with color, even in CI mode & through pipes
 process.env.FORCE_COLOR = true
 
+function formatLine(line) {
+    // add the leftmost pipe (jest is missing it) and also pad with a space or hyphen, as appropriate
+    return line[0] === '-' ? '|-' + line + '\n' : '| ' + line + '\n'
+}
+
 function augmentChildProcess(childProcess, withCoverage) {
     return new Promise((resolve, reject) => {
         let table = '',
@@ -15,18 +20,26 @@ function augmentChildProcess(childProcess, withCoverage) {
             let isInTable = false
 
             childProcess.stdout.on('data', (data) => {
-                data = data.toString()
-                if (!isInTable && data && data.match(/(-+\|)+/)) {
-                    // when we enter the table, mark that we're in the table and record that line
-                    isInTable = true
-                    table += data
-                } else if (isInTable && data && !data.match(/Test Suites: /)) {
-                    // while we're in the table, record all lines
-                    table += data
-                } else if (isInTable && data && data.match(/Test Suites: /)) {
-                    // when we exit the table, mark that we're outside the table
-                    isInTable = false
+                // data can be either one line, or a bunch of lines
+                // we need to process them line by line, so let's split them up here
+                let lines = data.toString().split('\n').slice(0, -1)
+
+                for(let line of lines) {
+                    // the table is missing the leftmost pipe, so we add it here
+                    line = formatLine(line)
+                    if (!isInTable && line && line.match(/^\|(-+\|)+/)) {
+                        // when we enter the table, mark that we're in the table and record that line
+                        isInTable = true
+                        table += line
+                    } else if (isInTable && line && !line.match(/Test Suites: /)) {
+                        // while we're in the table, record all lines
+                        table += line
+                    } else if (isInTable && line && line.match(/Test Suites: /)) {
+                        // when we exit the table, mark that we're outside the table
+                        isInTable = false
+                    }
                 }
+
                 // ignore all other lines
             })
 
@@ -38,7 +51,6 @@ function augmentChildProcess(childProcess, withCoverage) {
 
         childProcess.on('close', (code) => {
             if (code !== 0) {
-                console.warn('REJECT')
                 reject({
                     message: errors.join('\n'),
                     code: code
