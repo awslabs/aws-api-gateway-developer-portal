@@ -56,10 +56,10 @@ describe('getSwaggerFile', () => {
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/a1b2c3d4e5_customdomain.json'})
+        internalRepr = await index.getSwaggerFile({Key: 'catalog/a1b2c3d4e5_stagename.json'})
 
         expect(internalRepr.id).toBeUndefined()
-        expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_customdomain')
+        expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_stagename')
         expect(internalRepr.generic).toBeUndefined()
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
@@ -106,10 +106,10 @@ describe('getSwaggerFile', () => {
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/a1b2c3d4e5_oascustomdomain.json'})
+        internalRepr = await index.getSwaggerFile({Key: 'catalog/a1b2c3d4e5_oasstagename.json'})
 
         expect(internalRepr.id).toBeUndefined()
-        expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_oascustomdomain')
+        expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_oasstagename')
         expect(internalRepr.generic).toBeUndefined()
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
