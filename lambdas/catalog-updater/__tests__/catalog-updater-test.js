@@ -12,9 +12,6 @@ function promiser(mockResolveValue, mockRejectedValue) {
 
 describe('swaggerFileFilter', () => {
     test('should only process JSON or YAML files in the catalog directory', () => {
-        // suppress console logging
-        jest.spyOn(global.console, 'log').mockImplementation(() => jest.fn())
-
         // not in catalog/ directory, should all fail
         expect(index.swaggerFileFilter({Key: 'swagger.json'})).toBe(false)
         expect(index.swaggerFileFilter({Key: 'swagger.yaml'})).toBe(false)
