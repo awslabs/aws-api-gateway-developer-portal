@@ -256,10 +256,10 @@ function handler(event, context) {
 
         return exports.s3.upload(params, options).promise()
           .then((response) => console.log(`s3 upload succeeded: ${JSON.stringify(response, null, 4)}`))
-          .catch(/* istanbul ignore next */(error) => console.log(`error uploading catalog to s3: ${error}`))
+          .catch(/* istanbul ignore next */(error) => console.log('error uploading catalog to s3:', error))
       })
       .catch(/* istanbul ignore next */(error) => {
-        console.log(`error operating on bucket ${bucketName}: ${error}`)
+        console.log(`error operating on bucket ${bucketName}:`, error)
       })
 }
 

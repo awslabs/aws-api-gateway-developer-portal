@@ -181,7 +181,7 @@ function createCatalogDirectory(staticBucketName) {
     return exports.s3.upload(params).promise()
 }
 
-function addConfigFile(event) {
+function addConfigFile(bucketName, event) {
     let configObject = {
             restApiId: event.ResourceProperties.RestApiId,
             region: event.ResourceProperties.Region,
@@ -205,10 +205,10 @@ function addConfigFile(event) {
             = `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
     }
 
-    return s3.upload(params, options).promise()
+    return exports.s3.upload(params, options).promise()
 }
 
-function processFile(fileStat, readPromises, uploadPromises, bucketName) {
+function processFile(fileStat, readPromises, uploadPromises, bucketName, event, context) {
     let filePath = fileStat.path,
         thisReadPromise = fse.readFile(filePath)
 
@@ -223,17 +223,17 @@ function processFile(fileStat, readPromises, uploadPromises, bucketName) {
                 },
                 options = {}
 
-            uploadPromises.push(s3.upload(params, options).promise())
+            uploadPromises.push(exports.s3.upload(params, options).promise())
         })
         .catch(error => {
-            console.log(`Failed to upload: ${error}`)
+            console.log(`Failed to upload:`, error)
             notifyCFNThatUploadFailed(error, event, context)
         })
 
     readPromises.push(thisReadPromise)
 }
 
-function waitForUpload(readPromises, uploadPromises, bucketName) {
+function waitForUpload(readPromises, uploadPromises, bucketName, event, context) {
     console.log(`readPromises length: ${readPromises.length}`)
 
     return Promise.all(readPromises)
@@ -241,7 +241,7 @@ function waitForUpload(readPromises, uploadPromises, bucketName) {
             console.log('All read promises resolved.')
             console.log(`uploadPromises length: ${uploadPromises.length}`)
 
-            uploadPromises.push(addConfigFile(event))
+            uploadPromises.push(addConfigFile(bucketName, event))
 
             return Promise.all(uploadPromises)
                 .then(() => {
@@ -253,12 +253,12 @@ function waitForUpload(readPromises, uploadPromises, bucketName) {
                     }, event, context)
                 })
                 .catch(error => {
-                    console.log(`Failed to upload to bucket with name ${bucketName}: ${error}`)
+                    console.log(`Failed to upload to bucket with name ${bucketName}:`, error)
                     exports.notifyCFNThatUploadFailed(error, event, context)
                 })
         })
         .catch(error => {
-            console.log(`Failed to read file with error: ${error}`)
+            console.log('Failed to read file with error:', error)
             exports.notifyCFNThatUploadFailed(error, event, context)
         })
 }
@@ -274,12 +274,12 @@ function uploadStaticAssets(bucketName, event, context) {
         .pipe(excludeDirFilter)
         .on('error', (err, item) => excludeCustomContentFilter.emit('error', err, item))
         .pipe(excludeCustomContentFilter)
-        .on('data', (data) => processFile(data, readPromises, uploadPromises, bucketName))
+        .on('data', (data) => processFile(data, readPromises, uploadPromises, bucketName, event, context))
         .on('error', (error, item) => {
-            console.log(`Failed to traverse file system on path ${item && item.path}: ${error}`)
+            console.log(`Failed to traverse file system on path ${item && item.path}:`, error)
             notifyCFNThatUploadFailed(error, event, context)
         })
-        .on('end', waitForUpload(readPromises, uploadPromises, bucketName))
+        .on('end', () => waitForUpload(readPromises, uploadPromises, bucketName, event, context))
 }
 
 function handler(event, context) {
@@ -304,7 +304,7 @@ function handler(event, context) {
                 .then(exports.uploadStaticAssets(bucketName, event, context))
         }
     } catch(error) {
-        console.log(`Caught top-level error: ${error}`)
+        console.log(`Caught top-level error:`, error)
         notifyCFNThatUploadFailed(error, event, context)
     }
 }
