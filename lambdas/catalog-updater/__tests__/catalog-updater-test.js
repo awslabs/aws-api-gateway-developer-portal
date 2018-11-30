@@ -1,14 +1,7 @@
 const fs = require('fs'),
     path = require('path'),
-    index = require('../index')
-
-function promiser(mockResolveValue, mockRejectedValue) {
-    return {
-        promise: function () {
-            return !mockRejectedValue ? Promise.resolve(mockResolveValue) : Promise.reject(mockRejectedValue)
-        }
-    }
-}
+    index = require('../index'),
+    promiser = require('../../setup-jest').promiser
 
 describe('swaggerFileFilter', () => {
     test('should only process JSON or YAML files in the catalog directory', () => {
