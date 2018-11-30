@@ -32,8 +32,7 @@ const usagePlans = function() {
         return []
       }
       
-      console.error(`error: ${error}`)
-      console.error(JSON.stringify(error))
+      console.error('error:', error)
       
       throw error
     })
