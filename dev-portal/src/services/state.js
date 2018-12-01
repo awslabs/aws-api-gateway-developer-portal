@@ -92,6 +92,7 @@ function reactTo(triggerFn, effectFn) {
 
   // restartReaction()
 }
+
 reactTo(
   () => ({ subscriptions: store.subscriptions, usagePlans: store.usagePlans }),
   ({ usagePlans }) => {
@@ -100,7 +101,7 @@ reactTo(
 )
 
 reactTo(
-  () => store.apiList,
+  () => [].concat(store.apiList.apiGateway, store.apiList.generic),
   apiList => {
     fetchApiImage(apiList)
   }
@@ -110,7 +111,7 @@ reactTo(
  * 
  */
 function fetchApiImage(apiList) {
-  ([].concat(apiList.apiGateway, apiList.generic)).forEach(api => {
+  apiList.forEach(api => {
     if (!api.logo) {
       let specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
   
