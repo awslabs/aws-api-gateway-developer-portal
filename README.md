@@ -11,10 +11,12 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 ![Alt text](/screen-documentation.png?raw=true)
 
 ## Setup
-### Deploy with SAR
-You can deploy the Serverless Developer Portal through SAR in a few clicks! See the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html).
+There are 2 main ways to deploy the Developer Portal today:
+### 1. Deploy with SAR
+This deployment model is better if you want an easy way deploy the developer portal and use it as-is out of box. You can deploy the Serverless Developer Portal through SAR in a few clicks! See the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html).
 
-### Deploy with SAM
+### 2. Deploy with SAM
+This deployment model is better if you plan to customize the developer portal heavily and setup CI/CD on it.
 #### Prerequisites
 
 First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/lambda/latest/dg/sam-cli-requirements.html). Note that while the instructions specify Docker as a pre-requisite, Docker is only necessary for local development via SAM local. Feel free to skip installing Docker when you first set up the developer portal.
@@ -25,7 +27,7 @@ If you have not used the AWS CLI or SAM CLI before, you may need to [configure y
 
 If you have previously set up a v1 developer portal (non-SAM deployed), you will need to either remove all the v1 developer portal resources (dynamo tables, roles, etc.) or provide new names for the v2 developer portal by passing in parameter overrides for every resource.
 
-#### Setup and deploy
+#### Deploy
 
 Run:
 >Replace the `your-lambda-artifacts-bucket-name` with a bucket that you manage and must already exist
@@ -49,13 +51,25 @@ aws cloudformation describe-stacks --query "Stacks[?StackName=='dev-portal'][Out
 
 You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
 
-### Populate the Swagger catalog
+## Populate the Swagger catalog
 
-The developer portal only exposes a subset of your API Gateway managed APIs & stages. As of now, there's no support for APIs not managed by API Gateway. To expose an API to customers, associate that API & stage to a usage plan. Then, export the API's Swagger (must export as JSON, with API GW extensions) from the stage, rename it in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`. Note that this is case sensitive!
+By default the Developer Portal won't list any APIs. You will have to pick and choose which APIs to show. There are 2 types of APIs:
 
-Uploading to the `catalog` folder will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
+### Subscribable APIs
+For an API to be subscribable, they must be managed by Amazon API Gateway. The Developer Portal can let a user associate their API Key with these APIs (via the Subscribe button) so they can start calling and developing on these APIs.
 
-The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a Swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
+To list a subscribable API:
+1. Associate that API & stage to a usage plan. 
+2. Export the API's Swagger (must export as JSON, with API GW extensions) from the stage
+> Note: If you're using custom domains in API Gateway, you will need to rename the Swagger file in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`. Note that this is case sensitive!
+3. Upload the exported Swagger file to the `catalog` folder which will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
+> Note: The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a Swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
+
+### Non-subscribable APIs
+The Developer can also list APIs that are managed outside of Amazon API Gateway (eg. APIs hosted on-premise). The Developer Portal won't be able to associate an API Key with the API automatically however they can still test the APIs. 
+
+To list a non-subscribable API:
+1. Upload the Swagger file for your API to the `catalog` folder. (See above for additional notes and details).
 
 ### Testing your APIs
 
