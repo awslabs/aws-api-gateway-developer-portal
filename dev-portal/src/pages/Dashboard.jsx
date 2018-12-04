@@ -88,68 +88,79 @@ export default observer(() => {
     <Grid container>
       <Grid.Row>
         <Grid.Column style={{ paddingTop: "40px" }}>
-            <Header size="medium">API Key</Header>
-            <code style={{
-              background: "black",
-              border: "1px solid gray",
-              padding: "7px 8px",
-              color: "lightgray",
-              borderRadius: "5px"
-            }}>
-              {store.apiKey}
-            </code>
+          <Header size="medium">API Key</Header>
+          <code style={{
+            background: "black",
+            border: "1px solid gray",
+            padding: "7px 8px",
+            color: "lightgray",
+            borderRadius: "5px"
+          }}>
+            {store.apiKey}
+          </code>
         </Grid.Column>
       </Grid.Row>
       <Divider />
       <Grid.Row>
 
-      {store.usagePlans
-        .filter(usagePlan => usagePlan.subscribed)
-        .map((usagePlan, index) => {
+        {store.usagePlans
+          .filter(usagePlan => usagePlan.subscribed && usagePlan.apis.length)
+          .map((usagePlan, index) => {
+            let canvasId = `api-usage-chart-container-${usagePlan.id}` + index
 
-        let firstApiName = usagePlan.apis[0].swagger.info.title
-        let extraApiCount = usagePlan.apis.length - 1
-        let apiList = usagePlan.apis.reduce((acc, api) => acc.concat(
-          <List.Item key={api.id}>{api.swagger.info.title}</List.Item>
-        ), [])
-        let canvasId = `api-usage-chart-container-${usagePlan.id}` + index
+            loadUsage(usagePlan, canvasId)
 
-        loadUsage(usagePlan, canvasId)
-
-        return (
-          <Grid.Column width={16} widescreen={8} key={usagePlan.id} style={{ marginBottom: "40px" }}>
-            <Header size="medium">
-              Usage for {extraApiCount ? (
-                <Popup
-                  trigger={ <a style={{ cursor: "pointer" }}>{firstApiName} and {extraApiCount} more...</a> }
-                  content={ <List> {apiList} </List> }
-                  on={['hover', 'click']}
-                  position="right center"
-                />
-              ) : (
-                firstApiName
-              )}
-            </Header>
-            {usagePlan.throttle && (
-              <Message info>
-              <p>
-                Requests limited to {usagePlan.throttle.rateLimit} per second, and {usagePlan.throttle.burstLimit} in a burst.
-              </p>
-              </Message>
-            )}
-              
-              { !usagePlan.usage ? (
-                <Loader active />
-              ) : ( 
-                usagePlan.error ? (
-                  <Message error content={usagePlan.error.toString()} />
-                ) : null
-              )}
-              <canvas id={canvasId} />
-          </Grid.Column>
-        )
-      })}
+            return (
+              <Grid.Column width={16} widescreen={8} key={usagePlan.id} style={{ marginBottom: "40px" }}>
+                <Title apis={usagePlan.apis} />
+                {usagePlan.throttle && (
+                  <Message info>
+                    <p>
+                      Requests limited to {usagePlan.throttle.rateLimit} per second, and {usagePlan.throttle.burstLimit} in a burst.
+                    </p>
+                  </Message>
+                )}
+                {!usagePlan.usage ? (
+                  <Loader active />
+                ) : (
+                    usagePlan.error ? (
+                      <Message error content={usagePlan.error.toString()} />
+                    ) : null
+                  )}
+                <canvas id={canvasId} />
+              </Grid.Column>
+            )
+          })}
       </Grid.Row>
     </Grid>
   )
 })
+
+const Title = ({ apis }) => {
+  let firstApiName = apis[0].swagger.info.title
+
+  let apiList = (
+    <List> 
+      { apis.reduce((acc, api) => acc.concat(
+        <List.Item key={api.id}>{api.swagger.info.title}</List.Item>
+      ), []) } 
+    </List>
+  )
+
+  let extraApiCount = apis.length - 1
+
+  return (
+    <Header size="medium">
+      Usage for {extraApiCount ? (
+        <Popup
+          trigger={ <a style={{ cursor: "pointer" }}>{firstApiName} and {extraApiCount} more...</a> }
+          content={ apiList }
+          on={['hover', 'click']}
+          position="right center"
+        />
+      ) : (
+        firstApiName
+      )}
+    </Header>
+  )
+}
