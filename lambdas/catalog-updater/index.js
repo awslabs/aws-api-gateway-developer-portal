@@ -180,17 +180,14 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
   _.forEach(usagePlan.apiStages, (apiStage) => {
     let api = {}
 
-    _.chain(swaggerFileReprs)
-      .find((swaggerFileRepr) => {
-        return swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`
+    swaggerFileReprs
+      .filter(swaggerFileRepr => swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`)
+      .forEach(swaggerFileRepr => {
+        api.swagger = swaggerFileRepr.body
+        api.id = apiStage.apiId
+        api.stage = apiStage.stage
+        catalogObject.apis.push(api)
       })
-      .tap((swaggerFileRepr) => {
-          api.swagger = swaggerFileRepr.body
-          api.id = apiStage.apiId
-          api.stage = apiStage.stage
-          catalogObject.apis.push(api)
-      })
-      .value()
   })
 
   return catalogObject
@@ -270,6 +267,7 @@ exports = module.exports = {
   swaggerFileFilter,
   getSwaggerFile,
   buildCatalog,
+  usagePlanToCatalogObject,
   s3: new AWS.S3(),
   gateway: new AWS.APIGateway(),
   handler,

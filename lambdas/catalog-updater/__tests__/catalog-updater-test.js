@@ -170,6 +170,56 @@ describe('buildCatalog', () => {
     })
 })
 
+describe('usagePlanToCatalogObject', () => {
+
+    let firstValidApi = { swagger: 'prodSwaggerBody', id: 'a1b2c3d4e5', stage: 'prod' }
+    let secondValidApi = { swagger: 'gammaSwaggerBody', id: 'a1b2c3d4e5', stage: 'gamma' }
+
+    let usagePlan = {
+        id: 'MYID',
+        name: 'My Usage Plan',
+        throttle: 1000,
+        quota: 100000,
+        apiStages: [ 
+            { apiId: 'a1b2c3d4e5', stage: 'prod' },
+            { apiId: 'a1b2c3d4e5', stage: 'gamma' }
+        ]
+    }
+
+    test('correctly builds catalog', async () => {
+        const swaggerFileReprs = [
+            { body: 'prodSwaggerBody', apiStageKey: 'a1b2c3d4e5_prod' }, // included in usage plans
+            { body: 'gammaSwaggerBody', apiStageKey: 'a1b2c3d4e5_gamma' }, // included in usage plans
+            { body: 'otherSwaggerBody', apiStageKey: 'jf8f40f83f5_test' }, // NOT included in usage plans
+            { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
+        ]
+
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+
+        expect(catalogObject.apis.length).toEqual(2)
+        expect(catalogObject.apis[0]).toEqual(firstValidApi)
+        expect(catalogObject.apis[1]).toEqual(secondValidApi)
+    })
+    
+    test('correctly handles only generic swaggerFileReprs', async () => {
+        const swaggerFileReprs = [
+            { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
+        ]
+
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+
+        expect(catalogObject.apis.length).toEqual(0)
+    })
+
+    test('correctly handles empty swaggerFileReprs', async () => {
+        const swaggerFileReprs = []
+
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+
+        expect(catalogObject.apis.length).toEqual(0)
+    })
+})
+
 describe('handler', () => {
     test('should fetch from S3 and upload to S3 when run', async () => {
         // this is a very abstract test
