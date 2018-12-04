@@ -52,10 +52,10 @@ export default observer(class ApisPage extends React.Component {
     let errorHeader
     let errorBody 
 
-    if (store.apiList && store.apiList.length === 0) {
+    if (!store.apiList.apiGateway.length && !store.apiList.generic.length) {
       errorHeader = `No APIs Published`
       errorBody = `Your administrator hasn't added any APIs to your account. Please contact them to publish an API.`
-    } else if (!store.api && store.apiList && store.apiList.length) {
+    } else if (!store.api) {
       errorHeader = `No Such API`
       errorBody = `The selected API doesn't exist.`
     }
