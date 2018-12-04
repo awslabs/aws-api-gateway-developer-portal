@@ -62,7 +62,7 @@ To list a subscribable API:
 1. Associate that API & stage to a usage plan. 
 2. Export the API's Swagger (must export as JSON, with API GW extensions) from the stage
 > Note: If you're using custom domains in API Gateway, you will need to rename the Swagger file in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`. Note that this is case sensitive!
-3. Upload the exported Swagger file to the `catalog` folder which will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline. If the `catalog.json` file looks correct, your developer portal should be ready to use!
+3. Upload the exported Swagger file to the `catalog` folder which will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline.
 > Note: The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a Swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
 
 ### Non-subscribable APIs
