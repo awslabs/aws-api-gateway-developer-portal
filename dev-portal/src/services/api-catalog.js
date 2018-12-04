@@ -37,16 +37,19 @@ export function updateUsagePlansAndApisList(bustCache = false) {
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
     .then(({ data = [] }) => {
       store.usagePlans = data.apiGateway
-
-      if (!store.apiList) store.apiList = {}
-      store.apiList.apiGateway = getApiGatewayApisFromUsagePlans(store.usagePlans) // MUST create
-      store.apiList.generic = data.generic
-      store.apiList.loaded = true
+      store.apiList = {
+        loaded: true,
+        apiGateway: getApiGatewayApisFromUsagePlans(store.usagePlans), // MUST create
+        generic: data.generic
+      }
     })
     .catch(() => {
-      store.apiList = null
       store.usagePlans = null
-      store.apiList.loaded = true
+      store.apiList = {
+        loaded: true,
+        apiGateway: [],
+        generic: []
+      }
     })
 }
 let catalogPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
