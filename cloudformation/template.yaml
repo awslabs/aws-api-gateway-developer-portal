@@ -65,6 +65,49 @@ Conditions:
   # re-using it doesn't seem possible?
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]]
 
+Mappings:
+  # this information comes from these locations, and will need to be kept manually up to date:
+  # https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
+  # https://docs.aws.amazon.com/govcloud-us/latest/ug-west/using-govcloud-endpoints.html
+  # http://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#cnnorth_region
+  RegionSpecificConfig:
+    us-east-2:
+      s3Url: '.s3-website.us-east-2.amazonaws.com'
+    us-east-1:
+      s3Url: '.s3-website-us-east-1.amazonaws.com'
+    us-west-1:
+      s3Url: '.s3-website-us-west-1.amazonaws.com'
+    us-west-2:
+      s3Url: '.s3-website-us-west-2.amazonaws.com'
+    ap-south-1:
+      s3Url: '.s3-website.ap-south-1.amazonaws.com'
+    ap-northeast-3:
+      s3Url: '.s3-website.ap-northeast-3.amazonaws.com'
+    ap-northeast-2:
+      s3Url: '.s3-website.ap-northeast-2.amazonaws.com'
+    ap-southeast-1:
+      s3Url: '.s3-website-ap-southeast-1.amazonaws.com'
+    ap-southeast-2:
+      s3Url: '.s3-website-ap-southeast-2.amazonaws.com'
+    ap-northeast-1:
+      s3Url: '.s3-website-ap-northeast-1.amazonaws.com'
+    ca-central-1:
+      s3Url: '.s3-website.ca-central-1.amazonaws.com'
+    cn-northwest-1:
+      s3Url: '.s3-website.cn-northwest-1.amazonaws.com.cn'
+    eu-central-1:
+      s3Url: '.s3-website.eu-central-1.amazonaws.com'
+    eu-west-1:
+      s3Url: '.s3-website-eu-west-1.amazonaws.com'
+    eu-west-2:
+      s3Url: '.s3-website.eu-west-2.amazonaws.com'
+    eu-west-3:
+      s3Url: '.s3-website.eu-west-3.amazonaws.com'
+    sa-east-1:
+      s3Url: '.s3-website-sa-east-1.amazonaws.com'
+    us-gov-west-1:
+      s3Url: '.s3-website-us-gov-west-1.amazonaws.com'
+
 Resources:
   ApiGatewayApi:
     Type: AWS::Serverless::Api
@@ -319,7 +362,10 @@ Resources:
           - RoutingRuleCondition:
               HttpErrorCodeReturnedEquals: 403
             RedirectRule:
-              HostName: !If [ UseCustomDomainName, !Ref CustomDomainName, !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-website-', !Ref 'AWS::Region', '.amazonaws.com']]]
+              HostName: !If
+                - UseCustomDomainName
+                - !Ref CustomDomainName
+                - !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
               ReplaceKeyPrefixWith: '#!/'
 
   ArtifactsS3Bucket:
@@ -868,7 +914,7 @@ Resources:
         DefaultRootObject: index.html
         Enabled: true
         Origins:
-          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-website-', !Ref 'AWS::Region', '.amazonaws.com']]
+          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
             Id: 'dev-portal-site-s3-bucket'
             CustomOriginConfig:
               OriginProtocolPolicy: 'http-only'
@@ -912,9 +958,7 @@ Outputs:
   WebsiteURL:
     Value: !Join
       - ''
-      - - http://
+      - - 'http://'
         - !Ref DevPortalSiteS3BucketName
-        - .s3-website-
-        - !Ref 'AWS::Region'
-        - .amazonaws.com
+        - !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']
     Description: URL for website hosted on S3
