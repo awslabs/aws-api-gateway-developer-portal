@@ -378,7 +378,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
-      # AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
