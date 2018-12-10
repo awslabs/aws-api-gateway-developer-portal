@@ -220,6 +220,80 @@ describe('usagePlanToCatalogObject', () => {
     })
 })
 
+describe('copyAnyMethod', () => {
+    test('correctly copies ANY methods to other methods in swagger documents', async () => {
+        const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/swagger-ANY-method.json'), 'utf8'))
+        const anyMethod = fileBody.paths["/"]["x-amazon-apigateway-any-method"]
+        const catalogObject = index.copyAnyMethod(fileBody)
+
+        expect(catalogObject.paths["/"]).toEqual({
+            get: anyMethod,
+            post: anyMethod,
+            put: anyMethod,
+            delete: anyMethod,
+            patch: anyMethod,
+            head: anyMethod,
+            options: anyMethod
+        })
+    })
+
+    test('does NOT replace already existant methods with ANY in swagger documents', async () => {
+        const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/swagger-ANY+GET-methods.json'), 'utf8'))
+        const getMethod = fileBody.paths["/"]["get"]
+        const anyMethod = fileBody.paths["/"]["x-amazon-apigateway-any-method"]
+        const catalogObject = index.copyAnyMethod(fileBody)
+
+        expect(catalogObject.paths["/"]).toEqual({
+            // don't replace get
+            get: getMethod,
+    
+            // add everything else
+            post: anyMethod,
+            put: anyMethod,
+            delete: anyMethod,
+            patch: anyMethod,
+            head: anyMethod,
+            options: anyMethod
+        })
+    })
+    
+    test('correctly copies ANY methods to other methods in oas3 documents', async () => {
+        const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/oas3-ANY-method.json'), 'utf8'))
+        const anyMethod = fileBody.paths["/"]["x-amazon-apigateway-any-method"]
+        const catalogObject = index.copyAnyMethod(fileBody)
+
+        expect(catalogObject.paths["/"]).toEqual({
+            get: anyMethod,
+            post: anyMethod,
+            put: anyMethod,
+            delete: anyMethod,
+            patch: anyMethod,
+            head: anyMethod,
+            options: anyMethod
+        })
+    })
+
+    test('does NOT replace already existant methods with ANY in oas3 documents', async () => {
+        const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/oas3-ANY+GET-methods.json'), 'utf8'))
+        const getMethod = fileBody.paths["/"]["get"]
+        const anyMethod = fileBody.paths["/"]["x-amazon-apigateway-any-method"]
+        const catalogObject = index.copyAnyMethod(fileBody)
+
+        expect(catalogObject.paths["/"]).toEqual({
+            // don't replace get
+            get: getMethod,
+    
+            // add everything else
+            post: anyMethod,
+            put: anyMethod,
+            delete: anyMethod,
+            patch: anyMethod,
+            head: anyMethod,
+            options: anyMethod
+        })
+    })
+})
+
 describe('handler', () => {
     test('should fetch from S3 and upload to S3 when run', async () => {
         // this is a very abstract test

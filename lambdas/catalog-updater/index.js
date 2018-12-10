@@ -183,7 +183,7 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
     swaggerFileReprs
       .filter(swaggerFileRepr => swaggerFileRepr.apiStageKey === `${apiStage.apiId}_${apiStage.stage}`)
       .forEach(swaggerFileRepr => {
-        api.swagger = swaggerFileRepr.body
+        api.swagger = exports.copyAnyMethod(swaggerFileRepr.body)
         api.id = apiStage.apiId
         api.stage = apiStage.stage
         catalogObject.apis.push(api)
@@ -191,6 +191,25 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
   })
 
   return catalogObject
+}
+
+function copyAnyMethod(api) {
+  let apiPaths = _.get(api, 'paths', [])
+  let anyKey = "x-amazon-apigateway-any-method"
+  let methodsToAdd = ["get", "post", "put", "delete", "patch", "head", "options"]
+
+  Object.keys(apiPaths).forEach(pathKey => {
+    let path = apiPaths[pathKey]
+    if (path[anyKey]) {
+      methodsToAdd.forEach(method => {
+        if (!path[method]) path[method] = _.cloneDeep(path[anyKey])
+      })
+
+      delete path[anyKey]
+    }
+  })
+
+  return api
 }
 
 function buildCatalog(swaggerFiles) {
@@ -268,6 +287,7 @@ exports = module.exports = {
   getSwaggerFile,
   buildCatalog,
   usagePlanToCatalogObject,
+  copyAnyMethod,
   s3: new AWS.S3(),
   gateway: new AWS.APIGateway(),
   handler,
