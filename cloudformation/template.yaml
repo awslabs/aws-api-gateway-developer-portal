@@ -3,6 +3,35 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
 Description: My Dev Portal Stack
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Dev Portal Content Configuration"
+        Parameters:
+          - ArtifactsS3BucketName
+          - DevPortalSiteS3BucketName
+          - StaticAssetRebuildToken
+          - StaticAssetRebuildMode
+      -
+        Label:
+          default: "Dev Portal Customer Configuration"
+        Parameters:
+          - CognitoIdentityPoolName
+          - DevPortalCustomersTableName
+      -
+        Label:
+          default: "Subscription Notification Configuration"
+        Parameters:
+          - MarketplaceSubscriptionTopicProductCode
+      -
+        Label:
+          default: "Custom Domain Configuration"
+        Parameters:
+          - CustomDomainName
+          - CustomDomainNameAcmCertArn
+          - UseRoute53Nameservers
 Parameters:
   ArtifactsS3BucketName:
     Type: String
