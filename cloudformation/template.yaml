@@ -6,7 +6,7 @@ Description: My Dev Portal Stack
 Parameters:
   ArtifactsS3BucketName:
     Type: String
-    Description: The S3 bucket in which the Lambda function code is stored. Bucket
+    Description: The S3 bucket in which the Open API documents are stored. Bucket
       names are globally unique, so you must change this.
 
   DevPortalSiteS3BucketName:
