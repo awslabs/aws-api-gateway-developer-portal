@@ -30,10 +30,10 @@ Contributions via pull requests are much appreciated. Before sending us a pull r
 To send us a pull request, please:
 
 1. Fork the repository.
-2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
+2. Working off the latest version of the staging branch, modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
 3. Ensure local tests pass.
 4. Commit to your fork using clear commit messages.
-5. Send us a pull request, answering any default questions in the pull request interface.
+5. Send us a pull request merging into the staging branch, answering any default questions in the pull request interface.
 6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and 
