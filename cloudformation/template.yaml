@@ -985,3 +985,8 @@ Outputs:
         - !Ref DevPortalSiteS3BucketName
         - !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']
     Description: URL for website hosted on S3
+
+  CustomWebsiteURL:
+    Condition: UseCustomDomainName
+    Value: !Ref CustomDomainName
+    Description: Custom URL for website hosted on S3, served through CloudFront
