@@ -8,6 +8,7 @@ export const cognitoRegion = window.config.region
 export const cognitoUserPoolId = window.config.userPoolId
 export const cognitoIdentityPoolId = window.config.identityPoolId
 export const cognitoClientId = window.config.userPoolClientId
+export const cognitoDomain = window.config.userPoolDomain
 
 AWS.config.region = cognitoRegion
 
