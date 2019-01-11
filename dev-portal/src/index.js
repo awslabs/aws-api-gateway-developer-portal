@@ -3,7 +3,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom'
 
 // content-fragments (import here to start this ASAP)
 import 'services/get-fragments'
@@ -21,7 +21,7 @@ import Apis from 'pages/Apis'
 import AlertPopup from 'components/AlertPopup'
 import NavBar from 'components/NavBar'
 
-import { init } from 'services/self'
+import { init, login, logout } from 'services/self'
 import './index.css';
 
 class App extends React.Component {
@@ -31,8 +31,10 @@ class App extends React.Component {
 
     // We are using an S3 redirect rule to prefix the url path with #!
     // This then converts it back to a URL path for React routing
-    const hashRoute = window.location.hash.substring(2)
-    window.history.pushState({}, 'home page', hashRoute)
+    if (window.location.hash && window.location.hash[1] === '!') {
+      const hashRoute = window.location.hash.substring(2)
+      window.history.pushState({}, 'home page', hashRoute)
+    }
   }
 
   render() {
@@ -47,6 +49,8 @@ class App extends React.Component {
             <Route path="/dashboard" component={Dashboard} />
             <Route exact path="/apis" component={Apis} />
             <Route path="/apis/:apiId" component={Apis} />
+            <Route path="/login" render={() => (login(), <Redirect to="/" />)}/>
+            <Route path="/logout" render={() => (logout(), <Redirect to="/" />)}/>
             <Route component={() => <h2>Page not found</h2>} />
           </Switch>
         </React.Fragment>
