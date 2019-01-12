@@ -213,7 +213,7 @@ In addition to the easy customization described above, you can make changes in y
 
 To pull in new versions of the dev portal, merge or rebase in the upstream changes.
 
-> By default, the easy customizations described above **won't be updated by subsequent deployments**. If you would prefer to overwrite all files in the s3 bucket on a deploy, pass the `StaticAssetRebuildMode=overwrite` argument to your `sam deploy` command in addition to the `StaticAssetRebuildToken`. See [Advanced Customization](#advanced-customization) below.
+> By default, the easy customizations described above **won't be updated by subsequent deployments**. If you would prefer to overwrite all files in the s3 bucket on a deploy, pass the `StaticAssetRebuildMode=overwrite-content` argument to your `sam deploy` command in addition to the `StaticAssetRebuildToken`. See [Advanced Customization](#advanced-customization) below.
 
 
 ## Tear-down
