@@ -3,10 +3,9 @@
 ### Getting Started
 1. Navigate to the `/dev-portal/` folder, and run `npm install`
 
-1. Create a private S3 bucket for putting zipped lambda functions and zipped templates in. Note the bucket name for the next step. (This can be the same one you used during in the initial deployment)
+2. Create a private S3 bucket for putting zipped lambda functions and zipped templates in. Note the bucket name for the next step. (This can be the same one you used during in the initial deployment)
 
-2. Create a `deployer.config.js` file inside `/dev-portal/` with the following structure:
-We recommend using the same values you used during the initial deployment.
+3. Create a `deployer.config.js` file inside `/dev-portal/` with the structure below. We recommend using the same values you used during the initial deployment.
 ```js
 // replace your-lambda-artifacts-bucket-name with the name of the bucket you created in step 1
 // then, replace 'custom-prefix-' in siteAssetsBucket and apiAssetsBucket with your name / your org name / some unique identifier
@@ -19,12 +18,11 @@ module.exports = {
   apiAssetsBucket: `custom-prefix-dev-portal-artifacts`
 }
 ```
+4. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use
 
-3. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use
+5. Run `npm run start` to start the local development server at `localhost:3000`.
 
-4. Run `npm run start` to start the local development server at `localhost:3000`.
-
-5. Make changes locally, test them at `localhost:3000`, and, when satisfied, run `npm run release` to build and upload the changes to your  cloud dev portal.
+6. Make changes locally, test them at `localhost:3000`, and, when satisfied, run `npm run release` to build and upload the changes to your  cloud dev portal.
 
 ### npm Scripts
 
