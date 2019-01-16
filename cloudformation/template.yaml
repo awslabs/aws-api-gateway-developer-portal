@@ -87,6 +87,7 @@ Conditions:
   UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
   # the second clause is a copy of the UseCustomDomainName condition
   # re-using it doesn't seem possible?
+  NoCustomDomainName: !Not [ !Condition UseCustomDomainName ]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]]
 
 Mappings:
@@ -945,6 +946,25 @@ Resources:
           AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
           SslSupportMethod: 'sni-only'
 
+  DefaultCloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: DevPortalSiteS3Bucket
+    Condition: NoCustomDomainName
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: true
+          TargetOriginId: 'dev-portal-site-s3-bucket'
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        Origins:
+          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
+            Id: 'dev-portal-site-s3-bucket'
+            CustomOriginConfig:
+              OriginProtocolPolicy: 'http-only'
+
   CustomDomainDistributionAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Condition: UseCustomDomainName
@@ -979,12 +999,8 @@ Resources:
 
 Outputs:
   WebsiteURL:
-    Value: !Join
-      - ''
-      - - 'http://'
-        - !Ref DevPortalSiteS3BucketName
-        - !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']
-    Description: URL for website hosted on S3
+    Value: !GetAtt DefaultCloudfrontDistribution.GetDomainName
+    Description: URL for website
 
   CustomWebsiteURL:
     Condition: UseCustomDomainName
