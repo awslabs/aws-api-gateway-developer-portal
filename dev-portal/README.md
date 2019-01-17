@@ -12,10 +12,24 @@
 // the resulting bucket names need to be globally unique
 
 module.exports = {
+  // required; bucket must be pre-made
+  buildAssetsBucket: `YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME`,
+
+  // required; created by stack
   stackName: `dev-portal`,
-  buildAssetsBucket: `your-lambda-artifacts-bucket-name`,
-  siteAssetsBucket: `custom-prefix-dev-portal-static-assets`,
-  apiAssetsBucket: `custom-prefix-dev-portal-artifacts`
+  siteAssetsBucket: `CUSTOM_PREFIX-dev-portal-static-assets`,
+  apiAssetsBucket: `CUSTOM_PREFIX-dev-portal-artifacts`,
+  
+  // optional values (uncomment and change values if you want to use them)
+
+  // Change the name of the customer's table. Useful for multiple stacks. Defaults to `DevPortalCustomers`
+  // customersTableName: `DevPortalCustomers`,
+  
+  // Turns on cognito hosted sign in / sign up UI; Defaults to `` (blank string)
+  // cognitoDomainName: `auth-url`,
+
+  // Set this to overwrite-content if you want to reset your custom content back to the defaults. Defaults to ``
+  // staticAssetRebuildMode: `overwrite-content` // ONLY SET
 }
 ```
 4. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use
