@@ -801,7 +801,9 @@ Resources:
         PreSignUp: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
       Policies:
         PasswordPolicy:
-          MinimumLength: 8
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireNumbers: true
       Schema:
         - AttributeDataType: String
           Name: email
