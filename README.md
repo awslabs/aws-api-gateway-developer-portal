@@ -88,11 +88,22 @@ This creates a cloudfront distribution in front of the S3 bucket serving the sit
 If you chose `UseRoute53Nameservers=true`, after the deployment finishes, go to the Route53 console, find the nameservers for the hosted zone created by the deployment, and add those as the nameservers for your domain name through your registrar. The specifics of this process will vary by registrar.
 
 If you chose `UseRoute53Nameservers=false`, instead point your nameservers at the cloudfront distribution's URL.
+
 ### Add custom content and brand the Developer Portal
 See [Customization section](#customization)
 
 ### Add an approval workflow to register new users
 See [Components section](#cognito-user-pool-confirmation-strategy-lambdacognito-user-pools-confirmation-strategy)
+
+## Updating to a new version
+The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version.
+
+### To update a SAM deployment:
+1. Get the latest version from GitHub (Clone/Pull/Download).
+2. When deploying follow the same steps as previous and use the same values for the parameters. The only difference is passing in a new value for "-StaticAssetRebuildToken". You can use any string for this as long as it is different than previously used. If you followed the instructions above and it is the first time you're updating, you can use any non-empty string (default value is "").
+
+### To update a SAR deployment
+1. When deploying follow the same steps as previous and use the same values for the parameters. The only difference is passing in a new value for "-StaticAssetRebuildToken". You can use any string for this as long as it is different than previously used (default value is "defaultRebuildToken").
 
 ## Components
 

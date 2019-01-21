@@ -187,7 +187,8 @@ function addConfigFile(bucketName, event) {
             region: event.ResourceProperties.Region,
             identityPoolId: event.ResourceProperties.IdentityPoolId,
             userPoolId: event.ResourceProperties.UserPoolId,
-            userPoolClientId: event.ResourceProperties.UserPoolClientId
+            userPoolClientId: event.ResourceProperties.UserPoolClientId,
+            userPoolDomain: event.ResourceProperties.UserPoolDomain
         },
         params = {
             Bucket: bucketName,

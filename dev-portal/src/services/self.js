@@ -6,9 +6,8 @@ import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cogn
 
 // services
 import { store } from 'services/state'
-import { initApiGatewayClient, apiGatewayClient } from 'services/api'
 import { updateAllUserData } from 'services/api-catalog'
-import { cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
+import { initApiGatewayClient, apiGatewayClient, cognitoDomain, cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
 
 const poolData = {
   UserPoolId: cognitoUserPoolId,
@@ -38,25 +37,21 @@ export function init() {
         return
       }
 
-      const cognitoLoginKey = getCognitoLoginKey()
-      const Logins = {}
-      Logins[cognitoLoginKey] = session.getIdToken().getJwtToken()
-      AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-        IdentityPoolId: cognitoIdentityPoolId,
-        Logins: Logins
-      })
-
-      AWS.config.credentials.refresh((error) => {
-        if (error) {
-          logout()
-          console.error(error)
-        } else {
-          initApiGatewayClient(AWS.config.credentials)
-          updateAllUserData()
-        }
-      })
+      setCredentials(store.cognitoUser)
     })
   } else {
+    let signInUserSession = localStorage.getItem(JSON.stringify(poolData))
+    if (signInUserSession) {
+      
+      store.cognitoUser = new CognitoUser({
+        Username: '', // blank user name if we aren't using username and password
+        Pool: userPool
+      })
+
+      store.cognitoUser.signInUserSession = JSON.parse(signInUserSession)
+
+      setCredentials(store.cognitoUser)
+    }
     initApiGatewayClient()
   }
 }
@@ -76,48 +71,80 @@ export function register(email, password) {
 }
 
 export function login(email, password) {
-    const authenticationDetails = new AuthenticationDetails({
-      Username: email,
-      Password: password
-    })
+  let localCognitoUser = new CognitoUser({
+    Username: email || '', // blank user name if we aren't using username and password
+    Pool: new CognitoUserPool(poolData)
+  })
 
-    let localCognitoUser = new CognitoUser({
-      Username: email,
-      Pool: new CognitoUserPool(poolData)
-    })
-
+  if (email && password) {
     return new Promise((resolve, reject) => {
+      const authenticationDetails = new AuthenticationDetails({
+        Username: email,
+        Password: password
+      })
+
       localCognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
-
           store.cognitoUser = localCognitoUser
 
-          AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: cognitoIdentityPoolId,
-            Logins: {
-              [getCognitoLoginKey()]: result.getIdToken().getJwtToken()
-            }
-          })
-
-          AWS.config.credentials.refresh((error) => {
-            if (error) {
-              console.error(error)
-            } else {
-              initApiGatewayClient(AWS.config.credentials)
-
-              updateAllUserData()
-
-              apiGatewayClient().then(apiGatewayClient => 
-                apiGatewayClient.post('/signin', {}, {}, {})
-                  .then(resolve)
-                  .catch(reject)
-              )
-            }
-          })
+          setCredentials(store.cognitoUser)
+            .then(resolve)
+            .catch(reject)
         },
 
         onFailure: reject
+      })
     })
+  } else if (window.location.hash) { // assume we're grabbing tokens out of the hash
+    // fake the signInUserSession
+    localCognitoUser.signInUserSession = {}
+
+    window.location.hash
+      .replace(/^#/,'')
+      .split('&')
+      .map(param => param.split('='))
+      .forEach(param => {
+        // add real data to the fake signInUserSession
+        if (param[0] === 'id_token')
+          localCognitoUser.signInUserSession.idToken = { jwtToken: param[1] }
+
+        if (param[0] === 'access_token')
+          localCognitoUser.signInUserSession.accessToken = { jwtToken: param[1] }
+
+        // will use this value to auto-log out... eventually
+        // if (param[0] === 'expires_in')
+          // console.log(param[1])
+      })
+
+    if (localCognitoUser.signInUserSession.idToken) {
+      localStorage.setItem(JSON.stringify(poolData), JSON.stringify(localCognitoUser.signInUserSession))
+
+      store.cognitoUser = localCognitoUser
+
+      setCredentials(store.cognitoUser)
+    }
+  }
+}
+
+function setCredentials(cognitoUser) {
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: cognitoIdentityPoolId,
+    Logins: {
+      [getCognitoLoginKey()]: cognitoUser.signInUserSession.idToken.jwtToken
+    }
+  })
+
+  AWS.config.credentials.refresh((error) => {
+    if (error) {
+      console.error(error)
+      return Promise.reject(error)
+    }
+
+    initApiGatewayClient(AWS.config.credentials)
+    updateAllUserData()
+
+    return apiGatewayClient()
+      .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
   })
 }
 
@@ -126,5 +153,10 @@ export function logout() {
     store.cognitoUser.signOut()
     store.resetUserData()
     localStorage.clear()
+
+    if (cognitoDomain) {
+      // redirect to cognito to log out there, too
+      window.location = `${cognitoDomain}/logout?client_id=${cognitoClientId}&logout_uri=${window.location.protocol}//${window.location.host}`;
+    }
   }
 }
