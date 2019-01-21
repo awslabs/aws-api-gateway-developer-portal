@@ -73,10 +73,10 @@ Parameters:
     Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. Omitting this value opts out of the Cognito Hosted UI.
     Default: ''
 
-  CognitoDomainAcmCertArn:
-    Type: String
-    Description: Doesn't yet do anything. Oh well.
-    Default: ''
+  # CognitoDomainAcmCertArn:
+  #   Type: String
+  #   Description: Doesn't yet do anything. Oh well.
+  #   Default: ''
 
   CustomDomainName:
     Type: String
