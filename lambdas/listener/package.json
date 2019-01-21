@@ -1,6 +1,6 @@
 {
   "name": "serverless-developer-portal-marketplace-listener",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "developer portal component responsible for aws marketplace integration",
   "main": "index.js",
   "config": {},
