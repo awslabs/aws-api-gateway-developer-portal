@@ -1165,7 +1165,7 @@ Outputs:
     Value: !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
     Description: URL for website hosted on S3
     
-  DEPRECATED_S3WebsiteURL:
+  DEPRECATEDS3WebsiteURL:
     Value: !Join [ '', [ 'http://', !Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url'] ]]
     Description: URL for website
 
