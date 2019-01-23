@@ -915,7 +915,7 @@ Resources:
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
       CallbackURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
-      LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/logout' ]]
+      LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [ "implicit" ]
       AllowedOAuthScopes: [ "openid" ]
