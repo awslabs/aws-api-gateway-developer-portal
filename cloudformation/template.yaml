@@ -1162,14 +1162,18 @@ Resources:
 
 Outputs:
   WebsiteURL:
-    Value: !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
-    Description: URL for website hosted on S3
+    Value: !If [
+                  UseCustomDomainName,
+                  !Join ['', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
+                  !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+               ]
+    Description: CloudFront URL for website
     
   DEPRECATEDS3WebsiteURL:
     Value: !Join [ '', [ 'http://', !Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url'] ]]
-    Description: URL for website
+    Description: URL for website. Deprecated; this URL does not provide SSL / HTTPS, and will be made inaccessible in a later major version.
 
   CustomWebsiteURL:
     Condition: UseCustomDomainName
     Value: !Ref CustomDomainName
-    Description: Custom URL for website hosted on S3, served through CloudFront
+    Description: Custom URL for website
