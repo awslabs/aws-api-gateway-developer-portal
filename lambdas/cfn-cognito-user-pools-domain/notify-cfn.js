@@ -32,7 +32,7 @@ function notifyCFN ({ event, context, responseStatus, responseData, error, physi
   
   // lastRequestId = event.RequestId
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     let errorMessage = error ? error.message || error.error || error.errorMessage || error : ''
 
     // if there's no response message, default it based on presence of an error
