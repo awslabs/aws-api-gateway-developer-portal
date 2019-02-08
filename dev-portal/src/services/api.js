@@ -8,17 +8,18 @@ export const cognitoRegion = window.config.region
 export const cognitoUserPoolId = window.config.userPoolId
 export const cognitoClientId = window.config.userPoolClientId
 export const cognitoDomain = window.config.userPoolDomain
+export const cognitoAdminUserPoolId = window.config.adminUserPoolId
+export const cognitoAdminClientId = window.config.adminUserPoolClientId
+export const cognitoAdminDomain = window.config.adminUserPoolDomain
 
 AWS.config.region = cognitoRegion
 
 let cachedClient
 
-export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToken } = {}) {
+export function initApiGatewayClient(jwtToken) {
   cachedClient = window.apigClientFactory.newClient({
-    accessKey: accessKeyId,
-    secretKey: secretAccessKey,
-    sessionToken: sessionToken,
-    region: awsRegion
+    region: awsRegion,
+    jwtToken: jwtToken
   })
 }
 

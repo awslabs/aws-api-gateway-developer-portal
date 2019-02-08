@@ -1,13 +1,12 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import AWS from 'aws-sdk'
 import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
 
 // services
 import { store } from 'services/state'
 import { updateAllUserData } from 'services/api-catalog'
-import { initApiGatewayClient, apiGatewayClient, cognitoDomain, cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
+import { initApiGatewayClient, apiGatewayClient, cognitoDomain, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
 
 const poolData = {
   UserPoolId: cognitoUserPoolId,
@@ -127,25 +126,11 @@ export function login(email, password) {
 }
 
 function setCredentials(cognitoUser) {
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: cognitoIdentityPoolId,
-    Logins: {
-      [getCognitoLoginKey()]: cognitoUser.signInUserSession.idToken.jwtToken
-    }
-  })
-
-  AWS.config.credentials.refresh((error) => {
-    if (error) {
-      console.error(error)
-      return Promise.reject(error)
-    }
-
-    initApiGatewayClient(AWS.config.credentials)
+    initApiGatewayClient(cognitoUser.signInUserSession.accessToken.jwtToken)
     updateAllUserData()
 
     return apiGatewayClient()
       .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
-  })
 }
 
 export function logout() {
