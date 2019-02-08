@@ -18,7 +18,7 @@ Metadata:
         Label:
           default: "Dev Portal Customer Configuration"
         Parameters:
-          - CognitoIdentityPoolName
+          - CognitoUserPoolName
           - DevPortalCustomersTableName
       -
         Label:
@@ -78,12 +78,12 @@ Parameters:
   MarketplaceSubscriptionTopicProductCode:
     Type: String
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
-    Default: DevPortalMarketplaceSubscriptionTopic
+    Default: 'DevPortalMarketplaceSubscriptionTopic'
 
-  CognitoIdentityPoolName:
+  CognitoUserPoolName:
     Type: String
-    Description: The name for your Cognito Identity Pool.
-    Default: DevPortalUserPool
+    Description: The name for your Cognito User Pool.
+    Default: 'DevPortalUserPool'
 
   CognitoDomainNameOrPrefix:
     Type: String
@@ -928,7 +928,7 @@ Resources:
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Ref CognitoIdentityPoolName
+      UserPoolName: !Ref CognitoUserPoolName
       LambdaConfig:
         PreSignUp: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
       Policies:
@@ -945,7 +945,7 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientName: CognitoIdentityPool
+      ClientName: 'Dev Portal Users Pool Web Client'
       GenerateSecret: false
       RefreshTokenValidity: 30
 
@@ -1065,61 +1065,6 @@ Resources:
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       Domain: !Ref CognitoDomainNameOrPrefix
-  
-  CognitoIdentityPool:
-    Type: AWS::Cognito::IdentityPool
-    Properties:
-      IdentityPoolName: !Ref CognitoIdentityPoolName
-      AllowUnauthenticatedIdentities: false
-      CognitoIdentityProviders:
-        - ClientId: !Ref CognitoUserPoolClient
-          ProviderName: !Join
-            - ''
-            - - cognito-idp.
-              - !Ref 'AWS::Region'
-              - .amazonaws.com/
-              - !Ref CognitoUserPool
-
-  CognitoIdentityPoolRoles:
-    Type: AWS::Cognito::IdentityPoolRoleAttachment
-    Properties:
-      IdentityPoolId: !Ref CognitoIdentityPool
-      Roles:
-        authenticated: !GetAtt CognitoAuthenticatedRole.Arn
-
-  CognitoAuthenticatedRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Federated: cognito-identity.amazonaws.com
-          Action: sts:AssumeRoleWithWebIdentity
-          Condition:
-            StringEquals:
-              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
-            'ForAnyValue:StringLike':
-              'cognito-identity.amazonaws.com:amr': authenticated
-      Policies:
-      - PolicyName: CognitoAuthenticatedRole
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - execute-api:Invoke
-            Resource: !Join
-              - ''
-              - - 'arn:aws:execute-api:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - ':'
-                - !Ref ApiGatewayApi
-                - /prod/*/*
-      Path: '/'
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1164,7 +1109,6 @@ Resources:
       BucketName: !Ref DevPortalSiteS3Bucket
       RestApiId: !Ref ApiGatewayApi
       Region: !Ref 'AWS::Region'
-      IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       UserPoolDomain: !If [ UseCognitoHostedUI, !GetAtt CognitoUserPoolDomain.FullUrl, '' ]
