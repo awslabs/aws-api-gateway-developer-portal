@@ -44,11 +44,11 @@ function subscribe(customerId, productCode, callback) {
     }
 
     // get identity id for marketplace customer id
-    controller.getCognitoIdentityId(customerId, err, identityId => {
-        console.log("Got cognito identity : " + identityId);
+    controller.getCognitoUsername(customerId, err, username => {
+        console.log("Got cognito username : " + username);
 
         controller.getUsagePlanForProductCode(productCode, err, usagePlan => {
-            controller.subscribe(identityId, usagePlan.id, err, result => {
+            controller.subscribe(username, usagePlan.id, err, result => {
                 callback(null, result)
             })
         })
@@ -64,11 +64,11 @@ function unsubscribe(customerId, productCode, callback) {
     }
 
     // get identity id for marketplace customer id
-    controller.getCognitoIdentityId(customerId, err, identityId => {
-        console.log("Got cognito identity : " + identityId);
+    controller.getCognitoUsername(customerId, err, username => {
+        console.log("Got cognito username : " + username);
 
         controller.getUsagePlanForProductCode(productCode, err, usagePlan => {
-            controller.unsubscribe(identityId, usagePlan.id, err, result => {
+            controller.unsubscribe(username, usagePlan.id, err, result => {
                 callback(null, result)
             })
         })

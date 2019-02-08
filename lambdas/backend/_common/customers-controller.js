@@ -9,14 +9,13 @@ const apigateway = new AWS.APIGateway()
 
 const customersTable = process.env.CustomersTableName || 'DevPortalCustomers'
 
-function ensureCustomerItem(cognitoIdentityId, keyId, error, callback) {
-    const customerId = cognitoIdentityId// + '+' + keyId
+function ensureCustomerItem(cognitoUserKey, keyId, error, callback) {
 
     // ensure user is tracked in customer table
     const getParams = {
         TableName: customersTable,
         Key: {
-            Id: customerId
+            Id: cognitoUserKey
         }
     }
     dynamoDb.get(getParams, (err, data) => {
@@ -26,27 +25,27 @@ function ensureCustomerItem(cognitoIdentityId, keyId, error, callback) {
             const putParams = {
                 TableName: customersTable,
                 Item: {
-                    Id: customerId,
+                    Id: cognitoUserKey,
                     ApiKeyId: keyId
                 }
             }
 
-            dynamoDb.putItem(putParams, (customerErr, customerData) => {
+            dynamoDb.put(putParams, (customerErr, customerData) => {
                 if (customerErr) {
                     error(customerErr)
                 } else {
-                    console.log(`Created new customer in ddb with id ${customerId}`)
+                    console.log(`Created new customer in ddb with id ${cognitoUserKey}`)
                     callback(customerData)
                 }
             })
         } else {
-            console.log(`Customer exists with id ${customerId}`)
+            console.log(`Customer exists with id ${cognitoUserKey}`)
             callback(data.Item)
         }
     })
 }
 
-function getCognitoIdentityId(marketplaceCustomerId, error, callback) {
+function getCognitoUsername(marketplaceCustomerId, error, callback) {
     const params = {
         TableName: customersTable,
         IndexName: "MarketplaceCustomerIdIndex",
@@ -68,15 +67,15 @@ function getCognitoIdentityId(marketplaceCustomerId, error, callback) {
     })
 }
 
-function subscribe(cognitoIdentityId, usagePlanId, errFunc, callback) {
+function subscribe(cognitoUserKey, usagePlanId, errFunc, callback) {
 
-    getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
+    getApiKeyForCustomer(cognitoUserKey, errFunc, (data) => {
         console.log(`Get Api Key data ${JSON.stringify(data)}`)
 
         if (data.items.length === 0) {
-            console.log(`No API Key found for customer ${cognitoIdentityId}`)
+            console.log(`No API Key found for customer ${cognitoUserKey}`)
 
-            createApiKey(cognitoIdentityId, errFunc, (createData) => {
+            createApiKey(cognitoUserKey, errFunc, (createData) => {
                 console.log(`Create API Key data: ${createData}`)
                 const keyId = createData.id
 
@@ -98,13 +97,13 @@ function subscribe(cognitoIdentityId, usagePlanId, errFunc, callback) {
     })
 }
 
-function unsubscribe(cognitoIdentityId, usagePlanId, error, success) {
+function unsubscribe(cognitoUserKey, usagePlanId, error, success) {
 
-    getApiKeyForCustomer(cognitoIdentityId, error, (data) => {
+    getApiKeyForCustomer(cognitoUserKey, error, (data) => {
         console.log(`Get Api Key data ${JSON.stringify(data)}`)
 
         if (data.items.length === 0) {
-            console.log(`No API Key found for customer ${cognitoIdentityId}`)
+            console.log(`No API Key found for customer ${cognitoUserKey}`)
 
             error('Customer does not have an API Key')
         } else {
@@ -119,15 +118,15 @@ function unsubscribe(cognitoIdentityId, usagePlanId, error, success) {
     })
 }
 
-function createApiKey(cognitoIdentityId, error, callback) {
-    console.log(`Creating API Key for customer ${cognitoIdentityId}`)
+function createApiKey(cognitoUserKey, error, callback) {
+    console.log(`Creating API Key for customer ${cognitoUserKey}`)
 
-    // set the name to the cognito identity ID so we can query API Key for the cognito identity
+    // set the name to the cognito user key so we can query API Key for the cognito user key
     const params = {
-        description: `Dev Portal API Key for ${cognitoIdentityId}`,
+        description: `Dev Portal API Key for ${cognitoUserKey}`,
         enabled: true,
         generateDistinctId: true,
-        name: cognitoIdentityId
+        name: cognitoUserKey
     }
 
     apigateway.createApiKey(params, (err, data) => {
@@ -135,7 +134,7 @@ function createApiKey(cognitoIdentityId, error, callback) {
             console.log('createApiKey error', error)
             error(err)
         } else {
-            updateCustomerApiKeyId(cognitoIdentityId, data.id, error, () => callback(data))
+            updateCustomerApiKeyId(cognitoUserKey, data.id, error, () => callback(data))
         }
     })
 }
@@ -167,13 +166,13 @@ function deleteUsagePlanKey(keyId, usagePlanId, error, callback) {
     })
 }
 
-function getApiKeyForCustomer(cognitoIdentityId, error, callback) {
-    console.log(`Getting API Key for customer  ${cognitoIdentityId}`)
+function getApiKeyForCustomer(cognitoUserKey, error, callback) {
+    console.log(`Getting API Key for customer  ${cognitoUserKey}`)
 
     const params = {
         limit: 1,
         includeValues: true,
-        nameQuery: cognitoIdentityId
+        nameQuery: cognitoUserKey
     }
     apigateway.getApiKeys(params, (err, data) => {
         if (err) error(err)
@@ -181,10 +180,10 @@ function getApiKeyForCustomer(cognitoIdentityId, error, callback) {
     })
 }
 
-function getUsagePlansForCustomer(cognitoIdentityId, error, callback) {
-    console.log(`Getting API Key for customer ${cognitoIdentityId}`)
+function getUsagePlansForCustomer(cognitoUserKey, error, callback) {
+    console.log(`Getting API Key for customer ${cognitoUserKey}`)
 
-    getApiKeyForCustomer(cognitoIdentityId, error, (data) => {
+    getApiKeyForCustomer(cognitoUserKey, error, (data) => {
         if (data.items.length === 0) {
             callback({data : {}})
         } else {
@@ -229,11 +228,11 @@ function getUsagePlanForProductCode(productCode, error, callback) {
     });
 }
 
-function updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, success) {
+function updateCustomerMarketplaceId(cognitoUserKey, marketplaceCustomerId, error, success) {
     const dynamoDbParams = {
         TableName: customersTable,
         Key: {
-            Id: cognitoIdentityId
+            Id: cognitoUserKey
         },
         UpdateExpression: 'set #a = :x',
         ExpressionAttributeNames: { '#a': 'MarketplaceCustomerId' },
@@ -248,13 +247,13 @@ function updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, e
         if (dynamoDbErr) {
             error(dynamoDbErr)
         } else {
-            getApiKeyForCustomer(cognitoIdentityId, error, (data) => {
+            getApiKeyForCustomer(cognitoUserKey, error, (data) => {
                 console.log(`Get Api Key data ${JSON.stringify(data)}`)
 
                 if (data.items.length === 0) {
-                    console.log(`No API Key found for customer ${cognitoIdentityId}`)
+                    console.log(`No API Key found for customer ${cognitoUserKey}`)
 
-                    createApiKey(cognitoIdentityId, errFunc, (createData) => {
+                    createApiKey(cognitoUserKey, errFunc, (createData) => {
                         console.log(`Create API Key data: ${createData}`)
                         const keyId = createData.id
 
@@ -298,12 +297,12 @@ function updateApiKey(apiKeyId, marketplaceCustomerId, error, success) {
     });
 }
 
-function updateCustomerApiKeyId(cognitoIdentityId, apiKeyId, error, success) {
+function updateCustomerApiKeyId(cognitoUserKey, apiKeyId, error, success) {
     // update customer record with marketplace customer code
     const dynamoDbParams = {
         TableName: customersTable,
         Key: {
-            Id: cognitoIdentityId
+            Id: cognitoUserKey
         },
         UpdateExpression: 'set #a = :x',
         ExpressionAttributeNames: { '#a': 'ApiKeyId' },
@@ -342,5 +341,5 @@ module.exports = {
     getUsagePlansForCustomer: getUsagePlansForCustomer,
     getUsagePlanForProductCode: getUsagePlanForProductCode,
     updateCustomerMarketplaceId: updateCustomerMarketplaceId,
-    getCognitoIdentityId: getCognitoIdentityId
+    getCognitoUsername: getCognitoUsername
 }
