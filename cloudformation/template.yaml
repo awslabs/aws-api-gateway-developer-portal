@@ -973,6 +973,7 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource: 'arn:aws:logs:*:*:*'
+        # Should this be scoped down now that there are two?
         - PolicyName: UpdateUserPoolClient
           PolicyDocument: 
             Version: '2012-10-17'
@@ -1000,12 +1001,13 @@ Resources:
       ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
-      SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
+      # should (eventually) allow people to add more identity providers
+      SupportedIdentityProviders: [ "COGNITO" ]
       CallbackURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
       LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [ "implicit" ]
-      AllowedOAuthScopes: [ "openid" ]
+      AllowedOAuthScopes: [ "openid", !Join ['', [!Ref 'AWS::StackName', '-resource-server/user.access']]  ]
 
   CognitoUserPoolDomainBackingFnRole:
     Type: 'AWS::IAM::Role'
@@ -1065,6 +1067,207 @@ Resources:
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       Domain: !Ref CognitoDomainNameOrPrefix
+
+  CognitoResourceServerBackingFnRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: WriteCloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+        - PolicyName: ManageResourceServer
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action: 'cognito-idp:CreateResourceServer'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+              -
+                Effect: Allow
+                Action: 'cognito-idp:DeleteResourceServer'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+
+  CognitoResourceServerBackingFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 300
+      CodeUri: ../lambdas/cfn-cognito-resource-server
+      Handler: index.handler
+      Role: !GetAtt CognitoResourceServerBackingFnRole.Arn
+
+  CognitoResourceServer:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      Timeout: 360
+      ServiceToken: !GetAtt CognitoResourceServerBackingFn.Arn
+      UserPoolId: !Ref CognitoUserPool
+      Identifier: !Join ['', [!Ref 'AWS::StackName', '-resource-server']]
+      Admin: false
+
+  CognitoAdminUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Join ['', [!Ref CognitoUserPoolName, 'Admins']]
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireNumbers: true
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: false
+
+  CognitoAdminUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoAdminUserPool
+      ClientName: 'Dev Portal Admins Pool Web Client'
+      GenerateSecret: false
+      RefreshTokenValidity: 30
+
+  CognitoAdminUserPoolClientSettingsBackingFnRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: WriteCloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+        # Should this be scoped down now that there are two?
+        - PolicyName: UpdateUserPoolClient
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action: 'cognito-idp:UpdateUserPoolClient'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+
+  CognitoAdminUserPoolClientSettingsBackingFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 300
+      CodeUri: ../lambdas/cfn-cognito-user-pools-client-settings
+      Handler: index.handler
+      Role: !GetAtt CognitoUserPoolClientSettingsBackingFnRole.Arn
+
+  CognitoAdminUserPoolClientSettings:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      Timeout: 360
+      ServiceToken: !GetAtt CognitoAdminUserPoolClientSettingsBackingFn.Arn
+      UserPoolId: !Ref CognitoAdminUserPool
+      UserPoolClientId: !Ref CognitoAdminUserPoolClient
+      # should (eventually) allow people to add values
+      SupportedIdentityProviders: [ "COGNITO" ]
+      CallbackURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
+      LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [ "implicit" ]
+      AllowedOAuthScopes: [ "openid", !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/user.access']], !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']] ]
+
+  CognitoAdminUserPoolDomain:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      Timeout: 360
+      # note: we're re-using the non-admin user pool's backing lambda
+      ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
+      UserPoolId: !Ref CognitoAdminUserPool
+      Domain: !Join ['', [!Ref CognitoDomainNameOrPrefix, '-admin']]
+
+  CognitoAdminResourceServerBackingFnRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: WriteCloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+        - PolicyName: ManageResourceServer
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action: 'cognito-idp:CreateResourceServer'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+              -
+                Effect: Allow
+                Action: 'cognito-idp:DeleteResourceServer'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+
+  CognitoAdminResourceServerBackingFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 300
+      CodeUri: ../lambdas/cfn-cognito-resource-server
+      Handler: index.handler
+      Role: !GetAtt CognitoAdminResourceServerBackingFnRole.Arn
+
+  CognitoAdminResourceServer:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      Timeout: 360
+      ServiceToken: !GetAtt CognitoAdminResourceServerBackingFn.Arn
+      UserPoolId: !Ref CognitoAdminUserPool
+      Identifier: !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server']]
+      Admin: true
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
