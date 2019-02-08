@@ -29,7 +29,7 @@ exports.handler = async (event, context) => {
     if (responseData && responseData.UserPoolClient) 
       responseData = responseData.UserPoolClient
 
-    // try to use the User Pool is (plus '-Settings') as the ID
+    // try to use the User Pool id (plus '-Settings') as the ID
     let physicalResourceId
     
     if (responseData && responseData.UserPoolId)
