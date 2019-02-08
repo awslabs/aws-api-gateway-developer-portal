@@ -53,7 +53,7 @@ Parameters:
   DevPortalCustomersTableName:
     Type: String
     Description: The name of the DynamoDB Customers table.
-    Default: DevPortalCustomers
+    Default: 'DevPortalCustomers'
 
   DevPortalAdminEmail:
     Type: String
@@ -63,12 +63,12 @@ Parameters:
   DevPortalFeedbackTableName:
     Type: String
     Description: The name of the DynamoDB table storing feedback submitted by users.
-    Default: DevPortalFeedback
+    Default: 'DevPortalFeedback'
 
   StaticAssetRebuildToken:
     Type: String
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
-    Default: defaultRebuildToken
+    Default: 'defaultRebuildToken'
 
   StaticAssetRebuildMode:
     Type: String
@@ -112,8 +112,6 @@ Parameters:
 
 Conditions:
   UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
-  # the second clause is a copy of the UseCustomDomainName condition
-  # re-using it doesn't seem possible?
   NoCustomDomainName: !Not [ !Condition UseCustomDomainName ]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
   UseCognitoHostedUI: !Not [!Equals [!Ref CognitoDomainNameOrPrefix, '']]
@@ -477,7 +475,6 @@ Resources:
 
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
-    DependsOn: CatalogUpdaterLambdaFunction
     Properties:
       BucketName: !Ref ArtifactsS3BucketName
       NotificationConfiguration:
@@ -514,8 +511,8 @@ Resources:
       - AttributeName: Id
         KeyType: HASH
       ProvisionedThroughput:
-        ReadCapacityUnits: '5'
-        WriteCapacityUnits: '5'
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
       GlobalSecondaryIndexes:
       - IndexName: MarketplaceCustomerIdIndex
         KeySchema:
@@ -526,8 +523,8 @@ Resources:
           - ApiKeyId
           ProjectionType: INCLUDE
         ProvisionedThroughput:
-          ReadCapacityUnits: '5'
-          WriteCapacityUnits: '5'
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
 
   FeedbackTable:
     Type: AWS::DynamoDB::Table
@@ -960,7 +957,6 @@ Resources:
       GenerateSecret: false
       RefreshTokenValidity: 30
 
-  # Cognito User Pool Custom Resource config
   CognitoUserPoolClientSettingsBackingFnRole:
     Type: 'AWS::IAM::Role'
     Properties:
