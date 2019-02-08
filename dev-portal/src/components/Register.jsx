@@ -2,63 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react'
-import { Button, Form, Message, Modal } from 'semantic-ui-react'
+import { Menu } from 'semantic-ui-react'
 import { Redirect } from 'react-router-dom'
 import { register } from 'services/self'
 import { confirmMarketplaceSubscription } from 'services/api-catalog'
 
- export default class Register extends React.Component {
-  state = {
-    isSubmitting: false,
-    signedIn: false,
-    errorMessage: '',
-    isOpen: false
-  }
+import { cognitoDomain, cognitoClientId, cognitoAdminDomain, cognitoAdminClientId } from '../services/api'
 
-  open = () => this.setState({ isSubmitting: false, errorMessage: '', isOpen: true })
-  close = () => this.setState({ isOpen: false })
-
-  handleChange = (event, { name, value }) => this.setState({ [name]: value })
-  handleRegister = (event) => {
-    event.preventDefault()
-    this.setState({ isSubmitting: true })
-
-    register(this.state.email, this.state.password)
-    .then(() => {
-        this.setState({signedIn: true, isSubmitting: false, errorMessage: ''})
-
-        const { usagePlanId, token } = this.props
-
-        if (usagePlanId && token) {
-   	       return confirmMarketplaceSubscription(usagePlanId, token)
-        }
-    })
-    .catch((e) => this.setState({errorMessage: e.message, isSubmitting: false}))
-  }
+export default class Register extends React.Component {
+  redirectUri = `${window.location.protocol}//${window.location.host}/login`
 
   render() {
-    const { isOpen } = this.state
-
-    return this.state.signedIn ? <Redirect to='/apis' /> : (
-      <Modal
-        size='small'
-        open={isOpen}
-        onOpen={this.open}
-        onClose={this.close}
-        trigger={this.props.trigger}
-      >
-        <Modal.Header>Register</Modal.Header>
-        <Modal.Content>
-          <Form onSubmit={this.handleRegister} error={!!this.state.errorMessage} loading={this.state.isSubmitting}>
-            <Form.Input label='Email' name='email' onChange={this.handleChange} />
-            <Form.Input type='password' label='Password' name='password' autoComplete='false' onChange={this.handleChange} />
-            <Message error content={this.state.errorMessage} />
-            <Modal.Actions style={{textAlign: 'right'}}>
-              <Button type='button' onClick={this.close}>Close</Button>
-              <Button primary type='submit'>Register</Button>
-            </Modal.Actions>
-          </Form>
-        </Modal.Content>
-      </Modal>)
+    return this.props.signedIn ? <Redirect to='/apis'/> : (
+        <Menu.Item key="register" as="a"
+                   href={`${cognitoDomain}/signup?response_type=token&client_id=${cognitoClientId}&redirect_uri=${this.redirectUri}`}>Register</Menu.Item>)
     }
 }
