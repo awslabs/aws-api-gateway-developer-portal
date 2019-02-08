@@ -194,8 +194,7 @@ function addConfigFile(bucketName, event) {
         params = {
             Bucket: bucketName,
             Key: 'config.js',
-            Body: Buffer.from("window.config=" + JSON.stringify(configObject)),
-            ACL: "public-read"
+            Body: Buffer.from("window.config=" + JSON.stringify(configObject))
         },
         options = {}
 
@@ -220,7 +219,6 @@ function processFile(fileStat, readPromises, uploadPromises, bucketName, event, 
                     Bucket: bucketName,
                     Key: sanitizeFilePath(generalizeFilePath(filePath)),
                     Body: readResults,
-                    ACL: "public-read",
                     ContentType: determineContentType(filePath)
                 },
                 options = {}
