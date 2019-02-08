@@ -114,28 +114,26 @@ describe('generalizeFilePath', () => {
 describe('notifyCFNThatUploadSucceeded', () => {
     test('should notify cloudformation that the action succeeded', () => {
         let responseData = {}, event = {}, context = {},
-            response = require('cfn-response')
+            response = require('../notify-cfn')
 
-        response.send = jest.fn()
+        response.ofSuccess = jest.fn()
 
         index.notifyCFNThatUploadSucceeded(responseData, event, context)
 
-        expect(response.send).toHaveBeenCalledWith(event, context, 'SUCCESS', responseData, expect.any(String))
+        expect(response.ofSuccess).toHaveBeenCalledWith({ event, context, responseData })
     })
 })
 
 describe('notifyCFNThatUploadFailed', () => {
     test('should notify cloudformation that the action failed', () => {
         let error = new Error(), event = { 'event': 'object' }, context = { 'context': 'object' },
-            response = require('cfn-response')
+            response = require('../notify-cfn')
 
-        response.send = jest.fn()
+        response.ofFailure = jest.fn()
 
         index.notifyCFNThatUploadFailed(error, event, context)
-        index.notifyCFNThatUploadFailed('stringError', event, context)
 
-        expect(response.send).toHaveBeenCalledWith(event, context, 'FAILED', { error: error.stack })
-        expect(response.send).toHaveBeenCalledWith(event, context, 'FAILED', { error: 'stringError' })
+        expect(response.ofFailure).toHaveBeenCalledWith({ event, context, error })
     })
 })
 
