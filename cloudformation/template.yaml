@@ -485,9 +485,20 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
+
+  DevPortalSiteS3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+     Bucket: !Ref DevPortalSiteS3Bucket
+     PolicyDocument:
+       Statement:
+         - Action: 's3:GetObject'
+           Effect: Allow
+           Resource: !Sub 'arn:aws:s3:::${DevPortalSiteS3Bucket}/*'
+           Principal:
+             AWS: !Sub >-
+               arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
+               ${CloudFrontOriginAccessIdentity}
 
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
@@ -1346,6 +1357,12 @@ Resources:
       RebuildMode: !Ref StaticAssetRebuildMode
       FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
 
+  CloudFrontOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Ref 'AWS::StackName'
+
   CustomDomainCloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
     DependsOn: DevPortalSiteS3Bucket
@@ -1355,6 +1372,10 @@ Resources:
         Aliases:
           - !Ref CustomDomainName
           - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
             QueryString: true
@@ -1362,11 +1383,13 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: index.html
         Enabled: true
+        Comment: !Sub '${AWS::StackName} distribution'
         Origins:
-          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
-            Id: 'dev-portal-site-s3-bucket'
-            CustomOriginConfig:
-              OriginProtocolPolicy: 'http-only'
+          - Id: 'dev-portal-site-s3-bucket'
+            DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]
+            S3OriginConfig:
+             OriginAccessIdentity: !Sub >-
+               origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
         ViewerCertificate:
           AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
           SslSupportMethod: 'sni-only'
@@ -1376,6 +1399,10 @@ Resources:
     Condition: NoCustomDomainName
     Properties:
       DistributionConfig:
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
             QueryString: true
@@ -1383,11 +1410,13 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: index.html
         Enabled: true
+        Comment: !Sub '${AWS::StackName} distribution'
         Origins:
-          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
-            Id: 'dev-portal-site-s3-bucket'
-            CustomOriginConfig:
-              OriginProtocolPolicy: 'http-only'
+          - Id: 'dev-portal-site-s3-bucket'
+            DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]
+            S3OriginConfig:
+             OriginAccessIdentity: !Sub >-
+               origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
 
   CustomDomainDistributionAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
@@ -1429,10 +1458,6 @@ Outputs:
                   !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
                ]
     Description: CloudFront URL for website
-    
-  DEPRECATEDS3WebsiteURL:
-    Value: !Join [ '', [ 'http://', !Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url'] ]]
-    Description: URL for website. Deprecated; this URL does not provide SSL / HTTPS, and will be made inaccessible in a later major version.
 
   CustomWebsiteURL:
     Condition: UseCustomDomainName
