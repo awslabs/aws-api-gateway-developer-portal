@@ -1,4 +1,5 @@
 const customersController = require('./_common/customers-controller.js')
+const feedbackController = require('./_common/feedback-controller.js')
 const catalog = require('./catalog/index.js')
 const AWS = require('aws-sdk')
 const apigateway = new AWS.APIGateway()
@@ -7,6 +8,8 @@ const apigateway = new AWS.APIGateway()
 // replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
 const domain = `${process.env.CLIENT_BUCKET_NAME}.s3-website-${process.env.AWS_DEFAULT_REGION}.amazonaws.com`
 const baseUrl = `http://${domain}/`
+
+const feedbackEnabled = !!process.env['FeedbackSubmittedSNSTopic']
 
 function getCognitoIdentityId(req) {
     return req.apiGateway.event.requestContext.identity.cognitoIdentityId
@@ -249,6 +252,42 @@ function putMarketplaceSubscription(req, res) {
     })
 }
 
+function getFeedback(req, res) {
+    function error(data) {
+        console.log(`error: ${data}`)
+        res.status(500).json(data)
+    }
+
+    function success(data) {
+        res.status(200).json(data)
+    }
+
+    if (!feedbackEnabled) {
+        error("Customer feedback not enabled")
+    } else {
+        feedbackController.fetchFeedback(error, success)
+    }
+}
+
+function postFeedback(req, res) {
+    const cognitoIdentityId = getCognitoIdentityId(req)
+
+    function error(data) {
+        console.log(`error: ${data}`)
+        res.status(500).json(data)
+    }
+
+    function success(data) {
+        res.status(200).json(data)
+    }
+
+    if (!feedbackEnabled) {
+        error("Customer feedback not enabled")
+    } else {
+        feedbackController.submitFeedback(cognitoIdentityId, req.body.message, error, success)
+    }
+}
+
 exports = module.exports = {
     postSignIn,
     getCatalog,
@@ -258,5 +297,7 @@ exports = module.exports = {
     getUsage,
     deleteSubscription,
     postMarketplaceConfirm,
-    putMarketplaceSubscription
+    putMarketplaceSubscription,
+    getFeedback,
+    postFeedback
 }
