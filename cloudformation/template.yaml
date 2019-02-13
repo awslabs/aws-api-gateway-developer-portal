@@ -32,6 +32,13 @@ Metadata:
           - CustomDomainName
           - CustomDomainNameAcmCertArn
           - UseRoute53Nameservers
+      -
+        Label:
+          default: "Dev Portal Customer Feedback Configuration"
+        Parameters:
+          - DevPortalAdminEmail
+          - DevPortalFeedbackTableName
+
 Parameters:
   ArtifactsS3BucketName:
     Type: String
@@ -46,7 +53,17 @@ Parameters:
   DevPortalCustomersTableName:
     Type: String
     Description: The name of the DynamoDB Customers table.
-    Default: "DevPortalCustomers"
+    Default: DevPortalCustomers
+
+  DevPortalAdminEmail:
+    Type: String
+    Description: The email address where user submitted feedback notifications get sent.
+    Default: ''
+
+  DevPortalFeedbackTableName:
+    Type: String
+    Description: The name of the DynamoDB table storing feedback submitted by users.
+    Default: DevPortalFeedback
 
   StaticAssetRebuildToken:
     Type: String
@@ -61,12 +78,12 @@ Parameters:
   MarketplaceSubscriptionTopicProductCode:
     Type: String
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
-    Default: "DevPortalMarketplaceSubscriptionTopic"
+    Default: DevPortalMarketplaceSubscriptionTopic
 
   CognitoIdentityPoolName:
     Type: String
     Description: The name for your Cognito Identity Pool.
-    Default: "DevPortalUserPool"
+    Default: DevPortalUserPool
 
   CognitoDomainNameOrPrefix:
     Type: String
@@ -100,6 +117,7 @@ Conditions:
   NoCustomDomainName: !Not [ !Condition UseCustomDomainName ]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
   UseCognitoHostedUI: !Not [!Equals [!Ref CognitoDomainNameOrPrefix, '']]
+  EnableFeedbackSubmission: !Not [!Equals [!Ref DevPortalAdminEmail, '']]
 
 Mappings:
   # this information comes from these locations, and will need to be kept manually up to date:
@@ -329,6 +347,58 @@ Resources:
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
+          /feedback:
+            get:
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            post:
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: mock
           /{proxy+}:
             x-amazon-apigateway-any-method:
               x-amazon-apigateway-auth:
@@ -448,6 +518,39 @@ Resources:
           ReadCapacityUnits: '5'
           WriteCapacityUnits: '5'
 
+  FeedbackTable:
+    Type: AWS::DynamoDB::Table
+    Condition: EnableFeedbackSubmission
+    Properties:
+      TableName: !Ref DevPortalFeedbackTableName
+      AttributeDefinitions:
+      - AttributeName: Id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: Id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      GlobalSecondaryIndexes:
+      - IndexName: FeedbackIdIndex
+        KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+        Projection:
+          ProjectionType: KEYS_ONLY
+        ProvisionedThroughput:
+          ReadCapacityUnits: '5'
+          WriteCapacityUnits: '5'
+
+  FeedbackSubmittedSNSTopic:
+    Type: AWS::SNS::Topic
+    Condition: EnableFeedbackSubmission
+    Properties:
+      Subscription:
+      - Endpoint: !Ref DevPortalAdminEmail
+        Protocol: email
+
   BackendLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -514,6 +617,30 @@ Resources:
                 - :table/
                 - !Ref CustomersTable
                 - /index/MarketplaceCustomerIdIndex
+          - !If
+            - EnableFeedbackSubmission
+            - Effect: Allow
+              Action:
+              - dynamodb:Scan
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              Resource: !Join
+                - ''
+                - - 'arn:aws:dynamodb:'
+                  - !Ref 'AWS::Region'
+                  - ':'
+                  - !Ref 'AWS::AccountId'
+                  - :table/
+                  - !Ref FeedbackTable
+            - !Ref 'AWS::NoValue'
+          - !If
+            - EnableFeedbackSubmission
+            - Effect: Allow
+              Action:
+              - sns:Publish
+              Resource: !Ref FeedbackSubmittedSNSTopic
+            - !Ref 'AWS::NoValue'
 
   CognitoStrategyLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -759,6 +886,9 @@ Resources:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
           CustomersTableName: !Ref DevPortalCustomersTableName
+          FeedbackTableName: !Ref DevPortalFeedbackTableName
+          FeedbackSnsTopicArn:
+            Fn::If: [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
 
       # Adds the API as a trigger
       Events:
@@ -1041,6 +1171,7 @@ Resources:
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
+      FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
 
   CustomDomainCloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
