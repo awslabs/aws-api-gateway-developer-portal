@@ -6,21 +6,26 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient()
 const feedbackTable = process.env.FeedbackTableName || 'DevPortalFeedback'
 const feedbackTopicArn = process.env.FeedbackSnsTopicArn || ''
 
-const fetchFeedback = function(error, callback) {
-  const scanParams = {
-    TableName: feedbackTable
-  }
-
-  const items = []
-  return dynamoDb.scan(scanParams, function scanUntilDone(err, data) {
-    if (err) {
-      error(err)
-    } else if (data.LastEvaluatedKey) {
-        scanParams.ExclusiveStartKey = data.LastEvaluatedKey;
-        dynamoDb.scan(scanParams, scanUntilDone);
-    } else {
-      callback(items)
+const fetchFeedback = function() {
+  return new Promise(async (resolve, reject) => {
+    const scanParams = {
+      TableName: feedbackTable
     }
+
+    const items = []
+    let continueScanning = false
+    do {
+      try {
+        const data = await dynamoDb.scan(scanParams).promise()
+        items.push(...data.Items)
+        continueScanning = !!data.LastEvaluatedKey
+        scanParams.ExclusiveStartKey = data.LastEvaluatedKey
+      } catch (err) {
+        reject(err)
+      }
+    } while (continueScanning)
+
+    resolve(items)
   })
 }
 
@@ -70,5 +75,9 @@ const submitFeedback = function(cognitoIdentityId, message, error, callback) {
 
 module.exports = {
   fetchFeedback,
-  submitFeedback
+  submitFeedback,
+
+  // Visible for testing
+  dynamoDb,
+  sns
 }

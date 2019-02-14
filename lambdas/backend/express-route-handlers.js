@@ -9,7 +9,7 @@ const apigateway = new AWS.APIGateway()
 const domain = `${process.env.CLIENT_BUCKET_NAME}.s3-website-${process.env.AWS_DEFAULT_REGION}.amazonaws.com`
 const baseUrl = `http://${domain}/`
 
-const feedbackEnabled = !!process.env['FeedbackSubmittedSNSTopic']
+const feedbackEnabled = !!process.env['FeedbackSnsTopicArn']
 
 function getCognitoIdentityId(req) {
     return req.apiGateway.event.requestContext.identity.cognitoIdentityId
@@ -253,19 +253,17 @@ function putMarketplaceSubscription(req, res) {
 }
 
 function getFeedback(req, res) {
-    function error(data) {
-        console.log(`error: ${data}`)
-        res.status(500).json(data)
-    }
-
-    function success(data) {
-        res.status(200).json(data)
-    }
-
     if (!feedbackEnabled) {
-        error("Customer feedback not enabled")
+        res.status(401).json("Customer feedback not enabled")
     } else {
-        feedbackController.fetchFeedback(error, success)
+        feedbackController.fetchFeedback()
+            .then(feedback => {
+                res.status(200).json(feedback)
+            })
+            .catch(err => {
+                console.log(`error: ${err}`)
+                res.status(500).json(err)
+            })
     }
 }
 
@@ -282,7 +280,7 @@ function postFeedback(req, res) {
     }
 
     if (!feedbackEnabled) {
-        error("Customer feedback not enabled")
+        res.status(401).json("Customer feedback not enabled")
     } else {
         feedbackController.submitFeedback(cognitoIdentityId, req.body.message, error, success)
     }
