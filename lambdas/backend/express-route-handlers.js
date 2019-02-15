@@ -270,19 +270,12 @@ function getFeedback(req, res) {
 function postFeedback(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
 
-    function error(data) {
-        console.log(`error: ${data}`)
-        res.status(500).json(data)
-    }
-
-    function success(data) {
-        res.status(200).json(data)
-    }
-
     if (!feedbackEnabled) {
         res.status(401).json("Customer feedback not enabled")
     } else {
-        feedbackController.submitFeedback(cognitoIdentityId, req.body.message, error, success)
+        feedbackController.submitFeedback(cognitoIdentityId, req.body.message)
+            .then(() => res.status(200).json('success'))
+            .catch((err) => res.status(500).json(err))
     }
 }
 

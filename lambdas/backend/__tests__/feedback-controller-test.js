@@ -7,6 +7,7 @@ const message = 'your site is really cool'
 describe('submitFeedback', () => {
   test('should call dynamoDb.put', async () => {
     controller.dynamoDb.put = jest.fn().mockReturnValue(promiser())
+    controller.sns.publish = jest.fn().mockReturnValue(promiser())
 
     const expectedInputs = {
       UserId: userId,
@@ -37,7 +38,11 @@ describe('submitFeedback', () => {
   test('should not publish to sns topic if save to dynamo fails', async () => {
     controller.dynamoDb.put = jest.fn().mockReturnValue(promiser(null, 'error'))
 
-    await controller.submitFeedback(userId, message)
+    try {
+      await controller.submitFeedback(userId, message)
+    } catch (err) {
+      // expected since we threw the 'error' above
+    }
 
     expect(controller.dynamoDb.put).toHaveBeenCalledTimes(1)
     expect(controller.sns.publish).not.toHaveBeenCalled()
