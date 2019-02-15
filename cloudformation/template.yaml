@@ -68,6 +68,16 @@ Parameters:
     Description: The name for your Cognito Identity Pool.
     Default: "DevPortalUserPool"
 
+  CognitoDomainNameOrPrefix:
+    Type: String
+    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. Omitting this value opts out of the Cognito Hosted UI.
+    Default: ''
+
+  # CognitoDomainAcmCertArn:
+  #   Type: String
+  #   Description: Doesn't yet do anything. Oh well.
+  #   Default: ''
+
   CustomDomainName:
     Type: String
     Description: Optionally provide a custom domain name associated with an ACM cert to create a developer portal at that domain name (provide with the format foo.bar.net). Leave blank to create a developer portal without a custom domain name. Standing up a developer portal stack with a custom domain name will take significantly longer than without.
@@ -87,7 +97,9 @@ Conditions:
   UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
   # the second clause is a copy of the UseCustomDomainName condition
   # re-using it doesn't seem possible?
-  UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]]
+  NoCustomDomainName: !Not [ !Condition UseCustomDomainName ]
+  UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
+  UseCognitoHostedUI: !Not [!Equals [!Ref CognitoDomainNameOrPrefix, '']]
 
 Mappings:
   # this information comes from these locations, and will need to be kept manually up to date:
@@ -380,16 +392,7 @@ Resources:
       BucketName: !Ref DevPortalSiteS3BucketName
       WebsiteConfiguration:
         IndexDocument: index.html
-        ErrorDocument: error.html
-        RoutingRules:
-          - RoutingRuleCondition:
-              HttpErrorCodeReturnedEquals: 403
-            RedirectRule:
-              HostName: !If
-                - UseCustomDomainName
-                - !Ref CustomDomainName
-                - !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
-              ReplaceKeyPrefixWith: '#!/'
+        ErrorDocument: index.html
 
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
@@ -579,8 +582,7 @@ Resources:
                 - !Ref ArtifactsS3BucketName
                 - '/*'
           - Effect: Allow
-            Action:
-#            scope this down
+            Action: # scope this down
             - apigateway:*
             Resource: '*'
 
@@ -801,7 +803,9 @@ Resources:
         PreSignUp: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
       Policies:
         PasswordPolicy:
-          MinimumLength: 8
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireNumbers: true
       Schema:
         - AttributeDataType: String
           Name: email
@@ -815,6 +819,123 @@ Resources:
       GenerateSecret: false
       RefreshTokenValidity: 30
 
+  # Cognito User Pool Custom Resource config
+  CognitoUserPoolClientSettingsBackingFnRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: WriteCloudWatchLogs
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+        - PolicyName: UpdateUserPoolClient
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action: 'cognito-idp:UpdateUserPoolClient'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+
+  CognitoUserPoolClientSettingsBackingFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 300
+      CodeUri: ../lambdas/cfn-cognito-user-pools-client-settings
+      Handler: index.handler
+      Role: !GetAtt CognitoUserPoolClientSettingsBackingFnRole.Arn
+
+  CognitoUserPoolClientSettings:
+    Type: AWS::CloudFormation::CustomResource
+    Condition: UseCognitoHostedUI
+    Properties:
+      Timeout: 360
+      ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
+      UserPoolId: !Ref CognitoUserPool
+      UserPoolClientId: !Ref CognitoUserPoolClient
+      SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
+      CallbackURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
+      LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [ "implicit" ]
+      AllowedOAuthScopes: [ "openid" ]
+
+  CognitoUserPoolDomainBackingFnRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: WriteCloudWatchLogs
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+        - PolicyName: ManageUserPoolDomain
+          PolicyDocument: 
+            Version: '2012-10-17'
+            Statement: 
+              -
+                Effect: Allow
+                Action: 'cognito-idp:CreateUserPoolDomain'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+              -
+                Effect: Allow
+                Action: 'cognito-idp:DeleteUserPoolDomain'
+                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+              -
+                Effect: Allow
+                Action: 'cognito-idp:DescribeUserPoolDomain'
+                Resource: '*'
+
+  CognitoUserPoolDomainBackingFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 300
+      CodeUri: ../lambdas/cfn-cognito-user-pools-domain
+      Handler: index.handler
+      Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
+
+  CognitoUserPoolDomain:
+    Type: AWS::CloudFormation::CustomResource
+    Condition: UseCognitoHostedUI
+    Properties:
+      Timeout: 360
+      ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
+      UserPoolId: !Ref CognitoUserPool
+      Domain: !Ref CognitoDomainNameOrPrefix
+  
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
@@ -916,6 +1037,7 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
+      UserPoolDomain: !If [ UseCognitoHostedUI, !GetAtt CognitoUserPoolDomain.FullUrl, '' ]
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
@@ -944,6 +1066,24 @@ Resources:
         ViewerCertificate:
           AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
           SslSupportMethod: 'sni-only'
+
+  DefaultCloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: NoCustomDomainName
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          ForwardedValues:
+            QueryString: true
+          TargetOriginId: 'dev-portal-site-s3-bucket'
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        Origins:
+          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
+            Id: 'dev-portal-site-s3-bucket'
+            CustomOriginConfig:
+              OriginProtocolPolicy: 'http-only'
 
   CustomDomainDistributionAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
@@ -979,9 +1119,18 @@ Resources:
 
 Outputs:
   WebsiteURL:
-    Value: !Join
-      - ''
-      - - 'http://'
-        - !Ref DevPortalSiteS3BucketName
-        - !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']
-    Description: URL for website hosted on S3
+    Value: !If [
+                  UseCustomDomainName,
+                  !Join ['', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
+                  !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+               ]
+    Description: CloudFront URL for website
+    
+  DEPRECATEDS3WebsiteURL:
+    Value: !Join [ '', [ 'http://', !Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url'] ]]
+    Description: URL for website. Deprecated; this URL does not provide SSL / HTTPS, and will be made inaccessible in a later major version.
+
+  CustomWebsiteURL:
+    Condition: UseCustomDomainName
+    Value: !Ref CustomDomainName
+    Description: Custom URL for website
