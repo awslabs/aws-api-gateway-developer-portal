@@ -888,7 +888,7 @@ Resources:
           CustomersTableName: !Ref DevPortalCustomersTableName
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
-            Fn::If: [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
+            !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
 
       # Adds the API as a trigger
       Events:
