@@ -60,17 +60,16 @@ const saveToDynamo = function(cognitoIdentityId, message) {
   return dynamoDb.put(putParams).promise()
 }
 
-const submitFeedback = function(cognitoIdentityId, message, error, callback) {
-  saveToDynamo(cognitoIdentityId, message)
-    .then(() => {
-      publishToSnsTopic(message)
-        .then((response) => {
-          callback(response)
-        })
-    })
-    .catch((err) => {
-      error(err)
-    })
+const submitFeedback = function(cognitoIdentityId, message) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await saveToDynamo(cognitoIdentityId, message)
+      await publishToSnsTopic(message)
+      resolve()
+    } catch (err) {
+      reject(err)
+    }
+  })
 }
 
 module.exports = {
