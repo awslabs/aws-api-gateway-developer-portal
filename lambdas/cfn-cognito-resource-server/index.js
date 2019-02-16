@@ -41,12 +41,10 @@ exports.handler = async (event, context) => {
         break;
 
       case 'Delete':
-        console.log('This here is a delete!')
-        console.log('cognitoIdentityServiceProvider.deleteResourceServer:' + cognitoIdentityServiceProvider.deleteResourceServer)
         responseData = await cognitoIdentityServiceProvider.deleteResourceServer({
           Identifier: event.ResourceProperties.Identifier,
           UserPoolId: event.ResourceProperties.UserPoolId
-        });
+        }).promise();
 
         break;
     }
