@@ -20,9 +20,15 @@ import Apis from 'pages/Apis'
 // components
 import AlertPopup from 'components/AlertPopup'
 import NavBar from 'components/NavBar'
+import Feedback from './components/Feedback'
 
 import { init, login, logout } from 'services/self'
 import './index.css';
+
+// TODO: Feedback should be enabled if
+// the following is true && the current
+// user is not an administrator
+const feedbackEnabled = window.config.feedbackEnabled
 
 class App extends React.Component {
   constructor() {
@@ -53,6 +59,7 @@ class App extends React.Component {
             <Route path="/logout" render={() => (logout(), <Redirect to="/" />)}/>
             <Route component={() => <h2>Page not found</h2>} />
           </Switch>
+          {feedbackEnabled && <Feedback /> }
         </React.Fragment>
       </BrowserRouter>
     )

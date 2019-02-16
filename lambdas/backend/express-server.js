@@ -6,7 +6,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const util = require('util')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const handlers = require('./express-route-handlers.js')
 
@@ -26,6 +25,9 @@ app.get('/subscriptions/:usagePlanId/usage', handlers.getUsage)
 app.delete('/subscriptions/:usagePlanId', handlers.deleteSubscription)
 app.post('/marketplace-confirm/:usagePlanId', handlers.postMarketplaceConfirm)
 app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscription)
+app.get('/feedback', handlers.getFeedback)
+app.post('/feedback', handlers.postFeedback)
+
 
 // The aws-serverless-express library creates a server and listens on a Unix
 // Domain Socket for you, so you can remove the usual call to app.listen.
