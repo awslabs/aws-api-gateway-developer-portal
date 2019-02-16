@@ -25,35 +25,54 @@ function getCognitoLoginKey() {
 }
 
 export function init() {
+  initApiGatewayClient() // init a blank client (will get overwritten if we have creds)
+
   // attempt to refresh credentials from active session
   userPool = new CognitoUserPool(poolData)
-  store.cognitoUser = userPool.getCurrentUser()
+  let cognitoUser = userPool.getCurrentUser()
 
-  if (store.cognitoUser !== null) {
-    store.cognitoUser.getSession(function(err, session) {
+  if (cognitoUser !== null) {
+    cognitoUser.getSession(function(err, session) {
       if (err) {
         logout()
         console.error(err)
         return
       }
 
-      setCredentials(store.cognitoUser)
+      store.cognitoUser = cognitoUser
+      setCredentials(cognitoUser)
     })
   } else {
-    let signInUserSession = localStorage.getItem(JSON.stringify(poolData))
-    if (signInUserSession) {
-      
-      store.cognitoUser = new CognitoUser({
-        Username: '', // blank user name if we aren't using username and password
-        Pool: userPool
-      })
+    let signInUserSession
+    let parsedToken
+    let valid = false
 
-      store.cognitoUser.signInUserSession = JSON.parse(signInUserSession)
-
-      setCredentials(store.cognitoUser)
+    try {
+      signInUserSession = JSON.parse(localStorage.getItem(JSON.stringify(poolData)))
+      if (signInUserSession) { // this `if` prevents console.error spam
+        parsedToken = parseJwt(signInUserSession.idToken.jwtToken)
+        valid = parsedToken.exp*1000 > new Date()
+      }
+    } catch (error) { 
+      console.error(error)
     }
-    initApiGatewayClient()
+
+    if (valid) {
+      cognitoUser = new CognitoUser({ Username: parsedToken['cognito:username'], Pool: userPool })
+      cognitoUser.signInUserSession = signInUserSession
+
+      store.cognitoUser = cognitoUser
+      setCredentials(cognitoUser)
+    } else {
+      logout()
+    }
   }
+}
+
+function parseJwt (token) {
+  var base64Url = token.split('.')[1]
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+  return JSON.parse(window.atob(base64))
 }
 
 export function register(email, password) {
@@ -70,60 +89,73 @@ export function register(email, password) {
   })
 }
 
+// This is a pretty crazy mess.
+//
+// Basically, this is a login function that tries one of two ways to login
+// and returns a promise that resolves or rejects based on login success
+// It's hyper complicated and doesn't need to be and should be simplified 
+// once we get rid of the custom login.
 export function login(email, password) {
-  let localCognitoUser = new CognitoUser({
-    Username: email || '', // blank user name if we aren't using username and password
-    Pool: new CognitoUserPool(poolData)
-  })
+  let cognitoUser
 
-  if (email && password) {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    if (window.location.hash) { // assume we're grabbing tokens out of the hash
+      // fake the signInUserSession
+      let idToken, accessToken, username
+
+      try {
+        window.location.hash
+          .replace(/^#/, '')
+          .split('&')
+          .map(param => param.split('='))
+          .forEach(param => {
+            // record the id_token and access_token
+            if (param[0] === 'id_token') idToken = param[1]
+            if (param[0] === 'access_token') accessToken = param[1]
+          })
+
+        if (idToken) { // we get both, we set both, but we only really care about the idToken
+          username = parseJwt(idToken)['cognito:username']
+
+          cognitoUser = new CognitoUser({ Username: username, Pool: new CognitoUserPool(poolData) })
+          cognitoUser.signInUserSession = { idToken: { jwtToken: idToken }, accessToken: { jwtToken: accessToken } }
+
+          localStorage.setItem(JSON.stringify(poolData), JSON.stringify(cognitoUser.signInUserSession))
+
+          store.cognitoUser = cognitoUser
+          setCredentials(cognitoUser)
+
+          resolve(cognitoUser)
+        }
+      } 
+      
+      catch (error) {
+        reject(error)
+      }
+
+    } 
+
+    else {
+      cognitoUser = new CognitoUser({
+        Username: email,
+        Pool: new CognitoUserPool(poolData)
+      })
+
       const authenticationDetails = new AuthenticationDetails({
         Username: email,
         Password: password
       })
 
-      localCognitoUser.authenticateUser(authenticationDetails, {
+      cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {
-          store.cognitoUser = localCognitoUser
-
-          setCredentials(store.cognitoUser)
-            .then(resolve)
-            .catch(reject)
+          store.cognitoUser = cognitoUser
+          resolve(setCredentials(store.cognitoUser))
         },
 
         onFailure: reject
       })
-    })
-  } else if (window.location.hash) { // assume we're grabbing tokens out of the hash
-    // fake the signInUserSession
-    localCognitoUser.signInUserSession = {}
-
-    window.location.hash
-      .replace(/^#/,'')
-      .split('&')
-      .map(param => param.split('='))
-      .forEach(param => {
-        // add real data to the fake signInUserSession
-        if (param[0] === 'id_token')
-          localCognitoUser.signInUserSession.idToken = { jwtToken: param[1] }
-
-        if (param[0] === 'access_token')
-          localCognitoUser.signInUserSession.accessToken = { jwtToken: param[1] }
-
-        // will use this value to auto-log out... eventually
-        // if (param[0] === 'expires_in')
-          // console.log(param[1])
-      })
-
-    if (localCognitoUser.signInUserSession.idToken) {
-      localStorage.setItem(JSON.stringify(poolData), JSON.stringify(localCognitoUser.signInUserSession))
-
-      store.cognitoUser = localCognitoUser
-
-      setCredentials(store.cognitoUser)
-    }
-  }
+    } 
+  })
 }
 
 function setCredentials(cognitoUser) {
@@ -134,17 +166,19 @@ function setCredentials(cognitoUser) {
     }
   })
 
-  AWS.config.credentials.refresh((error) => {
-    if (error) {
-      console.error(error)
-      return Promise.reject(error)
-    }
-
-    initApiGatewayClient(AWS.config.credentials)
-    updateAllUserData()
-
-    return apiGatewayClient()
-      .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
+  return new Promise((resolve, reject) => {
+    AWS.config.credentials.refresh((error) => {
+      if (error) {
+        console.error(error)
+        return reject(error)
+      }
+  
+      initApiGatewayClient(AWS.config.credentials)
+      updateAllUserData()
+  
+      return apiGatewayClient()
+        .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
+    })
   })
 }
 
