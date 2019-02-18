@@ -31,3 +31,4 @@ packaged.yaml
 cognito.js
 .idea
 .vscode
+*.iml
