@@ -16,6 +16,14 @@ import { fragments } from 'services/get-fragments'
 // components
 import SignIn from './SignIn'
 import Register from './Register'
+import { apiGatewayClient } from "../services/api";
+
+async function tryAdminCall() {
+    let client = await apiGatewayClient()
+    let response = await client.get('/admin/catalog/visibility', {}, {})
+    console.log(response)
+    return response
+}
 
 // data
 import { cognitoDomain, cognitoClientId } from '../services/api'
@@ -30,6 +38,7 @@ export const NavBar = observer(() => {
 
       <Menu.Item as={Link} to="/getting-started">{fragments.GettingStarted.title}</Menu.Item>
       <Menu.Item as={Link} to="/apis">{fragments.APIs.title}</Menu.Item>
+      <Menu.Item onClick={tryAdminCall}>Test Admin API</Menu.Item>
       
       {insertAuthMenu(isAuthenticated(), cognitoDomain)}
     </Menu>
