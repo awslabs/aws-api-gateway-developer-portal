@@ -12,6 +12,7 @@
 dev-portal/node_modules/*
 !dev-portal/node_modules/swagger-ui/
 dev-portal/node_modules/swagger-ui/*
+!dev-portal/node_modules/swagger-ui/package.json
 !dev-portal/node_modules/swagger-ui/dist/
 
 # built artifacts
