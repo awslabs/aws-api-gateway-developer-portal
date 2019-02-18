@@ -368,6 +368,20 @@ Resources:
                     - :${stageVariables.DevPortalFunctionName}/invocations
                 httpMethod: POST
                 type: aws_proxy
+            delete:
+              security:
+              - user-authorizer:
+                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
             options:
               consumes:
               - application/json
