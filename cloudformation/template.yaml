@@ -409,19 +409,27 @@ Resources:
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
-          /{proxy+}:
-            x-amazon-apigateway-any-method:
+          /admin/catalog/visibility:
+            get:
               security:
               - user-authorizer:
-                - !Join ['', [!Ref 'AWS::StackName', '-resource-server/user.access']]
-                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/user.access']]
+                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
               produces:
               - application/json
-              parameters:
-              - name: proxy
-                in: path
-                required: true
-                type: string
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            post:
+              security:
+              - user-authorizer:
+                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
+              produces:
+              - application/json
               responses: {}
               x-amazon-apigateway-integration:
                 uri: !Join
@@ -459,6 +467,56 @@ Resources:
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
+#          /{proxy+}:
+#            x-amazon-apigateway-any-method:
+#              security:
+#              - user-authorizer:
+#                - !Join ['', [!Ref 'AWS::StackName', '-resource-server/user.access']]
+#                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/user.access']]
+#              produces:
+#              - application/json
+#              parameters:
+#              - name: proxy
+#                in: path
+#                required: true
+#                type: string
+#              responses: {}
+#              x-amazon-apigateway-integration:
+#                uri: !Join
+#                  - ''
+#                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+#                    - :${stageVariables.DevPortalFunctionName}/invocations
+#                httpMethod: POST
+#                type: aws_proxy
+#            options:
+#              consumes:
+#              - application/json
+#              produces:
+#              - application/json
+#              responses:
+#                '200':
+#                  description: 200 response
+#                  schema:
+#                    $ref: "#/definitions/Empty"
+#                  headers:
+#                    Access-Control-Allow-Origin:
+#                      type: string
+#                    Access-Control-Allow-Methods:
+#                      type: string
+#                    Access-Control-Allow-Headers:
+#                      type: string
+#              x-amazon-apigateway-integration:
+#                responses:
+#                  default:
+#                    statusCode: 200
+#                    responseParameters:
+#                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+#                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+#                      method.response.header.Access-Control-Allow-Origin: "'*'"
+#                passthroughBehavior: when_no_match
+#                requestTemplates:
+#                  application/json: "{\"statusCode\": 200}"
+#                type: mock
         definitions:
           Empty:
             type: object

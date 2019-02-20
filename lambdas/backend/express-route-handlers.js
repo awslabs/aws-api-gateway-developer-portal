@@ -77,7 +77,7 @@ function getApiKey(req, res) {
 
     customersController.getApiKeyForCustomer(cognitoUserKey, errFunc, (data) => {
         if (data.items.length === 0) {
-            res.status(404).json('No API Key for customer')
+            res.status(404).json({ error: 'No API Key for customer' })
         } else {
             const item = data.items[0]
             const key = {
@@ -120,7 +120,7 @@ function putSubscription(req, res) {
         }
 
         if (!isUsagePlanInCatalog) {
-            res.status(404).json('Invalid Usage Plan ID')
+            res.status(404).json({ error: 'Invalid Usage Plan ID' })
         } else {
             customersController.subscribe(cognitoUserKey, usagePlanId, error, success)
         }
@@ -141,7 +141,7 @@ function getUsage(req, res) {
 
         // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
         if (!isUsagePlanInCatalog) {
-            res.status(404).json('Invalid Usage Plan ID')
+            res.status(404).json({ error: 'Invalid Usage Plan ID' })
         } else {
             customersController.getApiKeyForCustomer(cognitoUserKey, errFunc, (data) => {
                 const keyId = data.items[0].id
@@ -185,7 +185,7 @@ function deleteSubscription(req, res) {
         const isUsagePlanInCatalog = Boolean(usagePlan)
 
         if (!isUsagePlanInCatalog) {
-            res.status(404).json('Invalid Usage Plan ID')
+            res.status(404).json({ error: 'Invalid Usage Plan ID'})
         } else {
             customersController.unsubscribe(cognitoUserKey, usagePlanId, error, success)
         }
@@ -203,7 +203,7 @@ function postMarketplaceConfirm(req, res) {
             depth: null,
             colors: true
         })}`)
-        res.status(400).json({message: 'Missing AWS Marketplace token'})
+        res.status(400).json({ message: 'Missing AWS Marketplace token' })
     }
 
     console.log(`Marketplace token: ${marketplaceToken}`)
@@ -243,7 +243,7 @@ function putMarketplaceSubscription(req, res) {
         RegistrationToken: marketplaceToken
     }
 
-    // call MMS to crack token into marketplace customer ID and product code
+    // call MMS to crack token into marketpltestSingleAccountId_apiKeysConfigace customer ID and product code
     marketplace.resolveCustomer(params, (err, data) => {
         if (err) {
             console.log(`marketplace error: ${JSON.stringify(err)}`)
@@ -286,6 +286,113 @@ function postFeedback(req, res) {
     }
 }
 
+async function getAdminCatalogVisibility(req, res) {
+    try {
+        let visibility = {}, catalogObject = await catalog()
+
+        visibility.apiGateway = await apigateway.getRestApis().item
+
+        visibility.apiGateway.forEach(async (api) => {
+            api.stages = await apigateway.getStages().item
+        })
+
+        // mark every api gateway managed api-stage in the catalog as visible
+        catalogObject.apiGateway.apis.forEach((catalogEntry) => {
+            visibility.apiGateway[catalogEntry.id].stages[catalogEntry.stage].visibility = true
+        })
+
+        // mark every api in the generic catalog as visible
+        catalogObject.generic.forEach((catalogEntry) => {
+            visibility.generic[catalogEntry.id] = {
+                visibility: true
+            }
+        })
+
+        // mark every other api gateway managed api-stage as not visible
+        visibility.apiGateway.forEach((api) => {
+            api.stages.forEach((stage) => {
+                if(!stage.visibility) stage.visibility = false
+            })
+        })
+
+        res.status(200).json(visibility)
+    } catch (err) {
+        console.log(`error: ${ data }`)
+        // TODO: Should this be 'error' or 'message'?
+        res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+
+async function postAdminCatalogVisibility(req, res) {
+    // for apigateway managed APIs, provide "apiId_stageName"
+    // in the apiKey field
+    if(req.apiKey) {
+        try {
+            let swagger = await apigateway.getExport({
+                restApiId: req.apiKey.split('_')[0],
+                stageName: req.apiKey.split('_')[1],
+                exportType: 'swagger',
+                extensions: 'apigateway'
+            }), params = {
+                Bucket: staticBucketName,
+                Key: 'catalog/',
+                Body: JSON.stringify(swagger)
+            }
+
+            await exports.s3.upload(params).promise()
+
+            res.status(200).json({ message: 'Success' })
+        }
+
+    // for generic swagger, just provide the swagger body
+    } else if(req.swagger) {
+        try {
+            let params = {
+                Bucket: staticBucketName,
+                Key: 'catalog/',
+                Body: JSON.stringify(req.swagger)
+            }
+
+            await exports.s3.upload(params).promise()
+
+            res.status(200).json({ message: 'Success' })
+        }
+    } else {
+        res.status(400).json({ message: 'Invalid input.' })
+    }
+}
+
+async function deleteAdminCatalogVisibility(req, res) {
+    // for apigateway managed APIs, provide "apiId_stageName"
+    // in the apiKey field
+    if(req.apiKey) {
+        let params = {
+            Bucket: staticBucketName,
+            // assumed: apiId_stageName.json is the only format
+            // no yaml, no autodetection based on file contents
+            Key: `catalog/${req.apiKey}.json`
+        }
+
+        await exports.s3.delete(params).promise()
+
+        res.status(200).json({ message: 'Success' })
+
+    // for generic swagger, provide the hashed swagger body
+    // in the id field
+    } else if(req.id) {
+        let params = {
+            Bucket: staticBucketName,
+            Key: `catalog/${req.id}.json`
+        }
+
+        await exports.s3.delete(params).promise()
+
+        res.status(200).json({message: 'Success'})
+    } else {
+        res.status(400).json({message: 'Invalid input.'})
+    }
+}
+
 exports = module.exports = {
     postSignIn,
     getCatalog,
@@ -297,5 +404,9 @@ exports = module.exports = {
     postMarketplaceConfirm,
     putMarketplaceSubscription,
     getFeedback,
-    postFeedback
+    postFeedback,
+    getAdminCatalogVisibility,
+    postAdminCatalogVisibility,
+    deleteAdminCatalogVisibility,
+    s3: new AWS.S3()
 }

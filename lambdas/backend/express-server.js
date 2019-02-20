@@ -16,6 +16,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(awsServerlessExpressMiddleware.eventContext())
 
+// user APIs
 app.post('/signin', handlers.postSignIn)
 app.get('/catalog', handlers.getCatalog)
 app.get('/apikey', handlers.getApiKey)
@@ -28,6 +29,11 @@ app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscr
 app.get('/feedback', handlers.getFeedback)
 app.post('/feedback', handlers.postFeedback)
 
+
+// admin APIs
+app.get('/admin/catalog/visibility', handlers.getAdminCatalogVisibility)
+app.post('/admin/catalog/visibility', handlers.postAdminCatalogVisibility)
+app.delete('/admin/catalog/visibility', handlers.deleteAdminCatalogVisibility)
 
 // The aws-serverless-express library creates a server and listens on a Unix
 // Domain Socket for you, so you can remove the usual call to app.listen.
