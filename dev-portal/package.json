@@ -42,6 +42,6 @@
   "devDependencies": {
     "mobx-react-devtools": "^6.0.3",
     "node-fetch": "^2.3.0",
-    "react-scripts": "2.0.3"
+    "react-scripts": "^2.1.5"
   }
 }

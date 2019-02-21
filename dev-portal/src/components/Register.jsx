@@ -4,10 +4,9 @@
 import React from 'react'
 import { Button, Form, Message, Modal } from 'semantic-ui-react'
 import { Redirect } from 'react-router-dom'
-import { register } from 'services/self'
-import { confirmMarketplaceSubscription } from 'services/api-catalog'
+import { cognitoDomain, cognitoClientId } from '../services/api'
 
- export default class Register extends React.Component {
+export default class Register extends React.Component {
   state = {
     isSubmitting: false,
     signedIn: false,

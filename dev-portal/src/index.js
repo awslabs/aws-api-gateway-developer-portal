@@ -55,11 +55,11 @@ class App extends React.Component {
             <Route path="/dashboard" component={Dashboard} />
             <Route exact path="/apis" component={Apis} />
             <Route path="/apis/:apiId" component={Apis} />
-            <Route path="/login" render={() => (login(), <Redirect to="/" />)}/>
-            <Route path="/logout" render={() => (logout(), <Redirect to="/" />)}/>
+            <Route path="/login" render={() => { login(); return <Redirect to="/" /> }} />
+            <Route path="/logout" render={() => { logout(); return <Redirect to="/" /> }} />
             <Route component={() => <h2>Page not found</h2>} />
           </Switch>
-          {feedbackEnabled && <Feedback /> }
+          {feedbackEnabled && <Feedback />}
         </React.Fragment>
       </BrowserRouter>
     )
