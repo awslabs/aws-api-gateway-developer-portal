@@ -175,6 +175,8 @@ Resources:
         paths:
           /:
             x-amazon-apigateway-any-method:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses:
@@ -224,6 +226,8 @@ Resources:
                 type: mock
           /register:
             post:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -265,6 +269,8 @@ Resources:
                 type: mock
           /marketplace-confirm/{usagePlanId}:
             post:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -306,6 +312,8 @@ Resources:
                 type: mock
           /catalog:
             get:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -347,6 +355,8 @@ Resources:
                 type: mock
           /feedback:
             get:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -358,6 +368,8 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
             post:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -370,8 +382,7 @@ Resources:
                 type: aws_proxy
             delete:
               security:
-              - user-authorizer:
-                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -414,8 +425,7 @@ Resources:
           /admin/catalog/visibility:
             get:
               security:
-              - user-authorizer:
-                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -428,8 +438,7 @@ Resources:
                 type: aws_proxy
             post:
               security:
-              - user-authorizer:
-                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -472,10 +481,7 @@ Resources:
           /{proxy+}:
             x-amazon-apigateway-any-method:
               security:
-              - user-authorizer:
-                - !Join ['', [!Ref 'AWS::StackName', '-resource-server/user.access']]
-                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/user.access']]
-                - !Join ['', [!Ref 'AWS::StackName', '-admin-resource-server/admin.access']]
+              - sigv4: []
               produces:
               - application/json
               parameters:
@@ -520,6 +526,12 @@ Resources:
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
+        securityDefinitions:
+          sigv4:
+            type: "apiKey"
+            name: "Authorization"
+            in: "header"
+            x-amazon-apigateway-authtype: "awsSigv4"
         definitions:
           Empty:
             type: object
@@ -1201,7 +1213,63 @@ Resources:
                 - ':'
                 - !Ref ApiGatewayApi
                 - /prod/*/*
+          - Effect: Deny
+            Action:
+            - execute-api:Invoke
+            Resource: !Join
+              - ''
+              - - 'arn:aws:execute-api:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':'
+                - !Ref ApiGatewayApi
+                - /prod/*/admin/*
       Path: '/'
+
+  CognitoAdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: cognito-identity.amazonaws.com
+          Action: sts:AssumeRoleWithWebIdentity
+          Condition:
+            StringEquals:
+              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
+            'ForAnyValue:StringLike':
+              'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+      - PolicyName: CognitoAuthenticatedRole
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - execute-api:Invoke
+            Resource: !Join
+              - ''
+              - - 'arn:aws:execute-api:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':'
+                - !Ref ApiGatewayApi
+                - /prod/*/*
+
+  CognitoAdminsGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      Description: 'Admin users of the developer portal'
+      GroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
+      # the role we assume is the role associated with the lowest-precedence users group
+      # since admin group has a precedence of 0, it takes priority
+      Precedence: 0
+      RoleArn: !GetAtt CognitoAdminRole.Arn
+      UserPoolId: !Ref CognitoUserPool
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
