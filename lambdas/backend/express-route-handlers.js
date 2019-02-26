@@ -20,6 +20,7 @@ function getUsagePlanFromCatalog(usagePlanId) {
 }
 
 function postSignIn(req, res) {
+    console.log(`POST /signin for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
 
     function errFunc(data) {
@@ -55,12 +56,14 @@ function postSignIn(req, res) {
 }
 
 function getCatalog(req, res) {
+    console.log(`GET /catalog for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     catalog()
         .then(catalog => res.status(200).json(catalog))
         .catch(error => res.status(error.statusCode).json(error))
 }
 
 function getApiKey(req, res) {
+    console.log(`GET /apikey for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
 
     function errFunc(data) {
@@ -96,6 +99,7 @@ function getSubscriptions(req, res) {
 }
 
 function putSubscription(req, res) {
+    console.log(`PUT /subscriptions for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
     const usagePlanId = req.params.usagePlanId
 
@@ -120,6 +124,7 @@ function putSubscription(req, res) {
 }
 
 function getUsage(req, res) {
+    console.log(`GET /usage for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
     const usagePlanId = req.params.usagePlanId
 
@@ -161,6 +166,7 @@ function getUsage(req, res) {
 }
 
 function deleteSubscription(req, res) {
+    console.log(`DELETE /subscriptions for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
     const usagePlanId = req.params.usagePlanId
 
@@ -185,6 +191,7 @@ function deleteSubscription(req, res) {
 }
 
 function postMarketplaceConfirm(req, res) {
+    console.log(`POST /marketplace-confirm for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     // no auth
     // this is the redirect URL for AWS Marketplace products
     // i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.us-east-1.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]
@@ -210,6 +217,7 @@ function postMarketplaceConfirm(req, res) {
 }
 
 function putMarketplaceSubscription(req, res) {
+    console.log(`PUT /marketplace-subscriptions/:usagePlanId for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const marketplaceToken = req.body.token
     const usagePlanId = req.params.usagePlanId
     console.log(`Marketplace token: ${marketplaceToken} usage plan id: ${usagePlanId}`)
@@ -252,6 +260,7 @@ function putMarketplaceSubscription(req, res) {
 }
 
 function getFeedback(req, res) {
+    console.log(`GET /feedback for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     if (!feedbackEnabled) {
         res.status(401).json("Customer feedback not enabled")
     } else {
@@ -267,6 +276,7 @@ function getFeedback(req, res) {
 }
 
 function postFeedback(req, res) {
+    console.log(`POST /feedback for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     const cognitoIdentityId = getCognitoIdentityId(req)
 
     if (!feedbackEnabled) {
@@ -279,6 +289,7 @@ function postFeedback(req, res) {
 }
 
 async function getAdminCatalogVisibility(req, res) {
+    console.log(`GET /admin/catalog/visibility for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     try {
 
         let visibility = { apiGateway: [] }, catalogObject = await catalog(),
@@ -334,6 +345,7 @@ async function getAdminCatalogVisibility(req, res) {
 }
 
 async function postAdminCatalogVisibility(req, res) {
+    console.log(`POST /admin-catalog-visibility for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     // for apigateway managed APIs, provide "apiId_stageName"
     // in the apiKey field
     if(req.body && req.body.apiKey) {
@@ -375,6 +387,7 @@ async function postAdminCatalogVisibility(req, res) {
 }
 
 async function deleteAdminCatalogVisibility(req, res) {
+    console.log(`DELETE /admin/catalog/visibility for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
     // for apigateway managed APIs, provide "apiId_stageName"
     // in the apiKey field
     if(req.body && req.body.apiKey) {
