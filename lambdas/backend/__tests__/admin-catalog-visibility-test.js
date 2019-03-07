@@ -14,6 +14,20 @@ const mockResponseObject = {
 
 jest.mock('../catalog/index')
 
+function generateRequestContext() {
+    return {
+        apiGateway: {
+            event: {
+                requestContext: {
+                    identity: {
+                        cognitoIdentityId: 'qwertyuiop'
+                    }
+                }
+            }
+        }
+    }
+}
+
 describe('getAdminCatalogVisibility', () => {
     test('returns a description of the catalog with visibility', async () => {
         catalog.mockReturnValue(Promise.resolve({
@@ -116,7 +130,7 @@ describe('getAdminCatalogVisibility', () => {
 
 
 
-        await getAdminCatalogVisibility({}, mockResponseObject)
+        await getAdminCatalogVisibility(generateRequestContext(), mockResponseObject)
 
         expect(apigateway.getRestApis).toHaveBeenCalledTimes(1)
         expect(apigateway.getStages).toHaveBeenCalledTimes(4)
@@ -165,7 +179,8 @@ describe('getAdminCatalogVisibility', () => {
 
 describe('postAdminCatalogVisibility', () => {
     test('exports and uploads swagger doc for api gateway managed apis', async () => {
-        let req = { body: { apiKey: 'a1b2c3_prod' } }
+        let req = generateRequestContext()
+        req.body = { apiKey: 'a1b2c3_prod' }
 
         apigateway.getExport = jest.fn().mockReturnValue(promiser({
                 message: 'swagger document'
@@ -195,7 +210,8 @@ describe('postAdminCatalogVisibility', () => {
     })
 
     test('uploads swagger doc for generic apis', async () => {
-        let req = { body: { swagger: { message: 'swagger document' } } }
+        let req = generateRequestContext()
+        req.body = { swagger: { message: 'swagger document' } }
 
         s3.upload = jest.fn().mockReturnValue(promiser())
 
@@ -214,7 +230,7 @@ describe('postAdminCatalogVisibility', () => {
     })
 
     test('rejects requests without apiKey or swagger fields', async () => {
-        let req = {}
+        let req = generateRequestContext()
 
         await postAdminCatalogVisibility(req, mockResponseObject)
 
@@ -225,7 +241,8 @@ describe('postAdminCatalogVisibility', () => {
 
 describe('deleteAdminCatalogVisibility', () => {
     test('deletes swagger doc from s3 for api gateway managed apis', async () => {
-        let req = { body: { apiKey: 'a1b2c3_prod' } }
+        let req = generateRequestContext()
+        req.body =  { apiKey: 'a1b2c3_prod' }
 
         s3.delete = jest.fn().mockReturnValue(promiser())
 
@@ -243,7 +260,8 @@ describe('deleteAdminCatalogVisibility', () => {
     })
 
     test('deletes swagger doc from s3 for generic apis', async () => {
-        let req = { body: { id: 'somebighash123456' } }
+        let req = generateRequestContext()
+        req.body = { id: 'somebighash123456' }
 
         s3.delete = jest.fn().mockReturnValue(promiser())
 
@@ -261,7 +279,7 @@ describe('deleteAdminCatalogVisibility', () => {
     })
 
     test('rejects requests without apiKey or id fields', async () => {
-        let req = {}
+        let req = generateRequestContext()
 
         await deleteAdminCatalogVisibility(req, mockResponseObject)
 
