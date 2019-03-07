@@ -295,10 +295,6 @@ async function getAdminCatalogVisibility(req, res) {
         let visibility = { apiGateway: [] }, catalogObject = await catalog(),
             apis = (await exports.apigateway.getRestApis().promise()).items
 
-        console.log(`network request: ${JSON.stringify(await exports.apigateway.getRestApis().promise(), null, 4)}`)
-
-        console.log(`apis: ${apis}`)
-
         let promises = []
         apis.forEach((api) => {
             promises.push(
@@ -418,6 +414,49 @@ async function deleteAdminCatalogVisibility(req, res) {
     }
 }
 
+async function idempotentSdkGenerationUpdate(parity, id, res) {
+    let sdkGeneration =
+        JSON.parse((await exports.s3.getObject({
+            Bucket: process.env.StaticBucketName,
+            Key: 'sdkGeneration.json'
+        }).promise()).Body)
+
+    if (sdkGeneration[id] !== parity) {
+        sdkGeneration[id] = parity
+
+        await exports.s3.upload({
+            Bucket: process.env.StaticBucketName,
+            Key: 'sdkGeneration.json',
+            Body: JSON.stringify(sdkGeneration)
+        }).promise()
+
+        await exports.lambda.invoke({
+            FunctionName: process.env.CatalogUpdaterFunctionArn,
+            // this API would be more performant if we moved to 'Event' invocations, but then we couldn't signal to
+            // admins when the catalog updater failed to update the catalog; they'd see a 200 and then no change in
+            // behavior.
+            InvocationType: 'RequestResponse',
+            LogType: 'None'
+        }).promise()
+
+        res.status(200).json({message: 'Success'})
+    } else {
+        res.status(200).json({message: 'Success'})
+    }
+}
+
+async function putAdminCatalogSdkGeneration(req, res) {
+    console.log(`PUT /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
+
+    await idempotentSdkGenerationUpdate(true, req.params.id, res)
+}
+
+async function deleteAdminCatalogSdkGeneration(req, res) {
+    console.log(`DELETE /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
+
+    await idempotentSdkGenerationUpdate(false, req.params.id, res)
+}
+
 exports = module.exports = {
     postSignIn,
     getCatalog,
@@ -433,6 +472,9 @@ exports = module.exports = {
     getAdminCatalogVisibility,
     postAdminCatalogVisibility,
     deleteAdminCatalogVisibility,
+    putAdminCatalogSdkGeneration,
+    deleteAdminCatalogSdkGeneration,
     s3: new AWS.S3(),
-    apigateway: new AWS.APIGateway()
+    apigateway: new AWS.APIGateway(),
+    lambda: new AWS.Lambda()
 }
