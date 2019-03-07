@@ -631,6 +631,7 @@ Resources:
           - Effect: Allow
             Action:
             - s3:GetObject
+            - s3:PutObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
@@ -668,6 +669,10 @@ Resources:
                 - :table/
                 - !Ref CustomersTable
                 - /index/MarketplaceCustomerIdIndex
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: !GetAtt CatalogUpdaterLambdaFunction.Arn
           - !If
             - EnableFeedbackSubmission
             - Effect: Allow
@@ -937,6 +942,7 @@ Resources:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
           CustomersTableName: !Ref DevPortalCustomersTableName
+          CatalogUpdaterFunctionArn: !GetAtt CatalogUpdaterLambdaFunction.Arn
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']

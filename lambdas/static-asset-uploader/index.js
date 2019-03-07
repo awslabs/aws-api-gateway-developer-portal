@@ -181,6 +181,11 @@ function createCatalogDirectory(staticBucketName) {
     return exports.s3.upload(params).promise()
 }
 
+function createSdkGenerationFile(staticBucketName) {
+    let params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}' }
+    return exports.s3.upload(params).promise()
+}
+
 function addConfigFile(bucketName, event) {
     let configObject = {
             restApiId: event.ResourceProperties.RestApiId,
@@ -294,21 +299,23 @@ async function handler(event, context) {
 
         if (event.RequestType === "Delete") {
             console.log(`bucketName: ${bucketName}, staticBucketName: ${staticBucketName}`)
-            return exports.cleanS3Bucket(bucketName)
-                .then(() => exports.cleanS3Bucket(staticBucketName))
-                .then(() =>
-                    exports.notifyCFNThatUploadSucceeded({ status: 'delete_success', bucket: bucketName }, event, context))
-                .catch((error) =>
-                    exports.notifyCFNThatUploadFailed(error, event, context))
+            try {
+                await exports.cleanS3Bucket(bucketName)
+                await exports.cleanS3Bucket(staticBucketName)
+                return await exports.notifyCFNThatUploadSucceeded({ status: 'delete_success', bucket: bucketName }, event, context)
+            } catch(error) {
+                await exports.notifyCFNThatUploadFailed(error, event, context)
+            }
         } else if (!event.ResourceProperties.BucketName) {
-            return exports.notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
+            return await exports.notifyCFNThatUploadFailed("Bucket name must be specified! See the SAM template.", event, context)
         } else {
-            return exports.createCatalogDirectory(staticBucketName)
-                .then(() => exports.uploadStaticAssets(bucketName, event, context))
+            await exports.createCatalogDirectory(staticBucketName)
+            await exports.createSdkGenerationFile(staticBucketName)
+            return await exports.uploadStaticAssets(bucketName, event, context)
         }
     } catch(error) {
         console.log(`Caught top-level error:`, error)
-        return notifyCFNThatUploadFailed(error, event, context)
+        return await notifyCFNThatUploadFailed(error, event, context)
     }
 }
 
@@ -319,6 +326,7 @@ exports = module.exports = {
     determineContentType,
     cleanS3Bucket,
     createCatalogDirectory,
+    createSdkGenerationFile,
     generalizeFilePath,
     notifyCFNThatUploadSucceeded,
     notifyCFNThatUploadFailed,

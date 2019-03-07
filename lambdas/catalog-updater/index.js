@@ -168,7 +168,7 @@ function getSwaggerFile(file) {
  * @param {Array} swaggerFileReprs array of swagger file representations, each with a body and path parameter
  * @returns {Object} a 'catalog object' with id, name, and apis properties
  */
-function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
+function usagePlanToCatalogObject(usagePlan, swaggerFileReprs, sdkGeneration) {
   let catalogObject = {
     id: usagePlan.id,
     name: usagePlan.name,
@@ -186,6 +186,9 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
         api.swagger = exports.copyAnyMethod(swaggerFileRepr.body)
         api.id = apiStage.apiId
         api.stage = apiStage.stage
+        console.log(`This api gateway managed API has a key of ${api.id}_${api.stage} and might be in sdkGeneration: ${sdkGeneration[`${api.id}_${api.stage}`]}`)
+        console.log(sdkGeneration)
+        sdkGeneration[`${api.id}_${api.stage}`] ? api.sdkGeneration = true : api.sdkGeneration = false
         catalogObject.apis.push(api)
       })
   })
@@ -212,8 +215,9 @@ function copyAnyMethod(api) {
   return api
 }
 
-function buildCatalog(swaggerFiles) {
+function buildCatalog(swaggerFiles, sdkGeneration) {
   console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
+  console.log(sdkGeneration)
 
   let catalog = {
     apiGateway: [],
@@ -225,13 +229,15 @@ function buildCatalog(swaggerFiles) {
       console.log(`usagePlans: ${JSON.stringify(result.items, null, 4)}`)
       let usagePlans = result.items
       for (let i = 0; i < usagePlans.length; i++) {
-          catalog.apiGateway[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles)
+          catalog.apiGateway[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles, sdkGeneration)
       }
 
         catalog.generic.push(
         ...swaggerFiles.filter(s => s.generic).map(s => {
           s.swagger = s.body
           delete s.body
+          console.log(`This generic API has an id of ${s.id} and sdkGeneration[s.id] === ${sdkGeneration[s.id]}`)
+          sdkGeneration[s.id] ? s.sdkGeneration = true : s.sdkGeneration = false
           return s
         })
       )
@@ -245,38 +251,27 @@ function buildCatalog(swaggerFiles) {
     })
 }
 
-function handler(event, context) {
+async function handler(event, context) {
     console.log(`event: ${JSON.stringify(event, null, 4)}`)
-    // this is really fragile
-    bucketName = _.get(event, 'Records[0].s3.bucket.name')
-    let params = { Bucket: bucketName }
+    bucketName = process.env.BucketName
 
-    return exports.s3.listObjectsV2(params).promise()
-      .then((result) => {
-        console.log(`result: ${JSON.stringify(result, null, 4)}`)
-        let promises = result.Contents
-          .filter(exports.swaggerFileFilter)
-          .map(exports.getSwaggerFile)
+    let sdkGeneration = JSON.parse((await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json' }).promise())
+                        .Body.toString())
+    console.log(sdkGeneration)
 
-        return Promise.all(promises)
-      })
-      .then(exports.buildCatalog)
-      .then((catalogObjects) => {
-        let params = {
-          Bucket: bucketName,
-          Key: 'catalog.json',
-          Body: JSON.stringify(catalogObjects),
-          ContentType: 'application/json'
-        },
-        options = {}
+    let listObjectsResult = await exports.s3.listObjectsV2({ Bucket: bucketName }).promise(),
+        catalog = await exports.buildCatalog(await Promise.all(listObjectsResult.Contents
+                         .filter(exports.swaggerFileFilter)
+                         .map(exports.getSwaggerFile)), sdkGeneration)
 
-        return exports.s3.upload(params, options).promise()
-          .then((response) => console.log(`s3 upload succeeded: ${JSON.stringify(response, null, 4)}`))
-          .catch(/* istanbul ignore next */(error) => console.log('error uploading catalog to s3:', error))
-      })
-      .catch(/* istanbul ignore next */(error) => {
-        console.log(`error operating on bucket ${bucketName}:`, error)
-      })
+    let params = {
+      Bucket: bucketName,
+      Key: 'catalog.json',
+      Body: JSON.stringify(catalog),
+      ContentType: 'application/json'
+    }
+
+    await exports.s3.upload(params).promise()
 }
 
 // make available for unit testing
