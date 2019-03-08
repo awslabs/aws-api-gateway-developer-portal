@@ -36,7 +36,31 @@ function promiser(mockResolveValue, mockRejectedValue) {
     }
 }
 
+function generateResponseContext() {
+    return {
+        status: jest.fn().mockReturnValue({
+            json: jest.fn()
+        })
+    }
+}
+
+function generateRequestContext() {
+    return {
+        apiGateway: {
+            event: {
+                requestContext: {
+                    identity: {
+                        cognitoIdentityId: 'qwertyuiop'
+                    }
+                }
+            }
+        }
+    }
+}
+
 // export helpers
 exports = module.exports = {
-    promiser
+    promiser,
+    generateRequestContext,
+    generateResponseContext
 }
