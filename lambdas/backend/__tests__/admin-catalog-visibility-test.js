@@ -4,7 +4,6 @@ const deleteAdminCatalogVisibility = require('../express-route-handlers').delete
 const s3 = require('../express-route-handlers').s3
 const apigateway = require('../express-route-handlers').apigateway
 const promiser = require('../../setup-jest').promiser
-const routeHandlers = require('../../setup-jest')
 let catalog = require('../catalog/index')
 
 const mockResponseObject = {
