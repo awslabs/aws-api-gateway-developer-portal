@@ -439,22 +439,22 @@ async function idempotentSdkGenerationUpdate(parity, id, res) {
             LogType: 'None'
         }).promise()
 
-        res.status(200).json({message: 'Success'})
+        res.status(200).json({ message: 'Success' })
     } else {
-        res.status(200).json({message: 'Success'})
+        res.status(200).json({ message: 'Success' })
     }
 }
 
 async function putAdminCatalogSdkGeneration(req, res) {
     console.log(`PUT /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
 
-    await idempotentSdkGenerationUpdate(true, req.params.id, res)
+    await exports.idempotentSdkGenerationUpdate(true, req.params.id, res)
 }
 
 async function deleteAdminCatalogSdkGeneration(req, res) {
     console.log(`DELETE /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
 
-    await idempotentSdkGenerationUpdate(false, req.params.id, res)
+    await exports.idempotentSdkGenerationUpdate(false, req.params.id, res)
 }
 
 exports = module.exports = {
@@ -474,6 +474,7 @@ exports = module.exports = {
     deleteAdminCatalogVisibility,
     putAdminCatalogSdkGeneration,
     deleteAdminCatalogSdkGeneration,
+    idempotentSdkGenerationUpdate,
     s3: new AWS.S3(),
     apigateway: new AWS.APIGateway(),
     lambda: new AWS.Lambda()
