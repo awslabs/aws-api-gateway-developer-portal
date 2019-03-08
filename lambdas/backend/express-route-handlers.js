@@ -291,6 +291,46 @@ function postFeedback(req, res) {
     }
 }
 
+function findApiInCatalog(restApiId, stageName, catalog) {
+    let foundApi = null
+
+    // forEach here is inefficient; can't terminate early
+    catalog.apiGateway.forEach((usagePlan) => {
+        usagePlan.apis.forEach((api) => {
+            if (api.id === restApiId && api.stage === stageName)
+                foundApi = api
+        })
+    })
+
+    return foundApi
+}
+
+async function getSdk(req, res) {
+    console.log(`GET /catalog/${req.params.id}/sdk for Cognito ID: ${getCognitoIdentityId(req)}`)
+
+    // note that we only return an SDK if the API is in the catalog
+    // this is important because the lambda function has permission to fetch any API's SDK
+    // we don't want to leak customer API shapes if they have privileged APIs not in the catalog
+    let restApiId = req.params.id.split('_')[0],
+        stageName = req.params.id.split('_')[1],
+        catalogObject = findApiInCatalog(restApiId, stageName, await catalog())
+
+    if(!catalogObject) {
+        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.` })
+    } else if(!catalogObject.sdkGeneration) {
+        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.` })
+    } else {
+        let resultsBuffer = (await exports.apigateway.getSdk({
+            restApiId: restApiId,
+            sdkType: req.query.sdkType,
+            stageName: stageName,
+            parameters: req.query.parameters
+        }).promise()).body
+
+        res.attachment().send(resultsBuffer)
+    }
+}
+
 async function getAdminCatalogVisibility(req, res) {
     console.log(`GET /admin/catalog/visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
     try {
@@ -487,6 +527,7 @@ exports = module.exports = {
     putMarketplaceSubscription,
     getFeedback,
     postFeedback,
+    getSdk,
     getAdminCatalogVisibility,
     postAdminCatalogVisibility,
     deleteAdminCatalogVisibility,

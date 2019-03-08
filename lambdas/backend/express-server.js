@@ -28,6 +28,7 @@ app.post('/marketplace-confirm/:usagePlanId', handlers.postMarketplaceConfirm)
 app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscription)
 app.get('/feedback', handlers.getFeedback)
 app.post('/feedback', handlers.postFeedback)
+app.get('/catalog/:id/sdk', handlers.getSdk)
 
 
 // admin APIs
