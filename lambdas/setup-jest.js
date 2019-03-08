@@ -1,5 +1,6 @@
 // jest setup
 global.console.log = jest.fn()
+global.console.dir = jest.fn()
 
 
 // helpers
