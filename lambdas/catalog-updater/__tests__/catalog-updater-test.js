@@ -317,7 +317,7 @@ describe('handler', () => {
 
         // this is the contents of the file sdkGeneration.json in S3
         index.s3.getObject =
-            jest.fn().mockReturnValue(promiser({ Body: new Buffer.from('{ "apiid_stagename": true }') }))
+            jest.fn().mockReturnValue(promiser({ Body: Buffer.from('{ "apiid_stagename": true }') }))
         // these are all the files in the catalog/ directory of the S3 bucket
         index.s3.listObjectsV2 =
             jest.fn(() => true).mockReturnValue(promiser({ Contents: ['listedObjects'] }))

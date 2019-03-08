@@ -414,6 +414,20 @@ async function deleteAdminCatalogVisibility(req, res) {
     }
 }
 
+
+/**
+ * Takes an API id (either in the api gateway manaaged APIID_STAGENAME format or the generic HASHEDID format) and a
+ * parity (desired state) of the sdkGeneration flag for that API, and updates the file sdkGeneration.json in the static
+ * asset bucket in S3. It does this by reading the contents of sdkGeneration.json, then, if the specified API's state
+ * is not already the desired state, it uploads the modified sdkGeneration.json and invokes catalogUpdater to "build"
+ * the changes from sdkGeneration.json into catalog.json.
+ *
+ * Note that this DOES NOT RETURN! Instead, it ends the lambda runtime by calling `res...json()`.
+ *
+ * @param {boolean} parity the desired result of the 'sdkGeneration' flag for the API with 'id' of id
+ * @param {String} id the id of the API to be modified
+ * @param {Object} res an express response object
+ */
 async function idempotentSdkGenerationUpdate(parity, id, res) {
     let sdkGeneration =
         JSON.parse((await exports.s3.getObject({
@@ -430,6 +444,7 @@ async function idempotentSdkGenerationUpdate(parity, id, res) {
             Body: JSON.stringify(sdkGeneration)
         }).promise()
 
+        // call catalogUpdater to build a fresh catalog.json that includes changes from sdkGeneration.json
         await exports.lambda.invoke({
             FunctionName: process.env.CatalogUpdaterFunctionArn,
             // this API would be more performant if we moved to 'Event' invocations, but then we couldn't signal to
