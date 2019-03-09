@@ -41,6 +41,9 @@ function generateResponseContext() {
     return {
         status: jest.fn().mockReturnValue({
             json: jest.fn()
+        }),
+        attachment: jest.fn().mockReturnValue({
+            send: jest.fn()
         })
     }
 }
