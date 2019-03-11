@@ -50,9 +50,9 @@ class Feedback extends React.PureComponent {
         onClose={this.closeModal}
         trigger={
           <div style={{ 
-            display: 'block', 
+            display: 'block',
             position: 'fixed', 
-            top: '50%', 
+            top: '80%',
             right: '-62px', // Adjusted for rotation
             transform: 'rotate(90deg)'
           }}>
