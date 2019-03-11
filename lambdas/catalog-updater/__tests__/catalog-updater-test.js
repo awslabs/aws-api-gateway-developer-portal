@@ -154,26 +154,28 @@ describe('buildCatalog', () => {
                     apis: [{
                         swagger: 'prodSwaggerBody',
                         id: 'a1b2c3d4e5',
-                        stage: 'prod'
+                        stage: 'prod',
+                        sdkGeneration: false
                     }]
                 }],
                 generic: [{
                     swagger: 'genericSwaggerBody',
                     id: 'somehugehash',
-                    generic: true
+                    generic: true,
+                    sdkGeneration: false
                 }]
             }
 
         index.gateway.getUsagePlans = jest.fn().mockReturnValueOnce(promiser({ items: [usagePlan] }))
 
-        expect(await index.buildCatalog(swaggerFileReprs)).toEqual(expectedCatalog)
+        expect(await index.buildCatalog(swaggerFileReprs, {})).toEqual(expectedCatalog)
     })
 })
 
 describe('usagePlanToCatalogObject', () => {
 
-    let firstValidApi = { swagger: 'prodSwaggerBody', id: 'a1b2c3d4e5', stage: 'prod' }
-    let secondValidApi = { swagger: 'gammaSwaggerBody', id: 'a1b2c3d4e5', stage: 'gamma' }
+    let firstValidApi = { swagger: 'prodSwaggerBody', id: 'a1b2c3d4e5', stage: 'prod', sdkGeneration: false }
+    let secondValidApi = { swagger: 'gammaSwaggerBody', id: 'a1b2c3d4e5', stage: 'gamma', sdkGeneration: false }
 
     let usagePlan = {
         id: 'MYID',
@@ -194,7 +196,7 @@ describe('usagePlanToCatalogObject', () => {
             { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
         ]
 
-        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
 
         expect(catalogObject.apis.length).toEqual(2)
         expect(catalogObject.apis[0]).toEqual(firstValidApi)
@@ -206,7 +208,7 @@ describe('usagePlanToCatalogObject', () => {
             { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
         ]
 
-        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
 
         expect(catalogObject.apis.length).toEqual(0)
     })
@@ -214,7 +216,7 @@ describe('usagePlanToCatalogObject', () => {
     test('correctly handles empty swaggerFileReprs', async () => {
         const swaggerFileReprs = []
 
-        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
 
         expect(catalogObject.apis.length).toEqual(0)
     })
@@ -295,11 +297,15 @@ describe('copyAnyMethod', () => {
 })
 
 describe('handler', () => {
+    afterEach(() => {
+        delete process.env.BucketName;
+    })
+
     test('should fetch from S3 and upload to S3 when run', async () => {
         // this is a very abstract test
         // we just want to verify that we hand data around correctly
         // so, string tokens used in place of actual data
-        let mockEvent = { Records: [{ s3: { bucket: { name: 'bucketName' } } }] },
+        let mockEvent = {},
             expectedUploadParams = {
                 Bucket: 'bucketName',
                 Key: 'catalog.json',
@@ -307,6 +313,12 @@ describe('handler', () => {
                 Body: '"catalog"'
             }
 
+        process.env.BucketName = 'bucketName'
+
+        // this is the contents of the file sdkGeneration.json in S3
+        index.s3.getObject =
+            jest.fn().mockReturnValue(promiser({ Body: Buffer.from('{ "apiid_stagename": true }') }))
+        // these are all the files in the catalog/ directory of the S3 bucket
         index.s3.listObjectsV2 =
             jest.fn(() => true).mockReturnValue(promiser({ Contents: ['listedObjects'] }))
         index.swaggerFileFilter =
@@ -320,6 +332,8 @@ describe('handler', () => {
 
         await index.handler(mockEvent, {})
 
+        expect(index.s3.getObject).toBeCalledTimes(1)
+        expect(index.s3.getObject).toBeCalledWith({ Bucket: 'bucketName', Key: 'sdkGeneration.json' })
         expect(index.s3.listObjectsV2).toBeCalledTimes(1)
         expect(index.s3.listObjectsV2).toBeCalledWith({ Bucket: 'bucketName' })
         expect(index.swaggerFileFilter).toBeCalledTimes(1)
@@ -327,8 +341,8 @@ describe('handler', () => {
         expect(index.getSwaggerFile).toBeCalledTimes(1)
         expect(index.getSwaggerFile).toBeCalledWith('listedObjects', expect.anything(), expect.anything())
         expect(index.buildCatalog).toBeCalledTimes(1)
-        expect(index.buildCatalog).toBeCalledWith(['swagger'])
+        expect(index.buildCatalog).toBeCalledWith(['swagger'], { 'apiid_stagename': true })
         expect(index.s3.upload).toBeCalledTimes(1)
-        expect(index.s3.upload).toBeCalledWith(expectedUploadParams, expect.any(Object))
+        expect(index.s3.upload).toBeCalledWith(expectedUploadParams)
     })
 })

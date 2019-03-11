@@ -16,9 +16,17 @@ import { fragments } from 'services/get-fragments'
 // components
 import SignIn from './SignIn'
 import Register from './Register'
+import { apiGatewayClient } from "../services/api";
 
 // data
-import { cognitoDomain, cognitoClientId } from '../services/api'
+import {cognitoDomain, cognitoClientId} from '../services/api'
+
+async function tryAdminCall() {
+    let client = await apiGatewayClient()
+    let response = await client.get('/admin/catalog/visibility', {}, {})
+    console.log(response)
+    return response
+}
 
 export const NavBar = observer(() => {
   return (
@@ -30,6 +38,7 @@ export const NavBar = observer(() => {
 
       <Menu.Item as={Link} to="/getting-started">{fragments.GettingStarted.title}</Menu.Item>
       <Menu.Item as={Link} to="/apis">{fragments.APIs.title}</Menu.Item>
+      <Menu.Item as="a" onClick={tryAdminCall}>Test Admin API</Menu.Item>
       
       {insertAuthMenu(isAuthenticated(), cognitoDomain)}
     </Menu>
@@ -47,6 +56,7 @@ function insertAuthMenu(authenticated, cognitoDomain) {
       </Menu.Menu>
     )
   } else {
+      //remove this conditional logic
     if (cognitoDomain) {
       return (
         <Menu.Menu position="right">
@@ -54,8 +64,8 @@ function insertAuthMenu(authenticated, cognitoDomain) {
           <Menu.Item key="register" as="a" href={`${cognitoDomain}/signup?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`}>Register</Menu.Item>
         </Menu.Menu>
       )
-    } 
-    
+    }
+
     else {
       return (
         <Menu.Menu position="right">

@@ -20,7 +20,7 @@ const usagePlans = function() {
   return s3.getObject(params).promise()
     .then((catalog) => {
       let cleanCatalog = JSON.parse(catalog.Body.toString())
-      console.log(`catalog: ${cleanCatalog}`)
+      console.log(`catalog: ${ JSON.stringify(cleanCatalog, null, 4) }`)
       usagePlanCatalog = cleanCatalog
       return usagePlanCatalog
     })

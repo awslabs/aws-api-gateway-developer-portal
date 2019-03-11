@@ -110,7 +110,7 @@ apigClientFactory.newClient = function (config) {
             verb: 'GET',
             path: pathComponent + path,
             headers: apiGateway.core.utils.parseParametersToObject(params, []),
-            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['start', 'end']),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['start', 'end', 'sdkType', 'parameters']),
             body: body
         };
 

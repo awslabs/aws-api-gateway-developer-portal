@@ -1,8 +1,7 @@
 const customersController = require('./_common/customers-controller.js')
 const feedbackController = require('./_common/feedback-controller.js')
-const catalog = require('./catalog/index.js')
 const AWS = require('aws-sdk')
-const apigateway = new AWS.APIGateway()
+const catalog = require('./catalog/index')
 
 
 // replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
@@ -22,6 +21,7 @@ function getUsagePlanFromCatalog(usagePlanId) {
 
 function postSignIn(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`POST /signin for Cognito ID: ${cognitoIdentityId}`)
 
     function errFunc(data) {
         console.log(`error: ${data}`)
@@ -56,6 +56,7 @@ function postSignIn(req, res) {
 }
 
 function getCatalog(req, res) {
+    console.log(`GET /catalog for Cognito ID: ${getCognitoIdentityId(req)}`)
     catalog()
         .then(catalog => res.status(200).json(catalog))
         .catch(error => res.status(error.statusCode).json(error))
@@ -63,6 +64,7 @@ function getCatalog(req, res) {
 
 function getApiKey(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`GET /apikey for Cognito ID: ${cognitoIdentityId}`)
 
     function errFunc(data) {
         console.log(`error: ${data}`)
@@ -71,7 +73,7 @@ function getApiKey(req, res) {
 
     customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
         if (data.items.length === 0) {
-            res.status(404).json('No API Key for customer')
+            res.status(404).json({ error: 'No API Key for customer' })
         } else {
             const item = data.items[0]
             const key = {
@@ -84,20 +86,22 @@ function getApiKey(req, res) {
 }
 
 function getSubscriptions(req, res) {
-    console.log(`GET /subscriptions for Cognito ID: ${req.apiGateway.event.requestContext.identity.cognitoIdentityId}`)
+    let cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`GET /subscriptions for Cognito ID: ${cognitoIdentityId}`)
 
     function errFunc(data) {
         console.log(`error: ${data}`)
         res.status(500).json(data)
     }
 
-    customersController.getUsagePlansForCustomer(req.apiGateway.event.requestContext.identity.cognitoIdentityId, errFunc, (data) => {
+    customersController.getUsagePlansForCustomer(cognitoIdentityId, errFunc, (data) => {
         res.status(200).json(data.items)
     })
 }
 
 function putSubscription(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`PUT /subscriptions for Cognito ID: ${cognitoIdentityId}`)
     const usagePlanId = req.params.usagePlanId
 
     getUsagePlanFromCatalog(usagePlanId).then((usagePlan) => {
@@ -113,7 +117,7 @@ function putSubscription(req, res) {
         }
 
         if (!isUsagePlanInCatalog) {
-            res.status(404).json('Invalid Usage Plan ID')
+            res.status(404).json({ error: 'Invalid Usage Plan ID' })
         } else {
             customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
         }
@@ -122,6 +126,7 @@ function putSubscription(req, res) {
 
 function getUsage(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`GET /usage for Cognito ID: ${cognitoIdentityId}`)
     const usagePlanId = req.params.usagePlanId
 
     function errFunc(data) {
@@ -134,7 +139,7 @@ function getUsage(req, res) {
 
         // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
         if (!isUsagePlanInCatalog) {
-            res.status(404).json('Invalid Usage Plan ID')
+            res.status(404).json({ error: 'Invalid Usage Plan ID' })
         } else {
             customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
                 const keyId = data.items[0].id
@@ -147,7 +152,7 @@ function getUsage(req, res) {
                     limit: 1000
                 }
 
-                apigateway.getUsage(params, (err, usageData) => {
+                exports.apigateway.getUsage(params, (err, usageData) => {
                     if (err) {
                         console.log(`get usage err ${JSON.stringify(err)}`)
                         errFunc(err)
@@ -163,6 +168,7 @@ function getUsage(req, res) {
 
 function deleteSubscription(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`DELETE /subscriptions for Cognito ID: ${cognitoIdentityId}`)
     const usagePlanId = req.params.usagePlanId
 
     function error(data) {
@@ -178,7 +184,7 @@ function deleteSubscription(req, res) {
         const isUsagePlanInCatalog = Boolean(usagePlan)
 
         if (!isUsagePlanInCatalog) {
-            res.status(404).json('Invalid Usage Plan ID')
+            res.status(404).json({ error: 'Invalid Usage Plan ID'})
         } else {
             customersController.unsubscribe(cognitoIdentityId, usagePlanId, error, success)
         }
@@ -186,6 +192,7 @@ function deleteSubscription(req, res) {
 }
 
 function postMarketplaceConfirm(req, res) {
+    console.log(`POST /marketplace-confirm for Cognito ID: ${getCognitoIdentityId(req)}`)
     // no auth
     // this is the redirect URL for AWS Marketplace products
     // i.e. https://YOUR_API_GATEWAY_API_ID.execute-api.us-east-1.amazonaws.com/prod/marketplace-confirm/[USAGE_PLAN_ID]
@@ -196,7 +203,7 @@ function postMarketplaceConfirm(req, res) {
             depth: null,
             colors: true
         })}`)
-        res.status(400).json({message: 'Missing AWS Marketplace token'})
+        res.status(400).json({ message: 'Missing AWS Marketplace token' })
     }
 
     console.log(`Marketplace token: ${marketplaceToken}`)
@@ -211,10 +218,12 @@ function postMarketplaceConfirm(req, res) {
 }
 
 function putMarketplaceSubscription(req, res) {
+    const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`PUT /marketplace-subscriptions/:usagePlanId for Cognito ID: ${cognitoIdentityId}`)
+
     const marketplaceToken = req.body.token
     const usagePlanId = req.params.usagePlanId
     console.log(`Marketplace token: ${marketplaceToken} usage plan id: ${usagePlanId}`)
-    const cognitoIdentityId = getCognitoIdentityId(req)
     console.log(`cognito id: ${cognitoIdentityId}`)
 
     function error(data) {
@@ -236,7 +245,7 @@ function putMarketplaceSubscription(req, res) {
         RegistrationToken: marketplaceToken
     }
 
-    // call MMS to crack token into marketplace customer ID and product code
+    // call MMS to crack token into marketpltestSingleAccountId_apiKeysConfigace customer ID and product code
     marketplace.resolveCustomer(params, (err, data) => {
         if (err) {
             console.log(`marketplace error: ${JSON.stringify(err)}`)
@@ -253,6 +262,8 @@ function putMarketplaceSubscription(req, res) {
 }
 
 function getFeedback(req, res) {
+    console.log(`GET /feedback for Cognito ID: ${getCognitoIdentityId(req)}`)
+
     if (!feedbackEnabled) {
         res.status(401).json("Customer feedback not enabled")
     } else {
@@ -269,6 +280,7 @@ function getFeedback(req, res) {
 
 function postFeedback(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
+    console.log(`POST /feedback for Cognito ID: ${cognitoIdentityId}`)
 
     if (!feedbackEnabled) {
         res.status(401).json("Customer feedback not enabled")
@@ -277,6 +289,230 @@ function postFeedback(req, res) {
             .then(() => res.status(200).json('success'))
             .catch((err) => res.status(500).json(err))
     }
+}
+
+function findApiInCatalog(restApiId, stageName, catalog) {
+    let foundApi = null
+
+    // forEach here is inefficient; can't terminate early
+    catalog.apiGateway.forEach((usagePlan) => {
+        usagePlan.apis.forEach((api) => {
+            if (api.id === restApiId && api.stage === stageName)
+                foundApi = api
+        })
+    })
+
+    return foundApi
+}
+
+async function getSdk(req, res) {
+    console.log(`GET /catalog/${req.params.id}/sdk for Cognito ID: ${getCognitoIdentityId(req)}`)
+
+    // note that we only return an SDK if the API is in the catalog
+    // this is important because the lambda function has permission to fetch any API's SDK
+    // we don't want to leak customer API shapes if they have privileged APIs not in the catalog
+    let restApiId = req.params.id.split('_')[0],
+        stageName = req.params.id.split('_')[1],
+        catalogObject = findApiInCatalog(restApiId, stageName, await catalog())
+
+    if(!catalogObject) {
+        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.` })
+    } else if(!catalogObject.sdkGeneration) {
+        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.` })
+    } else {
+        let resultsBuffer = (await exports.apigateway.getSdk({
+            restApiId: restApiId,
+            sdkType: req.query.sdkType,
+            stageName: stageName,
+            parameters: req.query.parameters
+        }).promise()).body
+
+        res.attachment().send(resultsBuffer)
+    }
+}
+
+async function getAdminCatalogVisibility(req, res) {
+    console.log(`GET /admin/catalog/visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
+    try {
+
+        let visibility = { apiGateway: [] }, catalogObject = await catalog(),
+            apis = (await exports.apigateway.getRestApis().promise()).items
+
+        let promises = []
+        apis.forEach((api) => {
+            promises.push(
+                exports.apigateway.getStages({ restApiId: api.id }).promise()
+                    .then((response) => response.item)
+                    .then((stages) => stages.forEach(stage => visibility.apiGateway.push({
+                        id: api.id,
+                        stage: stage.stageName,
+                        visibility: false
+                    })))
+            )
+        })
+        await Promise.all(promises)
+
+        console.dir(visibility)
+
+        // mark every api gateway managed api-stage in the catalog as visible
+        catalogObject.apiGateway.forEach((usagePlan) => {
+            usagePlan.apis.forEach((api) => {
+                console.dir(api)
+                visibility.apiGateway.map((apiEntry) => {
+                    if(apiEntry.id === api.id && apiEntry.stage === api.stage) apiEntry.visibility = true
+                    return apiEntry
+                })
+            })
+        })
+
+        // mark every api in the generic catalog as visible
+        catalogObject.generic.forEach((catalogEntry) => {
+            visibility.generic = {}
+
+            visibility.generic[catalogEntry.id] = {
+                visibility: true
+            }
+        })
+
+        res.status(200).json(visibility)
+    } catch (err) {
+        console.error(`error: ${ err.stack }`)
+
+        // TODO: Should this be 'error' or 'message'?
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
+}
+
+async function postAdminCatalogVisibility(req, res) {
+    console.log(`POST /admin-catalog-visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
+    // for apigateway managed APIs, provide "apiId_stageName"
+    // in the apiKey field
+    if(req.body && req.body.apiKey) {
+        // try {
+            let swagger = await exports.apigateway.getExport({
+                restApiId: req.body.apiKey.split('_')[0],
+                stageName: req.body.apiKey.split('_')[1],
+                exportType: 'swagger',
+                extensions: 'apigateway'
+            }).promise()
+
+            let params = {
+                Bucket: process.env.StaticBucketName,
+                Key: 'catalog/',
+                Body: JSON.stringify(swagger)
+            }
+
+            await exports.s3.upload(params).promise()
+
+            res.status(200).json({ message: 'Success' })
+        // }
+
+    // for generic swagger, just provide the swagger body
+    } else if(req.body && req.body.swagger) {
+        // try {
+            let params = {
+                Bucket: process.env.StaticBucketName,
+                Key: 'catalog/',
+                Body: JSON.stringify(req.body.swagger)
+            }
+
+            await exports.s3.upload(params).promise()
+
+            res.status(200).json({ message: 'Success' })
+        // }
+    } else {
+        res.status(400).json({ message: 'Invalid input' })
+    }
+}
+
+async function deleteAdminCatalogVisibility(req, res) {
+    console.log(`DELETE /admin/catalog/visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
+    // for apigateway managed APIs, provide "apiId_stageName"
+    // in the apiKey field
+    if(req.body && req.body.apiKey) {
+        let params = {
+            Bucket: process.env.StaticBucketName,
+            // assumed: apiId_stageName.json is the only format
+            // no yaml, no autodetection based on file contents
+            Key: `catalog/${ req.body.apiKey }.json`
+        }
+
+        await exports.s3.delete(params).promise()
+
+        res.status(200).json({ message: 'Success' })
+
+    // for generic swagger, provide the hashed swagger body
+    // in the id field
+    } else if(req.body && req.body.id) {
+        let params = {
+            Bucket: process.env.StaticBucketName,
+            Key: `catalog/${ req.body.id }.json`
+        }
+
+        await exports.s3.delete(params).promise()
+
+        res.status(200).json({ message: 'Success' })
+    } else {
+        res.status(400).json({ message: 'Invalid input' })
+    }
+}
+
+
+/**
+ * Takes an API id (either in the api gateway manaaged APIID_STAGENAME format or the generic HASHEDID format) and a
+ * parity (desired state) of the sdkGeneration flag for that API, and updates the file sdkGeneration.json in the static
+ * asset bucket in S3. It does this by reading the contents of sdkGeneration.json, then, if the specified API's state
+ * is not already the desired state, it uploads the modified sdkGeneration.json and invokes catalogUpdater to "build"
+ * the changes from sdkGeneration.json into catalog.json.
+ *
+ * Note that this DOES NOT RETURN! Instead, it ends the lambda runtime by calling `res...json()`.
+ *
+ * @param {boolean} parity the desired result of the 'sdkGeneration' flag for the API with 'id' of id
+ * @param {String} id the id of the API to be modified
+ * @param {Object} res an express response object
+ */
+async function idempotentSdkGenerationUpdate(parity, id, res) {
+    let sdkGeneration =
+        JSON.parse((await exports.s3.getObject({
+            Bucket: process.env.StaticBucketName,
+            Key: 'sdkGeneration.json'
+        }).promise()).Body)
+
+    if (sdkGeneration[id] !== parity) {
+        sdkGeneration[id] = parity
+
+        await exports.s3.upload({
+            Bucket: process.env.StaticBucketName,
+            Key: 'sdkGeneration.json',
+            Body: JSON.stringify(sdkGeneration)
+        }).promise()
+
+        // call catalogUpdater to build a fresh catalog.json that includes changes from sdkGeneration.json
+        await exports.lambda.invoke({
+            FunctionName: process.env.CatalogUpdaterFunctionArn,
+            // this API would be more performant if we moved to 'Event' invocations, but then we couldn't signal to
+            // admins when the catalog updater failed to update the catalog; they'd see a 200 and then no change in
+            // behavior.
+            InvocationType: 'RequestResponse',
+            LogType: 'None'
+        }).promise()
+
+        res.status(200).json({ message: 'Success' })
+    } else {
+        res.status(200).json({ message: 'Success' })
+    }
+}
+
+async function putAdminCatalogSdkGeneration(req, res) {
+    console.log(`PUT /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${getCognitoIdentityId(req)}`)
+
+    await exports.idempotentSdkGenerationUpdate(true, req.params.id, res)
+}
+
+async function deleteAdminCatalogSdkGeneration(req, res) {
+    console.log(`DELETE /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${getCognitoIdentityId(req)}`)
+
+    await exports.idempotentSdkGenerationUpdate(false, req.params.id, res)
 }
 
 exports = module.exports = {
@@ -290,5 +526,15 @@ exports = module.exports = {
     postMarketplaceConfirm,
     putMarketplaceSubscription,
     getFeedback,
-    postFeedback
+    postFeedback,
+    getSdk,
+    getAdminCatalogVisibility,
+    postAdminCatalogVisibility,
+    deleteAdminCatalogVisibility,
+    putAdminCatalogSdkGeneration,
+    deleteAdminCatalogSdkGeneration,
+    idempotentSdkGenerationUpdate,
+    s3: new AWS.S3(),
+    apigateway: new AWS.APIGateway(),
+    lambda: new AWS.Lambda()
 }

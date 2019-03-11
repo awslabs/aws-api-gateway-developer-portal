@@ -159,12 +159,19 @@ export function login(email, password) {
 }
 
 function setCredentials(cognitoUser) {
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: cognitoIdentityPoolId,
-    Logins: {
-      [getCognitoLoginKey()]: cognitoUser.signInUserSession.idToken.jwtToken
-    }
-  })
+  let preferred_role =
+      parseJwt(cognitoUser.signInUserSession.idToken.jwtToken)['cognito:preferred_role'],
+      params = {
+          IdentityPoolId: cognitoIdentityPoolId,
+          Logins: {
+              [getCognitoLoginKey()]: cognitoUser.signInUserSession.idToken.jwtToken
+          }
+      }
+
+  if(preferred_role)
+    params.RoleArn = preferred_role
+
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials(params)
 
   return new Promise((resolve, reject) => {
     AWS.config.credentials.refresh((error) => {
