@@ -14,6 +14,22 @@ function getCognitoIdentityId(req) {
     return req.apiGateway.event.requestContext.identity.cognitoIdentityId
 }
 
+// strategy borrowed from: https://serverless-stack.com/chapters/mapping-cognito-identity-id-and-user-pool-id.html
+function getCognitoUserId(req) {
+    const authProvider = req.apiGateway.event.requestContext.identity.cognitoAuthenticationProvider;
+
+    // Cognito authentication provider looks like:
+    // cognito-idp.us-east-1.amazonaws.com/us-east-1_xxxxxxxxx,cognito-idp.us-east-1.amazonaws.com/us-east-1_aaaaaaaaa:CognitoSignIn:qqqqqqqq-1111-2222-3333-rrrrrrrrrrrr
+    // Where us-east-1_aaaaaaaaa is the User Pool id
+    // And qqqqqqqq-1111-2222-3333-rrrrrrrrrrrr is the User Pool User Id
+    const parts = authProvider.split(':'),
+          userPoolIdParts = parts[parts.length - 3].split('/'),
+          userPoolId = userPoolIdParts[userPoolIdParts.length - 1],
+          userPoolUserId = parts[parts.length - 1]
+
+    return userPoolUserId
+}
+
 function getUsagePlanFromCatalog(usagePlanId) {
     return catalog()
         .then((catalog) => catalog.apiGateway.find(usagePlan => usagePlan.id === usagePlanId))
@@ -22,6 +38,8 @@ function getUsagePlanFromCatalog(usagePlanId) {
 function postSignIn(req, res) {
     const cognitoIdentityId = getCognitoIdentityId(req)
     console.log(`POST /signin for Cognito ID: ${cognitoIdentityId}`)
+
+    const cognitoUserId = getCognitoUserId(req)
 
     function errFunc(data) {
         console.log(`error: ${data}`)
@@ -35,20 +53,20 @@ function postSignIn(req, res) {
         if (data.items.length === 0) {
             console.log(`No API Key found for customer ${cognitoIdentityId}`)
 
-            customersController.createApiKey(cognitoIdentityId, errFunc, (createData) => {
-                console.log(`Create API Key data: ${createData}`)
+            customersController.createApiKey(cognitoIdentityId, cognitoUserId, errFunc, (createData) => {
+                console.log(`Create API Key data: ${JSON.stringify(createData, null, 4)}`)
                 const keyId = createData.id
 
                 console.log(`Got key ID ${keyId}`)
 
-                customersController.ensureCustomerItem(cognitoIdentityId, keyId, errFunc, () => {
-                    res.status(200).json({})
-                })
+                customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId)
+                    .then(() => res.status(200).json({}))
+                    .catch(errFunc)
             })
         } else {
             const keyId = data.items[0].id
 
-            customersController.ensureCustomerItem(cognitoIdentityId, keyId, errFunc, () => {
+            customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc, () => {
                 res.status(200).json({})
             })
         }
