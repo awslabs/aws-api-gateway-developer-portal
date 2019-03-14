@@ -110,11 +110,18 @@ Parameters:
     Description: Only applicable if creating a custom domain name for your dev portal. If true, skips creating a Route53 HostedZone and RecordSet. You'll need to provide your own nameserver hosting in place of Route53.
     Default: 'false'
 
+  DevelopmentMode:
+    Type: String
+    Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, etc.) for easier development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
+    Default: 'false'
+
 Conditions:
-  UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
-  NoCustomDomainName: !Not [ !Condition UseCustomDomainName ]
+  UseCustomDomainName: !And [!And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]], !Condition NotDevelopmentMode]
+  NoCustomDomainName: !And [!Not [ !Condition UseCustomDomainName ], !Condition NotDevelopmentMode]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
   EnableFeedbackSubmission: !Not [!Equals [!Ref DevPortalAdminEmail, '']]
+  DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
+  NotDevelopmentMode: !Not [!Condition DevelopmentMode]
 
 Resources:
   ApiGatewayApi:
@@ -504,17 +511,18 @@ Resources:
 
   DevPortalSiteS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
+    Condition: 'NotDevelopmentMode'
     Properties:
-     Bucket: !Ref DevPortalSiteS3Bucket
-     PolicyDocument:
-       Statement:
-         - Action: 's3:GetObject'
-           Effect: Allow
-           Resource: !Sub 'arn:aws:s3:::${DevPortalSiteS3Bucket}/*'
-           Principal:
-             AWS: !Sub >-
-               arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
-               ${CloudFrontOriginAccessIdentity}
+      Bucket: !Ref DevPortalSiteS3Bucket
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject'
+            Effect: Allow
+            Resource: !Sub 'arn:aws:s3:::${DevPortalSiteS3Bucket}/*'
+            Principal:
+              AWS: !Sub >-
+                arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
+                ${CloudFrontOriginAccessIdentity}
 
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
@@ -1056,8 +1064,8 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
-      CallbackURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
-      LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+      CallbackURL: !If [ DevelopmentMode, ['http://localhost:3000/login', !Join ['', 'http://',!GetAtt DevPortalSiteS3Bucket.RegionalDomainName]], [!Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]]]
+      LogoutURL: !If [ DevelopmentMode, ['http://localhost:3000', !Join ['', 'http://',!GetAtt DevPortalSiteS3Bucket.RegionalDomainName]], [!Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]]]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [ "implicit" ]
       AllowedOAuthScopes: [ "openid" ]
@@ -1281,10 +1289,12 @@ Resources:
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
+      DevelopmentMode: !Ref DevelopmentMode
       FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
 
   CloudFrontOriginAccessIdentity:
     Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Condition: 'NotDevelopmentMode'
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: !Ref 'AWS::StackName'
@@ -1378,11 +1388,11 @@ Resources:
 
 Outputs:
   WebsiteURL:
-    Value: !If [
+    Value: !If [DevelopmentMode, !Join['', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html'], !If [
                   UseCustomDomainName,
                   !Join ['', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
                   !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
-               ]
+               ]]
     Description: CloudFront URL for website
 
   CustomWebsiteURL:
