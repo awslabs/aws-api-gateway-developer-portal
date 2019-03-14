@@ -16,19 +16,28 @@ import Home from 'pages/Home'
 import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
+import { Admin } from 'pages/Admin'
 
 // components
 import AlertPopup from 'components/AlertPopup'
 import NavBar from 'components/NavBar'
 import Feedback from './components/Feedback'
 
-import { init, login, logout } from 'services/self'
+import { isAdmin, init, login, logout } from 'services/self'
 import './index.css';
 
 // TODO: Feedback should be enabled if
 // the following is true && the current
 // user is not an administrator
 const feedbackEnabled = window.config.feedbackEnabled
+
+export const AdminRoute = ({component: Component, ...rest}) => (
+  <Route {...rest} render={(props) => (
+    isAdmin()
+      ? <Component {...props} />
+      : <Redirect to="/" />
+  )} />
+)
 
 class App extends React.Component {
   constructor() {
@@ -53,6 +62,7 @@ class App extends React.Component {
             <Route exact path="/" component={Home} />
             <Route path="/getting-started" component={GettingStarted} />
             <Route path="/dashboard" component={Dashboard} />
+            <AdminRoute exact path="/admin" component={Admin} />
             <Route exact path="/apis" component={Apis} />
             <Route path="/apis/:apiId" component={Apis} />
             <Route path="/login" render={() => { login(); return <Redirect to="/" /> }} />

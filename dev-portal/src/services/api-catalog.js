@@ -36,6 +36,7 @@ export function updateUsagePlansAndApisList(bustCache = false) {
   return catalogPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
     .then(({ data = [] }) => {
+      console.log('awoo: %o', data.apiGateway)
       store.usagePlans = data.apiGateway
       store.apiList = {
         loaded: true,
@@ -44,6 +45,7 @@ export function updateUsagePlansAndApisList(bustCache = false) {
       }
     })
     .catch(() => {
+      console.log('meow')
       store.usagePlans = null
       store.apiList = {
         loaded: true,

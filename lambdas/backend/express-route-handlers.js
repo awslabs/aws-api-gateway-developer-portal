@@ -30,6 +30,28 @@ function getCognitoUserId(req) {
     return userPoolUserId
 }
 
+// See: https://github.com/darkskyapp/string-hash/blob/master/index.js
+function hash(str) {
+  let hash = 5381,
+    i = str.length;
+
+  while (i) {
+    hash = (hash * 33) ^ str.charCodeAt(--i);
+  }
+
+  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+   * integers. Since we want the results to be always positive, convert the
+   * signed int to an unsigned by doing an unsigned bitshift. */
+  return hash >>> 0;
+}
+
+// this returns the key we use in the CustomersTable. It's constructed from the issuer field and the username when we
+// allow multiple identity providers, this will allow google's example@example.com to be distinguishable from
+// Cognito's or Facebook's example@example.com
+function getCognitoKey(req) {
+    return req.apiGateway.event.requestContext.authorizer.claims.iss + ' ' + getCognitoUsername(req)
+}
+
 function getUsagePlanFromCatalog(usagePlanId) {
     return catalog()
         .then((catalog) => catalog.apiGateway.find(usagePlan => usagePlan.id === usagePlanId))
@@ -353,8 +375,12 @@ async function getAdminCatalogVisibility(req, res) {
     console.log(`GET /admin/catalog/visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
     try {
 
-        let visibility = { apiGateway: [] }, catalogObject = await catalog(),
+        let visibility = { apiGateway: [] },
+            catalogObject = await catalog(),
             apis = (await exports.apigateway.getRestApis().promise()).items
+
+        console.log(`network request: ${JSON.stringify(await exports.apigateway.getRestApis().promise(), null, 4)}`)
+        console.log(`apis: ${JSON.stringify(apis, null, 4)}`)
 
         let promises = []
         apis.forEach((api) => {
@@ -363,6 +389,7 @@ async function getAdminCatalogVisibility(req, res) {
                     .then((response) => response.item)
                     .then((stages) => stages.forEach(stage => visibility.apiGateway.push({
                         id: api.id,
+                        name: api.name,
                         stage: stage.stageName,
                         visibility: false
                     })))
@@ -370,12 +397,11 @@ async function getAdminCatalogVisibility(req, res) {
         })
         await Promise.all(promises)
 
-        console.dir(visibility)
+        console.log(`visibility: ${JSON.stringify(visibility, null, 4)}`)
 
         // mark every api gateway managed api-stage in the catalog as visible
         catalogObject.apiGateway.forEach((usagePlan) => {
             usagePlan.apis.forEach((api) => {
-                console.dir(api)
                 visibility.apiGateway.map((apiEntry) => {
                     if(apiEntry.id === api.id && apiEntry.stage === api.stage) apiEntry.visibility = true
                     return apiEntry
@@ -388,7 +414,8 @@ async function getAdminCatalogVisibility(req, res) {
             visibility.generic = {}
 
             visibility.generic[catalogEntry.id] = {
-                visibility: true
+                visibility: true,
+                name: catalogEntry.swagger.info.title || 'Untitled'
             }
         })
 
@@ -403,6 +430,7 @@ async function getAdminCatalogVisibility(req, res) {
 
 async function postAdminCatalogVisibility(req, res) {
     console.log(`POST /admin-catalog-visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
+
     // for apigateway managed APIs, provide "apiId_stageName"
     // in the apiKey field
     if(req.body && req.body.apiKey) {
@@ -411,14 +439,20 @@ async function postAdminCatalogVisibility(req, res) {
                 restApiId: req.body.apiKey.split('_')[0],
                 stageName: req.body.apiKey.split('_')[1],
                 exportType: 'swagger',
-                extensions: 'apigateway'
+                parameters: {
+                    "extensions": "apigateway"
+                }
             }).promise()
+
+            console.log('swagger: ', swagger.body)
 
             let params = {
                 Bucket: process.env.StaticBucketName,
-                Key: 'catalog/',
-                Body: JSON.stringify(swagger)
+                Key: `catalog/${req.body.apiKey}.json`,
+                Body: swagger.body
             }
+
+            console.log('params: ', params)
 
             await exports.s3.upload(params).promise()
 
@@ -430,8 +464,8 @@ async function postAdminCatalogVisibility(req, res) {
         // try {
             let params = {
                 Bucket: process.env.StaticBucketName,
-                Key: 'catalog/',
-                Body: JSON.stringify(req.body.swagger)
+                Key: `catalog/${hash(req.body.swagger)}.json`,
+                Body: req.body.swagger
             }
 
             await exports.s3.upload(params).promise()
@@ -447,24 +481,26 @@ async function deleteAdminCatalogVisibility(req, res) {
     console.log(`DELETE /admin/catalog/visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
     // for apigateway managed APIs, provide "apiId_stageName"
     // in the apiKey field
-    if(req.body && req.body.apiKey) {
+    console.log('delete request:', req)
+    console.log('delete request params:', req.params)
+    if(req.params && req.params.id) {
         let params = {
             Bucket: process.env.StaticBucketName,
             // assumed: apiId_stageName.json is the only format
             // no yaml, no autodetection based on file contents
-            Key: `catalog/${ req.body.apiKey }.json`
+            Key: `catalog/${req.params.id}.json`
         }
 
-        await exports.s3.delete(params).promise()
+        await exports.s3.deleteObject(params).promise()
 
         res.status(200).json({ message: 'Success' })
 
     // for generic swagger, provide the hashed swagger body
     // in the id field
-    } else if(req.body && req.body.id) {
+    } else if(req.params && req.params.genericId) {
         let params = {
             Bucket: process.env.StaticBucketName,
-            Key: `catalog/${ req.body.id }.json`
+            Key: `catalog/${ req.body.genericId }.json`
         }
 
         await exports.s3.delete(params).promise()

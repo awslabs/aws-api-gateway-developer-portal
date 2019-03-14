@@ -632,12 +632,23 @@ Resources:
           - Effect: Allow
             Action:
             - s3:GetObject
+            - s3:DeleteObject
             - s3:PutObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
                 - !Ref ArtifactsS3BucketName
                 - '/*'
+          - Effect: Allow
+            Action:
+            - apigateway:GET
+            Resource: !Join
+              - ''
+              - - 'arn:aws:apigateway:'
+                - !Ref 'AWS::Region'
+                - '::/restapis/'
+                - !Ref ApiGatewayApi
+                - '/*/exports/*'
           - Effect: Allow
             Action:
             - aws-marketplace:ResolveCustomer

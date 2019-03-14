@@ -8,6 +8,7 @@ import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cogn
 import { store } from 'services/state'
 import { updateAllUserData } from 'services/api-catalog'
 import { initApiGatewayClient, apiGatewayClient, cognitoDomain, cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
+import * as jwt_decode from "jwt-decode";
 
 const poolData = {
   UserPoolId: cognitoUserPoolId,
@@ -22,6 +23,12 @@ export function isAuthenticated() {
 
 function getCognitoLoginKey() {
   return `cognito-idp.${cognitoRegion}.amazonaws.com/${cognitoUserPoolId}`
+}
+
+export function isAdmin() {
+  return store.cognitoUser &&
+  `${jwt_decode(store.cognitoUser.signInUserSession.accessToken.jwtToken).scope}`
+    .includes('admin-resource-server/admin.access')
 }
 
 export function init() {
@@ -43,9 +50,9 @@ export function init() {
       setCredentials(cognitoUser)
     })
   } else {
-    let signInUserSession
-    let parsedToken
-    let valid = false
+    let signInUserSession,
+        parsedToken,
+        valid = false
 
     try {
       signInUserSession = JSON.parse(localStorage.getItem(JSON.stringify(poolData)))
