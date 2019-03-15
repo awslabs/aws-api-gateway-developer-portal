@@ -33,7 +33,7 @@ export class ApiManagement extends Component {
             prev => ({ ...prev, apis: res.data }),
             () => {
               console.log('state: %o', this.state)
-              console.log('generic: %o', Object.entries(this.state.apis.generic))
+              // console.log('generic: %o', Object.entries(this.state.apis.generic))
             }
           )
         } else {
