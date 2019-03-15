@@ -27,8 +27,8 @@ function getCognitoLoginKey() {
 
 export function isAdmin() {
   return store.cognitoUser &&
-  `${jwt_decode(store.cognitoUser.signInUserSession.accessToken.jwtToken).scope}`
-    .includes('admin-resource-server/admin.access')
+  `${jwt_decode(store.cognitoUser.signInUserSession.idToken.jwtToken)['cognito:preferred_role']}`
+    .includes('-CognitoAdminRole-')
 }
 
 export function init() {
@@ -57,7 +57,7 @@ export function init() {
     try {
       signInUserSession = JSON.parse(localStorage.getItem(JSON.stringify(poolData)))
       if (signInUserSession) { // this `if` prevents console.error spam
-        parsedToken = parseJwt(signInUserSession.idToken.jwtToken)
+        parsedToken = jwt_decode(signInUserSession.idToken.jwtToken)
         valid = parsedToken.exp*1000 > new Date()
       }
     } catch (error) { 
@@ -74,12 +74,6 @@ export function init() {
       logout()
     }
   }
-}
-
-function parseJwt (token) {
-  var base64Url = token.split('.')[1]
-  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-  return JSON.parse(window.atob(base64))
 }
 
 export function register(email, password) {
@@ -122,7 +116,7 @@ export function login(email, password) {
           })
 
         if (idToken) { // we get both, we set both, but we only really care about the idToken
-          username = parseJwt(idToken)['cognito:username']
+          username = jwt_decode(idToken)['cognito:username']
 
           cognitoUser = new CognitoUser({ Username: username, Pool: new CognitoUserPool(poolData) })
           cognitoUser.signInUserSession = { idToken: { jwtToken: idToken }, accessToken: { jwtToken: accessToken } }
@@ -167,7 +161,7 @@ export function login(email, password) {
 
 function setCredentials(cognitoUser) {
   let preferred_role =
-      parseJwt(cognitoUser.signInUserSession.idToken.jwtToken)['cognito:preferred_role'],
+      jwt_decode(cognitoUser.signInUserSession.idToken.jwtToken)['cognito:preferred_role'],
       params = {
           IdentityPoolId: cognitoIdentityPoolId,
           Logins: {

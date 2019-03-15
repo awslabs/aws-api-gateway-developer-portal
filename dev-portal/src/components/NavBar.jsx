@@ -7,6 +7,8 @@ import { Menu, Image } from 'semantic-ui-react'
 
 import { isAdmin, isAuthenticated, logout } from 'services/self'
 
+import { cognitoDomain, cognitoClientId } from '../services/api'
+
 // mobx
 import { observer } from 'mobx-react'
 
@@ -14,11 +16,15 @@ import { observer } from 'mobx-react'
 import { fragments } from 'services/get-fragments'
 
 // components
-import SignIn from './SignIn'
 import Register from './Register'
 
 export const NavBar = observer(
   class NavBar extends React.Component {
+    getCognitoUrl = (type) => {
+      let redirectUri = `${window.location.protocol}//${window.location.host}/login`
+      return `${cognitoDomain}/${type}?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`
+    }
+
     insertAuthMenu() {
       return isAuthenticated() ?
         (
@@ -29,7 +35,10 @@ export const NavBar = observer(
           </Menu.Menu>
         ) : (
           <Menu.Menu position="right">
-            <SignIn key="signin" trigger={<Menu.Item as="a">Sign In</Menu.Item>} />
+            <Menu.Item key="register" as="a"
+                       href={this.getCognitoUrl('login')}>
+                Sign In
+            </Menu.Item>
             <Register />
           </Menu.Menu>
         )
