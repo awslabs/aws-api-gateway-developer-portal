@@ -409,6 +409,24 @@ async function getAdminCatalogVisibility(req, res) {
             })
         })
 
+        let usagePlans = await exports.apigateway.getUsagePlans().promise()
+
+        // In the case of apiGateway APIs, the client doesn't know if there are usage plan associated or not
+        // so we need to provide that information. This can't be merged with the above loop:
+        // (catalogObject.apiGateway.forEach((usagePlan) => ...
+        // because the catalog only contains *visible* apis, and this loop needs to record the subscribability
+        // of both visible and non-visible APIs.
+        visibility.apiGateway.map(async (apiEntry) => {
+            apiEntry.subscribable = false
+
+            usagePlans.items.forEach((usagePlan) => {
+                usagePlan.apiStages.forEach((apiStage) => {
+                    if(apiEntry.id === apiStage.apiId && apiEntry.stage === apiStage.stage)
+                        apiEntry.subscribable = true
+                })
+            })
+        })
+
         // mark every api in the generic catalog as visible
         catalogObject.generic.forEach((catalogEntry) => {
             visibility.generic = {}
