@@ -379,7 +379,7 @@ async function getAdminCatalogVisibility(req, res) {
             catalogObject = await catalog(),
             apis = (await exports.apigateway.getRestApis().promise()).items
 
-        console.log(`network request: ${JSON.stringify(await exports.apigateway.getRestApis().promise(), null, 4)}`)
+        console.log(`network request: ${JSON.stringify(apis, null, 4)}`)
         console.log(`apis: ${JSON.stringify(apis, null, 4)}`)
 
         let promises = []
@@ -518,10 +518,10 @@ async function deleteAdminCatalogVisibility(req, res) {
     } else if(req.params && req.params.genericId) {
         let params = {
             Bucket: process.env.StaticBucketName,
-            Key: `catalog/${ req.body.genericId }.json`
+            Key: `catalog/${ req.params.genericId }.json`
         }
 
-        await exports.s3.delete(params).promise()
+        await exports.s3.deleteObject(params).promise()
 
         res.status(200).json({ message: 'Success' })
     } else {
@@ -608,5 +608,6 @@ exports = module.exports = {
     idempotentSdkGenerationUpdate,
     s3: new AWS.S3(),
     apigateway: new AWS.APIGateway(),
-    lambda: new AWS.Lambda()
+    lambda: new AWS.Lambda(),
+    hash
 }
