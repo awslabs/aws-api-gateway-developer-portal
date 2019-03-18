@@ -28,7 +28,7 @@ dev-portal/node_modules/swagger-ui/*
 # misc
 npm-debug.log
 .DS_Store
-packaged.yaml
+packaged*.yaml
 cognito.js
 .idea
 .vscode

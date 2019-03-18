@@ -6,6 +6,10 @@ node_js:
 cache: npm
 
 before_install:
+  # install clis in parallel
+#  - pip install --user awscli
+#    pip install --user aws-sam-cli
+#    https://github.com/travis-ci/travis-ci/issues/3139
   - cd dev-portal
   # install everything in dev portal
   - npm install
