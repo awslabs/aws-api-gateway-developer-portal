@@ -1065,8 +1065,24 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
-      CallbackURL: !If [ DevelopmentMode, ['http://localhost:3000/login', !Join ['', 'http://',!GetAtt DevPortalSiteS3Bucket.RegionalDomainName]], [!Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]]]
-      LogoutURL: !If [ DevelopmentMode, ['http://localhost:3000', !Join ['', 'http://',!GetAtt DevPortalSiteS3Bucket.RegionalDomainName]], [!Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]]]
+      CallbackURL: !If [ DevelopmentMode,
+        [
+          'http://localhost:3000/login',
+          !Join [ '', [ 'http://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
+        ],
+        [
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
+        ]
+      ]
+      LogoutURL: !If [ DevelopmentMode,
+        [
+          'http://localhost:3000/login',
+          !Join [ '', [ 'http://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
+        ],
+        [
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+        ]
+      ]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [ "implicit" ]
       AllowedOAuthScopes: [ "openid" ]
@@ -1393,11 +1409,14 @@ Resources:
 
 Outputs:
   WebsiteURL:
-    Value: !If [DevelopmentMode, !Join['', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html'], !If [
-                  UseCustomDomainName,
-                  !Join ['', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
-                  !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
-               ]]
+    Value: !If [ 'DevelopmentMode',
+      !Join [ '', [ !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+      !If [
+        'UseCustomDomainName',
+        !Join [ '', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
+        !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+      ]
+    ]
     Description: CloudFront URL for website
 
   CustomWebsiteURL:
