@@ -122,6 +122,7 @@ Conditions:
   EnableFeedbackSubmission: !Not [!Equals [!Ref DevPortalAdminEmail, '']]
   DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
   NotDevelopmentMode: !Not [!Condition DevelopmentMode]
+  InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
 
 Resources:
   ApiGatewayApi:
@@ -1322,7 +1323,9 @@ Resources:
         Comment: !Sub '${AWS::StackName} distribution'
         Origins:
           - Id: 'dev-portal-site-s3-bucket'
-            DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]
+            DomainName: !If ['InUSEastOne',
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com']],
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]]
             S3OriginConfig:
              OriginAccessIdentity: !Sub >-
                origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
@@ -1349,7 +1352,9 @@ Resources:
         Comment: !Sub '${AWS::StackName} distribution'
         Origins:
           - Id: 'dev-portal-site-s3-bucket'
-            DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]
+            DomainName: !If ['InUSEastOne',
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com']],
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]]
             S3OriginConfig:
              OriginAccessIdentity: !Sub >-
                origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
