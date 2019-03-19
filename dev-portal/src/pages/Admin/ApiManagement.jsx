@@ -131,6 +131,36 @@ export class ApiManagement extends Component {
       .then(res => console.log(res.status))
   }
 
+  isSdkGenerationConfigurable = (api) => {
+    return api.visibility
+  }
+
+  toggleSdkGeneration = (apisList, updatedApi) => {
+    console.log(`toggling generation for ${updatedApi.name}: ${updatedApi.id}_${updatedApi.stage}`)
+    apiGatewayClient()
+      .then(app => {
+        if(updatedApi.sdkGeneration) {
+            return app.delete(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
+        } else {
+            return app.put(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
+        }
+      })
+      .then(res => {
+        if(res.status === 200) {
+          const updatedApis = apisList.map(stateApi => {
+            if (stateApi.id === updatedApi.id && stateApi.stage === updatedApi.stage) {
+              stateApi.sdkGeneration = !stateApi.sdkGeneration
+            }
+            return stateApi
+          })
+
+          this.setState(
+            ({apis: {generic = undefined}}, ...prev) => ({...prev, apis: {apiGateway: updatedApis, generic}})
+          )
+        }
+      })
+  }
+
   render() {
     return (
       <div style={{ display: 'flex', width: '100%' }}>
@@ -138,7 +168,7 @@ export class ApiManagement extends Component {
           <Table celled collapsing>
             <Table.Header fullWidth>
               <Table.Row>
-                <Table.HeaderCell colSpan='5'>API Gateway APIs</Table.HeaderCell>
+                <Table.HeaderCell colSpan='6'>API Gateway APIs</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Header fullWidth>
@@ -148,6 +178,7 @@ export class ApiManagement extends Component {
                 <Table.HeaderCell>API Type</Table.HeaderCell>
                 <Table.HeaderCell>Displayed</Table.HeaderCell>
                 <Table.HeaderCell>Update</Table.HeaderCell>
+                <Table.HeaderCell>Allow Generating SDKs</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -170,6 +201,15 @@ export class ApiManagement extends Component {
                         disabled={!api.visibility}
                         onClick={() => this.updateApiGatewayApi(api)}>
                         Update
+                      </Button>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Button basic
+                        // color={api.sdkGeneration ? 'green' : 'red'}
+                        color='blue'
+                        disabled={!this.isSdkGenerationConfigurable(api)}
+                        onClick={() => this.toggleSdkGeneration(this.state.apis.apiGateway, api)}>
+                        {api.sdkGeneration ? 'Enabled' : 'Disabled'}
                       </Button>
                     </Table.Cell>
                   </Table.Row>

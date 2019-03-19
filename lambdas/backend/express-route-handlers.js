@@ -403,7 +403,11 @@ async function getAdminCatalogVisibility(req, res) {
         catalogObject.apiGateway.forEach((usagePlan) => {
             usagePlan.apis.forEach((api) => {
                 visibility.apiGateway.map((apiEntry) => {
-                    if(apiEntry.id === api.id && apiEntry.stage === api.stage) apiEntry.visibility = true
+                    if(apiEntry.id === api.id && apiEntry.stage === api.stage) {
+                        apiEntry.visibility = true
+                        apiEntry.sdkGeneration = api.sdkGeneration || false
+                    }
+
                     return apiEntry
                 })
             })
@@ -416,15 +420,18 @@ async function getAdminCatalogVisibility(req, res) {
         // (catalogObject.apiGateway.forEach((usagePlan) => ...
         // because the catalog only contains *visible* apis, and this loop needs to record the subscribability
         // of both visible and non-visible APIs.
-        visibility.apiGateway.map(async (apiEntry) => {
+        visibility.apiGateway.map((apiEntry) => {
             apiEntry.subscribable = false
 
             usagePlans.items.forEach((usagePlan) => {
                 usagePlan.apiStages.forEach((apiStage) => {
                     if(apiEntry.id === apiStage.apiId && apiEntry.stage === apiStage.stage)
                         apiEntry.subscribable = true
+                    apiEntry.sdkGeneration = !!apiEntry.sdkGeneration
                 })
             })
+
+            return apiEntry
         })
 
         // mark every api in the generic catalog as visible
