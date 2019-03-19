@@ -80,7 +80,7 @@ function getApiGatewayApisFromUsagePlans(usagePlans) {
  * @param {String} apiId   An apiId or the special strings 'FIRST' or 'ANY'. 'FIRST' and 'ANY' both return the first api encountered.
  * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
  */
-export function getApi(apiId, selectIt = false) {
+export function getApi(apiId, selectIt = false,  stage) {
   return updateUsagePlansAndApisList()
     .then(() => {
       let thisApi
@@ -90,10 +90,12 @@ export function getApi(apiId, selectIt = false) {
       if (allApis.length) {
         if (apiId === 'ANY' || apiId === 'FIRST') {
           thisApi = allApis[0]
+        } else {
+          thisApi = allApis.find(api => api.id.toString() === apiId)
         }
 
-        else {
-          thisApi = allApis.find(api => api.id.toString() === apiId)
+        if (stage) {
+          thisApi = store.apiList.apiGateway.find(api => api.id.toString() === apiId && api.stage === stage)
         }
       }
 

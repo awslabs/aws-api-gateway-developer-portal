@@ -62,9 +62,10 @@ class App extends React.Component {
             <Route exact path="/" component={Home} />
             <Route path="/getting-started" component={GettingStarted} />
             <Route path="/dashboard" component={Dashboard} />
-            <AdminRoute exact path="/admin" component={Admin} />
+            <AdminRoute path="/admin" component={Admin} />
             <Route exact path="/apis" component={Apis} />
-            <Route path="/apis/:apiId" component={Apis} />
+            <Route exact path="/apis/:apiId" component={Apis}/>
+            <Route path="/apis/:apiId/stage/:stage" component={Apis} />
             <Route path="/login" render={() => { login(); return <Redirect to="/" /> }} />
             <Route path="/logout" render={() => { logout(); return <Redirect to="/" /> }} />
             <Route component={() => <h2>Page not found</h2>} />

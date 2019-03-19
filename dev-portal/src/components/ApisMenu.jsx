@@ -10,12 +10,14 @@ import { Menu, Loader } from 'semantic-ui-react'
 // store
 import { observer } from 'mobx-react'
 import { store } from 'services/state'
+import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
 
 // utilities
 import _ from 'lodash'
 
-function isActive (apiId, selectedApiId) {
-  return (selectedApiId) ? apiId === selectedApiId : false
+function isActive(apiId, selectedApiId, stage, selectedStage) {
+  if (!selectedStage) return (selectedApiId) ? apiId === selectedApiId : false
+  return (selectedApiId) ? apiId === selectedApiId && stage === selectedStage : false
 }
 
 export default observer(function ApisMenu() {
@@ -32,6 +34,13 @@ export default observer(function ApisMenu() {
     (hasGenericApis && store.apiList.generic[0].id)
   )
 
+  let selectedStage
+
+  if (this.props.path.params.stage) {
+    selectedStage = this.props.path.params.stage
+  }
+
+
   // If we're still loading, display a spinner.
   // If we're not loading, and we don't have any apis, display a message.
   // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis 
@@ -40,20 +49,20 @@ export default observer(function ApisMenu() {
       {loadingApis ? (
         <Loader active />
       ) : (
-        (hasGatewayApis || hasGenericApis) ? (
-          <React.Fragment>
-            {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} />}
-            {hasGenericApis && <ApiSubsection title="Not Subscribable" listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
-          </React.Fragment>
-        ) : (
-          <p style={{ padding: "13px 16px", color: "whitesmoke" }}>No APIs Published</p>
-        )
-      )}
+          (hasGatewayApis || hasGenericApis) ? (
+            <React.Fragment>
+              {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} selectedStage={selectedStage} />}
+              {hasGenericApis && <GenericApiSubsection title="Not Subscribable" listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
+            </React.Fragment>
+          ) : (
+              <p style={{ padding: "13px 16px", color: "whitesmoke" }}>No APIs Published</p>
+            )
+        )}
     </Menu>
   )
 })
 
-function ApiSubsection({ title, listOfApis, selectedApiId }) {
+function GenericApiSubsection({ title, listOfApis, selectedApiId }) {
   return (
     <React.Fragment>
       <Menu.Header
@@ -70,6 +79,31 @@ function ApiSubsection({ title, listOfApis, selectedApiId }) {
           as={Link}
           to={`/apis/${api.id}`}
           active={isActive(api.id.toString(), selectedApiId.toString())}
+        >
+          {api.swagger.info.title}
+        </Menu.Item>
+      ))}
+    </React.Fragment>
+  )
+}
+
+function ApiSubsection({ title, listOfApis, selectedApiId, selectedStage = false }) {
+  return (
+    <React.Fragment>
+      <Menu.Header
+        style={{
+          padding: "13px 5px 13px 16px",
+          color: 'lightsteelblue'
+        }}
+      >
+        {title}
+      </Menu.Header>
+      {listOfApis.map(api => (
+        <Menu.Item
+          key={api.id}
+          as={Link}
+          to={`/apis/${api.id}/stage/${api.stage}`}
+          active={isActive(api.id.toString(), selectedApiId.toString(), api.stage.toString(), selectedStage)}
         >
           {api.swagger.info.title}
         </Menu.Item>

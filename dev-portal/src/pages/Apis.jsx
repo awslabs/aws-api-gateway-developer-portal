@@ -11,8 +11,8 @@ import 'swagger-ui/dist/swagger-ui.css'
 import { Container, Header, Icon } from 'semantic-ui-react'
 
 // services
-import { getApi } from 'services/api-catalog'
 import { isAuthenticated } from 'services/self'
+import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
 
 // components
 import ApisMenu from 'components/ApisMenu'
@@ -23,11 +23,11 @@ import { store } from 'services/state.js'
 import { observer } from 'mobx-react'
 
 export default observer(class ApisPage extends React.Component {
-  componentDidMount() { this.updateApi() }
+  componentDidMount() { updateUsagePlansAndApisList(true); this.updateApi() }
   componentDidUpdate() { this.updateApi() }
 
   updateApi = () => {
-    getApi(this.props.match.params.apiId || 'ANY', true)
+    getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
       .then(api => {
         if (api) {
           let swaggerUiConfig = {
