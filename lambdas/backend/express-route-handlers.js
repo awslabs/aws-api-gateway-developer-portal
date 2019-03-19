@@ -429,7 +429,9 @@ async function getAdminCatalogVisibility(req, res) {
 
         // mark every api in the generic catalog as visible
         catalogObject.generic.forEach((catalogEntry) => {
-            visibility.generic = {}
+            if(!visibility.generic) {
+                visibility.generic = {}
+            }
 
             visibility.generic[catalogEntry.id] = {
                 visibility: true,

@@ -3,11 +3,9 @@ import React, { Component } from 'react';
 import { Button, Table, Modal, Form } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
-import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
+import { getApi } from 'services/api-catalog';
 
 import * as YAML from 'yamljs'
-import { store } from 'services/state';
-import { toJS } from 'mobx'
 
 
 export class ApiManagement extends Component {
@@ -31,28 +29,29 @@ export class ApiManagement extends Component {
     const files = this.fileInput.current.files
     let swagger
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      const reader = new FileReader()
+    if (files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const reader = new FileReader()
 
-      reader.onload = ((f) => (e) => {
-        console.log(f)
-        if (f.name.includes('yaml')) {
-          swagger = JSON.stringify(YAML.parse(e.target.result))
-        } else {
-          swagger = JSON.stringify(JSON.parse(e.target.result))
-        }
+        reader.onload = ((f) => (e) => {
+          if (f.name.includes('yaml')) {
+            swagger = JSON.stringify(YAML.parse(e.target.result))
+          } else {
+            swagger = JSON.stringify(JSON.parse(e.target.result))
+          }
 
-        apiGatewayClient()
-          .then((app) => app.post('/admin/catalog/visibility', {}, { swagger: swagger }, {}))
-          .then((res) => {
-            if (res.status === 200) {
-              this.setState(prev => ({ ...prev, modalOpen: false }))
-            }
-            setTimeout(() => this.getApiVisibility(), 2000)
-          })
-      })(file);
-      reader.readAsText(file);
+          apiGatewayClient()
+            .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
+            .then((res) => {
+              if (res.status === 200) {
+                this.setState(prev => ({ ...prev, modalOpen: false }))
+              }
+              setTimeout(() => this.getApiVisibility(), 2000)
+            })
+        })(file);
+        reader.readAsText(file);
+      }
     }
   }
 
@@ -73,7 +72,6 @@ export class ApiManagement extends Component {
 
     getApi(apiId).then(api => {
       let myHash = hash(JSON.stringify(api.swagger))
-      console.log(myHash)
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
         .then((res) => {
@@ -88,11 +86,8 @@ export class ApiManagement extends Component {
     apiGatewayClient()
       .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
       .then(res => {
-        console.log('data: %o', res.data)
         if (res.status === 200) {
           this.setState(prev => ({ ...prev, apis: res.data }))
-        } else {
-          throw new Error('woops:')
         }
       })
   }
@@ -111,18 +106,16 @@ export class ApiManagement extends Component {
   }
 
   showApiGatewayApi = (api) => {
-    console.log(`showing ${api.name}: ${api.id}_${api.stage}`)
-    apiGatewayClient()
-      .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}` }, {}))
-      .then((res) => {
-        if (res.status === 200) {
-          this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
-        }
-      })
+      apiGatewayClient()
+        .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}` }, {}))
+        .then((res) => {
+          if (res.status === 200) {
+            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
+          }
+        })
   }
 
   hideApiGatewayApi = (api) => {
-    console.log(`hiding ${api.name}: ${api.id}_${api.stage}`)
     apiGatewayClient()
       .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
       .then((res) => {
@@ -131,9 +124,8 @@ export class ApiManagement extends Component {
         }
       })
   }
-  
+
   updateApiGatewayApi = (api) => {
-    console.log(`showing ${api.name}: ${api.id}_${api.stage}`)
     apiGatewayClient()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}` }, {}))
       .then(res => console.log(res.status))
@@ -144,7 +136,7 @@ export class ApiManagement extends Component {
       <div style={{ display: 'flex', width: '100%' }}>
         <div style={{ padding: '2em' }}>
           <Table celled collapsing>
-          <Table.Header fullWidth>
+            <Table.Header fullWidth>
               <Table.Row>
                 <Table.HeaderCell colSpan='5'>API Gateway APIs</Table.HeaderCell>
               </Table.Row>
@@ -160,7 +152,7 @@ export class ApiManagement extends Component {
             </Table.Header>
             <Table.Body>
               {this.state.apis.apiGateway ? this.state.apis.apiGateway.map((api, i) =>
-                api.id != window.config.restApiId && (
+                api.id !== window.config.restApiId && (
                   <Table.Row key={i}>
                     <Table.Cell collapsing>{api.name}</Table.Cell>
                     <Table.Cell>{api.stage}</Table.Cell>
@@ -194,9 +186,9 @@ export class ApiManagement extends Component {
 
         <div style={{ padding: '2em' }}>
           <Table celled collapsing>
-          <Table.Header fullWidth>
+            <Table.Header fullWidth>
               <Table.Row>
-                <Table.HeaderCell colSpan='4'>API Gateway APIs</Table.HeaderCell>
+                <Table.HeaderCell colSpan='4'>Generic APIs</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Header fullWidth>
@@ -205,10 +197,10 @@ export class ApiManagement extends Component {
                   <Modal
                     closeOnEscape={true}
                     closeOnDimmerClick={true}
-                    onClose={()=>this.setState((prev) => ({...prev, modalOpen: false}))}
+                    onClose={() => this.setState((prev) => ({ ...prev, modalOpen: false }))}
                     trigger={
-                    <Button floated='right' onClick={() => this.setState((prev) => ({ ...prev, modalOpen: true }))}>
-                      Add API
+                      <Button floated='right' onClick={() => this.setState((prev) => ({ ...prev, modalOpen: true }))}>
+                        Add API
                     </Button>}
                     open={this.state.modalOpen}
                   >
@@ -243,7 +235,7 @@ export class ApiManagement extends Component {
                       <Button basic
                         color='red'
                         onClick={() => this.deleteAPISpec(apiId)}>
-                          Delete
+                        Delete
                       </Button>
                     </Table.Cell>
                   </Table.Row>

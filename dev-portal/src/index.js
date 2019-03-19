@@ -17,6 +17,7 @@ import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
 import { Admin } from 'pages/Admin'
+import Search from 'pages/Search'
 
 // components
 import AlertPopup from 'components/AlertPopup'

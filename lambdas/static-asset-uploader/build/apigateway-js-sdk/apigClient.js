@@ -81,8 +81,7 @@ apigClientFactory.newClient = function (config) {
 
     var apiGatewayClient = apiGateway.core.apiGatewayClientFactory.newClient(simpleHttpClientConfig, sigV4ClientConfig);
 
-    // We'll store this for use later
-    apiGatewayClient.jwtToken = config.jwtToken;
+
 
     apigClient.rootOptions = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
@@ -97,9 +96,6 @@ apigClientFactory.newClient = function (config) {
             body: body
         };
 
-        if(apiGatewayClient.jwtToken) {
-            rootOptionsRequest.headers.Authorization = apiGatewayClient.jwtToken;
-        }
 
         return apiGatewayClient.makeRequest(rootOptionsRequest, authType, additionalParams, config.apiKey);
     };
@@ -114,13 +110,11 @@ apigClientFactory.newClient = function (config) {
             verb: 'GET',
             path: pathComponent + path,
             headers: apiGateway.core.utils.parseParametersToObject(params, []),
-            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['start', 'end']),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, ['start', 'end', 'sdkType', 'parameters']),
             body: body
         };
 
-        if (apiGatewayClient.jwtToken) {
-            proxyOptionsRequest.headers.Authorization = apiGatewayClient.jwtToken;
-        }
+        // console.log(proxyOptionsRequest);
 
         return apiGatewayClient.makeRequest(proxyOptionsRequest, authType, additionalParams, config.apiKey);
     };
@@ -138,9 +132,6 @@ apigClientFactory.newClient = function (config) {
             body: body
         };
 
-        if (apiGatewayClient.jwtToken) {
-            proxyOptionsRequest.headers.Authorization = apiGatewayClient.jwtToken;
-        }
 
         return apiGatewayClient.makeRequest(proxyOptionsRequest, authType, additionalParams, config.apiKey);
     };
@@ -158,9 +149,6 @@ apigClientFactory.newClient = function (config) {
             body: body
         };
 
-        if (apiGatewayClient.jwtToken) {
-            proxyOptionsRequest.headers.Authorization = apiGatewayClient.jwtToken;
-        }
 
         return apiGatewayClient.makeRequest(proxyOptionsRequest, authType, additionalParams, config.apiKey);
     };
@@ -178,9 +166,6 @@ apigClientFactory.newClient = function (config) {
             body: body
         };
 
-        if (apiGatewayClient.jwtToken) {
-            proxyOptionsRequest.headers.Authorization = apiGatewayClient.jwtToken;
-        }
 
         return apiGatewayClient.makeRequest(proxyOptionsRequest, authType, additionalParams, config.apiKey);
     };
