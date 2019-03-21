@@ -8,6 +8,7 @@ import React from 'react'
 
 import { Loader, Dropdown, Button, Header, Modal, Icon, Form } from 'semantic-ui-react'
 import { modal } from 'components/Modal'
+import { addNotification } from 'components/AlertPopup'
 
 import {observer} from 'mobx-react'
 
@@ -269,7 +270,8 @@ function getSdk(sdkType, parameters = "{}") {
     .then(({ data, ...rest }) => {
       downloadFile(data, `${apiId}_${stageName}-${sdkType}.zip`)
     })
-    .catch(() => {
+    .catch(({ data } = {}) => {
+      addNotification({ header: "An error occurred while attempting to download the SDK.", content: data.message })
     })
     .finally(() => {
       store.api.downloadingSdk = false

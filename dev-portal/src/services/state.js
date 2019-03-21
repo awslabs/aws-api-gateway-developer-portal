@@ -24,7 +24,9 @@ function storeDefaults() {
 
     usagePlans: [],
 
-    subscriptions: []
+    subscriptions: [],
+
+    notifications: []
   }
 }
 
