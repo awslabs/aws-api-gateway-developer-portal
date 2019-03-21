@@ -59,7 +59,6 @@ class App extends React.Component {
       <BrowserRouter>
         <React.Fragment>
           <NavBar />
-          <AlertPopup />
           <GlobalModal />
           <Switch>
             <Route exact path="/" component={Home} />
@@ -74,6 +73,7 @@ class App extends React.Component {
             <Route component={() => <h2>Page not found</h2>} />
           </Switch>
           {feedbackEnabled && <Feedback />}
+          <AlertPopup />
         </React.Fragment>
       </BrowserRouter>
     )

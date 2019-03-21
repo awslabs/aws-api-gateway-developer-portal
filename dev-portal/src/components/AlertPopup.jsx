@@ -24,6 +24,7 @@ export default class AlertPopup extends React.Component {
           onDismiss={this.handleDismiss}
           header='Error'
           content={this.state.message}
+          style={{ position: "absolute", width: "calc(100% - 200px)", margin: "25px 100px" }}
         />
       )
   }
