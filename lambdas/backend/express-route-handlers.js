@@ -484,13 +484,22 @@ async function postAdminCatalogVisibility(req, res) {
             }).promise()
 
             console.log('swagger: ', swagger.body)
-
-            let params = {
-                Bucket: process.env.StaticBucketName,
-                Key: `catalog/${req.body.apiKey}.json`,
-                Body: swagger.body
+            
+            let params;
+            if (req.body.subscribable) {
+                params = {
+                    Bucket: process.env.StaticBucketName,
+                    Key: `catalog/${req.body.apiKey}.json`,
+                    Body: swagger.body
+                }
+    
+            } else {
+                params = {
+                    Bucket: process.env.StaticBucketName,
+                    Key: `catalog/${hash(req.body.swagger)}.json`,
+                    Body: req.body.swagger
+                }
             }
-
             console.log('params: ', params)
 
             await exports.s3.upload(params).promise()

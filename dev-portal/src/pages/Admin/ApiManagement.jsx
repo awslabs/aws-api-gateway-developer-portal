@@ -107,7 +107,7 @@ export class ApiManagement extends Component {
 
   showApiGatewayApi = (api) => {
       apiGatewayClient()
-        .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}` }, {}))
+        .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
         .then((res) => {
           if (res.status === 200) {
             this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
