@@ -12,6 +12,8 @@ import { addNotification } from 'components/AlertPopup'
 
 import {observer} from 'mobx-react'
 
+import _ from 'lodash'
+
 /**
  * This button is used in the `InfoReplacement` component of the SwaggerUiLayout to add the GetSdkButton directly into the SwaggerUi UI.
  */
@@ -67,7 +69,7 @@ export class GetSdkModal extends React.Component {
     return { disabled: hasEmptyValue }
   }
 
-  handleChange = (event, { id, value }) => this.setState({ fields: { [id]: value } })
+  handleChange = (event, { id, value }) => this.setState((prevState) => _.set(_.cloneDeep(prevState), `fields.${id}`, value))
 
   handleSubmit = () => {
     if (!this.isDisabled().disabled) {
