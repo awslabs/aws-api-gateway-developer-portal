@@ -45,27 +45,34 @@ export class GetSdkModal extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = props.type.configurationProperties.reduce((obj, property) => {
+    // generate a null state value for each required property (to validate against)
+    let fields = props.type.configurationProperties.reduce((obj, property) => {
       if (property.required)
-        obj[property.id] = null
+        obj[property.name] = null
       return obj
     }, {})
+
+    this.state = {
+      fields
+    }
   }
 
   // this function returns a prop directly
   // it's intended to be used like <Component {...this.canSubmit()} />
   isDisabled = () => {
-    let hasEmptyValue = !!Object.entries(this.state)
+    let hasEmptyValue = !!Object.entries(this.state.fields)
       .find(([key, value]) => !value)
 
     return { disabled: hasEmptyValue }
   }
 
-  handleChange = (event, { id, value }) => this.setState({ [id]: value })
+  handleChange = (event, { id, value }) => this.setState({ fields: { [id]: value } })
 
   handleSubmit = () => {
-    modal.close()
-    getSdk(this.props.type.id, JSON.stringify(this.state))
+    if (!this.isDisabled().disabled) {
+      modal.close()
+      getSdk(this.props.type.id, JSON.stringify(this.state.fields))
+    }
   }
 
   render() {
@@ -139,7 +146,7 @@ const sdkTypes = [
     description: "",
     configurationProperties: [
       {
-        name: "prefix",
+        name: "classPrefix",
         friendlyName: "Prefix",
         description: "",
         required: true
@@ -152,7 +159,7 @@ const sdkTypes = [
     description: "",
     configurationProperties: [
       {
-        name: "prefix",
+        name: "classPrefix",
         friendlyName: "Prefix",
         description: "",
         required: true
@@ -235,6 +242,18 @@ const sdkTypes = [
   }
 ]
 
+/**
+ * 
+ * Let's talk about this for a moment. For some reason, passing data through the server adds (or removes?) 
+ * an unknown layer of encoding. To get around this, we're converting the file to a datauri on the backend, 
+ * then sending that through. Kinda unfortunate, because the datauri is larger than the actual encoded file.
+ * 
+ * Eventually, this encoding should be uncovered, and removed or worked around. Once we do that, we will 
+ * need to switched to requesting a blob, then use a file reader to read the Blob. For now, I'm leaving those 
+ * in comments so we know how.
+ * 
+ */
+
 function getSdk(sdkType, parameters = "{}") {
   let apiId = store.api.id
   let stageName = store.api.stage
@@ -244,11 +263,11 @@ function getSdk(sdkType, parameters = "{}") {
   return apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get(`/catalog/${apiId}_${stageName}/sdk`, { sdkType }, {}, {
       queryParams: { parameters },
-      config: { responseType: "blob" }
+      // leaving this as a comment so we know how to switch to a file in the future
+      // config: { responseType: "blob" }
     }))
     .then(({ data, ...rest }) => {
-      console.log(rest)
-      downloadFile(data)
+      downloadFile(data, `${apiId}_${stageName}-${sdkType}.zip`)
     })
     .catch(() => {
     })
@@ -257,19 +276,18 @@ function getSdk(sdkType, parameters = "{}") {
     })
 }
 
-function downloadFile(data, fileName = 'test.zip') {
-  const reader = new FileReader()
-  reader.onloadend = () => {
-    const downloadLinkElement = document.createElement('a')
-    console.log(reader.result)
-    downloadLinkElement.setAttribute('href', reader.result)
-    downloadLinkElement.setAttribute('download', fileName)
-    downloadLinkElement.style.display = 'none'
+function downloadFile(dataUri, fileName) {
+  // leaving this as a comment so we know how to switch to a file in the future
+  // const reader = new FileReader()
+  // reader.onloadend = () => {
+  const downloadLinkElement = document.createElement('a')
+  downloadLinkElement.setAttribute('href', dataUri)
+  downloadLinkElement.setAttribute('download', fileName)
+  downloadLinkElement.style.display = 'none'
 
-    document.body.appendChild(downloadLinkElement)
-    downloadLinkElement.click()
-    document.body.removeChild(downloadLinkElement)
-  }
-  reader.readAsDataURL(data)
-
+  document.body.appendChild(downloadLinkElement)
+  downloadLinkElement.click()
+  document.body.removeChild(downloadLinkElement)
+  // }
+  // reader.readAsDataURL(data)
 }

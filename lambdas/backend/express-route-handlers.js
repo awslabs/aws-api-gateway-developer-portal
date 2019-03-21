@@ -3,6 +3,7 @@ const feedbackController = require('./_common/feedback-controller.js')
 const AWS = require('aws-sdk')
 const catalog = require('./catalog/index')
 
+const Datauri = require('datauri')
 
 // replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
 const domain = `${process.env.CLIENT_BUCKET_NAME}.s3-website-${process.env.AWS_DEFAULT_REGION}.amazonaws.com`
@@ -375,10 +376,10 @@ async function getSdk(req, res) {
             parameters
         }).promise()).body
 
-        console.log(resultsBuffer)
-        console.log(resultsBuffer.toString('utf8'))
+        const datauri = new Datauri();
+        datauri.format('.zip', resultsBuffer)
 
-        res.attachment().send(resultsBuffer)
+        res.send(datauri.content)
     }
 }
 
