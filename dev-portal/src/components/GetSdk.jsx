@@ -6,31 +6,36 @@ import { store } from 'services/state'
 
 import React from 'react'
 
-import { Dropdown, Button, Header, Modal, Icon, Form } from 'semantic-ui-react'
+import { Loader, Dropdown, Button, Header, Modal, Icon, Form } from 'semantic-ui-react'
 import { modal } from 'components/Modal'
+
+import {observer} from 'mobx-react'
 
 /**
  * This button is used in the `InfoReplacement` component of the SwaggerUiLayout to add the GetSdkButton directly into the SwaggerUi UI.
  */
-export const GetSdkButton = () => {
-  let sdkTypesArray = Object.entries(sdkTypes)
-
+export const GetSdkButton = observer(() => {
   return (
-    <Dropdown as={Button} text='Download SDK' pointing className='link item'>
-      <Dropdown.Menu>
-        {sdkTypesArray.map(([type, info]) => {
-          return <Dropdown.Item key={type} onClick={() => confirmDownload(info)}>{info.platform}</Dropdown.Item>
-        })}
-      </Dropdown.Menu>
-    </Dropdown>
+    <span>
+      <Dropdown as={Button} text='Download SDK' pointing className='link item'>
+        <Dropdown.Menu>
+          {sdkTypes.map((type) => {
+            return <Dropdown.Item key={type.id} onClick={() => confirmDownload(type)}>
+              {type.friendlyName}
+            </Dropdown.Item>
+          })}
+        </Dropdown.Menu>
+      </Dropdown>
+      {store.api.downloadingSdk && <Loader active inline size="tiny" />}
+    </span>
   )
-}
+})
 
-function confirmDownload(info) {
-  if (info.fields.length)
-    modal.open(GetSdkModal, { info })
+function confirmDownload(type) {
+  if (type.configurationProperties.length)
+    modal.open(GetSdkModal, { type })
   else
-    getSdk(info.platform)
+    getSdk(type.id)
 }
 
 /**
@@ -40,8 +45,9 @@ export class GetSdkModal extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = props.info.fields.reduce((obj, field) => {
-      obj[field.key] = null
+    this.state = props.type.configurationProperties.reduce((obj, property) => {
+      if (property.required)
+        obj[property.id] = null
       return obj
     }, {})
   }
@@ -58,23 +64,24 @@ export class GetSdkModal extends React.Component {
   handleChange = (event, { id, value }) => this.setState({ [id]: value })
 
   handleSubmit = () => {
-    getSdk(this.props.info.platform, JSON.stringify(this.state))
+    modal.close()
+    getSdk(this.props.type.id, JSON.stringify(this.state))
   }
 
   render() {
-    const info = this.props.info
+    const type = this.props.type
 
     return <>
-      <Header icon='archive' content={`Download the ${info.platform} SDK`} />
+      <Header icon='archive' content={`Download the ${type.friendlyName} SDK`} />
       <Modal.Content>
-        <Form>
-          {info.fields.map(field => (
+        <Form onSubmit={this.handleSubmit}>
+          {type.configurationProperties.map(property => (
             // only display required fields for now
-            field.required ? <Form.Input
-              key={field.key}
-              id={field.key}
-              label={`${field.name} (required)`}
-              placeholder={field.placeholder}
+            property.required ? <Form.Input
+              key={property.name}
+              id={property.name}
+              label={`${property.friendlyName} (required)`}
+              placeholder={property.friendlyName}
               onChange={this.handleChange} /> : null
           ))}
         </Form>
@@ -91,57 +98,148 @@ export class GetSdkModal extends React.Component {
   }
 }
 
-const sdkTypes = {
-  "android": {
-    platform: "Android",
-    fields: [
-      { name: "Group ID", key: "groupId", required: true },
-      { name: "Invoker package", key: "invokerPackage", required: true },
-      { name: "Artifact ID", key: "artifactId", required: true },
-      { name: "Artifact version", key: "artifactVersion", required: true }
+const sdkTypes = [
+  {
+    id: "android",
+    friendlyName: "Android",
+    description: "",
+    configurationProperties: [
+      {
+        name: "groupId",
+        friendlyName: "Group ID",
+        description: "",
+        required: true
+      }, {
+        name: "invokerPackage",
+        friendlyName: "Invoker package",
+        description: "",
+        required: true
+      }, {
+        name: "artifactId",
+        friendlyName: "Artifact ID",
+        description: "",
+        required: true
+      }, {
+        name: "artifactVersion",
+        friendlyName: "Artifact version",
+        description: "",
+        required: true
+      },
     ]
   },
-  "javascript": {
-    platform: "JavaScript",
-    fields: []
+  {
+    id: "javascript",
+    friendlyName: "JavaScript",
+    description: "",
+    configurationProperties: []
   },
-  "ios-objective-c": {
-    platform: "iOS (Objective-C)",
-    fields: [
-      { name: "Prefix", key: "prefix", required: true }
+  {
+    id: "ios-objective-c",
+    friendlyName: "iOS (Objective-C)",
+    description: "",
+    configurationProperties: [
+      {
+        name: "prefix",
+        friendlyName: "Prefix",
+        description: "",
+        required: true
+      },
     ]
   },
-  "ios-swift": {
-    platform: "iOS (Swift)",
-    fields: [
-      { name: "Prefix", key: "prefix", required: true }
+  {
+    id: "ios-swift",
+    friendlyName: "iOS (Swift)",
+    description: "",
+    configurationProperties: [
+      {
+        name: "prefix",
+        friendlyName: "Prefix",
+        description: "",
+        required: true
+      },
     ]
   },
-  "java": {
-    platform: "Java",
-    fields: [
-      { name: "Service Name", key: "prefix", required: true },
-      { name: "Java Package Name", key: "prefix", required: true },
-      { name: "Java Build System", key: "prefix", required: false },
-      { name: "Java Group ID", key: "prefix", required: false },
-      { name: "Java Artifact ID", key: "prefix", required: false },
-      { name: "Java Artifact Version", key: "prefix", required: false },
-      { name: "Source Code License Text", key: "prefix", required: false }
+  {
+    id: "java",
+    friendlyName: "Java SDK",
+    description: "Java SDK generator for API Gateway APIs",
+    configurationProperties: [
+      {
+        name: "service.name",
+        friendlyName: "Service Name",
+        description: "Name of the service which is used to derive the Java interface name for your client",
+        required: true
+      },
+      {
+        name: "java.package-name",
+        friendlyName: "Java Package Name",
+        description: "Name of the Java package your code will be generated under",
+        required: true
+      },
+      {
+        name: "java.build-system",
+        friendlyName: "Java Build System",
+        description: "Build system to setup for project; Currently supported: maven, gradle",
+        required: false
+      },
+      {
+        name: "java.group-id",
+        friendlyName: "Java Group Id",
+        description: "Group id for your Maven or Gradle project. Defaults to package name",
+        required: false
+      },
+      {
+        name: "java.artifact-id",
+        friendlyName: "Java Artifact Id",
+        description: "Artifact Id for your Maven project or project name for your Gradle project. Defaults to service name",
+        required: false
+      },
+      {
+        name: "java.artifact-version",
+        friendlyName: "Java Artifact Version",
+        description: "Version of your Maven or Gradle project. Defaults to 1.0-SNAPSHOT",
+        required: false
+      },
+      {
+        name: "java.license-text",
+        friendlyName: "Source Code License Text",
+        description: "Customer provided license to inject into source file headers",
+        required: false
+      }
     ]
   },
-  "ruby": {
-    platform: "Ruby",
-    fields: [
-      { name: "Service Name", key: "prefix", required: true },
-      { name: "Ruby Gem Name", key: "prefix", required: false },
-      { name: "Ruby Gem Version", key: "prefix", required: false }
+  {
+    id: "ruby",
+    friendlyName: "Ruby",
+    description: "Ruby SDK generator for API Gateway APIs",
+    configurationProperties: [
+      {
+        name: "service.name",
+        friendlyName: "Service Name",
+        description: "Name of the service which is used to derive the name for your client",
+        required: true
+      },
+      {
+        name: "ruby.gem-name",
+        friendlyName: "Ruby Gem Name",
+        description: "Name of the Ruby gem your code will be generated under",
+        required: false
+      },
+      {
+        name: "ruby.gem-version",
+        friendlyName: "Ruby Gem Version",
+        description: "Version number for your service gem. Defaults to 1.0.0",
+        required: false
+      }
     ]
   }
-}
+]
 
 function getSdk(sdkType, parameters = "{}") {
   let apiId = store.api.id
   let stageName = store.api.stage
+
+  store.api.downloadingSdk = true
 
   return apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get(`/catalog/${apiId}_${stageName}/sdk`, { sdkType }, {}, {
@@ -149,17 +247,13 @@ function getSdk(sdkType, parameters = "{}") {
       config: { responseType: "blob" }
     }))
     .then(({ data, ...rest }) => {
-      // console.log(data)
       console.log(rest)
       downloadFile(data)
-      // store.usagePlans = data.apiGateway
-      // store.apiList = {
-      // }
     })
     .catch(() => {
-      // store.usagePlans = null
-      // store.apiList = {
-      // }
+    })
+    .finally(() => {
+      store.api.downloadingSdk = false
     })
 }
 

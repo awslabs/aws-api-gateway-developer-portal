@@ -53,7 +53,7 @@ const InfoReplacement = observer(({ specSelectors }) => {
           </div>
           <p>{externalDocs}</p>
           <SubscriptionButtons />
-          <GetSdkButton />
+          {store.api.sdkGeneration && <GetSdkButton />}
         </div>
       </div>
     </Container>

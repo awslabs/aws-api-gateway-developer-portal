@@ -5,12 +5,11 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 // semantic-ui
-import { Menu, Loader, Segment } from 'semantic-ui-react'
+import { Menu, Loader } from 'semantic-ui-react'
 
 // store
 import { observer } from 'mobx-react'
 import { store } from 'services/state'
-import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
 
 // utilities
 import _ from 'lodash'
@@ -46,7 +45,7 @@ export default observer(function ApisMenu() {
   // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis 
   return (
     <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0, flex: "0 0 auto", position: "relative" }} {...this.props}>
-      {loadingApis && <Loader active centered />}
+      {loadingApis && <Loader active />}
       {(hasGatewayApis || hasGenericApis) ? (
         <React.Fragment>
           {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} selectedStage={selectedStage} />}
