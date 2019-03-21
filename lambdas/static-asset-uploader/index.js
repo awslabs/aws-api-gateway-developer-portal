@@ -194,7 +194,8 @@ function addConfigFile(bucketName, event) {
             userPoolId: event.ResourceProperties.UserPoolId,
             userPoolClientId: event.ResourceProperties.UserPoolClientId,
             userPoolDomain: event.ResourceProperties.UserPoolDomain,
-            feedbackEnabled: event.ResourceProperties.FeedbackEnabled
+            // this is a stringified boolean here; let's go ahead and make it a real boolean
+            feedbackEnabled: event.ResourceProperties.FeedbackEnabled === 'true'
         },
         params = {
             Bucket: bucketName,
