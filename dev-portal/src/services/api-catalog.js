@@ -33,6 +33,8 @@ export function updateUsagePlansAndApisList(bustCache = false) {
   // if we've already tried, just return that promise
   if (!bustCache && catalogPromiseCache) return catalogPromiseCache
 
+  store.apiList.loaded = false
+
   return catalogPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
     .then(({ data = [] }) => {
@@ -80,7 +82,7 @@ function getApiGatewayApisFromUsagePlans(usagePlans) {
  * @param {String} apiId   An apiId or the special strings 'FIRST' or 'ANY'. 'FIRST' and 'ANY' both return the first api encountered.
  * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
  */
-export function getApi(apiId, selectIt = false,  stage) {
+export function getApi(apiId, selectIt = false, stage) {
   return updateUsagePlansAndApisList()
     .then(() => {
       let thisApi
