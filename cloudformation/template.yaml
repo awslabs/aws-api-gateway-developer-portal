@@ -87,8 +87,7 @@ Parameters:
 
   CognitoDomainNameOrPrefix:
     Type: String
-    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. Omitting this value opts out of the Cognito Hosted UI.
-    Default: ''
+    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. This should be regionally unique.
 
   # CognitoDomainAcmCertArn:
   #   Type: String
@@ -1012,9 +1011,13 @@ Resources:
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    # It's really unintuitive, but changing any of the properties here will cause stack updates to deploy non-functionally.
+    # The CognitoUserPoolClientSettings custom resource runs after this resource and adds a bunch of fields.
+    # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
+    # settings won't be set, e.g., CallbackURL.
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientName: 'CognitoUserPoolClient'
+      ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
 
