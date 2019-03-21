@@ -3,7 +3,6 @@
   "version": "2.3.2",
   "private": true,
   "dependencies": {
-    "amazon-cognito-identity-js": "^2.0.30",
     "aws-sdk": "^2.326.0",
     "chart.js": "^2.7.2",
     "front-matter": "^3.0.0",
