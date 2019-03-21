@@ -10,6 +10,8 @@ import { Button, Header, Image, Container } from 'semantic-ui-react'
 import { subscribe, unsubscribe } from 'services/api-catalog'
 import { isAuthenticated } from 'services/self'
 
+import { GetSdkButton } from 'components/GetSdk'
+
 // state
 import { observer } from 'mobx-react'
 import { store } from 'services/state.js'
@@ -51,6 +53,7 @@ const InfoReplacement = observer(({ specSelectors }) => {
           </div>
           <p>{externalDocs}</p>
           <SubscriptionButtons />
+          <GetSdkButton />
         </div>
       </div>
     </Container>
@@ -73,6 +76,5 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
     )
   }
 })
-
 
 export default SwaggerLayoutPlugin

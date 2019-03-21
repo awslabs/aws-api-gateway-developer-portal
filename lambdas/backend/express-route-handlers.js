@@ -360,12 +360,23 @@ async function getSdk(req, res) {
     } else if(!catalogObject.sdkGeneration) {
         res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.` })
     } else {
+        let parameters = req.query.parameters
+        if (typeof parameters === 'string') {
+            try { parameters = JSON.parse(parameters) } catch (e) {
+                return res.status(400).json({ message: `Input parameters for API with ID (${restApiId}) and Stage (${stageName}) were a string, but not parsable JSON: ${parameters}` })
+            }
+        }
+        console.log(req.query.parameters)
+        console.log(parameters)
         let resultsBuffer = (await exports.apigateway.getSdk({
-            restApiId: restApiId,
+            restApiId,
             sdkType: req.query.sdkType,
-            stageName: stageName,
-            parameters: req.query.parameters
+            stageName,
+            parameters
         }).promise()).body
+
+        console.log(resultsBuffer)
+        console.log(resultsBuffer.toString('utf8'))
 
         res.attachment().send(resultsBuffer)
     }

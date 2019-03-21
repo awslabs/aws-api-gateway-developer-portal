@@ -17,10 +17,11 @@ import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
 import { Admin } from 'pages/Admin'
-import Search from 'pages/Search'
+// import Search from 'pages/Search'
 
 // components
 import AlertPopup from 'components/AlertPopup'
+import GlobalModal from 'components/Modal'
 import NavBar from 'components/NavBar'
 import Feedback from './components/Feedback'
 
@@ -59,6 +60,7 @@ class App extends React.Component {
         <React.Fragment>
           <NavBar />
           <AlertPopup />
+          <GlobalModal />
           <Switch>
             <Route exact path="/" component={Home} />
             <Route path="/getting-started" component={GettingStarted} />
