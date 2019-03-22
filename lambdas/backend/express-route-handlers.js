@@ -514,7 +514,7 @@ async function postAdminCatalogVisibility(req, res) {
 
             let params = {
                 Bucket: process.env.StaticBucketName,
-                Key: `catalog/${hash(req.body.swagger)}.json`,
+                Key: `catalog/${hash(swaggerObject)}.json`,
                 Body: req.body.swagger
             }
 
