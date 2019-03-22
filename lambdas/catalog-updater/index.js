@@ -51,7 +51,8 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-    isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/
+  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
+  isUnsubscribableApiStageKeyRegex = /^unsubscribable_[a-zA-Z0-9]{10}_.*/
 
   return exports.s3.getObject(params).promise()
     .then((s3Repr) => {
@@ -77,6 +78,12 @@ function getSwaggerFile(file) {
       if (file.Key.replace('catalog/', '').match(isApiStageKeyRegex)) {
         result.apiStageKey = file.Key.replace('catalog/', '').split('.')[0]
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
+      }
+      else if (file.Key.replace('catalog/', '').match(isUnsubscribableApiStageKeyRegex)) {
+        result.apiId = file.Key.replace('catalog/', '').split('.')[0].split('_')[0]
+        result.stage = file.Key.replace('catalog/', '').split('.')[0].split('_')[1]
+        result.generic = true
+        result.id = hash(file.Key)
       }
       // if the file wasn't saved with its name as an API_STAGE key, assume it's a generic api
       else {

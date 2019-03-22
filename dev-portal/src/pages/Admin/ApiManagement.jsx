@@ -79,11 +79,6 @@ export class ApiManagement extends Component {
       let _api = toJS(api),
           myHash = hash(_api.swagger)
 
-      // console.log(_api.swagger)
-      // console.log(`Given the input of type ${typeof _api.swagger}:`)
-      // console.log(JSON.stringify(_api.swagger, null, 4))
-      // console.log(`I produced the hash: ${myHash}`)
-
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
         .then((res) => {
@@ -149,8 +144,7 @@ export class ApiManagement extends Component {
   }
 
   hideApiGatewayApi = (api) => {
-    console.log(api)
-    if (!api.subscribable) {
+    if (!api.subscribable && !api.id && !api.stage) {
       this.deleteAPISpec(api.genericId)
     } else {
       apiGatewayClient()

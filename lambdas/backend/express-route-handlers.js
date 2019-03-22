@@ -488,12 +488,9 @@ async function postAdminCatalogVisibility(req, res) {
                 }
     
             } else if (req.body.subscribable === 'false') {
-                // console.log(`Given the input of type ${typeof swagger.body}:`)
-                // console.log(JSON.stringify(JSON.parse(swagger.body), null, 4))
-                // console.log(`I produced the hash: ${hash(JSON.parse(swagger.body))}`)
                 params = {
                     Bucket: process.env.StaticBucketName,
-                    Key: `catalog/${hash(JSON.parse(swagger.body))}.json`,
+                    Key: `catalog/unsubscribable_${req.body.apiKey.split('_')[0]}_${req.body.apiKey.split('_')[1]}.json`,
                     Body: swagger.body
                 }
             }
@@ -511,6 +508,10 @@ async function postAdminCatalogVisibility(req, res) {
             if(!(swaggerObject.info && swaggerObject.info.title)) {
                 res.status(400).json({ message: 'Invalid input. API specification file must have a title.' })
             }
+
+            console.log(`Given the input of type ${typeof swaggerObject}:`)
+            console.log(JSON.stringify(swaggerObject, null, 4))
+            console.log(`I produced the hash: ${hash(swaggerObject)}`)
 
             let params = {
                 Bucket: process.env.StaticBucketName,
@@ -532,16 +533,27 @@ async function postAdminCatalogVisibility(req, res) {
 
 async function deleteAdminCatalogVisibility(req, res) {
     console.log(`DELETE /admin/catalog/visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
+    const catalogObject = await catalog()
+
     // for apigateway managed APIs, provide "apiId_stageName"
     // in the apiKey field
-    console.log('delete request:', req)
     console.log('delete request params:', req.params)
     if(req.params && req.params.id) {
+        let unsubscribable = true
+
+        catalogObject.apiGateway.forEach((usagePlan) => {
+            usagePlan.apis.forEach((api) => {
+                if(api.id === req.params.id.split('_')[0] && api.stage === req.params.id.split(('_')[1])) {
+                    unsubscribable = false
+                }
+            })
+        })
+
         let params = {
             Bucket: process.env.StaticBucketName,
             // assumed: apiId_stageName.json is the only format
             // no yaml, no autodetection based on file contents
-            Key: `catalog/${req.params.id}.json`
+            Key: `catalog/${unsubscribable ? 'unsubscribable_' : ''}${req.params.id}.json`
         }
 
         await exports.s3.deleteObject(params).promise()
