@@ -1110,7 +1110,7 @@ Resources:
       CallbackURL: !If [ DevelopmentMode,
         [
           'http://localhost:3000/login',
-          !Join [ '', [ 'http://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
         ],
         [
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
@@ -1119,7 +1119,7 @@ Resources:
       LogoutURL: !If [ DevelopmentMode,
         [
           'http://localhost:3000/login',
-          !Join [ '', [ 'http://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
         ],
         [
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
@@ -1452,7 +1452,7 @@ Resources:
 Outputs:
   WebsiteURL:
     Value: !If [ 'DevelopmentMode',
-      !Join [ '', [ !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+      !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
       !If [
         'UseCustomDomainName',
         !Join [ '', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
