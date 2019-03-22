@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Button, Table, Modal, Form } from 'semantic-ui-react'
+import { Button, Table, Modal, Form, Message } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
 import { getApi } from 'services/api-catalog';
@@ -14,12 +14,14 @@ export class ApiManagement extends Component {
       apiGateway: null,
       generic: null
     },
-    modalOpen: false
+    modalOpen: false,
+    errors: []
   }
 
   fileInput = React.createRef()
 
   componentDidMount() {
+    this.setState(prev => ({...prev, errors: [ ] }))
     this.getApiVisibility()
   }
 
@@ -27,25 +29,39 @@ export class ApiManagement extends Component {
     event.preventDefault();
 
     const files = this.fileInput.current.files
-    let swagger
+    let swagger, swaggerObject, anyFailures
 
     if (files.length > 0) {
+      this.setState(prev => ({ ...prev, errors: [] }))
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         const reader = new FileReader()
 
         reader.onload = ((f) => (e) => {
           if (f.name.includes('yaml')) {
-            swagger = JSON.stringify(YAML.parse(e.target.result))
+            swaggerObject = YAML.parse(e.target.result)
+            swagger = JSON.stringify(swaggerObject)
           } else {
-            swagger = JSON.stringify(JSON.parse(e.target.result))
+            swaggerObject = JSON.parse(e.target.result)
+            swagger = JSON.stringify(swaggerObject)
+          }
+
+          if(!(swaggerObject.info && swaggerObject.info.title)) {
+            anyFailures = true
+            this.setState(prev => ({ ... prev, errors: [ ...prev.errors, file.name ] }))
+            return
+          }
+
+          if(anyFailures) {
+            return
           }
 
           apiGatewayClient()
             .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
             .then((res) => {
               if (res.status === 200) {
-                this.setState(prev => ({ ...prev, modalOpen: false }))
+                this.setState(prev => ({ ...prev, modalOpen: false, errors: [] }))
               }
               setTimeout(() => this.getApiVisibility(), 2000)
             })
@@ -252,6 +268,10 @@ export class ApiManagement extends Component {
                             <label htmlFor="files">Select Files:</label>
                             <input type="file" id="files" name="files" accept=".json,.yaml,.yml" multiple={true} ref={this.fileInput} />
                           </Form.Field>
+                          {!!this.state.errors.length &&
+                            <Message size='tiny' color='red' list={this.state.errors} header="These files are not parseable or do not contain an api title:" />
+                          }
+                          <br />
                           <Button type='submit'>Upload</Button>
                         </Form>
                       </React.Fragment>

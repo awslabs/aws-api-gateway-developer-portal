@@ -500,7 +500,12 @@ async function postAdminCatalogVisibility(req, res) {
 
     // for generic swagger, just provide the swagger body
     } else if(req.body && req.body.swagger) {
-        // try {
+        try {
+            const swaggerObject = JSON.parse(req.body.swagger)
+            if(!(swaggerObject.info && swaggerObject.info.title)) {
+                res.status(400).json({ message: 'Invalid input. API specification file must have a title.' })
+            }
+
             let params = {
                 Bucket: process.env.StaticBucketName,
                 Key: `catalog/${hash(req.body.swagger)}.json`,
@@ -510,7 +515,10 @@ async function postAdminCatalogVisibility(req, res) {
             await exports.s3.upload(params).promise()
 
             res.status(200).json({ message: 'Success' })
-        // }
+        } catch(error) {
+            console.error(error)
+            res.status(400).json({ message: 'Invalid input' })
+        }
     } else {
         res.status(400).json({ message: 'Invalid input' })
     }
