@@ -33,11 +33,9 @@ export default observer(function ApisMenu() {
     (hasGenericApis && store.apiList.generic[0].id)
   )
 
-  let selectedStage
+  let selectedStage= ( this.props.path.params.stage || (hasGatewayApis && store.apiList.apiGateway[0].stage) )
 
-  if (this.props.path.params.stage) {
-    selectedStage = this.props.path.params.stage
-  }
+  console.log(`selected stage: ${selectedStage}`)
 
 
   // If we're still loading, display a spinner.
@@ -96,9 +94,9 @@ function ApiSubsection({ title, listOfApis, selectedApiId, selectedStage = false
       </Menu.Header>
       {listOfApis.map(api => (
         <Menu.Item
-          key={api.id}
+          key={`${api.id}_${api.stage}`}
           as={Link}
-          to={`/apis/${api.id}/stage/${api.stage}`}
+          to={`/apis/${api.id}/${api.stage}`}
           active={isActive(api.id.toString(), selectedApiId.toString(), api.stage.toString(), selectedStage)}
         >
           {api.swagger.info.title}

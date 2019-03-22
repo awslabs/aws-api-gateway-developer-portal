@@ -72,6 +72,8 @@ export class ApiManagement extends Component {
   }
 
   deleteAPISpec = (apiId) => {
+
+    console.log(`api ID: ${apiId}`)
     function hash(str) {
       let hash = 5381,
         i = str.length;
@@ -86,8 +88,13 @@ export class ApiManagement extends Component {
       return hash >>> 0;
     }
 
+
     getApi(apiId).then(api => {
+
+      console.log(api)
       let myHash = hash(JSON.stringify(api.swagger))
+
+      console.log(`hash: ${myHash}`)
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
         .then((res) => {
@@ -103,6 +110,28 @@ export class ApiManagement extends Component {
       .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
       .then(res => {
         if (res.status === 200) {
+          console.log(`visibility: ${JSON.stringify(res.data, null, 2)}`)
+
+          let apiGateway = res.data.apiGateway
+          let generic = res.data.generic && Object.keys(res.data.generic)
+
+          console.log(`generic: ${JSON.stringify(generic, null, 2)}`)
+          console.log(`api gateway: ${JSON.stringify(apiGateway, null, 2)}`)
+
+          apiGateway.forEach(api => {
+            if (generic) {
+              generic.forEach(genApi => {
+                if(res.data.generic[`${genApi}`]) {
+                  if(res.data.generic[`${genApi}`].name === api.name) {
+                    api.visibility = true
+                    api.genericId = genApi
+                    delete res.data.generic[`${genApi}`]
+                  }
+                }
+              })
+            }
+          })
+
           this.setState(prev => ({ ...prev, apis: res.data }))
         }
       })
@@ -123,7 +152,7 @@ export class ApiManagement extends Component {
 
   showApiGatewayApi = (api) => {
       apiGatewayClient()
-        .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}` }, {}))
+        .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
         .then((res) => {
           if (res.status === 200) {
             this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
@@ -132,18 +161,22 @@ export class ApiManagement extends Component {
   }
 
   hideApiGatewayApi = (api) => {
-    apiGatewayClient()
+    if (api.genericId) {
+      this.deleteAPISpec(api.genericId)
+    } else {
+      apiGatewayClient()
       .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
       .then((res) => {
         if (res.status === 200) {
           this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
         }
       })
+    }
   }
 
   updateApiGatewayApi = (api) => {
     apiGatewayClient()
-      .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}` }, {}))
+      .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
       .then(res => console.log(res.status))
   }
 
@@ -243,7 +276,7 @@ export class ApiManagement extends Component {
                       <Button basic
                         // color={api.sdkGeneration ? 'green' : 'red'}
                         color='blue'
-                        disabled={!this.isSdkGenerationConfigurable(api)}
+                        disabled={!api.subscribable || !this.isSdkGenerationConfigurable(api)}
                         onClick={() => this.toggleSdkGeneration(this.state.apis.apiGateway, api)}>
                         {api.sdkGeneration ? 'Enabled' : 'Disabled'}
                       </Button>

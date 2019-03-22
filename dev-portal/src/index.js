@@ -17,7 +17,6 @@ import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
 import { Admin } from 'pages/Admin'
-// import Search from 'pages/Search'
 
 // components
 import AlertPopup from 'components/AlertPopup'
@@ -67,7 +66,7 @@ class App extends React.Component {
             <AdminRoute path="/admin" component={Admin} />
             <Route exact path="/apis" component={Apis} />
             <Route exact path="/apis/:apiId" component={Apis}/>
-            <Route path="/apis/:apiId/stage/:stage" component={Apis} />
+            <Route path="/apis/:apiId/:stage" component={Apis} />
             <Route path="/login" render={() => { login(); return <Redirect to="/" /> }} />
             <Route path="/logout" render={() => { logout(); return <Redirect to="/" /> }} />
             <Route component={() => <h2>Page not found</h2>} />
