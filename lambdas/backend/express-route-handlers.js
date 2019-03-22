@@ -82,16 +82,14 @@ function postSignIn(req, res) {
 
                 console.log(`Got key ID ${keyId}`)
 
-                customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId)
+                customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc)
                     .then(() => res.status(200).json({}))
-                    .catch(errFunc)
             })
         } else {
             const keyId = data.items[0].id
 
-            customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc, () => {
-                res.status(200).json({})
-            })
+            customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc)
+                .then(() => res.status(200).json({}))
         }
     })
 }
