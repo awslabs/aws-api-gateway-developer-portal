@@ -258,7 +258,7 @@ const sdkTypes = [
  */
 
 function getSdk(sdkType, parameters = "{}") {
-  let apiId = store.api.id
+  let apiId = store.api.apiId || store.api.id
   let stageName = store.api.stage
 
   store.api.downloadingSdk = true

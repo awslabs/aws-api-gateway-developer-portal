@@ -197,7 +197,10 @@ function buildCatalog(swaggerFiles, sdkGeneration) {
           s.swagger = s.body
           delete s.body
           console.log(`This generic API has an id of ${s.id} and sdkGeneration[s.id] === ${sdkGeneration[s.id]}`)
-          sdkGeneration[s.id] ? s.sdkGeneration = true : s.sdkGeneration = false
+          s.sdkGeneration = sdkGeneration[s.id]
+          if(!s.sdkGeneration) {
+              s.sdkGeneration = sdkGeneration[`${s.apiId}_${s.stage}`]
+          }
           return s
         })
       )

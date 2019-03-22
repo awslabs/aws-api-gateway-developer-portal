@@ -336,6 +336,12 @@ function findApiInCatalog(restApiId, stageName, catalog) {
         })
     })
 
+    Object.keys(catalog.generic).forEach((genericKey) => {
+        let api = catalog.generic[genericKey]
+        if(api.apiId === restApiId && api.stage === stageName)
+            foundApi = api
+    })
+
     return foundApi
 }
 
