@@ -82,8 +82,8 @@ function getApiGatewayApisFromUsagePlans(usagePlans) {
  * @param {String} apiId   An apiId or the special strings 'FIRST' or 'ANY'. 'FIRST' and 'ANY' both return the first api encountered.
  * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
  */
-export function getApi(apiId, selectIt = false, stage) {
-  return updateUsagePlansAndApisList()
+export function getApi(apiId, selectIt = false, stage, cacheBust = false) {
+  return updateUsagePlansAndApisList(cacheBust)
     .then(() => {
       let thisApi
 

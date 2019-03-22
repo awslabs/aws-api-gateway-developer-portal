@@ -1,11 +1,14 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 
 import { Button, Table, Modal, Form, Message } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
-import { getApi } from 'services/api-catalog';
+import { getApi } from 'services/api-catalog'
 
 import * as YAML from 'yamljs'
+
+import hash from 'object-hash'
+import { toJS } from 'mobx'
 
 
 export class ApiManagement extends Component {
@@ -72,33 +75,18 @@ export class ApiManagement extends Component {
   }
 
   deleteAPISpec = (apiId) => {
+    getApi(apiId, false, undefined, true).then(api => {
+      let _api = toJS(api),
+          myHash = hash(_api.swagger)
 
-    console.log(`api ID: ${apiId}`)
-    function hash(str) {
-      let hash = 5381,
-        i = str.length;
+      // console.log(_api.swagger)
+      // console.log(`Given the input of type ${typeof _api.swagger}:`)
+      // console.log(JSON.stringify(_api.swagger, null, 4))
+      // console.log(`I produced the hash: ${myHash}`)
 
-      while (i) {
-        hash = (hash * 33) ^ str.charCodeAt(--i);
-      }
-
-      /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
-       * integers. Since we want the results to be always positive, convert the
-       * signed int to an unsigned by doing an unsigned bitshift. */
-      return hash >>> 0;
-    }
-
-
-    getApi(apiId).then(api => {
-
-      console.log(api)
-      let myHash = hash(JSON.stringify(api.swagger))
-
-      console.log(`hash: ${myHash}`)
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
         .then((res) => {
-          console.log(`data received: ${JSON.stringify(res, null, 2)}`);
           setTimeout(() => this.getApiVisibility(), 2000)
         })
     })
@@ -110,13 +98,13 @@ export class ApiManagement extends Component {
       .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
       .then(res => {
         if (res.status === 200) {
-          console.log(`visibility: ${JSON.stringify(res.data, null, 2)}`)
+          // console.log(`visibility: ${JSON.stringify(res.data, null, 2)}`)
 
           let apiGateway = res.data.apiGateway
           let generic = res.data.generic && Object.keys(res.data.generic)
 
-          console.log(`generic: ${JSON.stringify(generic, null, 2)}`)
-          console.log(`api gateway: ${JSON.stringify(apiGateway, null, 2)}`)
+          // console.log(`generic: ${JSON.stringify(generic, null, 2)}`)
+          // console.log(`api gateway: ${JSON.stringify(apiGateway, null, 2)}`)
 
           apiGateway.forEach(api => {
             if (generic) {
@@ -161,7 +149,8 @@ export class ApiManagement extends Component {
   }
 
   hideApiGatewayApi = (api) => {
-    if (api.genericId) {
+    console.log(api)
+    if (!api.subscribable) {
       this.deleteAPISpec(api.genericId)
     } else {
       apiGatewayClient()
@@ -211,7 +200,6 @@ export class ApiManagement extends Component {
   }
 
   tableSort = (first, second) => {
-    console.log(`Comparing ${JSON.stringify(first, null, 4)} and ${JSON.stringify(second, null, 4)}`)
     if(first.name !== second.name) {
       return first.name.localeCompare(second.name)
     } else {

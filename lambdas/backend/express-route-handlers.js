@@ -2,6 +2,7 @@ const customersController = require('./_common/customers-controller.js')
 const feedbackController = require('./_common/feedback-controller.js')
 const AWS = require('aws-sdk')
 const catalog = require('./catalog/index')
+const hash = require('object-hash')
 
 const Datauri = require('datauri')
 
@@ -29,21 +30,6 @@ function getCognitoUserId(req) {
           userPoolUserId = parts[parts.length - 1]
 
     return userPoolUserId
-}
-
-// See: https://github.com/darkskyapp/string-hash/blob/master/index.js
-function hash(str) {
-  let hash = 5381,
-    i = str.length;
-
-  while (i) {
-    hash = (hash * 33) ^ str.charCodeAt(--i);
-  }
-
-  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
-   * integers. Since we want the results to be always positive, convert the
-   * signed int to an unsigned by doing an unsigned bitshift. */
-  return hash >>> 0;
 }
 
 // this returns the key we use in the CustomersTable. It's constructed from the issuer field and the username when we
@@ -502,11 +488,12 @@ async function postAdminCatalogVisibility(req, res) {
                 }
     
             } else if (req.body.subscribable === 'false') {
-                console.log(`non-subscribabel API gateway API found: ${swagger.body}`)
-                console.log(typeof swagger.body)
+                // console.log(`Given the input of type ${typeof swagger.body}:`)
+                // console.log(JSON.stringify(JSON.parse(swagger.body), null, 4))
+                // console.log(`I produced the hash: ${hash(JSON.parse(swagger.body))}`)
                 params = {
                     Bucket: process.env.StaticBucketName,
-                    Key: `catalog/${hash(JSON.stringify(swagger.body))}.json`,
+                    Key: `catalog/${hash(JSON.parse(swagger.body))}.json`,
                     Body: swagger.body
                 }
             }
