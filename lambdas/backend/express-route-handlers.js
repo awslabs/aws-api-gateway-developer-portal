@@ -484,20 +484,23 @@ async function postAdminCatalogVisibility(req, res) {
             }).promise()
 
             console.log('swagger: ', swagger.body)
+            console.log('subscribable: ', req.body.subscribable)
             
-            let params;
-            if (req.body.subscribable) {
+            let params
+            if (req.body.subscribable === 'true') {
                 params = {
                     Bucket: process.env.StaticBucketName,
                     Key: `catalog/${req.body.apiKey}.json`,
                     Body: swagger.body
                 }
     
-            } else {
+            } else if (req.body.subscribable === 'false') {
+                console.log(`non-subscribabel API gateway API found: ${swagger.body}`)
+                console.log(typeof swagger.body)
                 params = {
                     Bucket: process.env.StaticBucketName,
-                    Key: `catalog/${hash(req.body.swagger)}.json`,
-                    Body: req.body.swagger
+                    Key: `catalog/${hash(JSON.stringify(swagger.body))}.json`,
+                    Body: swagger.body
                 }
             }
             console.log('params: ', params)

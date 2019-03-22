@@ -105,26 +105,6 @@ function getSwaggerFile(file) {
         result.apiStageKey = file.Key.replace('catalog/', '').split('.')[0]
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
-      // for Swagger 2, the api ID might be in the body.host field,
-      // and the stage might be in the body.basePath field
-      else if (swagger.host && swagger.basePath) {
-        let apiId, stage;
-
-        apiId = swagger.host.pop()
-        stage = swagger.basePath.pop()
-        result.apiStageKey = `${apiId}_${stage}`
-        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
-      }
-      // for OAS 3, the api ID might be in the body.servers[0].url field,
-      // and the stage might be in the body.servers[0].variables.basePath.default field
-      else if (oas.host && oas.basePath) {
-        let apiId, stage;
-
-        apiId = oas.host.pop()
-        stage = oas.basePath.pop()
-        result.apiStageKey = `${apiId}_${stage}`
-        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
-      }
       // if none of the above checks worked, assume it's a generic api
       else {
         console.log(`Generic Swagger definition found: ${file.Key}`)
