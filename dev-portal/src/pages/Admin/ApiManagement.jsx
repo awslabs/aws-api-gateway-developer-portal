@@ -258,7 +258,7 @@ export class ApiManagement extends Component {
                       <Button basic
                         // color={api.sdkGeneration ? 'green' : 'red'}
                         color='blue'
-                        disabled={!api.subscribable || !this.isSdkGenerationConfigurable(api)}
+                        disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
                         onClick={() => this.toggleSdkGeneration(this.state.apis.apiGateway, api)}>
                         {api.sdkGeneration ? 'Enabled' : 'Disabled'}
                       </Button>

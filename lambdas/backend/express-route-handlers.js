@@ -447,7 +447,9 @@ async function getAdminCatalogVisibility(req, res) {
 
             visibility.generic[catalogEntry.id] = {
                 visibility: true,
-                name: catalogEntry.swagger.info.title || 'Untitled'
+                name: catalogEntry.swagger.info.title || 'Untitled',
+                stage: catalogEntry.stage,
+                apiId: catalogEntry.apiId
             }
         })
 
@@ -543,7 +545,7 @@ async function deleteAdminCatalogVisibility(req, res) {
 
         catalogObject.apiGateway.forEach((usagePlan) => {
             usagePlan.apis.forEach((api) => {
-                if(api.id === req.params.id.split('_')[0] && api.stage === req.params.id.split(('_')[1])) {
+                if(api.id === req.params.id.split('_')[0] && api.stage === req.params.id.split('_')[1]) {
                     unsubscribable = false
                 }
             })
