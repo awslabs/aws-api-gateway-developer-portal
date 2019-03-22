@@ -24,7 +24,7 @@ export class ApiManagement extends Component {
   fileInput = React.createRef()
 
   componentDidMount() {
-    this.setState(prev => ({...prev, errors: [ ] }))
+    this.setState(prev => ({ ...prev, errors: [] }))
     this.getApiVisibility()
   }
 
@@ -50,13 +50,13 @@ export class ApiManagement extends Component {
             swagger = JSON.stringify(swaggerObject)
           }
 
-          if(!(swaggerObject.info && swaggerObject.info.title)) {
+          if (!(swaggerObject.info && swaggerObject.info.title)) {
             anyFailures = true
-            this.setState(prev => ({ ... prev, errors: [ ...prev.errors, file.name ] }))
+            this.setState(prev => ({ ...prev, errors: [...prev.errors, file.name] }))
             return
           }
 
-          if(anyFailures) {
+          if (anyFailures) {
             return
           }
 
@@ -77,7 +77,7 @@ export class ApiManagement extends Component {
   deleteAPISpec = (apiId) => {
     getApi(apiId, false, undefined, true).then(api => {
       let _api = toJS(api),
-          myHash = hash(_api.swagger)
+        myHash = hash(_api.swagger)
 
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
@@ -104,10 +104,12 @@ export class ApiManagement extends Component {
           apiGateway.forEach(api => {
             if (generic) {
               generic.forEach(genApi => {
-                if(res.data.generic[`${genApi}`]) {
-                  if(res.data.generic[`${genApi}`].name === api.name) {
+                if (res.data.generic[`${genApi}`]) {
+                  if (
+                    res.data.generic[`${genApi}`].apiId === api.id &&
+                    res.data.generic[`${genApi}`].stage === api.stage
+                  ) {
                     api.visibility = true
-                    api.genericId = genApi
                     delete res.data.generic[`${genApi}`]
                   }
                 }
@@ -134,13 +136,13 @@ export class ApiManagement extends Component {
   }
 
   showApiGatewayApi = (api) => {
-      apiGatewayClient()
-        .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
-        .then((res) => {
-          if (res.status === 200) {
-            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
-          }
-        })
+    apiGatewayClient()
+      .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
+      .then((res) => {
+        if (res.status === 200) {
+          this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
+        }
+      })
   }
 
   hideApiGatewayApi = (api) => {
@@ -148,12 +150,12 @@ export class ApiManagement extends Component {
       this.deleteAPISpec(api.genericId)
     } else {
       apiGatewayClient()
-      .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
-      .then((res) => {
-        if (res.status === 200) {
-          this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
-        }
-      })
+        .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
+        .then((res) => {
+          if (res.status === 200) {
+            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
+          }
+        })
     }
   }
 
@@ -171,14 +173,14 @@ export class ApiManagement extends Component {
     console.log(`toggling generation for ${updatedApi.name}: ${updatedApi.id}_${updatedApi.stage}`)
     apiGatewayClient()
       .then(app => {
-        if(updatedApi.sdkGeneration) {
-            return app.delete(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
+        if (updatedApi.sdkGeneration) {
+          return app.delete(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
         } else {
-            return app.put(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
+          return app.put(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
         }
       })
       .then(res => {
-        if(res.status === 200) {
+        if (res.status === 200) {
           const updatedApis = apisList.map(stateApi => {
             if (stateApi.id === updatedApi.id && stateApi.stage === updatedApi.stage) {
               stateApi.sdkGeneration = !stateApi.sdkGeneration
@@ -187,14 +189,14 @@ export class ApiManagement extends Component {
           })
 
           this.setState(
-            ({apis: {generic = undefined}}, ...prev) => ({...prev, apis: {apiGateway: updatedApis, generic}})
+            ({ apis: { generic = undefined } }, ...prev) => ({ ...prev, apis: { apiGateway: updatedApis, generic } })
           )
         }
       })
   }
 
   tableSort = (first, second) => {
-    if(first.name !== second.name) {
+    if (first.name !== second.name) {
       return first.name.localeCompare(second.name)
     } else {
       return first.stage.localeCompare(second.stage)
@@ -204,7 +206,7 @@ export class ApiManagement extends Component {
   genericTableSort = (firstIndex, secondIndex) => {
     const list = this.state.apis.generic
 
-    if(list[firstIndex].name !== list[secondIndex].name) {
+    if (list[firstIndex].name !== list[secondIndex].name) {
       list[firstIndex].name.localeCompare(list[secondIndex].name)
     } else {
       // compare by their index, which happens to be their id
