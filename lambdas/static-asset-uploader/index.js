@@ -176,14 +176,32 @@ function cleanS3Bucket(bucketName) {
         })
 }
 
+/**
+ * Creates a catalog directory for the user to put API specifications in.
+ *
+ * @param staticBucketName the name of the bucket the folder should be created in
+ * @returns {Promise.<Object>} the object returned by the headObject operation or the upload operation
+ */
 function createCatalogDirectory(staticBucketName) {
     let params = { Bucket: staticBucketName, Key: 'catalog/', Body: '' }
     return exports.s3.upload(params).promise()
 }
 
-function createSdkGenerationFile(staticBucketName) {
-    let params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}' }
-    return exports.s3.upload(params).promise()
+/**
+ * Checks to see if an sdkGeneration file exists, and creates it if it does not.
+ *
+ * @param staticBucketName the name of the bucket the file should exist in
+ * @returns {Promise.<Object>} the object returned by the headObject operation or the upload operation
+ */
+async function createSdkGenerationFile(staticBucketName) {
+    return await exports.s3.headObject({ Bucket: staticBucketName, Key: 'sdkGeneration.json' }).promise()
+        .catch((error) => {
+            console.error()
+            //assume it's a NotFound error, and upload a new version
+            let params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}' }
+            return exports.s3.upload(params).promise()
+        })
+
 }
 
 function addConfigFile(bucketName, event) {
