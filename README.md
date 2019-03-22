@@ -1,7 +1,7 @@
 ## Introduction
 [![Build Status](https://travis-ci.org/awslabs/aws-api-gateway-developer-portal.svg?branch=master)](https://travis-ci.org/awslabs/aws-api-gateway-developer-portal)
 
-The Amazon API Gateway Serverless Developer Portal is an application that you use for developer engagement by making your API Gateway APIs available to your customers through self-service discovery of those APIs. Your customers can use the developer portal to browse API documentation, register for – and immediately receive – their own API key that can be used to build applications, test published APIs, and monitor their own API usage. 
+The Amazon API Gateway Serverless Developer Portal is an application that you use for developer engagement by making your API Gateway APIs available to your customers through self-service discovery of those APIs. Your customers can use the developer portal to browse API documentation, register for – and immediately receive – their own API key that can be used to build applications, test published APIs, monitor their own API usage, generate SDKs, and submit feedback on your APIs design.
 
 For more information about Amazon API Gateway, visit the API Gateway [product page](https://aws.amazon.com/api-gateway/).
 
@@ -13,7 +13,7 @@ It also optionally supports subscription/unsubscription through a SaaS product o
 ## Setup
 There are 2 main ways to deploy the Developer Portal today:
 ### 1. Deploy with SAR
-This deployment model is better if you want an easy way deploy the developer portal and use it as-is out of box. You can deploy the Serverless Developer Portal through SAR in a few clicks! See the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html).
+This deployment model is better if you want an easy way to deploy the developer portal and use it as-is out of box. You can deploy the Serverless Developer Portal through SAR in a few clicks! See the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html).
 
 ### 2. Deploy with SAM
 This deployment model is better if you plan to customize the developer portal heavily and setup CI/CD on it.
@@ -38,7 +38,7 @@ sam package --template-file ./cloudformation/template.yaml --output-template-fil
 Then run: 
 >Replace `custom-prefix` in the command below with some prefix that is globally unique, like your org name or username and run
 ```bash
-sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts"
+sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CognitoDomainNameOrPrefix="custom-prefix"
 ```
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
@@ -49,27 +49,31 @@ To get the URL for the newly created developer portal instance, find the website
 aws cloudformation describe-stacks --query "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
 ```
 
-You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
+You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal or customize some of the features. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
 
-## Populate the Swagger catalog
+## Registering Users
+Users can self-register by clicking the 'Register' button in the developer portal. Cognito calls the `CognitoUserPoolsConfirmationStrategyFunction` to determine if the user is allowed to register themselves. By default, this function always accepts the user into the user pool, but you can customize the body of the function either in a local repository (followed by packaging and deploying) or in the lambda console. If you intend for the developer portal to be 'private' to some group of users (and not globally / freely accessible), you will need to write a lambda function that enforces your business logic for user registration. Documentation on this lambda function's use can be found [here](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-sign-up.html).
 
+### Promoting a User to an Admin
+Admin users can manage what APIs are visible to normal users and whether or not SDK generation is enabled (per api) for normal users. To promote a user to an admin, go to the Cognito console in the account the developer portal is in, select User Pools, then select the correct User Pool for the dev portal. From there, choose Users and groups, click on the users' name, choose Add to group, and select the group named `STACK-NAMEAdminsGroup`. This user is now an admin; if they're currently logged in, they will have to log out and back in to receive admin credentials.
+
+## Populate the API catalog
 By default the Developer Portal won't list any APIs. You will have to pick and choose which APIs to show. There are 2 types of APIs:
 
 ### Subscribable APIs
 For an API to be subscribable, they must be managed by Amazon API Gateway. The Developer Portal can let a user associate their API Key with these APIs (via the Subscribe button) so they can start calling and developing on these APIs.
 
 To list a subscribable API:
-1. Associate that API & stage to a usage plan. 
-2. Export the API's Swagger (must export as JSON, with API GW extensions) from the stage
-> Note: If you're using custom domains in API Gateway, you will need to rename the Swagger file in the format `apiId_stageName.json` and upload it to the `ArtifactsS3Bucket` (actual name provided as a parameter override on the CLI when deploying) in the `catalog` folder. An example might be named `d89n46zud1_production.json`. Note that this is case sensitive!
-3. Upload the exported Swagger file to the `catalog` folder which will cause a `catalog.json` file to be generated automatically. This file should contain a mapping of usage plans to api-stage with the Swagger for that api-stage inline.
-> Note: The `catalog.json` file will be automatically re-built every time a file is added or removed from the `catalog` folder. If you associate or disassociate a new api-stage to your usage plan, you will need to add or remove a Swagger file from the `catalog` folder in order for the `catalog.json` file to be current.
+1. In API Gateway's console or CLI, associate that API & stage to a usage plan.
+2. Log into the developer portal using an admin account and go to the Admin Panel tab.
+3. In the "Displayed" column, click "False".
 
 ### Non-subscribable APIs
-The Developer can also list APIs that are managed outside of Amazon API Gateway (eg. APIs hosted on-premise). The Developer Portal won't be able to associate an API Key with the API automatically however they can still test the APIs. 
+The Developer can also list APIs that are managed outside of Amazon API Gateway (eg. APIs hosted on-premise). The Developer Portal won't be able to associate an API Key with the API automatically; however, customers can still test the APIs.
 
 To list a non-subscribable API:
-1. Upload the Swagger file for your API to the `catalog` folder. (See above for additional notes and details).
+1. Log into the developer portal using an admin account and go to the Admin Panel tab.
+2. In the "Generic APIs" table, click "Add API", select an API specification file (Swagger or OAS3 in .json, .yaml, or .yml), and upload it.
 
 ### Testing your APIs
 
