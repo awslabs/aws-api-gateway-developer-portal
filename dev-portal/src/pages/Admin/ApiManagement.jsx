@@ -177,6 +177,26 @@ export class ApiManagement extends Component {
       })
   }
 
+  tableSort = (first, second) => {
+    console.log(`Comparing ${JSON.stringify(first, null, 4)} and ${JSON.stringify(second, null, 4)}`)
+    if(first.name !== second.name) {
+      return first.name.localeCompare(second.name)
+    } else {
+      return first.stage.localeCompare(second.stage)
+    }
+  }
+
+  genericTableSort = (firstIndex, secondIndex) => {
+    const list = this.state.apis.generic
+
+    if(list[firstIndex].name !== list[secondIndex].name) {
+      list[firstIndex].name.localeCompare(list[secondIndex].name)
+    } else {
+      // compare by their index, which happens to be their id
+      return firstIndex.localeCompare(secondIndex)
+    }
+  }
+
   render() {
     return (
       <div style={{ display: 'flex', width: '100%' }}>
@@ -198,7 +218,7 @@ export class ApiManagement extends Component {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {this.state.apis.apiGateway ? this.state.apis.apiGateway.map((api, i) =>
+              {this.state.apis.apiGateway ? this.state.apis.apiGateway.sort(this.tableSort).map((api, i) =>
                 api.id !== window.config.restApiId && (
                   <Table.Row key={i}>
                     <Table.Cell collapsing>{api.name}</Table.Cell>
@@ -287,7 +307,7 @@ export class ApiManagement extends Component {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {this.state.apis.generic ? Object.keys(this.state.apis.generic).map((apiId, i) =>
+              {this.state.apis.generic ? Object.keys(this.state.apis.generic).sort(this.genericTableSort).map((apiId, i) =>
                 (
                   <Table.Row key={i}>
                     <Table.Cell collapsing>{this.state.apis.generic[apiId].name}</Table.Cell>
