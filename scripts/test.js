@@ -1,4 +1,4 @@
-const { spawn } = require('child_process'),
+const { spawn, spawnSync } = require('child_process'),
     path = require('path'),
     convert = require('xml-js'),
     fse = require('fs-extra')
@@ -149,12 +149,26 @@ async function runTests(withCoverage) {
     if(withCoverage) processCoverage(await synthesizeCoverage())
 }
 
+function runIntegTests() {
+    let params = { stdio: 'inherit', shell: true, cwd: process.cwd() }
+
+    // run the tests with 4 worker threads so the 40 minute-long test runs run in parallel
+    // increase this as tests are added, if needed
+    for(let region of ['us-east-1', 'us-west-2']) {
+        spawnSync(`sam package --region ${region} --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged-${region}.yaml --s3-bucket dev-portal-integ-${region}`, params)
+    }
+
+    return spawnSync('jest -w 4 cfn-integration-test', params)
+}
+
 // maybe bring in an args parsing library later
 let args = process.argv.slice(2)
 if(args[0] === '--coverage=true') {
     return runTests(true).catch((e) => console.error(e))
 } else if(args[0] === '--coverage=false') {
     return runTests(false).catch((e) => console.error(e))
+} else if(args[0] === '--integ=true'){
+    return runIntegTests()
 } else {
     return runTests(false).catch((e) => console.error(e))
 }

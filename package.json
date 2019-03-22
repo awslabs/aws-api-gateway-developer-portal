@@ -9,14 +9,19 @@
     "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)",
     "test": "node scripts/test.js",
     "coverage": "node scripts/test.js --coverage=true",
-    "cover": "npm run coverage"
+    "integ": "node scripts/test.js --integ=true",
+    "cover": "npm run coverage",
+    "cfn-lint": "cfn-lint cloudformation/template.yaml -c I"
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "aws-sdk": "^2.406.0",
     "fs-extra": "^7.0.1",
     "jest": "^23.6.0",
     "memorystream": "^0.3.1",
     "xml-js": "^1.6.8"
   },
-  "dependencies": {}
+  "dependencies": {
+    "request-promise": "^4.2.4"
+  }
 }

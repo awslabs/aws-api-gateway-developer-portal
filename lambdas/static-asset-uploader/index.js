@@ -204,6 +204,10 @@ function addConfigFile(bucketName, event) {
         },
         options = {}
 
+    if (event.ResourceProperties.DevelopmentMode === "true") {
+        params.ACL = "public-read"
+    }
+
     console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)
 
     let suffix = event.ResourceProperties.MarketplaceSuffix
@@ -228,6 +232,10 @@ function processFile(fileStat, readPromises, uploadPromises, bucketName, event, 
                     ContentType: determineContentType(filePath)
                 },
                 options = {}
+
+            if(event.ResourceProperties.DevelopmentMode === "true") {
+                params.ACL = "public-read"
+            }
 
             uploadPromises.push(exports.s3.upload(params, options).promise())
         })
