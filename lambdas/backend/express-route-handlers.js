@@ -143,8 +143,9 @@ function putSubscription(req, res) {
     console.log(`PUT /subscriptions for Cognito ID: ${cognitoIdentityId}`)
     const usagePlanId = req.params.usagePlanId
 
-    getUsagePlanFromCatalog(usagePlanId).then((usagePlan) => {
-        const isUsagePlanInCatalog = Boolean(usagePlan)
+    getUsagePlanFromCatalog(usagePlanId).then(async (catalogUsagePlan) => {
+        const isUsagePlanInCatalog = Boolean(catalogUsagePlan)
+        const apiGatewayUsagePlan = await exports.apigateway.getUsagePlan({ usagePlanId }).promise()
 
         function error(data) {
             console.log(`error: ${data}`)
@@ -158,6 +159,14 @@ function putSubscription(req, res) {
         if (!isUsagePlanInCatalog) {
             res.status(404).json({ error: 'Invalid Usage Plan ID' })
         } else {
+            apiGatewayUsagePlan.apiStages.forEach((apiStage) => {
+                // if there are any apiStages in the api gateway usage plan and not the catalog
+                // reject this request
+                if(!catalogUsagePlan.apis.find((catalogApiStage) => catalogApiStage.id === apiStage.apiId && catalogApiStage.stage === apiStage.stage)) {
+                    res.status(404).json({ error: 'Misconfigured usage plan' })
+                }
+            })
+
             customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
         }
     })
