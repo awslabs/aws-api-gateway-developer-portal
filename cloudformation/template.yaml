@@ -182,7 +182,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -225,7 +229,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -268,7 +276,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -311,7 +323,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -380,7 +396,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -436,7 +456,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -484,7 +508,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
