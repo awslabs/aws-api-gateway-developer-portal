@@ -1118,7 +1118,7 @@ Resources:
       ]
       LogoutURL: !If [ DevelopmentMode,
         [
-          'http://localhost:3000/login',
+          'http://localhost:3000',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
         ],
         [
