@@ -1367,10 +1367,10 @@ Resources:
         Aliases:
           - !Ref CustomDomainName
           - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
-        CustomErrorResponses:
-          - ErrorCode: 403
-            ResponseCode: 200
-            ResponsePagePath: '/index.html'
+#        CustomErrorResponses:
+#          - ErrorCode: 403
+#            ResponseCode: 200
+#            ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
             QueryString: true
@@ -1396,10 +1396,10 @@ Resources:
     Condition: NoCustomDomainName
     Properties:
       DistributionConfig:
-        CustomErrorResponses:
-          - ErrorCode: 403
-            ResponseCode: 200
-            ResponsePagePath: '/index.html'
+#        CustomErrorResponses:
+#          - ErrorCode: 403
+#            ResponseCode: 200
+#            ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
             QueryString: true
