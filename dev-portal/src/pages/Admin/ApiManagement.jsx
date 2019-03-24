@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import { Button, Table, Modal, Form, Message, Popup } from 'semantic-ui-react'
+import { Button, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
 import { getApi } from 'services/api-catalog'
@@ -284,11 +284,11 @@ export class ApiManagement extends Component {
     // some APIs are visible, some are hidden; show the current state (Partial, with a warning) and enable on click
     else {
       return (
-      <Popup content='All APIs on this usage plan are subscribable, even those that are not visible!' trigger={<Button basic
+      <Popup content='Users subscribed to any of the APIs in this usage plan will have a valid API key for all APIs in this usage plan, even those that are not visible!' trigger={<Button basic
                               color='yellow'
-                              style={{'backgroundColor': 'white', width: '100%'}}
+                              style={{ backgroundColor: 'white', width: '100%', paddingLeft: '1em', paddingRight: '1em', minWidth: '88px' }}
                               onClick={() => this.showAllApiGatewayApis(usagePlan)}>
-        Partial
+        Partial <Icon name='warning sign' style={{ paddingLeft: '5px' }} />
       </Button>} />
       )
     }
