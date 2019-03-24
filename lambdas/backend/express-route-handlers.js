@@ -142,17 +142,14 @@ function putSubscription(req, res) {
             res.status(201).json(data)
         }
 
+        // the usage plan doesn't exist
         if (!isUsagePlanInCatalog) {
             res.status(404).json({ error: 'Invalid Usage Plan ID' })
+        // the usage plan exists, but 0 of its apis are visible
+        } else if(!catalogUsagePlan.apis.length) {
+            res.status(404).json({ error: 'Invalid Usage Plan ID' })
+        // allow subscription if (the usage plan exists, at least 1 of its apis are visible)
         } else {
-            apiGatewayUsagePlan.apiStages.forEach((apiStage) => {
-                // if there are any apiStages in the api gateway usage plan and not the catalog
-                // reject this request
-                if(!catalogUsagePlan.apis.find((catalogApiStage) => catalogApiStage.id === apiStage.apiId && catalogApiStage.stage === apiStage.stage)) {
-                    res.status(400).json({ error: 'Misconfigured usage plan' })
-                }
-            })
-
             customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
         }
     })
