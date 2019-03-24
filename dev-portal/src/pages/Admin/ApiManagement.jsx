@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import { Button, Table, Modal, Form, Message } from 'semantic-ui-react'
+import { Button, Table, Modal, Form, Message, Popup } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
 import { getApi } from 'services/api-catalog'
@@ -64,7 +64,7 @@ export class ApiManagement extends Component {
             .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
             .then((res) => {
               if (res.status === 200) {
-                this.setState(prev => ({ ...prev, modalOpen: false, errors: [] }))
+                this.setState(prev => ({ ...prev, modalOpen: anyFailures, errors: anyFailures ? prev.errors : [] }))
               }
               setTimeout(() => this.getApiVisibility(), 2000)
             })
@@ -122,10 +122,14 @@ export class ApiManagement extends Component {
       })
   }
 
-  updateLocalApiGatewayApis = (apisList, updatedApi) => {
+  updateLocalApiGatewayApis = (apisList, updatedApi, parity) => {
     const updatedApis = apisList.map(stateApi => {
       if (stateApi.id === updatedApi.id && stateApi.stage === updatedApi.stage) {
-        stateApi.visibility = !stateApi.visibility
+        if(parity !== undefined && (parity === true || parity === false)) {
+          stateApi.visibility = parity
+        } else {
+          stateApi.visibility = !stateApi.visibility
+        }
       }
       return stateApi
     })
@@ -159,10 +163,40 @@ export class ApiManagement extends Component {
     }
   }
 
+    showAllApiGatewayApis = (usagePlan) => {
+      Promise.all(usagePlan.apis.map((api) =>
+          apiGatewayClient()
+            .then(app => app.post('/admin/catalog/visibility', {}, {
+              apiKey: `${api.id}_${api.stage}`,
+              subscribable: `${api.subscribable}`
+            }, {}))
+            .then(res => { res.api = api; return res })
+      )).then((promises) => {
+        promises.forEach((result) => {
+          if (result.status === 200) {
+            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, result.api, true)
+          }
+        })
+      })
+    }
+
+    hideAllApiGatewayApis = (usagePlan) => {
+      Promise.all(usagePlan.apis.map((api) =>
+        apiGatewayClient()
+          .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
+          .then(res => { res.api = api; return res })
+      )).then((promises) => {
+        promises.forEach((result) => {
+          if (result.status === 200) {
+            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, result.api, false)
+          }
+        })
+      })
+    }
+
   updateApiGatewayApi = (api) => {
     apiGatewayClient()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
-      .then(res => console.log(res.status))
   }
 
   isSdkGenerationConfigurable = (api) => {
@@ -170,7 +204,6 @@ export class ApiManagement extends Component {
   }
 
   toggleSdkGeneration = (apisList, updatedApi) => {
-    console.log(`toggling generation for ${updatedApi.name}: ${updatedApi.id}_${updatedApi.stage}`)
     apiGatewayClient()
       .then(app => {
         if (updatedApi.sdkGeneration) {
@@ -214,6 +247,158 @@ export class ApiManagement extends Component {
     }
   }
 
+  usagePlanSort = (first, second) => {
+    if (first.name !== second.name) {
+      return first.name.localeCompare(second.name)
+    } else {
+      return first.id.localeCompare(second.id)
+    }
+  }
+
+  renderHeaderVisibilityButton(usagePlan) {
+    let numberOfApis = usagePlan.apis.length,
+        numberofVisibleApis = usagePlan.apis.filter((api) => api.visibility === true).length
+
+    // every API is visible, show the "disable" button
+    if(numberOfApis === numberofVisibleApis) {
+      return (
+        <Button basic
+                color='green'
+                style={{'backgroundColor': 'white', width: '100%'}}
+                onClick={() => this.hideAllApiGatewayApis(usagePlan)}>
+            True
+        </Button>
+      )
+    }
+    // every API is not visible, show the current state (False) and enable on click
+    else if(numberofVisibleApis === 0) {
+      return (
+        <Button basic
+                color='red'
+                style={{'backgroundColor': 'white', width: '100%'}}
+                onClick={() => this.showAllApiGatewayApis(usagePlan)}>
+            False
+        </Button>
+      )
+    }
+    // some APIs are visible, some are hidden; show the current state (Partial, with a warning) and enable on click
+    else {
+      return (
+      <Popup content='All APIs on this usage plan are subscribable, even those that are not visible!' trigger={<Button basic
+                              color='yellow'
+                              style={{'backgroundColor': 'white', width: '100%'}}
+                              onClick={() => this.showAllApiGatewayApis(usagePlan)}>
+        Partial
+      </Button>} />
+      )
+    }
+  }
+
+  sortByUsagePlan() {
+    if(!this.state.apis.apiGateway)
+      return this.renderNoApis()
+
+    let usagePlans =
+      this.state.apis.apiGateway
+        .filter((api) => api.usagePlanId)
+        .reduce((accumulator, api) => {
+          if(!accumulator.find((usagePlan) => api.usagePlanId === usagePlan.id)) {
+            accumulator.push({ id: api.usagePlanId, name: api.usagePlanName })
+          }
+          return accumulator
+        }, [])
+        .sort(this.usagePlanSort)
+        .map((usagePlan) => {
+          return { ...usagePlan, apis: this.state.apis.apiGateway.filter((api) => api.usagePlanId === usagePlan.id).sort(this.tableSort) }
+        }),
+    unsubscribable =
+      this.state.apis.apiGateway
+        .filter((api) => !api.usagePlanId)
+          .sort(this.tableSort)
+
+    return (
+      <React.Fragment>
+        {usagePlans.map((usagePlan, i) => {
+          return (
+            <React.Fragment>
+              {this.renderHeader(usagePlan, i)}
+              {usagePlan.apis.map((api) => api.id !== window.config.restApiId && this.renderRow(api, i))}
+              <Table.Row style={{'backgroundColor': '#1678c2', 'color': 'white'}}>
+                <Table.Cell colSpan='6'>
+                  <b>Not Subscribable</b> <i>No Usage Plan</i>
+                </Table.Cell>
+              </Table.Row>
+              {unsubscribable.map((api) => api.id !== window.config.restApiId && this.renderRow(api, i))}
+            </React.Fragment>
+          )
+        })}
+      </React.Fragment>
+    )
+  }
+
+  renderNoApis = () => {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan='4'>
+          No APIs found
+        </Table.Cell>
+      </Table.Row>
+    )
+  }
+
+  renderHeader(usagePlan, i) {
+    return (
+      <Table.Row key={i} style={{'backgroundColor': '#1678c2', 'color': 'white'}}>
+        <Table.Cell colSpan='3'>
+          <b>{usagePlan && usagePlan.name}</b> <i>Usage Plan</i>
+        </Table.Cell>
+        <Table.Cell>
+            {this.renderHeaderVisibilityButton(usagePlan)}
+        </Table.Cell>
+        <Table.Cell colSpan='2'>
+
+        </Table.Cell>
+      </Table.Row>
+    )
+  }
+
+  renderRow(api, i) {
+    return (
+      <Table.Row>
+        <Table.Cell collapsing>{api.name}</Table.Cell>
+        <Table.Cell>{api.stage}</Table.Cell>
+        <Table.Cell>{api.subscribable ? 'Subscribable' : 'Not Subscribable'}</Table.Cell>
+        <Table.Cell>
+          <Button basic
+                  color={api.visibility ? 'green' : 'red'}
+                  style={{ width: '100%' }}
+                  onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}>
+              {api.visibility ? 'True' : 'False'}
+          </Button>
+        </Table.Cell>
+        <Table.Cell>
+          <Button basic
+                  color='blue'
+                  disabled={!api.visibility}
+                  style={{ width: '100%' }}
+                  onClick={() => this.updateApiGatewayApi(api)}>
+            Update
+          </Button>
+        </Table.Cell>
+        <Table.Cell>
+          <Button basic
+              // color={api.sdkGeneration ? 'green' : 'red'}
+                  color='blue'
+                  style={{ width: '100%' }}
+                  disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
+                  onClick={() => this.toggleSdkGeneration(this.state.apis.apiGateway, api)}>
+              {api.sdkGeneration ? 'Enabled' : 'Disabled'}
+          </Button>
+        </Table.Cell>
+      </Table.Row>
+    )
+  }
+
   render() {
     return (
       <div style={{ display: 'flex', width: '100%' }}>
@@ -235,44 +420,7 @@ export class ApiManagement extends Component {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {this.state.apis.apiGateway ? this.state.apis.apiGateway.sort(this.tableSort).map((api, i) =>
-                api.id !== window.config.restApiId && (
-                  <Table.Row key={i}>
-                    <Table.Cell collapsing>{api.name}</Table.Cell>
-                    <Table.Cell>{api.stage}</Table.Cell>
-                    <Table.Cell>{api.subscribable ? 'Subscribable' : 'Not Subscribable'}</Table.Cell>
-                    <Table.Cell>
-                      <Button basic
-                        color={api.visibility ? 'green' : 'red'}
-                        onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}>
-                        {api.visibility ? 'True' : 'False'}
-                      </Button>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Button basic
-                        color='blue'
-                        disabled={!api.visibility}
-                        onClick={() => this.updateApiGatewayApi(api)}>
-                        Update
-                      </Button>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Button basic
-                        // color={api.sdkGeneration ? 'green' : 'red'}
-                        color='blue'
-                        disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
-                        onClick={() => this.toggleSdkGeneration(this.state.apis.apiGateway, api)}>
-                        {api.sdkGeneration ? 'Enabled' : 'Disabled'}
-                      </Button>
-                    </Table.Cell>
-                  </Table.Row>
-                )) : (
-                  <Table.Row >
-                    <Table.Cell colSpan='4'>
-                      No APIs found
-                </Table.Cell>
-                  </Table.Row>
-                )}
+              { this.sortByUsagePlan() }
             </Table.Body>
           </Table>
         </div>
