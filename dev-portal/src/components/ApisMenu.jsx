@@ -43,7 +43,7 @@ export default observer(function ApisMenu(props) {
   // If we're not loading, and we don't have any apis, display a message.
   // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis 
   return (
-    <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0, flex: "0 0 auto", position: "relative" }} {...this.props}>
+    <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0, flex: "0 0 auto", position: "relative", overflowY: "scroll" }} {...this.props}>
       {loadingApis && <Loader active />}
       {(hasGatewayApis || hasGenericApis) ? (
         <React.Fragment>
