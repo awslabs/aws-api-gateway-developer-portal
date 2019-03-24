@@ -149,7 +149,7 @@ function putSubscription(req, res) {
                 // if there are any apiStages in the api gateway usage plan and not the catalog
                 // reject this request
                 if(!catalogUsagePlan.apis.find((catalogApiStage) => catalogApiStage.id === apiStage.apiId && catalogApiStage.stage === apiStage.stage)) {
-                    res.status(404).json({ error: 'Misconfigured usage plan' })
+                    res.status(400).json({ error: 'Misconfigured usage plan' })
                 }
             })
 
