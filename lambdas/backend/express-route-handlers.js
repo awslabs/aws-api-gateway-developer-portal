@@ -436,8 +436,12 @@ async function getAdminCatalogVisibility(req, res) {
 
             usagePlans.items.forEach((usagePlan) => {
                 usagePlan.apiStages.forEach((apiStage) => {
-                    if(apiEntry.id === apiStage.apiId && apiEntry.stage === apiStage.stage)
+                    if(apiEntry.id === apiStage.apiId && apiEntry.stage === apiStage.stage) {
                         apiEntry.subscribable = true
+                        apiEntry.usagePlanId = usagePlan.id
+                        apiEntry.usagePlanName = usagePlan.name
+                    }
+
                     apiEntry.sdkGeneration = !!apiEntry.sdkGeneration
                 })
             })
