@@ -436,6 +436,7 @@ export class ApiManagement extends Component {
               <Table.Row>
                 <Table.HeaderCell colSpan='2'>
                   <Modal
+                    closeIcon
                     closeOnEscape={true}
                     closeOnDimmerClick={true}
                     onClose={() => this.setState((prev) => ({ ...prev, modalOpen: false }))}
