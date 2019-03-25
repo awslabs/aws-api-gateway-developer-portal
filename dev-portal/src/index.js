@@ -23,6 +23,7 @@ import AlertPopup from 'components/AlertPopup'
 import GlobalModal from 'components/Modal'
 import NavBar from 'components/NavBar'
 import Feedback from './components/Feedback'
+import ApiSearch from './components/ApiSearch'
 
 import { isAdmin, init, login, logout } from 'services/self'
 import './index.css';
@@ -65,6 +66,7 @@ class App extends React.Component {
             <Route path="/dashboard" component={Dashboard} />
             <AdminRoute path="/admin" component={Admin} />
             <Route exact path="/apis" component={Apis} />
+            <Route exact path="/apis/search" component={ApiSearch} />
             <Route exact path="/apis/:apiId" component={Apis}/>
             <Route path="/apis/:apiId/:stage" component={Apis} />
             <Route path="/login" render={() => { login(); return <Redirect to="/" /> }} />

@@ -19,7 +19,7 @@ function isActive(apiId, selectedApiId, stage, selectedStage) {
   return (selectedApiId) ? apiId === selectedApiId && stage === selectedStage : false
 }
 
-export default observer(function ApisMenu() {
+export default observer(function ApisMenu(props) {
   const loadingApis = !store.apiList.loaded
   const hasGatewayApis = !!_.get(store, 'apiList.apiGateway.length')
   const hasGenericApis = !!_.get(store, 'apiList.generic.length')
@@ -27,16 +27,17 @@ export default observer(function ApisMenu() {
   // either grab the selectedApiId from the path OR
   // grab it from the first apiGateway api OR
   // grab it from the first generic api
-  const selectedApiId = (
+  let selectedApiId = (
     this.props.path.params.apiId ||
     (hasGatewayApis && store.apiList.apiGateway[0].id) ||
     (hasGenericApis && store.apiList.generic[0].id)
   )
 
+  if (props.path.url === '/apis/search') {
+    selectedApiId = false
+  }
+
   let selectedStage= ( this.props.path.params.stage || (hasGatewayApis && store.apiList.apiGateway[0].stage) )
-
-  console.log(`selected stage: ${selectedStage}`)
-
 
   // If we're still loading, display a spinner.
   // If we're not loading, and we don't have any apis, display a message.
@@ -46,6 +47,7 @@ export default observer(function ApisMenu() {
       {loadingApis && <Loader active />}
       {(hasGatewayApis || hasGenericApis) ? (
         <React.Fragment>
+          <Menu.Item key="search" as={Link} to="/apis/search" active={props.path.url === '/apis/search'}>Search APIs</Menu.Item>
           {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} selectedStage={selectedStage} />}
           {hasGenericApis && <GenericApiSubsection title="Not Subscribable" listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
         </React.Fragment>
