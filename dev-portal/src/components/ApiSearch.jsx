@@ -1,16 +1,14 @@
 import React, { Component } from 'react';
-import { store } from 'services/state'
-
-import ApisMenu from './ApisMenu'
 
 import { Link } from 'react-router-dom'
-import { Menu, Search, Grid, Header, Segment } from 'semantic-ui-react'
+import { Menu, Search, Grid } from 'semantic-ui-react'
 
 import { observer } from 'mobx-react'
-import { toJS } from 'mobx'
+import { store } from 'services/state'
 
 import _ from 'lodash'
 
+import ApisMenu from './ApisMenu'
 import './ApiSearch.css'
 
 const resultRenderer = (result) => (
