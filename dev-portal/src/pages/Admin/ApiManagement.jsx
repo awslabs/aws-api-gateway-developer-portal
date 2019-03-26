@@ -315,15 +315,15 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             <React.Fragment>
               {this.renderHeader(usagePlan, i)}
               {usagePlan.apis.map((api) => api.id !== window.config.restApiId && this.renderRow(api, i))}
-              <Table.Row style={{'backgroundColor': '#1678c2', 'color': 'white'}}>
-                <Table.Cell colSpan='6'>
-                  <b>Not Subscribable</b> <i>No Usage Plan</i>
-                </Table.Cell>
-              </Table.Row>
-              {unsubscribable.map((api) => api.id !== window.config.restApiId && this.renderRow(api, i))}
             </React.Fragment>
           )
         })}
+        <Table.Row style={{'backgroundColor': '#1678c2', 'color': 'white'}}>
+          <Table.Cell colSpan='6'>
+            <b>Not Subscribable</b> <i>No Usage Plan</i>
+          </Table.Cell>
+        </Table.Row>
+        {unsubscribable.map((api) => api.id !== window.config.restApiId && this.renderRow(api))}
       </React.Fragment>
     )
   }
@@ -354,7 +354,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     )
   }
 
-  renderRow(api, i) {
+  renderRow(api) {
     return (
       <Table.Row>
         <Table.Cell collapsing>{api.name}</Table.Cell>
