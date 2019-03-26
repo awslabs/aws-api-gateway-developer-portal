@@ -202,7 +202,7 @@ const sdkTypes = [
   },
   {
     id: "java",
-    friendlyName: "Java SDK",
+    friendlyName: "Java",
     description: "Java SDK generator for API Gateway APIs",
     configurationProperties: [
       {
