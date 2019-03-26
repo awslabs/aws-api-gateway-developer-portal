@@ -196,8 +196,8 @@ function createCatalogDirectory(staticBucketName) {
 async function createSdkGenerationFile(staticBucketName) {
     return await exports.s3.headObject({ Bucket: staticBucketName, Key: 'sdkGeneration.json' }).promise()
         .catch((error) => {
-            console.error()
-            //assume it's a NotFound error, and upload a new version
+            console.error(error)
+            // assume it's a NotFound error, and upload a new version
             let params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}' }
             return exports.s3.upload(params).promise()
         })
