@@ -100,7 +100,13 @@ export class GetSdkModal extends React.Component {
     return { disabled: hasEmptyValue }
   }
 
-  handleChange = (event, { id, value }) => this.setState((prevState) => _.set(_.cloneDeep(prevState), `fields.${id}`, value))
+  handleChange = (event, { id, value }) => {
+    this.setState((prevState) => {
+      let newState = _.cloneDeep(prevState)
+      newState.fields[id] = value
+      return newState
+    })
+  }
 
   handleSubmit = () => {
     if (!this.isDisabled().disabled) {
