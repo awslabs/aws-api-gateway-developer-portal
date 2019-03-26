@@ -454,9 +454,22 @@ async function getAdminCatalogVisibility(req, res) {
 
             visibility.generic[catalogEntry.id] = {
                 visibility: true,
-                name: catalogEntry.swagger.info.title || 'Untitled',
-                stage: catalogEntry.stage,
-                apiId: catalogEntry.apiId
+                name: catalogEntry.swagger.info.title || 'Untitled'
+            }
+
+            if(catalogEntry.stage)
+                visibility.generic[catalogEntry.id].stage = catalogEntry.stage
+            if(catalogEntry.apiId)
+                visibility.generic[catalogEntry.id].apiId = catalogEntry.apiId
+            if(catalogEntry.sdkGeneration !== undefined) {
+                visibility.apiGateway.map((api) => {
+                    console.log(api)
+                    console.log(catalogEntry)
+                    if(api.id === catalogEntry.apiId && api.stage === catalogEntry.stage) {
+                        api.sdkGeneration = catalogEntry.sdkGeneration
+                    }
+                    return api
+                })
             }
         })
 
@@ -489,7 +502,7 @@ async function postAdminCatalogVisibility(req, res) {
             console.log('subscribable: ', req.body.subscribable)
             
             let params
-            if (req.body.subscribable === 'true') {
+            if (req.body.subscribable === 'true' || req.body.subscribable === true) {
                 params = {
                     Bucket: process.env.StaticBucketName,
                     Key: `catalog/${req.body.apiKey}.json`,
