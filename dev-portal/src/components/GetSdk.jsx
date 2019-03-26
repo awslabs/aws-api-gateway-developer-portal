@@ -10,7 +10,7 @@ import { Loader, Button, Header, Modal, Icon, Form } from 'semantic-ui-react'
 import { modal } from 'components/Modal'
 import { addNotification } from 'components/AlertPopup'
 
-import {observer} from 'mobx-react'
+import { observer } from 'mobx-react'
 
 import _ from 'lodash'
 

@@ -4,19 +4,16 @@ import { Button, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-re
 
 import { apiGatewayClient } from 'services/api'
 import { getApi } from 'services/api-catalog'
+import { store } from 'services/state'
 
 import * as YAML from 'yamljs'
 
 import hash from 'object-hash'
 import { toJS } from 'mobx'
+import { observer } from 'mobx-react'
 
-
-export class ApiManagement extends Component {
+export const ApiManagement = observer(class ApiManagement extends React.Component {
   state = {
-    apis: {
-      apiGateway: null,
-      generic: null
-    },
     modalOpen: false,
     errors: []
   }
@@ -24,7 +21,6 @@ export class ApiManagement extends Component {
   fileInput = React.createRef()
 
   componentDidMount() {
-    this.setState(prev => ({ ...prev, errors: [] }))
     this.getApiVisibility()
   }
 
@@ -117,7 +113,7 @@ export class ApiManagement extends Component {
             }
           })
 
-          this.setState(prev => ({ ...prev, apis: res.data }))
+          store.visibility = res.data
         }
       })
   }
@@ -134,9 +130,7 @@ export class ApiManagement extends Component {
       return stateApi
     })
 
-    this.setState(
-      ({ apis: { generic = undefined } }, ...prev) => ({ ...prev, apis: { apiGateway: updatedApis, generic } })
-    )
+      store.visibility = { generic: store.visibility.generic, apiGateway: updatedApis }
   }
 
   showApiGatewayApi = (api) => {
@@ -144,7 +138,7 @@ export class ApiManagement extends Component {
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
       .then((res) => {
         if (res.status === 200) {
-          this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
+          this.updateLocalApiGatewayApis(store.visibility.apiGateway, api)
         }
       })
   }
@@ -157,7 +151,7 @@ export class ApiManagement extends Component {
         .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
         .then((res) => {
           if (res.status === 200) {
-            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, api)
+            this.updateLocalApiGatewayApis(store.visibility.apiGateway, api)
           }
         })
     }
@@ -174,7 +168,7 @@ export class ApiManagement extends Component {
       )).then((promises) => {
         promises.forEach((result) => {
           if (result.status === 200) {
-            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, result.api, true)
+            this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, true)
           }
         })
       })
@@ -188,7 +182,7 @@ export class ApiManagement extends Component {
       )).then((promises) => {
         promises.forEach((result) => {
           if (result.status === 200) {
-            this.updateLocalApiGatewayApis(this.state.apis.apiGateway, result.api, false)
+            this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, false)
           }
         })
       })
@@ -221,9 +215,7 @@ export class ApiManagement extends Component {
             return stateApi
           })
 
-          this.setState(
-            ({ apis: { generic = undefined } }, ...prev) => ({ ...prev, apis: { apiGateway: updatedApis, generic } })
-          )
+          store.visibility.apiGateway = updatedApis
         }
       })
   }
@@ -237,7 +229,7 @@ export class ApiManagement extends Component {
   }
 
   genericTableSort = (firstIndex, secondIndex) => {
-    const list = this.state.apis.generic
+    const list = store.visibility.generic
 
     if (list[firstIndex].name !== list[secondIndex].name) {
       list[firstIndex].name.localeCompare(list[secondIndex].name)
@@ -295,11 +287,11 @@ export class ApiManagement extends Component {
   }
 
   sortByUsagePlan() {
-    if(!this.state.apis.apiGateway)
+    if(!store.visibility.apiGateway)
       return this.renderNoApis()
 
     let usagePlans =
-      this.state.apis.apiGateway
+      store.visibility.apiGateway
         .filter((api) => api.usagePlanId)
         .reduce((accumulator, api) => {
           if(!accumulator.find((usagePlan) => api.usagePlanId === usagePlan.id)) {
@@ -309,10 +301,10 @@ export class ApiManagement extends Component {
         }, [])
         .sort(this.usagePlanSort)
         .map((usagePlan) => {
-          return { ...usagePlan, apis: this.state.apis.apiGateway.filter((api) => api.usagePlanId === usagePlan.id).sort(this.tableSort) }
+          return { ...usagePlan, apis: store.visibility.apiGateway.filter((api) => api.usagePlanId === usagePlan.id).sort(this.tableSort) }
         }),
     unsubscribable =
-      this.state.apis.apiGateway
+      store.visibility.apiGateway
         .filter((api) => !api.usagePlanId)
           .sort(this.tableSort)
 
@@ -391,7 +383,7 @@ export class ApiManagement extends Component {
                   color='blue'
                   style={{ width: '100%' }}
                   disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
-                  onClick={() => this.toggleSdkGeneration(this.state.apis.apiGateway, api)}>
+                  onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}>
               {api.sdkGeneration ? 'Enabled' : 'Disabled'}
           </Button>
         </Table.Cell>
@@ -473,10 +465,10 @@ export class ApiManagement extends Component {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {this.state.apis.generic ? Object.keys(this.state.apis.generic).sort(this.genericTableSort).map((apiId, i) =>
+              {store.visibility.generic ? Object.keys(store.visibility.generic).sort(this.genericTableSort).map((apiId, i) =>
                 (
                   <Table.Row key={i}>
-                    <Table.Cell collapsing>{this.state.apis.generic[apiId].name}</Table.Cell>
+                    <Table.Cell collapsing>{store.visibility.generic[apiId].name}</Table.Cell>
                     <Table.Cell>
                       <Button basic
                         color='red'
@@ -498,4 +490,4 @@ export class ApiManagement extends Component {
       </div>
     );
   }
-}
+})
