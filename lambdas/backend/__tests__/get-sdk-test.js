@@ -32,7 +32,8 @@ describe('getSdk', () => {
                         }
                     ]
                 }
-            ]
+            ],
+            generic: {}
         })
 
         await handlers.getSdk(req, res)
@@ -47,9 +48,8 @@ describe('getSdk', () => {
             parameters: { serviceName: 'my-new-ruby-service' }
         })
 
-        expect(res.attachment).toHaveBeenCalledTimes(1)
-        expect(res.attachment().send).toHaveBeenCalledTimes(1)
-        expect(res.attachment().send).toHaveBeenCalledWith(Buffer.from('returnedSDK'))
+        expect(res.send).toHaveBeenCalledTimes(1)
+        expect(res.send.mock.calls[0][0]).toContain('data:application/zip;base64,')
     })
 
     test('it should not return SDKs for APIs not in the catalog', async () => {
@@ -70,7 +70,8 @@ describe('getSdk', () => {
                         }
                     ]
                 }
-            ]
+            ],
+            generic: {}
         })
 
         await handlers.getSdk(req, res)
@@ -110,7 +111,8 @@ describe('getSdk', () => {
                         }
                     ]
                 }
-            ]
+            ],
+            generic: {}
         })
 
         await handlers.getSdk(req, res)
