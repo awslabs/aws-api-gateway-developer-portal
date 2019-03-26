@@ -6,7 +6,7 @@ import { store } from 'services/state'
 
 import React from 'react'
 
-import { Loader, Dropdown, Button, Header, Modal, Icon, Form } from 'semantic-ui-react'
+import { Loader, Button, Header, Modal, Icon, Form } from 'semantic-ui-react'
 import { modal } from 'components/Modal'
 import { addNotification } from 'components/AlertPopup'
 
@@ -20,19 +20,50 @@ import _ from 'lodash'
 export const GetSdkButton = observer(() => {
   return (
     <span>
-      <Dropdown as={Button} text='Download SDK' pointing className='link item'>
-        <Dropdown.Menu>
-          {sdkTypes.map((type) => {
-            return <Dropdown.Item key={type.id} onClick={() => confirmDownload(type)}>
-              {type.friendlyName}
-            </Dropdown.Item>
-          })}
-        </Dropdown.Menu>
+      <Dropdown text='Download SDK' pointing className='link item'>
+        {sdkTypes.map((type) => {
+          return <div className="item" key={type.id} onClick={() => confirmDownload(type)}>
+            {type.friendlyName}
+          </div>
+        })}
       </Dropdown>
       {store.api.downloadingSdk && <Loader active inline size="tiny" />}
     </span>
   )
 })
+
+class Dropdown extends React.Component {
+  constructor(props) {
+    super(props)
+
+    this.state = { visible: false }
+    this.button = +(new Date()) + '-dropdown-clickable' // we've using this class to exclude certain elements from hiding
+
+    document.addEventListener('click', this.hideDropdown)
+  }
+
+  toggleDropdown = () => this.setState(prevState => ({ ...prevState, visible: !prevState.visible }))
+  hideDropdown = event => {
+    if (!event.target.classList.contains(this.button))
+      this.setState(prevState => ({ ...prevState, visible: false }))
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('click', this.hideDropdown)
+  }
+
+  render() {
+    return (
+      <span onClick={this.toggleDropdown} className={"ui button pointing dropdown link item " + this.button + (this.state.visible ? " active" : "")}>
+        {this.props.text}
+        <i className={"dropdown icon " + this.button}></i>
+        <div className={"menu transition" + (this.state.visible ? " visible" : "")}>
+          {this.props.children}
+        </div>
+      </span>
+    )
+  }
+}
 
 function confirmDownload(type) {
   if (type.configurationProperties.length)
