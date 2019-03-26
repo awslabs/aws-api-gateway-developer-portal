@@ -5,6 +5,7 @@ import _ from 'lodash'
 
 import { apiGatewayClient } from './api'
 import { store } from './state'
+import { isAdmin } from './self'
 
 /* Catalog and API Utils */
 
@@ -15,11 +16,16 @@ import { store } from './state'
  * @param {Boolean} bustCache=true   Ignore the cache and re-make the calls? Defaults to true.
  */
 export function updateAllUserData(bustCache = true) {
-  return Promise.all([
+  let promises = [
     updateUsagePlansAndApisList(bustCache),
     updateSubscriptions(bustCache),
     updateApiKey(bustCache)
-  ])
+  ]
+
+  if(isAdmin())
+    promises.push(updateVisibility(bustCache))
+
+  return Promise.all(promises)
 }
 
 /**
@@ -105,6 +111,12 @@ export function getApi(apiId, selectIt = false, stage, cacheBust = false) {
 
       return thisApi
     })
+}
+
+export function updateVisibility(cacheBust = false) {
+    return apiGatewayClient()
+        .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
+        .then(({data}) => (store.visibility = data))
 }
 
 /* Subscription Utils */
