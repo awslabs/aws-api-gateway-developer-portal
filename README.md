@@ -30,15 +30,15 @@ If you have previously set up a v1 developer portal (non-SAM deployed), you will
 #### Deploy
 
 Run:
->Replace the `your-lambda-artifacts-bucket-name` with a bucket that you manage and must already exist
+>In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists. Then, run:
 ```bash
 sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
 Then run: 
->Replace `custom-prefix` in the command below with some prefix that is globally unique, like your org name or username and run
+>In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists, and replace `custom-prefix` with some prefix that is globally unique, like your org name or username. Then, run:
 ```bash
-sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CognitoDomainNameOrPrefix="custom-prefix"
+sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --s3-bucket your-lambda-artifacts-bucket-name --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CognitoDomainNameOrPrefix="custom-prefix"
 ```
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
@@ -69,7 +69,7 @@ To list a subscribable API:
 3. In the "Displayed" column, click "False".
 
 ### Non-subscribable APIs
-The Developer can also list APIs that are managed outside of Amazon API Gateway (eg. APIs hosted on-premise). The Developer Portal won't be able to associate an API Key with the API automatically; however, customers can still test the APIs.
+The Developer can also list APIs that are managed outside of Amazon API Gateway (e.g., APIs hosted on-premise). The Developer Portal won't be able to associate an API Key with the API automatically; however, customers can still test the APIs.
 
 To list a non-subscribable API:
 1. Log into the developer portal using an admin account and go to the Admin Panel tab.
@@ -94,146 +94,28 @@ If you chose `UseRoute53Nameservers=true`, after the deployment finishes, go to 
 If you chose `UseRoute53Nameservers=false`, instead point your nameservers at the cloudfront distribution's URL.
 
 ### Add custom content and brand the Developer Portal
-See [Customization section](#customization)
-
-### Add an approval workflow to register new users
-See [Components section](#cognito-user-pool-confirmation-strategy-lambdacognito-user-pools-confirmation-strategy)
+See [this page on customization](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Customization)
 
 ## Updating to a new version
-The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version.
+The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version. For changes to major versions, please see [this page on updating](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Upgrading/_edit).
 
 ### To update a SAM deployment:
 1. Get the latest version from GitHub (Clone/Pull/Download).
-2. When deploying follow the same steps as previous and use the same values for the parameters. The only difference is passing in a new value for "-StaticAssetRebuildToken". You can use any string for this as long as it is different than previously used. If you followed the instructions above and it is the first time you're updating, you can use any non-empty string (default value is "").
+2. When deploying follow the same steps as previous and use the same values for the parameters. The only difference is passing in a new value for the stack parameter StaticAssetRebuildToken. You can use any string for this as long as it is different than previously used.
 
 ### To update a SAR deployment
-1. When deploying follow the same steps as previous and use the same values for the parameters. The only difference is passing in a new value for "-StaticAssetRebuildToken". You can use any string for this as long as it is different than previously used (default value is "defaultRebuildToken").
+1. When deploying follow the same steps as previous and use the same values for the parameters. The only difference is passing in a new value for the stack parameter StaticAssetRebuildToken.
 
 ## Components
-
-![Alt text](/images/highLevelDiagram.png?raw=true)
-
-### SAM Stack (template.yaml)
-
-All the components in the developer portal are managed by the SAM stack defined in template.yaml. New application components can be added to this template. Configuration values are fed to this template from the parameter overrides provided on the command line. If overrides are not provided, default values are used.
-
-### UI (/app)
-
-The UI is a simple React application hosted in an S3 bucket. The assets are uploaded to the S3 bucket by the static-asset-uploader lambda function. The client side code communicates with the application backend via an API Gateway proxy API. For more information on updating the UI, see `./dev-portal/README.md`.
-
-### Application Backend (/lambdas/backend)
-
-The application backend is a Lambda function built on the [aws-serverless-express](https://github.com/awslabs/aws-serverless-express) library. The backend is responsible for login/registration, API subscription/unsubscription, usage metrics, and handling product subscription redirects from AWS Marketplace.
-
-The backend function runs with escalated privileges (defined as LambdaExecutionRole in the CloudFormation template) and can be used to call other AWS services such as the API Gateway control plane or DynamoDB.
-
-All resources in the API require AWS SigV4 authentication (i.e. via Cognito) with the exception of /register and the marketplace redirection resource.
-
-By default, the backend implementation assumes a one-to-one association between authenticated users (Cognito identities) and API Gateway API Keys. A given user can be subscribed to multiple usage plans using the same API Key.
-
-### Cognito User Pool Confirmation Strategy (/lambda/cognito-user-pools-confirmation-strategy)
-
-This lambda function (right now) is called for every registration request, but always returns true. This is a placeholder function for you to edit with your own logic for approval. We expect there won't be a single approval/workflow logic that will work for everyone, so we created a placeholder Lambda function that you can easily extend to have your own logic.
-
-If you're consuming the dev portal via SAM, you should be able to change the contents of the lambdas/cognito-user-pools-confirmation-strategy/index.js file, then run a CloudFormation stack update with the new lambda body.
-
-### AWS Marketplace SNS Listener Function (Optional) (/lambda/listener)
-
-The listener Lambda function will be triggered when customers subscribe or unsubscribe to your product through the AWS Marketplace console. AWS Marketplace will generate a unique SNS Topic where events will be published for your product. This is configurable via 'marketplaceSubscriptionTopic' configuration in package.json. After changing this you will need to run 'npm run update-stack' and 'npm run subscribe-listener' to subscribe the listener function.
-
-From the listener function you can manage your Usage Plan Keys through API Gateway to grant/revoke access to your APIs as well as implement any other subscription/unsubscription business logic. If you have multiple marketplace products, you will need to subscribe the listener function to the SNS topic for each product.
+For an overview of the components of the developer portal, please see [this page](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Components).
 
 ## Debugging
 
-You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See this [blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
-
-## Customization
-After deployment, you can overwrite certain files in the S3 bucket to update images, styling and the content of specific pages. All customizations live in the `custom-content` folder of the bucket defined by the `DevPortalSiteS3BucketName` parameter in the sam deploy command (default value "custom-prefix-dev-portal-static-assets"). 
-
-> By default, on upload to the S3 bucket, the permissions are restricted. Make sure that "Everyone" has Read permissions to the files in the S3 bucket otherwise you might see some components not displaying properly. 
-
-> By default, the easy customizations described below **won't be updated by subsequent deployments**. This makes it safe to deploy architectural changes to the Developer Portal without overwriting your branding and content changes. To override this behavior, see [Advanced Customization](#advanced-customization) below.
-
-#### Images
-
-You can update the logo that appears in the navbar, the image that appears on the Home page, and the images that appear for each api on the API details pages. 
-
-> All images must be `.png`.
-
-- `/custom-content/nav-logo.png`
-
-  The logo in that appears in the navbar. Replace it to use your own image.
-
-- `/custom-content/home-image.png`
-
-  Primary image displayed on the Home page. Replace it to use your own image.
-
-- `/custom-content/api-logos/default.png` 
-
-  The default image used when a specific api image is not provided. Replace it to use your own image.
-
-- `/custom-content/api-logos/{apiId}_{stage}.png`
-
-  A custom image for a given API and Stage. If provided will be displayed instead of the `default.png`
-
-  e.g. `/custom-content/api-logos/s8df5s3dd_Prod.png`
-
-
-#### Styling
-
-Replace the `/custom-content/styles.css` with your own CSS Styling. Note that this stylesheet is loaded **before** all other styles in the project. Be sure to make sure your styles do not collide.
-
-#### Content
-
-Content on the Home page, the Getting Started page can be modified by updating the markdown files in `/custom-content/content-fragments`. 
-
-Each file begins with a [yaml front matter](https://jekyllrb.com/docs/front-matter/) block. This front matter is used to fill in data beyond the content of the page. 
-
-```yaml
----
-title: Navbar Header # Display in the navbar 
-header: Main Page Header # Main headline on the page
----
-
-Your content starts here.
-```
-
-The content of the page is rendered using [GitHub-flavoured markdown](https://github.github.com/gfm/). You can also nest HTML inside each markdown fragment if you need more complex layouts.
-
-```md
-# My Content Header!
-
-Some content content...
-
-[<button>A button that's a link!</button>](https://aws.amazon.com/api-gateway/)
-```
-
-The `Home` page takes the following front matter:
-
-- `title`: Text that appears in the navbar.
-- `header`: Main headline on the Home page.
-- `tagline`: Secondary headline on the Home page.
-- `gettingStartedButton`: Text of the "Getting Started" button.
-- `apiListButton`: Text of the "Our APIs" button.
-
-The `APIs` page takes the following front matter:
-- `title`: Text that appears in the navbar.
-
-The `GettingStarted` page takes the following front matter:
-- `title`: Text that appears in the navbar.
-
-### Advanced customization
-
-In addition to the easy customization described above, you can make changes in your cloned copy of the repository, version with git, and package & deploy with SAM. **You must include the `StaticAssetRebuildToken` as part of the deployment.**
-
-To pull in new versions of the dev portal, merge or rebase in the upstream changes.
-
-> By default, the easy customizations described above **won't be updated by subsequent deployments**. If you would prefer to overwrite all files in the s3 bucket on a deploy, pass the `StaticAssetRebuildMode=overwrite` argument to your `sam deploy` command in addition to the `StaticAssetRebuildToken`. See [Advanced Customization](#advanced-customization) below.
-
+You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See [this blog post](https://aws.amazon.com/blogs/compute/techniques-and-tools-for-better-serverless-api-logging-with-amazon-api-gateway-and-aws-lambda/) for more information.
 
 ## Tear-down
 
-Deleting developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table, which will list the provisioned api keys.
+Deleting the developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table before deleting the cloudformation stack. This table lists the provisioned api keys that will need to be cleaned up afterwards.
 
 ## Marketplace SaaS Setup Instructions
 
