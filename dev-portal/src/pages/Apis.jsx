@@ -11,8 +11,8 @@ import 'swagger-ui/dist/swagger-ui.css'
 import { Container, Header, Icon } from 'semantic-ui-react'
 
 // services
-import { getApi } from 'services/api-catalog'
 import { isAuthenticated } from 'services/self'
+import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
 
 // components
 import ApisMenu from 'components/ApisMenu'
@@ -23,11 +23,11 @@ import { store } from 'services/state.js'
 import { observer } from 'mobx-react'
 
 export default observer(class ApisPage extends React.Component {
-  componentDidMount() { this.updateApi() }
+  componentDidMount() { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
   componentDidUpdate() { this.updateApi() }
 
   updateApi = () => {
-    getApi(this.props.match.params.apiId || 'ANY', true)
+    return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
       .then(api => {
         if (api) {
           let swaggerUiConfig = {
@@ -52,17 +52,19 @@ export default observer(class ApisPage extends React.Component {
     let errorHeader
     let errorBody 
 
-    if (!store.apiList.apiGateway.length && !store.apiList.generic.length) {
-      errorHeader = `No APIs Published`
-      errorBody = `Your administrator hasn't added any APIs to your account. Please contact them to publish an API.`
-    } else if (!store.api) {
-      errorHeader = `No Such API`
-      errorBody = `The selected API doesn't exist.`
+    if (store.apiList.loaded) {
+      if (!store.apiList.apiGateway.length && !store.apiList.generic.length) {
+        errorHeader = `No APIs Published`
+        errorBody = `Your administrator hasn't added any APIs to your account. Please contact them to publish an API.`
+      } else if (!store.api) {
+        errorHeader = `No Such API`
+        errorBody = `The selected API doesn't exist.`
+      }
     }
 
     return (
       <div style={{ display: "flex", flex: "1 1 auto", overflow: "hidden" }}>
-        <ApisMenu path={this.props.match} style={{ flex: "0 0 auto" }} />
+        <ApisMenu path={this.props.match} />
         <div className="swagger-section" style={{ flex: "1 1 auto", overflow: 'auto' }}>
           <div className="swagger-ui-wrap" id="swagger-ui-container" style={{ padding: "0 20px" }}>
             {errorHeader && errorBody && (

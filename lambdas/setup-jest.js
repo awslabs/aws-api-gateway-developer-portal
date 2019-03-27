@@ -44,6 +44,9 @@ function generateResponseContext() {
         }),
         attachment: jest.fn().mockReturnValue({
             send: jest.fn()
+        }),
+        send: jest.fn().mockReturnValue({
+            send: jest.fn()
         })
     }
 }

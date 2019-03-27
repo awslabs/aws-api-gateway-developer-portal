@@ -9,23 +9,8 @@
 let AWS = require('aws-sdk'),
   _ = require('lodash'),
   yaml = require('js-yaml'),
-  bucketName = ''
-
-
-// See: https://github.com/darkskyapp/string-hash/blob/master/index.js
-function hash(str) {
-  let hash = 5381,
-    i = str.length;
-
-  while (i) {
-    hash = (hash * 33) ^ str.charCodeAt(--i);
-  }
-
-  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
-   * integers. Since we want the results to be always positive, convert the
-   * signed int to an unsigned by doing an unsigned bitshift. */
-  return hash >>> 0;
-}
+  bucketName = '',
+  hash = require('object-hash')
 
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
@@ -66,9 +51,8 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-    isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
-    extractApiIdRegex = /(https?:\/\/)?(.*)\.execute-api\./,
-    extractStageRegex = /\/?([^"]*)/
+  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
+  isUnsubscribableApiStageKeyRegex = /^unsubscribable_[a-zA-Z0-9]{10}_.*/
 
   return exports.s3.getObject(params).promise()
     .then((s3Repr) => {
@@ -77,6 +61,7 @@ function getSwaggerFile(file) {
       console.log(`Processing file: ${file.Key}`)
 
       try {
+        //s3Repr.Body is a buffer, so we call toString()
         result.body = JSON.parse(s3Repr.Body.toString());
       } catch (jsonErr) {
         try {
@@ -88,16 +73,6 @@ function getSwaggerFile(file) {
         }
       }
 
-      let swagger = {
-        host:  _.get(result, 'body.host', '').match(extractApiIdRegex),
-        basePath: _.get(result, 'body.basePath', '').match(extractStageRegex)
-      }
-
-      let oas = {
-        host: _.get(result, 'body.servers[0].url', '').match(extractApiIdRegex),
-        basePath: _.get(result, 'body.servers[0].variables.basePath.default', '').match(extractStageRegex)
-      }
-
       // if the file was saved with its name as an API_STAGE key, we should use that
       // from strings like catalog/a1b2c3d4e5_prod.json, remove catalog and .json
       // we can trust that there's not a period in the stage name, as API GW doesn't allow that
@@ -105,31 +80,17 @@ function getSwaggerFile(file) {
         result.apiStageKey = file.Key.replace('catalog/', '').split('.')[0]
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
-      // for Swagger 2, the api ID might be in the body.host field,
-      // and the stage might be in the body.basePath field
-      else if (swagger.host && swagger.basePath) {
-        let apiId, stage;
-
-        apiId = swagger.host.pop()
-        stage = swagger.basePath.pop()
-        result.apiStageKey = `${apiId}_${stage}`
-        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
+      else if (file.Key.replace('catalog/', '').match(isUnsubscribableApiStageKeyRegex)) {
+        result.apiId = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[0]
+        result.stage = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[1]
+        result.generic = true
+        result.id = hash(result.body)
       }
-      // for OAS 3, the api ID might be in the body.servers[0].url field,
-      // and the stage might be in the body.servers[0].variables.basePath.default field
-      else if (oas.host && oas.basePath) {
-        let apiId, stage;
-
-        apiId = oas.host.pop()
-        stage = oas.basePath.pop()
-        result.apiStageKey = `${apiId}_${stage}`
-        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
-      }
-      // if none of the above checks worked, assume it's a generic api
+      // if the file wasn't saved with its name as an API_STAGE key, assume it's a generic api
       else {
         console.log(`Generic Swagger definition found: ${file.Key}`)
         result.generic = true
-        result.id = hash(file.Key)
+        result.id = hash(result.body)
       }
 
       return result
@@ -237,7 +198,11 @@ function buildCatalog(swaggerFiles, sdkGeneration) {
           s.swagger = s.body
           delete s.body
           console.log(`This generic API has an id of ${s.id} and sdkGeneration[s.id] === ${sdkGeneration[s.id]}`)
-          sdkGeneration[s.id] ? s.sdkGeneration = true : s.sdkGeneration = false
+
+          s.sdkGeneration = !!sdkGeneration[s.id]
+          if(!s.sdkGeneration) {
+              s.sdkGeneration = !!sdkGeneration[`${s.apiId}_${s.stage}`]
+          }
           return s
         })
       )

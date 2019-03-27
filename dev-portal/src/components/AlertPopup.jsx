@@ -2,29 +2,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react'
-import { Message } from 'semantic-ui-react'
+import { Segment, Message } from 'semantic-ui-react'
 
-export default class AlertPopup extends React.Component {
-  state = {
-    isVisible: false,
-    message: ''
-  }
+import { observer } from 'mobx-react'
 
-  handleDismiss = () => {
-    this.setState({ isVisible: false })
-  }
+import { store } from 'services/state'
 
-  render() {
-      return (
-        <Message
-          hidden={!this.state.isVisible}
-          negative
-          floating
-          icon='warning sign'
-          onDismiss={this.handleDismiss}
-          header='Error'
-          content={this.state.message}
-        />
-      )
-  }
+export default observer(() => {
+  return (
+    <Segment basic style={{ position: "absolute", right: 0, margin: 0, top: "56px", display: "flex", flexDirection: "column" }}>
+      {store.notifications.map(notify => {
+        return <Message
+          {...notify}
+          onDismiss={() => clearNofication(notify)}
+          style={{ margin: 0, marginBottom: "15px" }} />
+      })}
+    </Segment>
+  )
+})
+
+export function addNotification({ compact=true, negative=true, floating=true, icon="warning sign", header="Error", content="An unknown error has occurred." }) {
+  store.notifications.push({
+    compact, negative, floating, icon, header, content
+  })
+}
+
+function clearNofication(notification) {
+  store.notifications = store.notifications.filter(notify => notify !== notification)
 }

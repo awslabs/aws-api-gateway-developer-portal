@@ -163,7 +163,7 @@ describe('handler', () => {
         delete process.env.StaticBucketName
     })
 
-    test('should, on update or create, create a catalog directory', async () => {
+    test('should, on update or create, create a catalog directory and upsert sdkGeneration.json', async () => {
         let event = {
                 ResourceProperties: {
                     BucketName: 'bucketName'
@@ -177,11 +177,18 @@ describe('handler', () => {
         process.env.StaticBucketName = 'staticBucketName'
         index.createCatalogDirectory = jest.fn().mockResolvedValue()
         index.uploadStaticAssets = jest.fn()
+        index.s3.headObject = jest.fn().mockReturnValue(promiser({}))
 
         await index.handler(event, context)
 
         expect(index.createCatalogDirectory).toHaveBeenCalledWith('staticBucketName')
         expect(index.uploadStaticAssets).toHaveBeenCalledWith('bucketName', event, context)
+
+        expect(index.s3.headObject).toHaveBeenCalledTimes(1)
+        expect(index.s3.headObject).toHaveBeenCalledWith({
+            Bucket: 'staticBucketName',
+            Key: 'sdkGeneration.json'
+        })
 
         delete process.env.StaticBucketName
     })

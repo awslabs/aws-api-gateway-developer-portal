@@ -1,6 +1,6 @@
 {
   "name": "serverless-developer-portal-catalog-updater",
-  "version": "2.3.3",
+  "version": "3.0.0",
   "description": "developer portal component responsible for updating the catalog of usage plans and swagger files",
   "main": "index.js",
   "config": {},
@@ -11,7 +11,8 @@
   "dependencies": {
     "aws-sdk": "^2.6.7",
     "js-yaml": "^3.12.0",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.10",
+    "object-hash": "^1.3.1"
   },
   "devDependencies": {}
 }

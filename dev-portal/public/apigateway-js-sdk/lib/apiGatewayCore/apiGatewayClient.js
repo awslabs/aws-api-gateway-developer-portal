@@ -41,6 +41,7 @@ apiGateway.core.apiGatewayClientFactory.newClient = function (simpleHttpClientCo
         // merge them into the appropriate request properties
         request.headers = apiGateway.core.utils.mergeInto(request.headers, additionalParams.headers);
         request.queryParams = apiGateway.core.utils.mergeInto(request.queryParams, additionalParams.queryParams);
+        request.config = additionalParams.config || {}
 
         //If an auth type was specified inject the appropriate auth client
         if (authType === 'AWS_IAM') {

@@ -87,8 +87,7 @@ Parameters:
 
   CognitoDomainNameOrPrefix:
     Type: String
-    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. Omitting this value opts out of the Cognito Hosted UI.
-    Default: ''
+    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. This should be regionally unique.
 
   # CognitoDomainAcmCertArn:
   #   Type: String
@@ -107,12 +106,12 @@ Parameters:
 
   UseRoute53Nameservers:
     Type: String
-    Description: Only applicable if creating a custom domain name for your dev portal. If true, skips creating a Route53 HostedZone and RecordSet. You'll need to provide your own nameserver hosting in place of Route53.
+    Description: Only applicable if creating a custom domain name for your dev portal. Defaults to false, and you'll need to provide your own nameserver hosting. If set to true, a Route53 HostedZone and RecordSet are created for you.
     Default: 'false'
 
   DevelopmentMode:
     Type: String
-    Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, etc.) for easier development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
+    Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, CORS, etc.) for easier development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
     Default: 'false'
 
 Conditions:
@@ -183,7 +182,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -226,7 +229,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -269,7 +276,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -312,7 +323,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -381,7 +396,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -437,7 +456,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -485,7 +508,11 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
@@ -640,12 +667,23 @@ Resources:
           - Effect: Allow
             Action:
             - s3:GetObject
+            - s3:DeleteObject
             - s3:PutObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
                 - !Ref ArtifactsS3BucketName
                 - '/*'
+          - Effect: Allow
+            Action:
+            - apigateway:GET
+            Resource: !Join
+              - ''
+              - - 'arn:aws:apigateway:'
+                - !Ref 'AWS::Region'
+                - '::/restapis/'
+                - !Ref ApiGatewayApi
+                - '/*/exports/*'
           - Effect: Allow
             Action:
             - aws-marketplace:ResolveCustomer
@@ -1009,9 +1047,13 @@ Resources:
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    # It's really unintuitive, but changing any of the properties here will cause stack updates to deploy non-functionally.
+    # The CognitoUserPoolClientSettings custom resource runs after this resource and adds a bunch of fields.
+    # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
+    # settings won't be set, e.g., CallbackURL.
     Properties:
       UserPoolId: !Ref CognitoUserPool
-      ClientName: 'CognitoUserPoolClient'
+      ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
 
@@ -1068,7 +1110,7 @@ Resources:
       CallbackURL: !If [ DevelopmentMode,
         [
           'http://localhost:3000/login',
-          !Join [ '', [ 'http://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
         ],
         [
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
@@ -1076,8 +1118,8 @@ Resources:
       ]
       LogoutURL: !If [ DevelopmentMode,
         [
-          'http://localhost:3000/login',
-          !Join [ '', [ 'http://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
+          'http://localhost:3000',
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
         ],
         [
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
@@ -1327,7 +1369,7 @@ Resources:
           - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
         CustomErrorResponses:
           - ErrorCode: 403
-            ResponseCode: 200
+            ResponseCode: 403
             ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
@@ -1356,7 +1398,7 @@ Resources:
       DistributionConfig:
         CustomErrorResponses:
           - ErrorCode: 403
-            ResponseCode: 200
+            ResponseCode: 403
             ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
@@ -1410,7 +1452,7 @@ Resources:
 Outputs:
   WebsiteURL:
     Value: !If [ 'DevelopmentMode',
-      !Join [ '', [ !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+      !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
       !If [
         'UseCustomDomainName',
         !Join [ '', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],

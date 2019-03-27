@@ -24,7 +24,14 @@ function storeDefaults() {
 
     usagePlans: [],
 
-    subscriptions: []
+    subscriptions: [],
+
+    notifications: [],
+
+    visibility: {
+      apiGateway: [],
+      generic: {}
+    }
   }
 }
 

@@ -4,6 +4,7 @@ const deleteAdminCatalogVisibility = require('../express-route-handlers').delete
 const s3 = require('../express-route-handlers').s3
 const apigateway = require('../express-route-handlers').apigateway
 const promiser = require('../../setup-jest').promiser
+const hash = require('../express-route-handlers').hash
 let catalog = require('../catalog/index')
 
 const mockResponseObject = {
@@ -67,7 +68,7 @@ describe('getAdminCatalogVisibility', () => {
             generic: [
                 {
                     id: '1234567890',
-                    swagger: {}
+                    swagger: { info: { title: '' }}
                 }
             ]
         }))
@@ -75,16 +76,20 @@ describe('getAdminCatalogVisibility', () => {
         apigateway.getRestApis = jest.fn().mockReturnValue(promiser({
             items: [
                 {
-                    id: 'a1b2c3'
+                    id: 'a1b2c3',
+                    name: 'first'
                 },
                 {
-                    id: 'd1e2f3'
+                    id: 'd1e2f3',
+                    name: 'second'
                 },
                 {
-                    id: 'g1h1i1'
+                    id: 'g1h1i1',
+                    name: 'third'
                 },
                 {
-                    id: 'j1k2l3'
+                    id: 'j1k2l3',
+                    name: 'fourth'
                 }
             ]
         }))
@@ -93,12 +98,18 @@ describe('getAdminCatalogVisibility', () => {
             .mockReturnValueOnce(promiser({
                 item: [
                     {
+                        id: 'a1b2c3',
+                        name: 'first',
                         stageName: 'gamma'
                     },
                     {
+                        id: 'a1b2c3',
+                        name: 'first',
                         stageName: 'prod'
                     },
                     {
+                        id: 'a1b2c3',
+                        name: 'first',
                         stageName: 'exclude'
                     }
                 ]
@@ -106,6 +117,8 @@ describe('getAdminCatalogVisibility', () => {
             .mockReturnValueOnce(promiser({
                 item: [
                     {
+                        id: 'd1e2f3',
+                        name: 'second',
                         stageName: 'def'
                     }
                 ]
@@ -113,6 +126,8 @@ describe('getAdminCatalogVisibility', () => {
             .mockReturnValueOnce(promiser({
                 item: [
                     {
+                        id: 'g1h1i1',
+                        name: 'third',
                         stageName: 'ghi'
                     }
                 ]
@@ -120,14 +135,42 @@ describe('getAdminCatalogVisibility', () => {
             .mockReturnValue(promiser({
                 item: [
                     {
+                        id: 'j1k2l3',
+                        name: 'fourth',
                         stageName: 'exclude'
                     }
                 ]
             }))
 
-        // routeHandlers.catalog
-
-
+        apigateway.getUsagePlans = jest.fn()
+            .mockReturnValue(promiser({
+                items: [
+                    {
+                        id: 'z1x2c3',
+                        name: 'basic',
+                        apiStages: [
+                            {
+                                apiId: 'a1b2c3',
+                                stage: 'gamma'
+                            },
+                            {
+                                apiId: 'a1b2c3',
+                                stage: 'exclude'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'b1n2m3',
+                        name: 'advanced',
+                        apiStages: [
+                            {
+                                apiId: 'd1e2f3',
+                                stage: 'def'
+                            }
+                        ]
+                    }
+                ]
+            }))
 
         await getAdminCatalogVisibility(generateRequestContext(), mockResponseObject)
 
@@ -137,39 +180,64 @@ describe('getAdminCatalogVisibility', () => {
         expect(mockResponseObject.json).toHaveBeenCalledWith({
             apiGateway: [
                 {
-                    id: "a1b2c3",
-                    stage: "gamma",
-                    visibility: true
+                    id: 'a1b2c3',
+                    stage: 'gamma',
+                    visibility: true,
+                    subscribable: true,
+                    name: 'first',
+                    usagePlanId: 'z1x2c3',
+                    usagePlanName: 'basic',
+                    sdkGeneration: false
                 },
                 {
-                    id: "a1b2c3",
-                    stage: "prod",
-                    visibility: true
+                    id: 'a1b2c3',
+                    stage: 'prod',
+                    visibility: true,
+                    subscribable: false,
+                    name: 'first',
+                    sdkGeneration: false
                 },
                 {
-                    id: "a1b2c3",
-                    stage: "exclude",
-                    visibility: false
+                    id: 'a1b2c3',
+                    stage: 'exclude',
+                    visibility: false,
+                    subscribable: true,
+                    name: 'first',
+                    usagePlanId: 'z1x2c3',
+                    usagePlanName: 'basic',
+                    sdkGeneration: false
                 },
                 {
-                    id: "d1e2f3",
-                    stage: "def",
-                    visibility: true
+                    id: 'd1e2f3',
+                    stage: 'def',
+                    visibility: true,
+                    subscribable: true,
+                    name: 'second',
+                    usagePlanId: 'b1n2m3',
+                    usagePlanName: 'advanced',
+                    sdkGeneration: false
                 },
                 {
-                    id: "g1h1i1",
-                    stage: "ghi",
-                    visibility: false
+                    id: 'g1h1i1',
+                    stage: 'ghi',
+                    visibility: false,
+                    subscribable: false,
+                    name: 'third',
+                    sdkGeneration: false
                 },
                 {
-                    id: "j1k2l3",
-                    stage: "exclude",
-                    visibility: false
+                    id: 'j1k2l3',
+                    stage: 'exclude',
+                    visibility: false,
+                    subscribable: false,
+                    name: 'fourth',
+                    sdkGeneration: false
                 }
             ],
             generic: {
                 1234567890: {
-                    visibility: true
+                    visibility: true,
+                    name: 'Untitled'
                 }
             }
         })
@@ -179,10 +247,12 @@ describe('getAdminCatalogVisibility', () => {
 describe('postAdminCatalogVisibility', () => {
     test('exports and uploads swagger doc for api gateway managed apis', async () => {
         let req = generateRequestContext()
-        req.body = { apiKey: 'a1b2c3_prod' }
+        req.body = { apiKey: 'a1b2c3_prod', subscribable: true }
 
         apigateway.getExport = jest.fn().mockReturnValue(promiser({
+            body: {
                 message: 'swagger document'
+            }
         }))
 
         s3.upload = jest.fn().mockReturnValue(promiser())
@@ -195,13 +265,15 @@ describe('postAdminCatalogVisibility', () => {
             restApiId: 'a1b2c3',
             stageName: 'prod',
             exportType: 'swagger',
-            extensions: 'apigateway'
+            parameters: {
+                extensions: 'apigateway'
+            }
         })
 
         expect(s3.upload).toHaveBeenCalledWith({
             Bucket: 'myBucket',
-            Key: 'catalog/',
-            Body: JSON.stringify({ message: 'swagger document' })
+            Key: 'catalog/a1b2c3_prod.json',
+            Body: { message: 'swagger document' }
         })
 
         expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -210,7 +282,7 @@ describe('postAdminCatalogVisibility', () => {
 
     test('uploads swagger doc for generic apis', async () => {
         let req = generateRequestContext()
-        req.body = { swagger: { message: 'swagger document' } }
+        req.body = { swagger: JSON.stringify({ message: 'swagger document' }) }
 
         s3.upload = jest.fn().mockReturnValue(promiser())
 
@@ -220,7 +292,7 @@ describe('postAdminCatalogVisibility', () => {
 
         expect(s3.upload).toHaveBeenCalledWith({
             Bucket: 'myPail',
-            Key: 'catalog/',
+            Key: `catalog/${hash({ message: 'swagger document' })}.json`,
             Body: JSON.stringify({ message: 'swagger document' })
         })
 
@@ -241,15 +313,15 @@ describe('postAdminCatalogVisibility', () => {
 describe('deleteAdminCatalogVisibility', () => {
     test('deletes swagger doc from s3 for api gateway managed apis', async () => {
         let req = generateRequestContext()
-        req.body =  { apiKey: 'a1b2c3_prod' }
+        req.params =  { id: 'a1b2c3_prod' }
 
-        s3.delete = jest.fn().mockReturnValue(promiser())
+        s3.deleteObject = jest.fn().mockReturnValue(promiser())
 
         process.env.StaticBucketName = 'myOtherBucket'
 
         await deleteAdminCatalogVisibility(req, mockResponseObject)
 
-        expect(s3.delete).toHaveBeenCalledWith({
+        expect(s3.deleteObject).toHaveBeenCalledWith({
             Bucket: 'myOtherBucket',
             Key: 'catalog/a1b2c3_prod.json'
         })
@@ -260,16 +332,16 @@ describe('deleteAdminCatalogVisibility', () => {
 
     test('deletes swagger doc from s3 for generic apis', async () => {
         let req = generateRequestContext()
-        req.body = { id: 'somebighash123456' }
+        req.params = { genericId: 'somebighash123456' }
 
-        s3.delete = jest.fn().mockReturnValue(promiser())
+        s3.deleteObject = jest.fn().mockReturnValue(promiser())
 
-        process.env.StaticBucketName = 'myOtherBucket'
+        process.env.StaticBucketName = 'anotherBucket'
 
         await deleteAdminCatalogVisibility(req, mockResponseObject)
 
-        expect(s3.delete).toHaveBeenCalledWith({
-            Bucket: 'myOtherBucket',
+        expect(s3.deleteObject).toHaveBeenCalledWith({
+            Bucket: 'anotherBucket',
             Key: 'catalog/somebighash123456.json'
         })
 

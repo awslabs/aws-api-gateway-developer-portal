@@ -34,7 +34,8 @@ app.get('/catalog/:id/sdk', handlers.getSdk)
 // admin APIs
 app.get('/admin/catalog/visibility', handlers.getAdminCatalogVisibility)
 app.post('/admin/catalog/visibility', handlers.postAdminCatalogVisibility)
-app.delete('/admin/catalog/visibility', handlers.deleteAdminCatalogVisibility)
+app.delete('/admin/catalog/visibility/:id', handlers.deleteAdminCatalogVisibility)
+app.delete('/admin/catalog/visibility/generic/:genericId', handlers.deleteAdminCatalogVisibility)
 app.put('/admin/catalog/:id/sdkGeneration', handlers.putAdminCatalogSdkGeneration)
 app.delete('/admin/catalog/:id/sdkGeneration', handlers.deleteAdminCatalogSdkGeneration)
 

@@ -205,7 +205,8 @@ apiGateway.core.sigV4ClientFactory.newClient = function (config) {
             method: verb,
             url: url,
             headers: headers,
-            data: body
+            data: body,
+            ...request.config
         };
         return axios(signedRequest);
     };
