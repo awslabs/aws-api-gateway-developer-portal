@@ -61,6 +61,7 @@ function getSwaggerFile(file) {
       console.log(`Processing file: ${file.Key}`)
 
       try {
+        //s3Repr.Body is a buffer, so we call toString()
         result.body = JSON.parse(s3Repr.Body.toString());
       } catch (jsonErr) {
         try {
@@ -83,13 +84,13 @@ function getSwaggerFile(file) {
         result.apiId = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[0]
         result.stage = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[1]
         result.generic = true
-        result.id = hash(file.Key)
+        result.id = hash(result.body)
       }
       // if the file wasn't saved with its name as an API_STAGE key, assume it's a generic api
       else {
         console.log(`Generic Swagger definition found: ${file.Key}`)
         result.generic = true
-        result.id = hash(file.Key)
+        result.id = hash(result.body)
       }
 
       return result

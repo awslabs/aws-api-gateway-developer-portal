@@ -454,7 +454,7 @@ async function getAdminCatalogVisibility(req, res) {
 
             visibility.generic[catalogEntry.id] = {
                 visibility: true,
-                name: catalogEntry.swagger.info.title || 'Untitled'
+                name: (catalogEntry.swagger && catalogEntry.swagger.info && catalogEntry.swagger.info.title) || 'Untitled'
             }
 
             if(catalogEntry.stage)

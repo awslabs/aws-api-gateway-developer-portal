@@ -41,7 +41,7 @@ describe('getSwaggerFile', () => {
 
         internalRepr = await index.getSwaggerFile({ Key: 'catalog/swagger.json' })
 
-        expect(internalRepr.id).toBe(index.hash('catalog/swagger.json'))
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
         expect(internalRepr.apiStageKey).toBeUndefined()
         expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
@@ -76,7 +76,7 @@ describe('getSwaggerFile', () => {
 
         internalRepr = await index.getSwaggerFile({ Key: 'catalog/normal-exported-swagger.json' })
 
-        expect(internalRepr.id).toBe(index.hash('catalog/normal-exported-swagger.json'))
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
         expect(internalRepr.apiStageKey).toBeUndefined()
         expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
@@ -93,7 +93,7 @@ describe('getSwaggerFile', () => {
 
         internalRepr = await index.getSwaggerFile({ Key: 'catalog/swagger.json' })
 
-        expect(internalRepr.id).toBe(index.hash('catalog/swagger.json'))
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
         expect(internalRepr.apiStageKey).toBeUndefined()
         expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
@@ -128,7 +128,7 @@ describe('getSwaggerFile', () => {
 
         internalRepr = await index.getSwaggerFile({ Key: 'catalog/normal-exported-oas3.json' })
 
-        expect(internalRepr.id).toBe(index.hash('catalog/normal-exported-oas3.json'))
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
         expect(internalRepr.apiStageKey).toBeUndefined()
         expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
