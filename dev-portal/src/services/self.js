@@ -2,155 +2,113 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import AWS from 'aws-sdk'
-import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js'
 
 // services
 import { store } from 'services/state'
 import { updateAllUserData } from 'services/api-catalog'
 import { initApiGatewayClient, apiGatewayClient, cognitoDomain, cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
-
-const poolData = {
-  UserPoolId: cognitoUserPoolId,
-  ClientId: cognitoClientId
-}
-
-let userPool
+import * as jwt_decode from "jwt-decode";
 
 export function isAuthenticated() {
-  return store.cognitoUser
+  return store.idToken
 }
 
-function getCognitoLoginKey() {
-  return `cognito-idp.${cognitoRegion}.amazonaws.com/${cognitoUserPoolId}`
+export function isAdmin() {
+  return store.idToken &&
+  `${jwt_decode(store.idToken)['cognito:preferred_role']}`.includes('-CognitoAdminRole-')
 }
 
 export function init() {
+  initApiGatewayClient() // init a blank client (will get overwritten if we have creds)
+
   // attempt to refresh credentials from active session
-  userPool = new CognitoUserPool(poolData)
-  store.cognitoUser = userPool.getCurrentUser()
 
-  if (store.cognitoUser !== null) {
-    store.cognitoUser.getSession(function(err, session) {
-      if (err) {
-        logout()
-        console.error(err)
-        return
-      }
+  let idToken
+  let parsedToken
+  let valid = false
 
-      setCredentials(store.cognitoUser)
-    })
+  try {
+    idToken = localStorage.getItem(cognitoUserPoolId)
+    if (idToken) { // this `if` prevents console.error spam
+      parsedToken = jwt_decode(idToken)
+      valid = parsedToken.exp * 1000 > new Date()
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
+  if (valid) {
+    store.idToken = idToken
+    setCredentials()
   } else {
-    let signInUserSession = localStorage.getItem(JSON.stringify(poolData))
-    if (signInUserSession) {
-      
-      store.cognitoUser = new CognitoUser({
-        Username: '', // blank user name if we aren't using username and password
-        Pool: userPool
-      })
-
-      store.cognitoUser.signInUserSession = JSON.parse(signInUserSession)
-
-      setCredentials(store.cognitoUser)
-    }
-    initApiGatewayClient()
+    logout()
   }
 }
 
-export function register(email, password) {
-  localStorage.clear()
-  const attributeList = []
+export function login() {
   return new Promise((resolve, reject) => {
-    userPool.signUp(email, password, attributeList, null, (err, result) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(login(email, password))
+    let idToken, accessToken, username
+
+    try {
+      window.location.hash
+        .replace(/^#/, '')
+        .split('&')
+        .map(param => param.split('='))
+        .forEach(param => {
+          // record the id_token and access_token
+          if (param[0] === 'id_token') idToken = param[1]
+          if (param[0] === 'access_token') accessToken = param[1]
+        })
+
+      if (idToken) { // we get both, we set both, but we only really care about the idToken
+        username = jwt_decode(idToken)['cognito:username']
+
+        localStorage.setItem(cognitoUserPoolId, idToken)
+
+        store.idToken = idToken
+
+        setCredentials()
+
+        resolve(idToken)
       }
-    })
-  })
-}
-
-export function login(email, password) {
-  let localCognitoUser = new CognitoUser({
-    Username: email || '', // blank user name if we aren't using username and password
-    Pool: new CognitoUserPool(poolData)
-  })
-
-  if (email && password) {
-    return new Promise((resolve, reject) => {
-      const authenticationDetails = new AuthenticationDetails({
-        Username: email,
-        Password: password
-      })
-
-      localCognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: (result) => {
-          store.cognitoUser = localCognitoUser
-
-          setCredentials(store.cognitoUser)
-            .then(resolve)
-            .catch(reject)
-        },
-
-        onFailure: reject
-      })
-    })
-  } else if (window.location.hash) { // assume we're grabbing tokens out of the hash
-    // fake the signInUserSession
-    localCognitoUser.signInUserSession = {}
-
-    window.location.hash
-      .replace(/^#/,'')
-      .split('&')
-      .map(param => param.split('='))
-      .forEach(param => {
-        // add real data to the fake signInUserSession
-        if (param[0] === 'id_token')
-          localCognitoUser.signInUserSession.idToken = { jwtToken: param[1] }
-
-        if (param[0] === 'access_token')
-          localCognitoUser.signInUserSession.accessToken = { jwtToken: param[1] }
-
-        // will use this value to auto-log out... eventually
-        // if (param[0] === 'expires_in')
-          // console.log(param[1])
-      })
-
-    if (localCognitoUser.signInUserSession.idToken) {
-      localStorage.setItem(JSON.stringify(poolData), JSON.stringify(localCognitoUser.signInUserSession))
-
-      store.cognitoUser = localCognitoUser
-
-      setCredentials(store.cognitoUser)
+    } catch (error) {
+      reject(error)
     }
-  }
+  })
 }
 
-function setCredentials(cognitoUser) {
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+function setCredentials() {
+  let preferred_role = jwt_decode(store.idToken)['cognito:preferred_role']
+  let params = {
     IdentityPoolId: cognitoIdentityPoolId,
     Logins: {
-      [getCognitoLoginKey()]: cognitoUser.signInUserSession.idToken.jwtToken
+      [`cognito-idp.${cognitoRegion}.amazonaws.com/${cognitoUserPoolId}`]: store.idToken
     }
-  })
+  }
 
-  AWS.config.credentials.refresh((error) => {
-    if (error) {
-      console.error(error)
-      return Promise.reject(error)
-    }
+  if (preferred_role)
+    params.RoleArn = preferred_role
 
-    initApiGatewayClient(AWS.config.credentials)
-    updateAllUserData()
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials(params)
 
-    return apiGatewayClient()
-      .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
+  return new Promise((resolve, reject) => {
+    AWS.config.credentials.refresh((error) => {
+      if (error) {
+        console.error(error)
+        return reject(error)
+      }
+
+      initApiGatewayClient(AWS.config.credentials)
+      updateAllUserData()
+  
+      return apiGatewayClient()
+        .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
+    })
   })
 }
 
 export function logout() {
-  if (store.cognitoUser) {
-    store.cognitoUser.signOut()
+  if (store.idToken) {
     store.resetUserData()
     localStorage.clear()
 

@@ -9,23 +9,8 @@
 let AWS = require('aws-sdk'),
   _ = require('lodash'),
   yaml = require('js-yaml'),
-  bucketName = ''
-
-
-// See: https://github.com/darkskyapp/string-hash/blob/master/index.js
-function hash(str) {
-  let hash = 5381,
-    i = str.length;
-
-  while (i) {
-    hash = (hash * 33) ^ str.charCodeAt(--i);
-  }
-
-  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
-   * integers. Since we want the results to be always positive, convert the
-   * signed int to an unsigned by doing an unsigned bitshift. */
-  return hash >>> 0;
-}
+  bucketName = '',
+  hash = require('object-hash')
 
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
@@ -66,9 +51,8 @@ function getSwaggerFile(file) {
     Bucket: bucketName,
     Key: file.Key
   },
-    isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
-    extractApiIdRegex = /(https?:\/\/)?(.*)\.execute-api\./,
-    extractStageRegex = /\/?([^"]*)/
+  isApiStageKeyRegex = /^[a-zA-Z0-9]{10}_.*/,
+  isUnsubscribableApiStageKeyRegex = /^unsubscribable_[a-zA-Z0-9]{10}_.*/
 
   return exports.s3.getObject(params).promise()
     .then((s3Repr) => {
@@ -77,6 +61,7 @@ function getSwaggerFile(file) {
       console.log(`Processing file: ${file.Key}`)
 
       try {
+        //s3Repr.Body is a buffer, so we call toString()
         result.body = JSON.parse(s3Repr.Body.toString());
       } catch (jsonErr) {
         try {
@@ -88,16 +73,6 @@ function getSwaggerFile(file) {
         }
       }
 
-      let swagger = {
-        host:  _.get(result, 'body.host', '').match(extractApiIdRegex),
-        basePath: _.get(result, 'body.basePath', '').match(extractStageRegex)
-      }
-
-      let oas = {
-        host: _.get(result, 'body.servers[0].url', '').match(extractApiIdRegex),
-        basePath: _.get(result, 'body.servers[0].variables.basePath.default', '').match(extractStageRegex)
-      }
-
       // if the file was saved with its name as an API_STAGE key, we should use that
       // from strings like catalog/a1b2c3d4e5_prod.json, remove catalog and .json
       // we can trust that there's not a period in the stage name, as API GW doesn't allow that
@@ -105,31 +80,17 @@ function getSwaggerFile(file) {
         result.apiStageKey = file.Key.replace('catalog/', '').split('.')[0]
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
-      // for Swagger 2, the api ID might be in the body.host field,
-      // and the stage might be in the body.basePath field
-      else if (swagger.host && swagger.basePath) {
-        let apiId, stage;
-
-        apiId = swagger.host.pop()
-        stage = swagger.basePath.pop()
-        result.apiStageKey = `${apiId}_${stage}`
-        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
+      else if (file.Key.replace('catalog/', '').match(isUnsubscribableApiStageKeyRegex)) {
+        result.apiId = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[0]
+        result.stage = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[1]
+        result.generic = true
+        result.id = hash(result.body)
       }
-      // for OAS 3, the api ID might be in the body.servers[0].url field,
-      // and the stage might be in the body.servers[0].variables.basePath.default field
-      else if (oas.host && oas.basePath) {
-        let apiId, stage;
-
-        apiId = oas.host.pop()
-        stage = oas.basePath.pop()
-        result.apiStageKey = `${apiId}_${stage}`
-        console.log(`File ${file.Key} has an identifying API_STAGE host of ${result.apiStageKey}.`)
-      }
-      // if none of the above checks worked, assume it's a generic api
+      // if the file wasn't saved with its name as an API_STAGE key, assume it's a generic api
       else {
         console.log(`Generic Swagger definition found: ${file.Key}`)
         result.generic = true
-        result.id = hash(file.Key)
+        result.id = hash(result.body)
       }
 
       return result
@@ -168,7 +129,7 @@ function getSwaggerFile(file) {
  * @param {Array} swaggerFileReprs array of swagger file representations, each with a body and path parameter
  * @returns {Object} a 'catalog object' with id, name, and apis properties
  */
-function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
+function usagePlanToCatalogObject(usagePlan, swaggerFileReprs, sdkGeneration) {
   let catalogObject = {
     id: usagePlan.id,
     name: usagePlan.name,
@@ -186,6 +147,9 @@ function usagePlanToCatalogObject(usagePlan, swaggerFileReprs) {
         api.swagger = exports.copyAnyMethod(swaggerFileRepr.body)
         api.id = apiStage.apiId
         api.stage = apiStage.stage
+        console.log(`This api gateway managed API has a key of ${api.id}_${api.stage} and might be in sdkGeneration: ${sdkGeneration[`${api.id}_${api.stage}`]}`)
+        console.log(sdkGeneration)
+        sdkGeneration[`${api.id}_${api.stage}`] ? api.sdkGeneration = true : api.sdkGeneration = false
         catalogObject.apis.push(api)
       })
   })
@@ -212,8 +176,9 @@ function copyAnyMethod(api) {
   return api
 }
 
-function buildCatalog(swaggerFiles) {
+function buildCatalog(swaggerFiles, sdkGeneration) {
   console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
+  console.log(sdkGeneration)
 
   let catalog = {
     apiGateway: [],
@@ -225,13 +190,19 @@ function buildCatalog(swaggerFiles) {
       console.log(`usagePlans: ${JSON.stringify(result.items, null, 4)}`)
       let usagePlans = result.items
       for (let i = 0; i < usagePlans.length; i++) {
-          catalog.apiGateway[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles)
+          catalog.apiGateway[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles, sdkGeneration)
       }
 
         catalog.generic.push(
         ...swaggerFiles.filter(s => s.generic).map(s => {
           s.swagger = s.body
           delete s.body
+          console.log(`This generic API has an id of ${s.id} and sdkGeneration[s.id] === ${sdkGeneration[s.id]}`)
+
+          s.sdkGeneration = !!sdkGeneration[s.id]
+          if(!s.sdkGeneration) {
+              s.sdkGeneration = !!sdkGeneration[`${s.apiId}_${s.stage}`]
+          }
           return s
         })
       )
@@ -245,38 +216,27 @@ function buildCatalog(swaggerFiles) {
     })
 }
 
-function handler(event, context) {
+async function handler(event, context) {
     console.log(`event: ${JSON.stringify(event, null, 4)}`)
-    // this is really fragile
-    bucketName = _.get(event, 'Records[0].s3.bucket.name')
-    let params = { Bucket: bucketName }
+    bucketName = process.env.BucketName
 
-    return exports.s3.listObjectsV2(params).promise()
-      .then((result) => {
-        console.log(`result: ${JSON.stringify(result, null, 4)}`)
-        let promises = result.Contents
-          .filter(exports.swaggerFileFilter)
-          .map(exports.getSwaggerFile)
+    let sdkGeneration = JSON.parse((await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json' }).promise())
+                        .Body.toString())
+    console.log(sdkGeneration)
 
-        return Promise.all(promises)
-      })
-      .then(exports.buildCatalog)
-      .then((catalogObjects) => {
-        let params = {
-          Bucket: bucketName,
-          Key: 'catalog.json',
-          Body: JSON.stringify(catalogObjects),
-          ContentType: 'application/json'
-        },
-        options = {}
+    let listObjectsResult = await exports.s3.listObjectsV2({ Bucket: bucketName }).promise(),
+        catalog = await exports.buildCatalog(await Promise.all(listObjectsResult.Contents
+                         .filter(exports.swaggerFileFilter)
+                         .map(exports.getSwaggerFile)), sdkGeneration)
 
-        return exports.s3.upload(params, options).promise()
-          .then((response) => console.log(`s3 upload succeeded: ${JSON.stringify(response, null, 4)}`))
-          .catch(/* istanbul ignore next */(error) => console.log('error uploading catalog to s3:', error))
-      })
-      .catch(/* istanbul ignore next */(error) => {
-        console.log(`error operating on bucket ${bucketName}:`, error)
-      })
+    let params = {
+      Bucket: bucketName,
+      Key: 'catalog.json',
+      Body: JSON.stringify(catalog),
+      ContentType: 'application/json'
+    }
+
+    await exports.s3.upload(params).promise()
 }
 
 // make available for unit testing

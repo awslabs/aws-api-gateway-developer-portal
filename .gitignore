@@ -12,6 +12,7 @@
 dev-portal/node_modules/*
 !dev-portal/node_modules/swagger-ui/
 dev-portal/node_modules/swagger-ui/*
+!dev-portal/node_modules/swagger-ui/package.json
 !dev-portal/node_modules/swagger-ui/dist/
 
 # built artifacts
@@ -27,7 +28,8 @@ dev-portal/node_modules/swagger-ui/*
 # misc
 npm-debug.log
 .DS_Store
-packaged.yaml
+packaged*.yaml
 cognito.js
 .idea
 .vscode
+*.iml

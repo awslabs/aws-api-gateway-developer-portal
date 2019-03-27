@@ -5,6 +5,7 @@ import _ from 'lodash'
 
 import { apiGatewayClient } from './api'
 import { store } from './state'
+import { isAdmin } from './self'
 
 /* Catalog and API Utils */
 
@@ -15,11 +16,16 @@ import { store } from './state'
  * @param {Boolean} bustCache=true   Ignore the cache and re-make the calls? Defaults to true.
  */
 export function updateAllUserData(bustCache = true) {
-  return Promise.all([
+  let promises = [
     updateUsagePlansAndApisList(bustCache),
     updateSubscriptions(bustCache),
     updateApiKey(bustCache)
-  ])
+  ]
+
+  if(isAdmin())
+    promises.push(updateVisibility(bustCache))
+
+  return Promise.all(promises)
 }
 
 /**
@@ -32,6 +38,8 @@ export function updateAllUserData(bustCache = true) {
 export function updateUsagePlansAndApisList(bustCache = false) {
   // if we've already tried, just return that promise
   if (!bustCache && catalogPromiseCache) return catalogPromiseCache
+
+  store.apiList.loaded = false
 
   return catalogPromiseCache = apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
@@ -80,8 +88,8 @@ function getApiGatewayApisFromUsagePlans(usagePlans) {
  * @param {String} apiId   An apiId or the special strings 'FIRST' or 'ANY'. 'FIRST' and 'ANY' both return the first api encountered.
  * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
  */
-export function getApi(apiId, selectIt = false) {
-  return updateUsagePlansAndApisList()
+export function getApi(apiId, selectIt = false, stage, cacheBust = false) {
+  return updateUsagePlansAndApisList(cacheBust)
     .then(() => {
       let thisApi
 
@@ -90,10 +98,12 @@ export function getApi(apiId, selectIt = false) {
       if (allApis.length) {
         if (apiId === 'ANY' || apiId === 'FIRST') {
           thisApi = allApis[0]
+        } else {
+          thisApi = allApis.find(api => api.id.toString() === apiId)
         }
 
-        else {
-          thisApi = allApis.find(api => api.id.toString() === apiId)
+        if (stage) {
+          thisApi = store.apiList.apiGateway.find(api => api.id.toString() === apiId && api.stage === stage)
         }
       }
 
@@ -101,6 +111,12 @@ export function getApi(apiId, selectIt = false) {
 
       return thisApi
     })
+}
+
+export function updateVisibility(cacheBust = false) {
+    return apiGatewayClient()
+        .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
+        .then(({data}) => (store.visibility = data))
 }
 
 /* Subscription Utils */

@@ -10,6 +10,8 @@ import { Button, Header, Image, Container } from 'semantic-ui-react'
 import { subscribe, unsubscribe } from 'services/api-catalog'
 import { isAuthenticated } from 'services/self'
 
+import { GetSdkButton } from 'components/GetSdk'
+
 // state
 import { observer } from 'mobx-react'
 import { store } from 'services/state.js'
@@ -51,6 +53,7 @@ const InfoReplacement = observer(({ specSelectors }) => {
           </div>
           <p>{externalDocs}</p>
           <SubscriptionButtons />
+          {store.api.sdkGeneration && <GetSdkButton />}
         </div>
       </div>
     </Container>
@@ -69,10 +72,9 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
         ) : (
           <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
         )
-      ) : <Header as='h4' color='darkgrey'>This API is not configured for subscription from the portal.</Header> : null
+      ) : <Header as='h4' color='grey'>This API is not configured for subscription from the portal.</Header> : null
     )
   }
 })
-
 
 export default SwaggerLayoutPlugin

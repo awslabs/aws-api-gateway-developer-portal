@@ -13,8 +13,13 @@ exports.handler = async (event, context) => {
         UserPoolId: event.ResourceProperties.UserPoolId,
         ClientId: event.ResourceProperties.UserPoolClientId,
         SupportedIdentityProviders: event.ResourceProperties.SupportedIdentityProviders,
-        CallbackURLs: [event.ResourceProperties.CallbackURL],
-        LogoutURLs: [event.ResourceProperties.LogoutURL],
+        // make sure these are array-wrapped, but not double-wrapped
+        CallbackURLs: Array.isArray(event.ResourceProperties.CallbackURL) ?
+            event.ResourceProperties.CallbackURL :
+            [event.ResourceProperties.CallbackURL],
+        LogoutURLs: Array.isArray(event.ResourceProperties.LogoutURL) ?
+            event.ResourceProperties.LogoutURL :
+            [event.ResourceProperties.LogoutURL],
         AllowedOAuthFlowsUserPoolClient: (event.ResourceProperties.AllowedOAuthFlowsUserPoolClient == 'true'),
         AllowedOAuthFlows: event.ResourceProperties.AllowedOAuthFlows,
         AllowedOAuthScopes: event.ResourceProperties.AllowedOAuthScopes
@@ -29,7 +34,7 @@ exports.handler = async (event, context) => {
     if (responseData && responseData.UserPoolClient) 
       responseData = responseData.UserPoolClient
 
-    // try to use the User Pool is (plus '-Settings') as the ID
+    // try to use the User Pool id (plus '-Settings') as the ID
     let physicalResourceId
     
     if (responseData && responseData.UserPoolId)

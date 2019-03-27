@@ -32,6 +32,13 @@ Metadata:
           - CustomDomainName
           - CustomDomainNameAcmCertArn
           - UseRoute53Nameservers
+      -
+        Label:
+          default: "Dev Portal Customer Feedback Configuration"
+        Parameters:
+          - DevPortalAdminEmail
+          - DevPortalFeedbackTableName
+
 Parameters:
   ArtifactsS3BucketName:
     Type: String
@@ -46,12 +53,22 @@ Parameters:
   DevPortalCustomersTableName:
     Type: String
     Description: The name of the DynamoDB Customers table.
-    Default: "DevPortalCustomers"
+    Default: 'DevPortalCustomers'
+
+  DevPortalAdminEmail:
+    Type: String
+    Description: The email address where user submitted feedback notifications get sent.
+    Default: ''
+
+  DevPortalFeedbackTableName:
+    Type: String
+    Description: The name of the DynamoDB table storing feedback submitted by users.
+    Default: 'DevPortalFeedback'
 
   StaticAssetRebuildToken:
     Type: String
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
-    Default: defaultRebuildToken
+    Default: 'defaultRebuildToken'
 
   StaticAssetRebuildMode:
     Type: String
@@ -61,17 +78,16 @@ Parameters:
   MarketplaceSubscriptionTopicProductCode:
     Type: String
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
-    Default: "DevPortalMarketplaceSubscriptionTopic"
+    Default: DevPortalMarketplaceSubscriptionTopic
 
   CognitoIdentityPoolName:
     Type: String
     Description: The name for your Cognito Identity Pool.
-    Default: "DevPortalUserPool"
+    Default: 'DevPortalIdentityPool'
 
   CognitoDomainNameOrPrefix:
     Type: String
-    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. Omitting this value opts out of the Cognito Hosted UI.
-    Default: ''
+    Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. This should be regionally unique.
 
   # CognitoDomainAcmCertArn:
   #   Type: String
@@ -90,102 +106,22 @@ Parameters:
 
   UseRoute53Nameservers:
     Type: String
-    Description: Only applicable if creating a custom domain name for your dev portal. If true, skips creating a Route53 HostedZone and RecordSet. You'll need to provide your own nameserver hosting in place of Route53.
+    Description: Only applicable if creating a custom domain name for your dev portal. Defaults to false, and you'll need to provide your own nameserver hosting. If set to true, a Route53 HostedZone and RecordSet are created for you.
+    Default: 'false'
+
+  DevelopmentMode:
+    Type: String
+    Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, CORS, etc.) for easier development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
     Default: 'false'
 
 Conditions:
-  UseCustomDomainName: !And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]]
-  # the second clause is a copy of the UseCustomDomainName condition
-  # re-using it doesn't seem possible?
-  NoCustomDomainName: !Not [ !Condition UseCustomDomainName ]
+  UseCustomDomainName: !And [!And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]], !Condition NotDevelopmentMode]
+  NoCustomDomainName: !And [!Not [ !Condition UseCustomDomainName ], !Condition NotDevelopmentMode]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
-  UseCognitoHostedUI: !Not [!Equals [!Ref CognitoDomainNameOrPrefix, '']]
-
-Mappings:
-  # this information comes from these locations, and will need to be kept manually up to date:
-  # https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
-  # https://docs.aws.amazon.com/govcloud-us/latest/ug-west/using-govcloud-endpoints.html
-  # http://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#cnnorth_region
-  RegionSpecificConfig:
-    us-east-2:
-      s3Url: '.s3-website.us-east-2.amazonaws.com'
-    us-east-1:
-      s3Url: '.s3-website-us-east-1.amazonaws.com'
-    us-west-1:
-      s3Url: '.s3-website-us-west-1.amazonaws.com'
-    us-west-2:
-      s3Url: '.s3-website-us-west-2.amazonaws.com'
-    ap-south-1:
-      s3Url: '.s3-website.ap-south-1.amazonaws.com'
-    ap-northeast-3:
-      s3Url: '.s3-website.ap-northeast-3.amazonaws.com'
-    ap-northeast-2:
-      s3Url: '.s3-website.ap-northeast-2.amazonaws.com'
-    ap-southeast-1:
-      s3Url: '.s3-website-ap-southeast-1.amazonaws.com'
-    ap-southeast-2:
-      s3Url: '.s3-website-ap-southeast-2.amazonaws.com'
-    ap-northeast-1:
-      s3Url: '.s3-website-ap-northeast-1.amazonaws.com'
-    ca-central-1:
-      s3Url: '.s3-website.ca-central-1.amazonaws.com'
-    cn-northwest-1:
-      s3Url: '.s3-website.cn-northwest-1.amazonaws.com.cn'
-    eu-central-1:
-      s3Url: '.s3-website.eu-central-1.amazonaws.com'
-    eu-west-1:
-      s3Url: '.s3-website-eu-west-1.amazonaws.com'
-    eu-west-2:
-      s3Url: '.s3-website.eu-west-2.amazonaws.com'
-    eu-west-3:
-      s3Url: '.s3-website.eu-west-3.amazonaws.com'
-    sa-east-1:
-      s3Url: '.s3-website-sa-east-1.amazonaws.com'
-    us-gov-west-1:
-      s3Url: '.s3-website-us-gov-west-1.amazonaws.com'
-
-Mappings:
-  # this information comes from these locations, and will need to be kept manually up to date:
-  # https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
-  # https://docs.aws.amazon.com/govcloud-us/latest/ug-west/using-govcloud-endpoints.html
-  # http://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#cnnorth_region
-  RegionSpecificConfig:
-    us-east-2:
-      s3Url: '.s3-website.us-east-2.amazonaws.com'
-    us-east-1:
-      s3Url: '.s3-website-us-east-1.amazonaws.com'
-    us-west-1:
-      s3Url: '.s3-website-us-west-1.amazonaws.com'
-    us-west-2:
-      s3Url: '.s3-website-us-west-2.amazonaws.com'
-    ap-south-1:
-      s3Url: '.s3-website.ap-south-1.amazonaws.com'
-    ap-northeast-3:
-      s3Url: '.s3-website.ap-northeast-3.amazonaws.com'
-    ap-northeast-2:
-      s3Url: '.s3-website.ap-northeast-2.amazonaws.com'
-    ap-southeast-1:
-      s3Url: '.s3-website-ap-southeast-1.amazonaws.com'
-    ap-southeast-2:
-      s3Url: '.s3-website-ap-southeast-2.amazonaws.com'
-    ap-northeast-1:
-      s3Url: '.s3-website-ap-northeast-1.amazonaws.com'
-    ca-central-1:
-      s3Url: '.s3-website.ca-central-1.amazonaws.com'
-    cn-northwest-1:
-      s3Url: '.s3-website.cn-northwest-1.amazonaws.com.cn'
-    eu-central-1:
-      s3Url: '.s3-website.eu-central-1.amazonaws.com'
-    eu-west-1:
-      s3Url: '.s3-website-eu-west-1.amazonaws.com'
-    eu-west-2:
-      s3Url: '.s3-website.eu-west-2.amazonaws.com'
-    eu-west-3:
-      s3Url: '.s3-website.eu-west-3.amazonaws.com'
-    sa-east-1:
-      s3Url: '.s3-website-sa-east-1.amazonaws.com'
-    us-gov-west-1:
-      s3Url: '.s3-website-us-gov-west-1.amazonaws.com'
+  EnableFeedbackSubmission: !Not [!Equals [!Ref DevPortalAdminEmail, '']]
+  DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
+  NotDevelopmentMode: !Not [!Condition DevelopmentMode]
+  InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
 
 Resources:
   ApiGatewayApi:
@@ -202,6 +138,8 @@ Resources:
         paths:
           /:
             x-amazon-apigateway-any-method:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses:
@@ -244,13 +182,19 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
           /register:
             post:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -285,13 +229,19 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
           /marketplace-confirm/{usagePlanId}:
             post:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -326,13 +276,19 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
           /catalog:
             get:
+              security:
+              - sigv4: []
               produces:
               - application/json
               responses: {}
@@ -367,15 +323,152 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: mock
+          /feedback:
+            get:
+              security:
+              - sigv4: []
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            post:
+              security:
+              - sigv4: []
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            delete:
+              security:
+              - sigv4: []
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: mock
+          /admin/catalog/visibility:
+            get:
+              security:
+              - sigv4: []
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            post:
+              security:
+              - sigv4: []
+              produces:
+              - application/json
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Join
+                  - ''
+                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+                    - :${stageVariables.DevPortalFunctionName}/invocations
+                httpMethod: POST
+                type: aws_proxy
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
           /{proxy+}:
             x-amazon-apigateway-any-method:
-              x-amazon-apigateway-auth:
-                type: aws_iam
+              security:
+              - sigv4: []
               produces:
               - application/json
               parameters:
@@ -415,11 +508,21 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
                 passthroughBehavior: when_no_match
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
+        securityDefinitions:
+          sigv4:
+            type: "apiKey"
+            name: "Authorization"
+            in: "header"
+            x-amazon-apigateway-authtype: "awsSigv4"
         definitions:
           Empty:
             type: object
@@ -433,13 +536,24 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
+
+  DevPortalSiteS3BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Condition: 'NotDevelopmentMode'
+    Properties:
+      Bucket: !Ref DevPortalSiteS3Bucket
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject'
+            Effect: Allow
+            Resource: !Sub 'arn:aws:s3:::${DevPortalSiteS3Bucket}/*'
+            Principal:
+              AWS: !Sub >-
+                arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
+                ${CloudFrontOriginAccessIdentity}
 
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
-    DependsOn: CatalogUpdaterLambdaFunction
     Properties:
       BucketName: !Ref ArtifactsS3BucketName
       NotificationConfiguration:
@@ -476,8 +590,8 @@ Resources:
       - AttributeName: Id
         KeyType: HASH
       ProvisionedThroughput:
-        ReadCapacityUnits: '5'
-        WriteCapacityUnits: '5'
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
       GlobalSecondaryIndexes:
       - IndexName: MarketplaceCustomerIdIndex
         KeySchema:
@@ -488,8 +602,41 @@ Resources:
           - ApiKeyId
           ProjectionType: INCLUDE
         ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+  FeedbackTable:
+    Type: AWS::DynamoDB::Table
+    Condition: EnableFeedbackSubmission
+    Properties:
+      TableName: !Ref DevPortalFeedbackTableName
+      AttributeDefinitions:
+      - AttributeName: Id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: Id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      GlobalSecondaryIndexes:
+      - IndexName: FeedbackIdIndex
+        KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+        Projection:
+          ProjectionType: KEYS_ONLY
+        ProvisionedThroughput:
           ReadCapacityUnits: '5'
           WriteCapacityUnits: '5'
+
+  FeedbackSubmittedSNSTopic:
+    Type: AWS::SNS::Topic
+    Condition: EnableFeedbackSubmission
+    Properties:
+      Subscription:
+      - Endpoint: !Ref DevPortalAdminEmail
+        Protocol: email
 
   BackendLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -520,11 +667,23 @@ Resources:
           - Effect: Allow
             Action:
             - s3:GetObject
+            - s3:DeleteObject
+            - s3:PutObject
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
                 - !Ref ArtifactsS3BucketName
                 - '/*'
+          - Effect: Allow
+            Action:
+            - apigateway:GET
+            Resource: !Join
+              - ''
+              - - 'arn:aws:apigateway:'
+                - !Ref 'AWS::Region'
+                - '::/restapis/'
+                - !Ref ApiGatewayApi
+                - '/*/exports/*'
           - Effect: Allow
             Action:
             - aws-marketplace:ResolveCustomer
@@ -557,6 +716,34 @@ Resources:
                 - :table/
                 - !Ref CustomersTable
                 - /index/MarketplaceCustomerIdIndex
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: !GetAtt CatalogUpdaterLambdaFunction.Arn
+          - !If
+            - EnableFeedbackSubmission
+            - Effect: Allow
+              Action:
+              - dynamodb:Scan
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              Resource: !Join
+                - ''
+                - - 'arn:aws:dynamodb:'
+                  - !Ref 'AWS::Region'
+                  - ':'
+                  - !Ref 'AWS::AccountId'
+                  - :table/
+                  - !Ref FeedbackTable
+            - !Ref 'AWS::NoValue'
+          - !If
+            - EnableFeedbackSubmission
+            - Effect: Allow
+              Action:
+              - sns:Publish
+              Resource: !Ref FeedbackSubmittedSNSTopic
+            - !Ref 'AWS::NoValue'
 
   CognitoStrategyLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -802,6 +989,10 @@ Resources:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
           CustomersTableName: !Ref DevPortalCustomersTableName
+          CatalogUpdaterFunctionArn: !GetAtt CatalogUpdaterLambdaFunction.Arn
+          FeedbackTableName: !Ref DevPortalFeedbackTableName
+          FeedbackSnsTopicArn:
+            !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
 
       # Adds the API as a trigger
       Events:
@@ -856,13 +1047,16 @@ Resources:
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    # It's really unintuitive, but changing any of the properties here will cause stack updates to deploy non-functionally.
+    # The CognitoUserPoolClientSettings custom resource runs after this resource and adds a bunch of fields.
+    # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
+    # settings won't be set, e.g., CallbackURL.
     Properties:
       UserPoolId: !Ref CognitoUserPool
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
 
-  # Cognito User Pool Custom Resource config
   CognitoUserPoolClientSettingsBackingFnRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -907,15 +1101,30 @@ Resources:
 
   CognitoUserPoolClientSettings:
     Type: AWS::CloudFormation::CustomResource
-    Condition: UseCognitoHostedUI
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
-      CallbackURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
-      LogoutURL: !Join ['', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+      CallbackURL: !If [ DevelopmentMode,
+        [
+          'http://localhost:3000/login',
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
+        ],
+        [
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
+        ]
+      ]
+      LogoutURL: !If [ DevelopmentMode,
+        [
+          'http://localhost:3000',
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
+        ],
+        [
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+        ]
+      ]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [ "implicit" ]
       AllowedOAuthScopes: [ "openid" ]
@@ -972,7 +1181,6 @@ Resources:
 
   CognitoUserPoolDomain:
     Type: AWS::CloudFormation::CustomResource
-    Condition: UseCognitoHostedUI
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
@@ -1032,7 +1240,63 @@ Resources:
                 - ':'
                 - !Ref ApiGatewayApi
                 - /prod/*/*
+          - Effect: Deny
+            Action:
+            - execute-api:Invoke
+            Resource: !Join
+              - ''
+              - - 'arn:aws:execute-api:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':'
+                - !Ref ApiGatewayApi
+                - /prod/*/admin/*
       Path: '/'
+
+  CognitoAdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: cognito-identity.amazonaws.com
+          Action: sts:AssumeRoleWithWebIdentity
+          Condition:
+            StringEquals:
+              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
+            'ForAnyValue:StringLike':
+              'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+      - PolicyName: CognitoAuthenticatedRole
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - execute-api:Invoke
+            Resource: !Join
+              - ''
+              - - 'arn:aws:execute-api:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':'
+                - !Ref ApiGatewayApi
+                - /prod/*/*
+
+  CognitoAdminsGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      Description: 'Admin users of the developer portal'
+      GroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
+      # the role we assume is the role associated with the lowest-precedence users group
+      # since admin group has a precedence of 0, it takes priority
+      Precedence: 0
+      RoleArn: !GetAtt CognitoAdminRole.Arn
+      UserPoolId: !Ref CognitoUserPool
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1080,10 +1344,19 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
-      UserPoolDomain: !If [ UseCognitoHostedUI, !GetAtt CognitoUserPoolDomain.FullUrl, '' ]
+      UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
+      DevelopmentMode: !Ref DevelopmentMode
+      FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
+
+  CloudFrontOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Condition: 'NotDevelopmentMode'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Ref 'AWS::StackName'
 
   CustomDomainCloudfrontDistribution:
     Type: AWS::CloudFront::Distribution
@@ -1094,6 +1367,10 @@ Resources:
         Aliases:
           - !Ref CustomDomainName
           - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
             QueryString: true
@@ -1101,11 +1378,15 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: index.html
         Enabled: true
+        Comment: !Sub '${AWS::StackName} distribution'
         Origins:
-          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
-            Id: 'dev-portal-site-s3-bucket'
-            CustomOriginConfig:
-              OriginProtocolPolicy: 'http-only'
+          - Id: 'dev-portal-site-s3-bucket'
+            DomainName: !If ['InUSEastOne',
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com']],
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]]
+            S3OriginConfig:
+             OriginAccessIdentity: !Sub >-
+               origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
         ViewerCertificate:
           AcmCertificateArn: !Ref CustomDomainNameAcmCertArn
           SslSupportMethod: 'sni-only'
@@ -1115,6 +1396,10 @@ Resources:
     Condition: NoCustomDomainName
     Properties:
       DistributionConfig:
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 403
+            ResponsePagePath: '/index.html'
         DefaultCacheBehavior:
           ForwardedValues:
             QueryString: true
@@ -1122,11 +1407,15 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: index.html
         Enabled: true
+        Comment: !Sub '${AWS::StackName} distribution'
         Origins:
-          - DomainName: !Join ['', [!Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url']]]
-            Id: 'dev-portal-site-s3-bucket'
-            CustomOriginConfig:
-              OriginProtocolPolicy: 'http-only'
+          - Id: 'dev-portal-site-s3-bucket'
+            DomainName: !If ['InUSEastOne',
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3.amazonaws.com']],
+              !Join ['', [!Ref DevPortalSiteS3BucketName, '.s3-', !Ref 'AWS::Region', '.amazonaws.com']]]
+            S3OriginConfig:
+             OriginAccessIdentity: !Sub >-
+               origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
 
   CustomDomainDistributionAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
@@ -1162,16 +1451,15 @@ Resources:
 
 Outputs:
   WebsiteURL:
-    Value: !If [
-                  UseCustomDomainName,
-                  !Join ['', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
-                  !Join ['', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
-               ]
+    Value: !If [ 'DevelopmentMode',
+      !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+      !If [
+        'UseCustomDomainName',
+        !Join [ '', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
+        !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+      ]
+    ]
     Description: CloudFront URL for website
-    
-  DEPRECATEDS3WebsiteURL:
-    Value: !Join [ '', [ 'http://', !Ref DevPortalSiteS3BucketName, !FindInMap ['RegionSpecificConfig', !Ref 'AWS::Region', 's3Url'] ]]
-    Description: URL for website. Deprecated; this URL does not provide SSL / HTTPS, and will be made inaccessible in a later major version.
 
   CustomWebsiteURL:
     Condition: UseCustomDomainName

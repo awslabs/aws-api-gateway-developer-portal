@@ -5,7 +5,9 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, Image } from 'semantic-ui-react'
 
-import { isAuthenticated, logout } from 'services/self'
+import { isAdmin, isAuthenticated, logout } from 'services/self'
+
+import { cognitoDomain, cognitoClientId } from '../services/api'
 
 // mobx
 import { observer } from 'mobx-react'
@@ -14,57 +16,48 @@ import { observer } from 'mobx-react'
 import { fragments } from 'services/get-fragments'
 
 // components
-import SignIn from './SignIn'
 import Register from './Register'
 
-// data
-import { cognitoDomain, cognitoClientId } from '../services/api'
+export const NavBar = observer(
+  class NavBar extends React.Component {
+    getCognitoUrl = (type) => {
+      let redirectUri = `${window.location.protocol}//${window.location.host}/login`
+      return `${cognitoDomain}/${type}?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`
+    }
 
-export const NavBar = observer(() => {
-  return (
-    <Menu inverted borderless attached style={{ flex: "0 0 auto" }}>
-      <Menu.Item as={Link} to="/">
-        <Image size='mini' src="/custom-content/nav-logo.png" style={{ paddingRight: "10px" }} />
-        {fragments.Home.title}
-      </Menu.Item>
+    insertAuthMenu() {
+      return isAuthenticated() ?
+        (
+          <Menu.Menu position="right">
+            {isAdmin() && <Menu.Item as={Link} to="/admin">Admin Panel</Menu.Item>}
+            <Menu.Item key="dashboard" as={Link} to="/dashboard">My Dashboard</Menu.Item>
+            <Menu.Item key="signout" as="a" onClick={logout}>Sign Out</Menu.Item>
+          </Menu.Menu>
+        ) : (
+          <Menu.Menu position="right">
+            <Menu.Item key="register" as="a"
+                       href={this.getCognitoUrl('login')}>
+                Sign In
+            </Menu.Item>
+            <Register />
+          </Menu.Menu>
+        )
+    }
 
-      <Menu.Item as={Link} to="/getting-started">{fragments.GettingStarted.title}</Menu.Item>
-      <Menu.Item as={Link} to="/apis">{fragments.APIs.title}</Menu.Item>
-      
-      {insertAuthMenu(isAuthenticated(), cognitoDomain)}
-    </Menu>
-  )
-})
+    render() {
+      return <Menu inverted borderless attached style={{ flex: "0 0 auto" }} >
+        <Menu.Item as={Link} to="/">
+          <Image size='mini' src="/custom-content/nav-logo.png" style={{ paddingRight: "10px" }} />
+          {fragments.Home.title}
+        </Menu.Item>
 
-function insertAuthMenu(authenticated, cognitoDomain) {
-  let redirectUri = `${window.location.protocol}//${window.location.host}/login`
+        <Menu.Item as={Link} to="/getting-started">{fragments.GettingStarted.title}</Menu.Item>
+        <Menu.Item as={Link} to="/apis">{fragments.APIs.title}</Menu.Item>
 
-  if (authenticated) {
-    return (
-      <Menu.Menu position="right">
-        <Menu.Item key="signout" as="a" onClick={logout}>Sign Out</Menu.Item>
-        <Menu.Item key="dashboard" as={Link} to="/dashboard">My Dashboard</Menu.Item>
-      </Menu.Menu>
-    )
-  } else {
-    if (cognitoDomain) {
-      return (
-        <Menu.Menu position="right">
-          <Menu.Item key="signin" as="a" href={`${cognitoDomain}/login?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`}>Sign In</Menu.Item>
-          <Menu.Item key="register" as="a" href={`${cognitoDomain}/signup?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`}>Register</Menu.Item>
-        </Menu.Menu>
-      )
-    } 
-    
-    else {
-      return (
-        <Menu.Menu position="right">
-          <SignIn key="signin" trigger={<Menu.Item as="a">Sign In</Menu.Item>} />
-          <Register key="register" trigger={<Menu.Item as="a">Register</Menu.Item>} />
-        </Menu.Menu>
-      )
+        {this.insertAuthMenu()}
+      </Menu >
     }
   }
-}
+)
 
 export default NavBar

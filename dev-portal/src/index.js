@@ -16,13 +16,30 @@ import Home from 'pages/Home'
 import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
+import { Admin } from 'pages/Admin'
 
 // components
 import AlertPopup from 'components/AlertPopup'
+import GlobalModal from 'components/Modal'
 import NavBar from 'components/NavBar'
+import Feedback from './components/Feedback'
+import ApiSearch from './components/ApiSearch'
 
-import { init, login, logout } from 'services/self'
+import { isAdmin, init, login, logout } from 'services/self'
 import './index.css';
+
+// TODO: Feedback should be enabled if
+// the following is true && the current
+// user is not an administrator
+const feedbackEnabled = window.config.feedbackEnabled
+
+export const AdminRoute = ({component: Component, ...rest}) => (
+  <Route {...rest} render={(props) => (
+    isAdmin()
+      ? <Component {...props} />
+      : <Redirect to="/" />
+  )} />
+)
 
 class App extends React.Component {
   constructor() {
@@ -42,17 +59,22 @@ class App extends React.Component {
       <BrowserRouter>
         <React.Fragment>
           <NavBar />
-          <AlertPopup />
+          <GlobalModal />
           <Switch>
             <Route exact path="/" component={Home} />
             <Route path="/getting-started" component={GettingStarted} />
             <Route path="/dashboard" component={Dashboard} />
+            <AdminRoute path="/admin" component={Admin} />
             <Route exact path="/apis" component={Apis} />
-            <Route path="/apis/:apiId" component={Apis} />
-            <Route path="/login" render={() => (login(), <Redirect to="/" />)}/>
-            <Route path="/logout" render={() => (logout(), <Redirect to="/" />)}/>
+            <Route exact path="/apis/search" component={ApiSearch} />
+            <Route exact path="/apis/:apiId" component={Apis}/>
+            <Route path="/apis/:apiId/:stage" component={Apis} />
+            <Route path="/login" render={() => { login(); return <Redirect to="/" /> }} />
+            <Route path="/logout" render={() => { logout(); return <Redirect to="/" /> }} />
             <Route component={() => <h2>Page not found</h2>} />
           </Switch>
+          {feedbackEnabled && <Feedback />}
+          <AlertPopup />
         </React.Fragment>
       </BrowserRouter>
     )

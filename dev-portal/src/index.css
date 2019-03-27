@@ -28,3 +28,11 @@ h1, h2, h3, h4, h5 {
   from { transform: scale(1); }
   to { transform: scale(1.08); }
 }
+
+/* fix semantic-ui quirks */
+.ui.negative.floating.message, .ui.attached.negative.floating.message {
+  box-shadow: 
+    0px 0px 0px 1px #E0B4B4 inset, 
+    0px 2px 4px 0px rgba(34, 36, 38, 0.12), 
+    0px 2px 10px 0px rgba(34, 36, 38, 0.15)
+}

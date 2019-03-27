@@ -39,24 +39,22 @@ describe('getSwaggerFile', () => {
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/swagger.json'})
+        internalRepr = await index.getSwaggerFile({ Key: 'catalog/swagger.json' })
 
-        expect(internalRepr.id).toBe(index.hash('catalog/swagger.json'))
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
         expect(internalRepr.apiStageKey).toBeUndefined()
         expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
 
-    test('should recognize custom domain name swagger files after fetching them from S3', async () => {
-        // custom domain name swagger files have their api id and stage name in their filename
-        // in the future, we should vastly prefer this over way of recognizing the file over the other forms
-
+    test('should recognize swagger files saved in apiId_stageName format after fetching them from S3', async () => {
+        // the admin panel uploads files in this format; we then read them and build them into the catalog
         let fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-swagger.json')),
             internalRepr
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/a1b2c3d4e5_stagename.json'})
+        internalRepr = await index.getSwaggerFile({ Key: 'catalog/a1b2c3d4e5_stagename.json' })
 
         expect(internalRepr.id).toBeUndefined()
         expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_stagename')
@@ -64,19 +62,23 @@ describe('getSwaggerFile', () => {
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
 
-    test('should recognize exported swagger files after fetching them from S3', async () => {
-        // 'normal' exported swagger files have their api id and stage name in their host and basepath fields
+    test('should not recognize exported swagger files after fetching them from S3', async () => {
+        // we used to automatically detect exported swagger files by reading into their host and basePath fields
+        // we no longer do this, and this test serves to confirm that we do not automatically detect if a swagger file
+        // was exported from API GW. this makes cross-account generic APIs easier, and prevents the admin panel's
+        // "make visible" from accidentally promoting exported-but-intended-to-be-generic swagger files into apiGateway
+        // managed files
 
         let fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-swagger.json')),
             internalRepr
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/normal-exported-swagger.json'})
+        internalRepr = await index.getSwaggerFile({ Key: 'catalog/normal-exported-swagger.json' })
 
-        expect(internalRepr.id).toBeUndefined()
-        expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_exported')
-        expect(internalRepr.generic).toBeUndefined()
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
+        expect(internalRepr.apiStageKey).toBeUndefined()
+        expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
 
@@ -89,24 +91,22 @@ describe('getSwaggerFile', () => {
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/swagger.json'})
+        internalRepr = await index.getSwaggerFile({ Key: 'catalog/swagger.json' })
 
-        expect(internalRepr.id).toBe(index.hash('catalog/swagger.json'))
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
         expect(internalRepr.apiStageKey).toBeUndefined()
         expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
 
-    test('should recognize custom domain name OAS3 files after fetching them from S3', async () => {
-        // custom domain name OAS3 files have their api id and stage name in their filename
-        // in the future, we should vastly prefer this over way of recognizing the file over the other forms
-
+    test('should recognize OAS3 files saved in apiId_stageName format after fetching them from S3', async () => {
+        // the admin panel uploads files in this format; we then read them and build them into the catalog
         let fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-oas3.json')),
             internalRepr
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/a1b2c3d4e5_oasstagename.json'})
+        internalRepr = await index.getSwaggerFile({ Key: 'catalog/a1b2c3d4e5_oasstagename.json' })
 
         expect(internalRepr.id).toBeUndefined()
         expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_oasstagename')
@@ -114,19 +114,23 @@ describe('getSwaggerFile', () => {
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
 
-    test('should recognize exported OAS3 files after fetching them from S3', async () => {
-        // 'normal' exported OAS3 files have their api id and stage name in their host and basepath fields
+    test('should not recognize exported OAS3 files after fetching them from S3', async () => {
+        // we used to automatically detect exported swagger files by reading into their host and basePath fields
+        // we no longer do this, and this test serves to confirm that we do not automatically detect if a swagger file
+        // was exported from API GW. this makes cross-account generic APIs easier, and prevents the admin panel's
+        // "make visible" from accidentally promoting exported-but-intended-to-be-generic swagger files into apiGateway
+        // managed files
 
         let fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-oas3.json')),
             internalRepr
 
         index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
 
-        internalRepr = await index.getSwaggerFile({Key: 'catalog/normal-exported-oas3.json'})
+        internalRepr = await index.getSwaggerFile({ Key: 'catalog/normal-exported-oas3.json' })
 
-        expect(internalRepr.id).toBeUndefined()
-        expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_oasexported')
-        expect(internalRepr.generic).toBeUndefined()
+        expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
+        expect(internalRepr.apiStageKey).toBeUndefined()
+        expect(internalRepr.generic).toBe(true)
         expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
     })
 })
@@ -154,26 +158,28 @@ describe('buildCatalog', () => {
                     apis: [{
                         swagger: 'prodSwaggerBody',
                         id: 'a1b2c3d4e5',
-                        stage: 'prod'
+                        stage: 'prod',
+                        sdkGeneration: false
                     }]
                 }],
                 generic: [{
                     swagger: 'genericSwaggerBody',
                     id: 'somehugehash',
-                    generic: true
+                    generic: true,
+                    sdkGeneration: false
                 }]
             }
 
         index.gateway.getUsagePlans = jest.fn().mockReturnValueOnce(promiser({ items: [usagePlan] }))
 
-        expect(await index.buildCatalog(swaggerFileReprs)).toEqual(expectedCatalog)
+        expect(await index.buildCatalog(swaggerFileReprs, {})).toEqual(expectedCatalog)
     })
 })
 
 describe('usagePlanToCatalogObject', () => {
 
-    let firstValidApi = { swagger: 'prodSwaggerBody', id: 'a1b2c3d4e5', stage: 'prod' }
-    let secondValidApi = { swagger: 'gammaSwaggerBody', id: 'a1b2c3d4e5', stage: 'gamma' }
+    let firstValidApi = { swagger: 'prodSwaggerBody', id: 'a1b2c3d4e5', stage: 'prod', sdkGeneration: false }
+    let secondValidApi = { swagger: 'gammaSwaggerBody', id: 'a1b2c3d4e5', stage: 'gamma', sdkGeneration: false }
 
     let usagePlan = {
         id: 'MYID',
@@ -194,7 +200,7 @@ describe('usagePlanToCatalogObject', () => {
             { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
         ]
 
-        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
 
         expect(catalogObject.apis.length).toEqual(2)
         expect(catalogObject.apis[0]).toEqual(firstValidApi)
@@ -206,7 +212,7 @@ describe('usagePlanToCatalogObject', () => {
             { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
         ]
 
-        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
 
         expect(catalogObject.apis.length).toEqual(0)
     })
@@ -214,7 +220,7 @@ describe('usagePlanToCatalogObject', () => {
     test('correctly handles empty swaggerFileReprs', async () => {
         const swaggerFileReprs = []
 
-        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs)
+        const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
 
         expect(catalogObject.apis.length).toEqual(0)
     })
@@ -295,11 +301,15 @@ describe('copyAnyMethod', () => {
 })
 
 describe('handler', () => {
+    afterEach(() => {
+        delete process.env.BucketName;
+    })
+
     test('should fetch from S3 and upload to S3 when run', async () => {
         // this is a very abstract test
         // we just want to verify that we hand data around correctly
         // so, string tokens used in place of actual data
-        let mockEvent = { Records: [{ s3: { bucket: { name: 'bucketName' } } }] },
+        let mockEvent = {},
             expectedUploadParams = {
                 Bucket: 'bucketName',
                 Key: 'catalog.json',
@@ -307,6 +317,12 @@ describe('handler', () => {
                 Body: '"catalog"'
             }
 
+        process.env.BucketName = 'bucketName'
+
+        // this is the contents of the file sdkGeneration.json in S3
+        index.s3.getObject =
+            jest.fn().mockReturnValue(promiser({ Body: Buffer.from('{ "apiid_stagename": true }') }))
+        // these are all the files in the catalog/ directory of the S3 bucket
         index.s3.listObjectsV2 =
             jest.fn(() => true).mockReturnValue(promiser({ Contents: ['listedObjects'] }))
         index.swaggerFileFilter =
@@ -320,6 +336,8 @@ describe('handler', () => {
 
         await index.handler(mockEvent, {})
 
+        expect(index.s3.getObject).toBeCalledTimes(1)
+        expect(index.s3.getObject).toBeCalledWith({ Bucket: 'bucketName', Key: 'sdkGeneration.json' })
         expect(index.s3.listObjectsV2).toBeCalledTimes(1)
         expect(index.s3.listObjectsV2).toBeCalledWith({ Bucket: 'bucketName' })
         expect(index.swaggerFileFilter).toBeCalledTimes(1)
@@ -327,8 +345,8 @@ describe('handler', () => {
         expect(index.getSwaggerFile).toBeCalledTimes(1)
         expect(index.getSwaggerFile).toBeCalledWith('listedObjects', expect.anything(), expect.anything())
         expect(index.buildCatalog).toBeCalledTimes(1)
-        expect(index.buildCatalog).toBeCalledWith(['swagger'])
+        expect(index.buildCatalog).toBeCalledWith(['swagger'], { 'apiid_stagename': true })
         expect(index.s3.upload).toBeCalledTimes(1)
-        expect(index.s3.upload).toBeCalledWith(expectedUploadParams, expect.any(Object))
+        expect(index.s3.upload).toBeCalledWith(expectedUploadParams)
     })
 })

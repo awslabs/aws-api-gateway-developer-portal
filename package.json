@@ -1,22 +1,27 @@
 {
   "name": "aws-serverless-dev-portal",
-  "version": "2.3.3",
+  "version": "3.0.0",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
   "scripts": {
-    "get-dependencies": "npm run get-dev-portal-dependencies; npm run get-lambda-dependencies;",
-    "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}); npm run get-dependencies' \\;",
+    "get-dependencies": "npm run get-dev-portal-dependencies && npm run get-lambda-dependencies;",
+    "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}) && npm run get-dependencies' \\;",
     "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)",
     "test": "node scripts/test.js",
     "coverage": "node scripts/test.js --coverage=true",
-    "cover": "npm run coverage"
+    "integ": "node scripts/test.js --integ=true",
+    "cover": "npm run coverage",
+    "cfn-lint": "cfn-lint cloudformation/template.yaml -c I"
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "aws-sdk": "^2.406.0",
     "fs-extra": "^7.0.1",
     "jest": "^23.6.0",
     "memorystream": "^0.3.1",
     "xml-js": "^1.6.8"
   },
-  "dependencies": {}
+  "dependencies": {
+    "request-promise": "^4.2.4"
+  }
 }

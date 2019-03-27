@@ -21,6 +21,8 @@ export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToke
     sessionToken: sessionToken,
     region: awsRegion
   })
+
+  window.apigw = cachedClient
 }
 
 export function apiGatewayClient() {

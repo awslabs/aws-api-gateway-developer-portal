@@ -9,15 +9,15 @@ export function getQueryString() {
   return (/^[?#]/.test(q) ? q.slice(1) : q)
     .split('&')
     .reduce((params, param) => {
-      let [ key, value ] = param.split('=');
+      let [key, value] = param.split('=');
       params[key] = value ? decodeURIComponent(value) : '';
       return params;
-    }, { })
+    }, {})
 }
 
 export function toTitleCase(string) {
-	let firstLetter = string[0]
-	let allOtherLetters = string.slice(1)
+  let firstLetter = string[0]
+  let allOtherLetters = string.slice(1)
 
-	return firstLetter.toUpperCase() + allOtherLetters.toLowerCase()
+  return firstLetter.toUpperCase() + allOtherLetters.toLowerCase()
 }

@@ -1,10 +1,15 @@
 language: node_js
 node_js:
-  - "node"
+  # we can't use latest because 11.11 breaks jest's env variable mock
+  - "11.10.1"
 
 cache: npm
 
 before_install:
+  # install clis in parallel
+#  - pip install --user awscli
+#    pip install --user aws-sam-cli
+#    https://github.com/travis-ci/travis-ci/issues/3139
   - cd dev-portal
   # install everything in dev portal
   - npm install

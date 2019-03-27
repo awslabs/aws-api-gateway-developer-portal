@@ -114,28 +114,26 @@ describe('generalizeFilePath', () => {
 describe('notifyCFNThatUploadSucceeded', () => {
     test('should notify cloudformation that the action succeeded', () => {
         let responseData = {}, event = {}, context = {},
-            response = require('cfn-response')
+            response = require('../notify-cfn')
 
-        response.send = jest.fn()
+        response.ofSuccess = jest.fn()
 
         index.notifyCFNThatUploadSucceeded(responseData, event, context)
 
-        expect(response.send).toHaveBeenCalledWith(event, context, 'SUCCESS', responseData, expect.any(String))
+        expect(response.ofSuccess).toHaveBeenCalledWith({ event, context, responseData })
     })
 })
 
 describe('notifyCFNThatUploadFailed', () => {
     test('should notify cloudformation that the action failed', () => {
         let error = new Error(), event = { 'event': 'object' }, context = { 'context': 'object' },
-            response = require('cfn-response')
+            response = require('../notify-cfn')
 
-        response.send = jest.fn()
+        response.ofFailure = jest.fn()
 
         index.notifyCFNThatUploadFailed(error, event, context)
-        index.notifyCFNThatUploadFailed('stringError', event, context)
 
-        expect(response.send).toHaveBeenCalledWith(event, context, 'FAILED', { error: error.stack })
-        expect(response.send).toHaveBeenCalledWith(event, context, 'FAILED', { error: 'stringError' })
+        expect(response.ofFailure).toHaveBeenCalledWith({ event, context, error })
     })
 })
 
@@ -165,7 +163,7 @@ describe('handler', () => {
         delete process.env.StaticBucketName
     })
 
-    test('should, on update or create, create a catalog directory', async () => {
+    test('should, on update or create, create a catalog directory and upsert sdkGeneration.json', async () => {
         let event = {
                 ResourceProperties: {
                     BucketName: 'bucketName'
@@ -179,11 +177,18 @@ describe('handler', () => {
         process.env.StaticBucketName = 'staticBucketName'
         index.createCatalogDirectory = jest.fn().mockResolvedValue()
         index.uploadStaticAssets = jest.fn()
+        index.s3.headObject = jest.fn().mockReturnValue(promiser({}))
 
         await index.handler(event, context)
 
         expect(index.createCatalogDirectory).toHaveBeenCalledWith('staticBucketName')
         expect(index.uploadStaticAssets).toHaveBeenCalledWith('bucketName', event, context)
+
+        expect(index.s3.headObject).toHaveBeenCalledTimes(1)
+        expect(index.s3.headObject).toHaveBeenCalledWith({
+            Bucket: 'staticBucketName',
+            Key: 'sdkGeneration.json'
+        })
 
         delete process.env.StaticBucketName
     })

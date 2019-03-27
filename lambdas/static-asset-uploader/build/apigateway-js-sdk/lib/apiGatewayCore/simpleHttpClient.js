@@ -74,7 +74,8 @@ apiGateway.core.simpleHttpClientFactory.newClient = function (config) {
             method: verb,
             url: url,
             headers: headers,
-            data: body
+            data: body,
+            ...request.config
         };
         return axios(simpleHttpRequest);
     };
