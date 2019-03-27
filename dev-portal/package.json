@@ -1,6 +1,6 @@
 {
   "name": "dev-portal",
-  "version": "2.3.2",
+  "version": "3.0.0",
   "private": true,
   "dependencies": {
     "aws-sdk": "^2.326.0",
