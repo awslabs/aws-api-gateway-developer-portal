@@ -1366,7 +1366,6 @@ Resources:
       DistributionConfig:
         Aliases:
           - !Ref CustomDomainName
-          - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 403
@@ -1442,11 +1441,6 @@ Resources:
             DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
             # this is a "magic string" for using CFN aliases; see this link:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
-            HostedZoneId: 'Z2FDTNDATAQYW2'
-        - Name: !Join [ '', [ 'www.', !Ref CustomDomainName, '.' ] ]
-          Type: A
-          AliasTarget:
-            DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
             HostedZoneId: 'Z2FDTNDATAQYW2'
 
 Outputs:
