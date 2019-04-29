@@ -184,7 +184,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -231,7 +231,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -278,7 +278,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -325,7 +325,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -398,7 +398,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -458,7 +458,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -510,7 +510,7 @@ Resources:
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
                       method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
-                        !Join ['', [ "'https://", !GetAtt CustomDomainCloudfrontDistribution.DomainName, "'" ]],
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
                       ]]
                 passthroughBehavior: when_no_match
@@ -1366,7 +1366,6 @@ Resources:
       DistributionConfig:
         Aliases:
           - !Ref CustomDomainName
-          - !Join [ '', [ 'www.', !Ref CustomDomainName ] ]
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 403
@@ -1443,11 +1442,6 @@ Resources:
             # this is a "magic string" for using CFN aliases; see this link:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
             HostedZoneId: 'Z2FDTNDATAQYW2'
-        - Name: !Join [ '', [ 'www.', !Ref CustomDomainName, '.' ] ]
-          Type: A
-          AliasTarget:
-            DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
-            HostedZoneId: 'Z2FDTNDATAQYW2'
 
 Outputs:
   WebsiteURL:
@@ -1455,7 +1449,7 @@ Outputs:
       !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
       !If [
         'UseCustomDomainName',
-        !Join [ '', [ 'https://', !GetAtt CustomDomainCloudfrontDistribution.DomainName ]],
+        !Join [ '', [ 'https://', !Ref CustomDomainName ]],
         !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
       ]
     ]
