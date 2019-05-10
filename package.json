@@ -1,6 +1,6 @@
 {
   "name": "aws-serverless-dev-portal",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "devDependencies": {
     "aws-sdk": "^2.406.0",
     "fs-extra": "^7.0.1",
-    "jest": "^23.6.0",
+    "jest": "^24.8.0",
     "memorystream": "^0.3.1",
     "xml-js": "^1.6.8"
   },
