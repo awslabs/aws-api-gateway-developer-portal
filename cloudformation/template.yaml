@@ -54,6 +54,10 @@ Parameters:
     Type: String
     Description: The name of the DynamoDB Customers table.
     Default: 'DevPortalCustomers'
+    MaxLength: 255
+    MinLength: 3
+    AllowedPattern: ^[A-Za-z0-9-_.]+$
+    ConstraintDescription: Malformed input - Parameter DevPortalCustomersTableName must contain only upper or lower case letters, numbers, hyphens, underscores and periods.
 
   DevPortalAdminEmail:
     Type: String
@@ -64,6 +68,10 @@ Parameters:
     Type: String
     Description: The name of the DynamoDB table storing feedback submitted by users.
     Default: 'DevPortalFeedback'
+    MaxLength: 255
+    MinLength: 3
+    AllowedPattern: ^[A-Za-z0-9-_.]+$
+    ConstraintDescription: Malformed input - Parameter DevPortalSiteS3BucketName must contain only upper or lower case letters, numbers, hyphens, underscores and periods.
 
   StaticAssetRebuildToken:
     Type: String
