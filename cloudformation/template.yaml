@@ -59,6 +59,9 @@ Parameters:
     Type: String
     Description: The email address where user submitted feedback notifications get sent.
     Default: ''
+    MaxLength: 254
+    AllowedPattern: ^$|^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$
+    ConstraintDescription: Malformed input - Parameter DevPortalAdminEmail must be blank or follow the format for valid email addresses, see https://www.w3.org/TR/html/sec-forms.html#email-state-typeemail
 
   DevPortalFeedbackTableName:
     Type: String
