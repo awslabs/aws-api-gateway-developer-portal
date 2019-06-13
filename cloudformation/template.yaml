@@ -44,11 +44,19 @@ Parameters:
     Type: String
     Description: The S3 bucket in which the Open API documents are stored. Bucket
       names are globally unique, so you must change this.
+    MaxLength: 63
+    MinLength: 3
+    AllowedPattern: ^[a-z0-9]+(?:.[a-z0-9-]*)*[a-z0-9]+$
+    ConstraintDescription: Malformed input - Parameter ArtifactsS3BucketName must follow the rules for S3 bucket naming, see https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
 
   DevPortalSiteS3BucketName:
     Type: String
     Description: The S3 bucket in which the web application code is stored. Bucket
       names are globally unique, so you must change this.
+    MaxLength: 63
+    MinLength: 3
+    AllowedPattern: ^[a-z0-9]+(?:.[a-z0-9-]*)*[a-z0-9]+$
+    ConstraintDescription: Malformed input - Parameter DevPortalSiteS3BucketName must follow the rules for S3 bucket naming, see https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html
 
   DevPortalCustomersTableName:
     Type: String
