@@ -103,6 +103,7 @@ Parameters:
     Type: String
     Description: If you provided a domain name associated with an acm cert, then you must also specify here the acm cert's arn. Leave this blank to create a developer portal without a custom domain name.
     Default: ''
+    AllowedPattern: ^$|^arn:aws:acm:([a-z0-9-])*:([0-9]){12}:certificate\/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$
 
   UseRoute53Nameservers:
     Type: String
