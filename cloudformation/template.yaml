@@ -84,6 +84,9 @@ Parameters:
     Type: String
     Description: The name for your Cognito Identity Pool.
     Default: 'DevPortalIdentityPool'
+    MaxLength: 128
+    AllowedPattern: ^[a-zA-Z0-9+=,.@-]*$
+    ConstraintDescription: Malformed input - Parameter CognitoIdentityPoolName must Pool names must be between one and 128 characters long. They can contain uppercase and lowercase letters (a-z, A-Z), numbers (0-9), and the following special characters + = , . @ and -.
 
   CognitoDomainNameOrPrefix:
     Type: String
