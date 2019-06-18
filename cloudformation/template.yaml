@@ -79,6 +79,7 @@ Parameters:
     Type: String
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
     Default: DevPortalMarketplaceSubscriptionTopic
+    MaxLength: 223
     AllowedPattern: ^[a-zA-Z0-9_-]*$
     ConstraintDescription: Malformed input - Parameter MarketplaceSubscriptionTopicProductCode must be less than 223 characters long. It can contain uppercase and lowercase letters (a-z, A-Z), numbers (0-9), and the following special characters _ and -.
 
