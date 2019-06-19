@@ -97,7 +97,7 @@ If you chose `UseRoute53Nameservers=false`, instead point your nameservers at th
 See [this page on customization](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Customization)
 
 ## Updating to a new version
-The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version. For changes to major versions, please see [this page on updating](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Upgrading/_edit).
+The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version. For changes to major versions, please see [this page on updating](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Updating/).
 
 ### To update a SAM deployment:
 1. Get the latest version from GitHub (Clone/Pull/Download).
