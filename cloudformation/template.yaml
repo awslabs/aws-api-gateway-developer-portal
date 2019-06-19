@@ -18,6 +18,7 @@ Metadata:
         Label:
           default: "Dev Portal Customer Configuration"
         Parameters:
+          - CognitoUserPoolId
           - CognitoIdentityPoolName
           - DevPortalCustomersTableName
       -
@@ -80,6 +81,11 @@ Parameters:
     Description: The marketplace SNS topic suffix for subscription/unsubscription events
     Default: DevPortalMarketplaceSubscriptionTopic
 
+  CognitoUserPoolId:
+    Type: String
+    Description: The ID of an existing User Pool, if exists. If unsupplied, a new user pool will be created.
+    Default: ''
+
   CognitoIdentityPoolName:
     Type: String
     Description: The name for your Cognito Identity Pool.
@@ -122,6 +128,7 @@ Conditions:
   DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
   NotDevelopmentMode: !Not [!Condition DevelopmentMode]
   InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
+  CreateNewUserPool: !Equals [!Ref CognitoUserPoolId, '']
 
 Resources:
   ApiGatewayApi:
@@ -1030,6 +1037,7 @@ Resources:
       Timeout: 3
 
   CognitoUserPool:
+    Condition: CreateNewUserPool
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Ref CognitoIdentityPoolName
@@ -1052,7 +1060,7 @@ Resources:
     # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
     # settings won't be set, e.g., CallbackURL.
     Properties:
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
@@ -1104,7 +1112,7 @@ Resources:
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
       CallbackURL: !If [ DevelopmentMode,
@@ -1184,7 +1192,7 @@ Resources:
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
       Domain: !Ref CognitoDomainNameOrPrefix
   
   CognitoIdentityPool:
@@ -1296,7 +1304,7 @@ Resources:
       # since admin group has a precedence of 0, it takes priority
       Precedence: 0
       RoleArn: !GetAtt CognitoAdminRole.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1342,7 +1350,7 @@ Resources:
       RestApiId: !Ref ApiGatewayApi
       Region: !Ref 'AWS::Region'
       IdentityPoolId: !Ref CognitoIdentityPool
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
       UserPoolClientId: !Ref CognitoUserPoolClient
       UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
