@@ -21,6 +21,7 @@ Metadata:
           - CognitoUserPoolId
           - CognitoIdentityPoolName
           - DevPortalCustomersTableName
+          - ExistingUserPoolDomain
       -
         Label:
           default: "Subscription Notification Configuration"
@@ -83,12 +84,12 @@ Parameters:
 
   CognitoUserPoolId:
     Type: String
-    Description: The ID of an existing User Pool, if exists. If unsupplied, a new user pool will be created.
+    Description: The ID of an existing User Pool, if exists. If unsupplied, a new user pool will be created. If supplied - must also supply ExistingUserPoolDomain.
     Default: ''
 
   ExistingUserPoolDomain:
     Type: String
-    Description: The Domain of the existing User Pool, if exists. Must be supplied for an existing User Pool.
+    Description: The Domain of the existing User Pool, if exists. Must be supplied for an existing User Pool (together with CognitoUserPoolId).
     Default: ''
 
   CognitoIdentityPoolName:
