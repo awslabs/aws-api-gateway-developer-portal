@@ -86,6 +86,11 @@ Parameters:
     Description: The ID of an existing User Pool, if exists. If unsupplied, a new user pool will be created.
     Default: ''
 
+  ExistingUserPoolDomain:
+    Type: String
+    Description: The Domain of the existing User Pool, if exists. Must be supplied for an existing User Pool.
+    Default: ''
+
   CognitoIdentityPoolName:
     Type: String
     Description: The name for your Cognito Identity Pool.
@@ -955,7 +960,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool
+          - !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
 
   LambdaSNSExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1188,6 +1193,7 @@ Resources:
       Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
 
   CognitoUserPoolDomain:
+    Condition: CreateNewUserPool
     Type: AWS::CloudFormation::CustomResource
     Properties:
       Timeout: 360
@@ -1207,7 +1213,7 @@ Resources:
             - - cognito-idp.
               - !Ref 'AWS::Region'
               - .amazonaws.com/
-              - !Ref CognitoUserPool
+              - !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
 
   CognitoIdentityPoolRoles:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
@@ -1352,7 +1358,7 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
       UserPoolClientId: !Ref CognitoUserPoolClient
-      UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
+      UserPoolDomain: !If [CreateNewUserPool, !GetAtt CognitoUserPoolDomain.FullUrl, !Ref ExistingUserPoolDomain]
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
