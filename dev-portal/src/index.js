@@ -62,6 +62,9 @@ class App extends React.Component {
           <GlobalModal />
           <Switch>
             <Route exact path="/" component={Home} />
+            <Route exact path="/index.html" component={() =>
+              <Redirect to="/"/>
+            } />
             <Route path="/getting-started" component={GettingStarted} />
             <Route path="/dashboard" component={Dashboard} />
             <AdminRoute path="/admin" component={Admin} />
