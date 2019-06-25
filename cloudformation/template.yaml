@@ -72,7 +72,7 @@ Parameters:
 
   StaticAssetRebuildMode:
     Type: String
-    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite_content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
+    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
     Default: ''
 
   MarketplaceSubscriptionTopicProductCode:
