@@ -12,6 +12,8 @@ let AWS = require('aws-sdk'),
   bucketName = '',
   hash = require('object-hash')
 
+const { getAllUsagePlans } = require('./shared/get-all-usage-plans')
+
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
  * and whether it's in the catalog folder (S3 Key starts with "catalog/").
@@ -176,26 +178,6 @@ function copyAnyMethod(api) {
   return api
 }
 
-/** Fetches all usage plans, combining all pages into a single array. */
-async function getAllUsagePlans() {
-  // The maximum allowed value of `limit` is 500 according to
-  // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html#getUsagePlans-property
-  const defaultParams = {limit: 500}
-
-  console.log('Fetching first page of usage plans')
-  let response = await exports.gateway.getUsagePlans(defaultParams).promise()
-  const usagePlans = response.items
-
-  while (response.position) {
-    console.log(`Fetching next page of usage plans, at position=[${response.position}]`)
-    const nextParams = {...defaultParams, position: response.position}
-    response = await exports.gateway.getUsagePlans(nextParams).promise()
-    usagePlans.push(...response.items)
-  }
-
-  return usagePlans
-}
-
 function buildCatalog(swaggerFiles, sdkGeneration) {
   console.log(`results: ${JSON.stringify(swaggerFiles, null, 4)}`)
   console.log(sdkGeneration)
@@ -205,7 +187,7 @@ function buildCatalog(swaggerFiles, sdkGeneration) {
     generic: []
   }
 
-  return getAllUsagePlans()
+  return getAllUsagePlans(exports.gateway)
     .then(usagePlans => {
       console.log(`usagePlans: ${JSON.stringify(usagePlans, null, 4)}`)
       for (let i = 0; i < usagePlans.length; i++) {
