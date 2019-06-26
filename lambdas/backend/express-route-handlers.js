@@ -3,6 +3,7 @@ const feedbackController = require('./_common/feedback-controller.js')
 const AWS = require('aws-sdk')
 const catalog = require('./catalog/index')
 const hash = require('object-hash')
+const { getAllUsagePlans } = require('./shared/get-all-usage-plans')
 
 const Datauri = require('datauri')
 
@@ -421,7 +422,7 @@ async function getAdminCatalogVisibility(req, res) {
             })
         })
 
-        let usagePlans = await exports.apigateway.getUsagePlans().promise()
+        let usagePlans = await getAllUsagePlans(exports.apigateway)
 
         // In the case of apiGateway APIs, the client doesn't know if there are usage plan associated or not
         // so we need to provide that information. This can't be merged with the above loop:
@@ -431,7 +432,7 @@ async function getAdminCatalogVisibility(req, res) {
         visibility.apiGateway.map((apiEntry) => {
             apiEntry.subscribable = false
 
-            usagePlans.items.forEach((usagePlan) => {
+            usagePlans.forEach((usagePlan) => {
                 usagePlan.apiStages.forEach((apiStage) => {
                     if(apiEntry.id === apiStage.apiId && apiEntry.stage === apiStage.stage) {
                         apiEntry.subscribable = true
