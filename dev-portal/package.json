@@ -17,7 +17,7 @@
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "0.85.0",
-    "swagger-ui": "3.19.3",
+    "swagger-ui": "3.22.3",
     "yamljs": "^0.3.0"
   },
   "scripts": {
@@ -44,6 +44,6 @@
   "devDependencies": {
     "mobx-react-devtools": "^6.0.3",
     "node-fetch": "^2.3.0",
-    "react-scripts": "^2.1.5"
+    "react-scripts": "^3.0.1"
   }
 }
