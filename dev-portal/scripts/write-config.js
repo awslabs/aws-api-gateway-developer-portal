@@ -10,16 +10,20 @@ const { execute, r } = require('./utils.js')
 const buildConfig = require('../deployer.config.js')
 const stackName = buildConfig.stackName
 
-function writeConfig (swallowOutput) {
-  return execute(`aws cloudformation describe-stacks --stack-name ${stackName}`, swallowOutput)
-  .then((result) => {
-    const websiteUrl = (JSON.parse(result.stdout).Stacks[0].Outputs)
-      .find(output => output.OutputKey === "WebsiteURL").OutputValue
+// AWS SAM CLI configuration
+const awsSamCliProfile = buildConfig.awsSamCliProfile;
+const profileOption = awsSamCliProfile ? `--profile ${awsSamCliProfile}` : ''
 
-    return fetch(`${websiteUrl}/config.js`).then(response => response.text())
-  })
-  .then(output => writeFile(r(`../public/config.js`), output))
-  .catch(console.error)
+function writeConfig (swallowOutput) {
+  return execute(`aws cloudformation describe-stacks --stack-name ${stackName} ${profileOption}`, swallowOutput)
+      .then((result) => {
+    const websiteUrl = (JSON.parse(result.stdout).Stacks[0].Outputs)
+        .find(output => output.OutputKey === "WebsiteURL").OutputValue
+
+  return fetch(`${websiteUrl}/config.js`).then(response => response.text())
+})
+.then(output => writeFile(r(`../public/config.js`), output))
+.catch(console.error)
 }
 
 module.exports = writeConfig

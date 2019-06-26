@@ -30,6 +30,9 @@ module.exports = {
 
   // Set this to overwrite-content if you want to reset your custom content back to the defaults. Defaults to ``
   // staticAssetRebuildMode: `overwrite-content` // ONLY SET
+  
+  // AWS SAM CLI profile option: optional specific profile from your AWS credential file. Not used by default
+  //awsSamCliProfile: "my-profile"
 }
 ```
 4. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use
