@@ -12,6 +12,8 @@ let AWS = require('aws-sdk'),
   bucketName = '',
   hash = require('object-hash')
 
+const { getAllUsagePlans } = require('./shared/get-all-usage-plans')
+
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
  * and whether it's in the catalog folder (S3 Key starts with "catalog/").
@@ -185,10 +187,9 @@ function buildCatalog(swaggerFiles, sdkGeneration) {
     generic: []
   }
 
-  return exports.gateway.getUsagePlans({}).promise()
-    .then((result) => {
-      console.log(`usagePlans: ${JSON.stringify(result.items, null, 4)}`)
-      let usagePlans = result.items
+  return getAllUsagePlans(exports.gateway)
+    .then(usagePlans => {
+      console.log(`usagePlans: ${JSON.stringify(usagePlans, null, 4)}`)
       for (let i = 0; i < usagePlans.length; i++) {
           catalog.apiGateway[i] = usagePlanToCatalogObject(usagePlans[i], swaggerFiles, sdkGeneration)
       }
