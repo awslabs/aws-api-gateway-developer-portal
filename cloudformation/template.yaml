@@ -115,7 +115,7 @@ Parameters:
 
   DevelopmentMode:
     Type: String
-    Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, CORS, etc.) for easier development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
+    Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, CORS, etc.) for easier development. It also breaks frontend routing (except to /index.html), including deep linking and page refresh. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
     Default: 'false'
     AllowedValues: 
       - 'false'
