@@ -30,15 +30,28 @@ If you have previously set up a v1 developer portal (non-SAM deployed), you will
 #### Deploy
 
 Run:
+
 >In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists. Then, run:
+
 ```bash
-sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
+sam package --template-file ./cloudformation/template.yaml \
+    --output-template-file ./cloudformation/packaged.yaml \
+    --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
-Then run: 
+Then run:
+
 >In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists, and replace `custom-prefix` with some prefix that is globally unique, like your org name or username. Then, run:
+
 ```bash
-sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --s3-bucket your-lambda-artifacts-bucket-name --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CognitoDomainNameOrPrefix="custom-prefix"
+sam deploy --template-file ./cloudformation/packaged.yaml \
+    --stack-name "dev-portal" \
+    --s3-bucket your-lambda-artifacts-bucket-name \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --parameter-overrides \
+    DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" \
+    ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" \
+    CognitoDomainNameOrPrefix="custom-prefix"
 ```
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
@@ -46,7 +59,8 @@ The command will exit when the stack creation is successful. If you'd like to wa
 To get the URL for the newly created developer portal instance, find the websiteURL field in the cloudformation console's outputs or run this command:
 
 ```bash
-aws cloudformation describe-stacks --query "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
+aws cloudformation describe-stacks --query \
+    "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
 ```
 
 You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal or customize some of the features. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
