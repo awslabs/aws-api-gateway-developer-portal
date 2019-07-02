@@ -5,7 +5,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, Image } from 'semantic-ui-react'
 
-import { isAdmin, isAuthenticated, logout } from 'services/self'
+import { isAdmin, isAuthenticated, logout, getLoginRedirectUrl } from 'services/self'
 
 import { cognitoDomain, cognitoClientId } from '../services/api'
 
@@ -21,7 +21,7 @@ import Register from './Register'
 export const NavBar = observer(
   class NavBar extends React.Component {
     getCognitoUrl = (type) => {
-      let redirectUri = `${window.location.protocol}//${window.location.host}/login`
+      let redirectUri = getLoginRedirectUrl()
       return `${cognitoDomain}/${type}?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`
     }
 
