@@ -5,10 +5,11 @@ import React from 'react'
 import {Menu} from 'semantic-ui-react'
 import {Redirect} from 'react-router-dom'
 
+import {getLoginRedirectUrl} from 'services/self'
 import {cognitoDomain, cognitoClientId} from '../services/api'
 
 export default class Register extends React.Component {
-    redirectUri = `${window.location.protocol}//${window.location.host}/login`
+    redirectUri = getLoginRedirectUrl()
 
     render() {
         return this.props.signedIn ? <Redirect to='/apis'/> : (

@@ -1121,20 +1121,20 @@ Resources:
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
       CallbackURL: !If [ DevelopmentMode,
         [
-          'http://localhost:3000/login',
-          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName ]]
+          'http://localhost:3000/index.html?action=login',
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=login' ]]
         ],
         [
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/login' ]]
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
         ]
       ]
       LogoutURL: !If [ DevelopmentMode,
         [
-          'http://localhost:3000',
-          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName]]
+          'http://localhost:3000/index.html?action=logout',
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=logout' ]]
         ],
         [
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ]]]
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=logout' ]]
         ]
       ]
       AllowedOAuthFlowsUserPoolClient: true
