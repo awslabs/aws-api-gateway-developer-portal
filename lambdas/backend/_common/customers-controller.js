@@ -3,6 +3,7 @@
 
 'use strict'
 const AWS = require('aws-sdk')
+const { getAllUsagePlans } = require('../shared/get-all-usage-plans')
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient()
 const apigateway = new AWS.APIGateway()
@@ -195,10 +196,9 @@ function getUsagePlansForCustomer(cognitoIdentityId, error, callback) {
                 keyId,
                 limit: 1000
             }
-            apigateway.getUsagePlans(params, (err, usagePlansData) => {
-                if (err) error(err)
-                else callback(usagePlansData)
-            })
+            getAllUsagePlans(apigateway, params)
+                .then(usagePlansData => callback({ items: usagePlansData }))
+                .catch(err => error(err))
         }
     })
 }
@@ -209,26 +209,22 @@ function getUsagePlanForProductCode(productCode, error, callback) {
     // do a linear scan of usage plans for name matching productCode
     var params = {
         limit: 1000
-    };
-    apigateway.getUsagePlans(params, function(err, data) {
-        if (err) {
-            error(err)
-        } else {
-            console.log(`Got usage plans ${JSON.stringify(data.items)}`)
+    }
+    getAllUsagePlans(apigateway, params).then(usagePlans => {
+        console.log(`Got usage plans ${JSON.stringify(usagePlans)}`)
 
-            // note: ensure that only one usage plan maps to a given marketplace product code
-            const usageplan = data.items.find(function (item) {
-                return item.productCode !== undefined && item.productCode === productCode
-            })
-            if (usageplan !== undefined) {
-                console.log(`Found usage plan matching ${productCode}`)
-                callback(usageplan)
-            } else {
-                console.log(`Couldn't find usageplan matching product code ${productCode}`)
-                error(`Couldn't find usageplan matching product code ${productCode}`)
-            }
+        // note: ensure that only one usage plan maps to a given marketplace product code
+        const usageplan = usagePlans.find(function (item) {
+            return item.productCode !== undefined && item.productCode === productCode
+        })
+        if (usageplan !== undefined) {
+            console.log(`Found usage plan matching ${productCode}`)
+            callback(usageplan)
+        } else {
+            console.log(`Couldn't find usageplan matching product code ${productCode}`)
+            error(`Couldn't find usageplan matching product code ${productCode}`)
         }
-    });
+    }).catch(err => error(err))
 }
 
 function updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, success) {
@@ -322,16 +318,6 @@ function updateCustomerApiKeyId(cognitoIdentityId, apiKeyId, error, success) {
         }
     })
 }
-
-// function getUsagePlans(error, callback) {
-//     const params = {
-//         limit: 1000
-//     }
-//     apigateway.getUsagePlans(params, (err, data) => {
-//         if (err) error(err)
-//         else callback(data)
-//     })
-// }
 
 module.exports = {
     ensureCustomerItem,
