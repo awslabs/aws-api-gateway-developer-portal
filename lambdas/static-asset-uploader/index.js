@@ -185,6 +185,9 @@ function cleanS3Bucket(bucketName) {
 function createCatalogDirectory(staticBucketName) {
     let params = { Bucket: staticBucketName, Key: 'catalog/', Body: '' }
     return exports.s3.upload(params).promise()
+        .catch(err => {
+          console.log('Error creating "catalog" directory', err)
+        })
 }
 
 /**
@@ -195,11 +198,11 @@ function createCatalogDirectory(staticBucketName) {
  */
 async function createSdkGenerationFile(staticBucketName) {
     return await exports.s3.headObject({ Bucket: staticBucketName, Key: 'sdkGeneration.json' }).promise()
-        .catch((error) => {
-            console.error(error)
+        .catch(async _error => {
             // assume it's a NotFound error, and upload a new version
+            console.log('Uploading sdkGeneration.json since it seems to not exist')
             let params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}' }
-            return exports.s3.upload(params).promise()
+            return await exports.s3.upload(params).promise()
         })
 
 }
@@ -255,7 +258,8 @@ function processFile(fileStat, readPromises, uploadPromises, bucketName, event, 
                 params.ACL = "public-read"
             }
 
-            uploadPromises.push(exports.s3.upload(params, options).promise())
+          uploadPromises.push(exports.s3.upload(params, options).promise()
+              .catch(err => { throw err }))
         })
         .catch(error => {
             console.log(`Failed to upload:`, error)
