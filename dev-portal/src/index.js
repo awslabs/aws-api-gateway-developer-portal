@@ -5,6 +5,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom'
 
+import * as queryString from 'query-string'
+
 // content-fragments (import here to start this ASAP)
 import 'services/get-fragments'
 
@@ -62,6 +64,15 @@ class App extends React.Component {
           <GlobalModal />
           <Switch>
             <Route exact path="/" component={Home} />
+            <Route exact path="/index.html" component={() => {
+              const { action } = queryString.parse(window.location.search)
+              if (action === 'login') {
+                login()
+              } else if (action === 'logout') {
+                logout()
+              }
+              return <Redirect to="/" />
+            }} />
             <Route path="/getting-started" component={GettingStarted} />
             <Route path="/dashboard" component={Dashboard} />
             <AdminRoute path="/admin" component={Admin} />
