@@ -1,10 +1,10 @@
 {
   "name": "aws-serverless-dev-portal",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
   "scripts": {
-    "get-dependencies": "npm run get-dev-portal-dependencies && npm run get-lambda-dependencies;",
+    "get-dependencies": "npm install && npm run get-dev-portal-dependencies && npm run get-lambda-dependencies;",
     "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}) && npm run get-dependencies' \\;",
     "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)",
     "test": "node scripts/test.js",
