@@ -93,6 +93,10 @@ Parameters:
     Type: String
     Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. This should be regionally unique.
 
+  ExistingCognitoUserPool:
+    Type: String
+    Description: The existing User Pool ID. Leave blank to create a new User Pool.
+
   # CognitoDomainAcmCertArn:
   #   Type: String
   #   Description: Doesn't yet do anything. Oh well.
@@ -134,6 +138,7 @@ Conditions:
   DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
   NotDevelopmentMode: !Not [!Condition DevelopmentMode]
   InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
+  CreateCognitoUserPool: !Equals [!Ref ExistingCognitoUserPool, '']
 
 Resources:
   ApiGatewayApi:
@@ -564,6 +569,7 @@ Resources:
                 arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
                 ${CloudFrontOriginAccessIdentity}
 
+
   ArtifactsS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -960,7 +966,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool
+          - !If [CreateCognitoUserPool, !Ref CognitoUserPool, !Ref ExistingCognitoUserPool]
 
   LambdaSNSExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1043,6 +1049,7 @@ Resources:
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
+    Condition: CreateCognitoUserPool
     Properties:
       UserPoolName: !Ref CognitoIdentityPoolName
       LambdaConfig:
@@ -1064,7 +1071,7 @@ Resources:
     # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
     # settings won't be set, e.g., CallbackURL.
     Properties:
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateCognitoUserPool, !Ref CognitoUserPool, !Ref ExistingCognitoUserPool]
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
@@ -1116,7 +1123,7 @@ Resources:
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateCognitoUserPool, !Ref CognitoUserPool, !Ref ExistingCognitoUserPool]
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
       CallbackURL: !If [ DevelopmentMode,
@@ -1193,6 +1200,7 @@ Resources:
 
   CognitoUserPoolDomain:
     Type: AWS::CloudFormation::CustomResource
+    Condition: CreateCognitoUserPool
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
@@ -1211,7 +1219,7 @@ Resources:
             - - cognito-idp.
               - !Ref 'AWS::Region'
               - .amazonaws.com/
-              - !Ref CognitoUserPool
+              - !If [CreateCognitoUserPool, !Ref CognitoUserPool, !Ref ExistingCognitoUserPool]
 
   CognitoIdentityPoolRoles:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
@@ -1308,7 +1316,7 @@ Resources:
       # since admin group has a precedence of 0, it takes priority
       Precedence: 0
       RoleArn: !GetAtt CognitoAdminRole.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateCognitoUserPool, !Ref CognitoUserPool, !Ref ExistingCognitoUserPool]
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1354,9 +1362,9 @@ Resources:
       RestApiId: !Ref ApiGatewayApi
       Region: !Ref 'AWS::Region'
       IdentityPoolId: !Ref CognitoIdentityPool
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateCognitoUserPool, !Ref CognitoUserPool, !Ref ExistingCognitoUserPool]
       UserPoolClientId: !Ref CognitoUserPoolClient
-      UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
+      UserPoolDomain: !If [ CreateCognitoUserPool, !GetAtt CognitoUserPoolDomain.FullUrl, !Ref CognitoDomainNameOrPrefix ]
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode

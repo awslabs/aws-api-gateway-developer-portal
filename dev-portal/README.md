@@ -25,9 +25,13 @@ module.exports = {
   // Change the name of the customer's table. Useful for multiple stacks. Defaults to `DevPortalCustomers`
   // customersTableName: `DevPortalCustomers`,
   
+  // Optional Existing Cognito User Pool. This parameter alters the value of the CognitoDomainName value. See below.
+  // cognitoUserPool: "eu-west-1_XXX",
+  
   // Turns on cognito hosted sign in / sign up UI; Defaults to `` (blank string)
+  // Important: If 'cognitoUserPool' is provided, this needs to be the full URL of the Cognito hosted UI (e.g. https://my.auth.org or https://myauth.auth.eu-west-1.amazoncognito.com)
   // cognitoDomainName: `auth-url`,
-
+  
   // Set this to overwrite-content if you want to reset your custom content back to the defaults. Defaults to ``
   // staticAssetRebuildMode: `overwrite-content` // ONLY SET
   
