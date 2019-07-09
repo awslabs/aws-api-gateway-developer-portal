@@ -43,6 +43,8 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@testing-library/jest-dom": "^4.0.0",
+    "@testing-library/react": "^8.0.4",
     "mobx-react-devtools": "^6.0.3",
     "node-fetch": "^2.3.0",
     "react-scripts": "^3.0.1"
