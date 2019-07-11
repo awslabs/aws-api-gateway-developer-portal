@@ -592,7 +592,11 @@ Resources:
   CustomersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Ref DevPortalCustomersTableName
+      TableName:
+        !Join
+          - '-'
+          - - !Ref AWS::StackName
+            - !Ref DevPortalCustomersTableName
       AttributeDefinitions:
       - AttributeName: Id
         AttributeType: S
@@ -621,7 +625,11 @@ Resources:
     Type: AWS::DynamoDB::Table
     Condition: EnableFeedbackSubmission
     Properties:
-      TableName: !Ref DevPortalFeedbackTableName
+      TableName:
+        !Join
+          - '-'
+          - - !Ref AWS::StackName
+            - !Ref DevPortalFeedbackTableName
       AttributeDefinitions:
       - AttributeName: Id
         AttributeType: S
@@ -1000,9 +1008,9 @@ Resources:
         Variables:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
-          CustomersTableName: !Ref DevPortalCustomersTableName
+          CustomersTableName: !Ref CustomersTable
           CatalogUpdaterFunctionArn: !GetAtt CatalogUpdaterLambdaFunction.Arn
-          FeedbackTableName: !Ref DevPortalFeedbackTableName
+          FeedbackTableName: !Ref FeedbackTable
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
 
