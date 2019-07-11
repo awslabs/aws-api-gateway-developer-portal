@@ -594,7 +594,7 @@ Resources:
     Properties:
       TableName:
         !Join
-          - '-'
+          - ''
           - - !Ref AWS::StackName
             - !Ref DevPortalCustomersTableName
       AttributeDefinitions:
@@ -627,7 +627,7 @@ Resources:
     Properties:
       TableName:
         !Join
-          - '-'
+          - ''
           - - !Ref AWS::StackName
             - !Ref DevPortalFeedbackTableName
       AttributeDefinitions:
