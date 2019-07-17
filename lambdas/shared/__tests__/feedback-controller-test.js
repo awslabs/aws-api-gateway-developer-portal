@@ -1,5 +1,5 @@
 const promiser = require('../../setup-jest').promiser
-const controller = require('../_common/feedback-controller')
+const controller = require('dev-portal-common/feedback-controller')
 
 const userId = 'test-id'
 const message = 'your site is really cool'
