@@ -7,8 +7,8 @@ import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom'
 
 import * as queryString from 'query-string'
 
-// content-fragments (import here to start this ASAP)
-import 'services/get-fragments'
+// content-fragments
+import { loadFragments } from 'services/get-fragments'
 
 // semantic-ui
 import 'semantic-ui-css/semantic.css'
@@ -29,6 +29,8 @@ import ApiSearch from './components/ApiSearch'
 
 import { isAdmin, init, login, logout } from 'services/self'
 import './index.css';
+
+loadFragments()
 
 // TODO: Feedback should be enabled if
 // the following is true && the current
