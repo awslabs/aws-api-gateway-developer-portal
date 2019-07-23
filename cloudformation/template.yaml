@@ -1483,7 +1483,7 @@ Resources:
       Handler: index.handler
       MemorySize: 512
       Role: !GetAtt DumpV3AccountDataExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Timeout: 300
       Environment:
         Variables:
