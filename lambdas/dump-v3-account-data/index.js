@@ -131,7 +131,7 @@ const insertUsernames = ({ accounts, usernamesByUserId }) => accounts
   }))
 
 /**
- * Formats an account account object as a string of tab-separated values.
+ * Formats an account object as a string of tab-separated values.
  *
  * Note that no escaping is required, since all fields consist of
  * non-whitespace characters in the printable subset of Unicode. See [1] for
