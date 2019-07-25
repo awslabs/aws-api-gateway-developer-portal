@@ -1,4 +1,4 @@
-const customers = require('../_common/customers-controller')
+const customers = require('dev-portal-common/customers-controller')
 const promiser = require('../../setup-jest').promiser
 
 describe('customersController', () => {

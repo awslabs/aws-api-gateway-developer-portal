@@ -21,8 +21,12 @@ export const HomePage = observer(() => (
       <Image centered size='small' src='/custom-content/home-image.png' />
       <Header as='h1' style={{ color: "whitesmoke" }}>{fragments.Home.header}</Header>
       <p>{fragments.Home.tagline}</p>
-      <Link to="/getting-started"><Button positive>{fragments.Home.gettingStartedButton}</Button></Link>
-      <Link to="/apis" style={{ padding: "0.78571429em 1.5em 0.78571429em", color: "white" }}>{fragments.Home.apiListButton}</Link>
+      <Link to="/getting-started" data-testid="gettingStartedLink">
+        <Button positive>{fragments.Home.gettingStartedButton}</Button>
+      </Link>
+      <Link to="/apis" style={{ padding: "0.78571429em 1.5em 0.78571429em", color: "white" }} data-testid="apiListLink">
+        {fragments.Home.apiListButton}
+      </Link>
     </Segment>
     <Segment vertical style={{ padding: "40px 0px", margin: "0 !important" }}>
       <Container fluid text textAlign='justified'>

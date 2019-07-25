@@ -5,8 +5,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom'
 
-// content-fragments (import here to start this ASAP)
-import 'services/get-fragments'
+import * as queryString from 'query-string'
+
+// content-fragments
+import { loadFragments } from 'services/get-fragments'
 
 // semantic-ui
 import 'semantic-ui-css/semantic.css'
@@ -27,6 +29,8 @@ import ApiSearch from './components/ApiSearch'
 
 import { isAdmin, init, login, logout } from 'services/self'
 import './index.css';
+
+loadFragments()
 
 // TODO: Feedback should be enabled if
 // the following is true && the current
@@ -62,6 +66,15 @@ class App extends React.Component {
           <GlobalModal />
           <Switch>
             <Route exact path="/" component={Home} />
+            <Route exact path="/index.html" component={() => {
+              const { action } = queryString.parse(window.location.search)
+              if (action === 'login') {
+                login()
+              } else if (action === 'logout') {
+                logout()
+              }
+              return <Redirect to="/" />
+            }} />
             <Route path="/getting-started" component={GettingStarted} />
             <Route path="/dashboard" component={Dashboard} />
             <AdminRoute path="/admin" component={Admin} />

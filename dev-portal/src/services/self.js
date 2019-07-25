@@ -77,6 +77,9 @@ export function login() {
   })
 }
 
+export const getLoginRedirectUrl = () => `${window.location.protocol}//${window.location.host}/index.html?action=login`
+export const getLogoutRedirectUrl = () => `${window.location.protocol}//${window.location.host}/index.html?action=logout`
+
 function setCredentials() {
   let preferred_role = jwt_decode(store.idToken)['cognito:preferred_role']
   let params = {
@@ -114,7 +117,8 @@ export function logout() {
 
     if (cognitoDomain) {
       // redirect to cognito to log out there, too
-      window.location = `${cognitoDomain}/logout?client_id=${cognitoClientId}&logout_uri=${window.location.protocol}//${window.location.host}`;
+      const redirectUrl = getLogoutRedirectUrl()
+      window.location = `${cognitoDomain}/logout?client_id=${cognitoClientId}&logout_uri=${redirectUrl}`
     }
   }
 }
