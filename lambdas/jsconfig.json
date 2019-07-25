@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "lib": ["es2017"],
+    "module": "commonjs",
+    "target": "es2017",
+    "paths": {
+      "dev-portal-common/*": ["./common-layer/nodejs/node_modules/dev-portal-common/*"]
+    }
+  }
+}
