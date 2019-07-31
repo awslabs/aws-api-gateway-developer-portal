@@ -6,7 +6,11 @@ import { render } from '@testing-library/react'
 /*
  * Jest requires at least one test per file in __tests__.
  */
-test('', () => {})
+if (typeof test === 'function') {
+  test('', () => {})
+} else {
+  console.warn('__tests__/utils used outside of tests!')
+}
 
 /*
  * Wrapper around react-testing-library's `render` function, providing a dummy
@@ -14,10 +18,19 @@ test('', () => {})
  *
  * [1]: https://testing-library.com/docs/example-react-router
  */
-export const renderWithRouter = (ui, {
-  route = '/',
-  history = createMemoryHistory({ initialEntries: [route] })
-} = {}) => ({
+export const renderWithRouter = (
+  ui,
+  {
+    route = '/',
+    history = createMemoryHistory({ initialEntries: [route] }),
+  } = {},
+) => ({
   ...render(<Router history={history}>{ui}</Router>),
-  history
+  history,
 })
+
+/**
+ * Returns a Promise that resolves after `ms` milliseconds with the value `resolution`.
+ */
+export const resolveAfter = (ms, resolution) =>
+  new Promise(resolve => setTimeout(() => resolve(resolution), ms))
