@@ -106,18 +106,27 @@ export const AccountsTable = ({
   }, [columns, filter])
 
   /**
-   * Sets `accountsView` to the filtered and sorted subset of `props.accounts`.
+   * Sets `accountsView` to the filtered subset of `props.accounts`.
    */
   useEffect(() => {
     let view = _(accounts)
-    if (filter.column !== NO_FILTER_COLUMN) {
-      const filterKey = filter.column.filtering.accessor
-      view = view.filter(
-        item =>
-          !!item[filterKey] &&
-          item[filterKey].toString().includes(filter.value),
-      )
+    if (filter.value !== '' && filter.column !== NO_FILTER_COLUMN) {
+      const filterAccessor = filter.column.filtering.accessor
+      if (typeof filterAccessor === 'string') {
+        view = view.filter(
+          item =>
+            !!item[filterAccessor] &&
+            item[filterAccessor].toString().includes(filter.value),
+        )
+      } else if (typeof filterAccessor === 'function') {
+        view = view.filter(item => filterAccessor(item).includes(filter.value))
+      } else {
+        throw new Error(
+          `Invalid filtering accessor on column ${filter.column.id}`,
+        )
+      }
     }
+
     if (order.column !== NO_ORDER_COLUMN) {
       view = view.orderBy(
         [order.column.ordering.iteratee],
@@ -322,8 +331,10 @@ const FillerAccountRow = React.memo(({ columnCount }) => (
 const AccountRow = React.memo(({ account, columns, isSelected, onSelect }) => {
   return (
     <Table.Row active={isSelected} onClick={() => onSelect(account)}>
-      {columns.map(({ render }, index) => (
-        <Table.Cell key={index}>{render(account)}</Table.Cell>
+      {columns.map(({ id, render }, index) => (
+        <Table.Cell data-account-column-id={id} key={index}>
+          {render(account)}
+        </Table.Cell>
       ))}
     </Table.Row>
   )
