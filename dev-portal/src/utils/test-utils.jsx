@@ -3,13 +3,8 @@ import { Router } from 'react-router-dom'
 import { createMemoryHistory } from 'history'
 import { render } from '@testing-library/react'
 
-/*
- * Jest requires at least one test per file in __tests__.
- */
-if (typeof test === 'function') {
-  test('', () => {})
-} else {
-  console.warn('__tests__/utils used outside of tests!')
+if (typeof jest !== 'object') {
+  console.warn('test-utils used outside of tests!')
 }
 
 /*

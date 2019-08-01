@@ -3,7 +3,7 @@ import React from 'react'
 import * as rtl from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
-import { renderWithRouter } from '__tests__/utils'
+import { renderWithRouter } from 'utils/test-utils'
 
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
 import * as AccountService from 'services/accounts'

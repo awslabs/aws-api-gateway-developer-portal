@@ -1,6 +1,6 @@
 import _ from 'lodash'
 
-import { resolveAfter } from '__tests__/utils'
+import { resolveAfter } from 'utils/test-utils'
 
 const now = Date.now()
 const numMockAccounts = 157 // should be prime
