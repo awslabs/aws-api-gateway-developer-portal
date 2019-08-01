@@ -3,7 +3,7 @@ import React from 'react'
 import * as rtl from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
-import { renderWithRouter } from 'utils/test-utils'
+import * as testUtils from 'utils/test-utils'
 
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
@@ -11,28 +11,12 @@ import * as AccountService from 'services/accounts'
 
 jest.mock('services/accounts')
 
-/**
- * Suppress React 16.8 act() warnings globally.
- * The React team's fix won't be out of alpha until 16.9.0.
- *
- * See <https://github.com/facebook/react/issues/14769#issuecomment-514589856>
- */
-const consoleError = console.error
-beforeAll(() => {
-  jest.spyOn(console, 'error').mockImplementation((...args) => {
-    if (
-      !args[0].includes(
-        'Warning: An update to %s inside a test was not wrapped in act',
-      )
-    ) {
-      consoleError(...args)
-    }
-  })
-})
+// TODO: remove when React 16.9 is released
+testUtils.suppressReact16Dot8ActWarningsGlobally()
 
 afterEach(rtl.cleanup)
 
-const renderPage = () => renderWithRouter(<RegisteredAccounts />)
+const renderPage = () => testUtils.renderWithRouter(<RegisteredAccounts />)
 
 const waitForAccountsToLoad = page =>
   rtl.waitForElementToBeRemoved(() =>
