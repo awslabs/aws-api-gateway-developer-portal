@@ -73,13 +73,7 @@ function withCollapsibleMobileSidebar(WrappedComponent) {
 
     checkMobileScreenResolution = () => {
       const isMobileScreenResolution = this.isMobileScreenResolution()
-      this.setState({isSidebarCollapsed: isMobileScreenResolution, isMobileScreenResolution: isMobileScreenResolution})
-
-      if (this.isMobileScreenResolution()) {
-        this.setState({isSidebarCollapsed: true, isMobileScreenResolution: true})
-      } else {
-        this.setState({isSidebarCollapsed: false, isMobileScreenResolution: false})
-      }
+      this.setState({isSidebarCollapsed: isMobileScreenResolution, isMobileScreenResolution})
     }
 
     debouncedResizeHandler = _.debounce(this.checkMobileScreenResolution, 500)
