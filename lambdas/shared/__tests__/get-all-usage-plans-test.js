@@ -1,4 +1,4 @@
-const { getAllUsagePlans } = require('../get-all-usage-plans')
+const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
 
 const promiser = require('../../setup-jest').promiser
 

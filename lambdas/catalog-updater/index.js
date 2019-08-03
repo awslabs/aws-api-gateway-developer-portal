@@ -12,7 +12,7 @@ let AWS = require('aws-sdk'),
   bucketName = '',
   hash = require('object-hash')
 
-const { getAllUsagePlans } = require('./shared/get-all-usage-plans')
+const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
 
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),

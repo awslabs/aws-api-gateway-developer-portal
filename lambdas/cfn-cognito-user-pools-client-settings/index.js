@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const notifyCFN = require('./notify-cfn')
+const notifyCFN = require('dev-portal-common/notify-cfn')
 
 exports.handler = async (event, context) => {
   try {
