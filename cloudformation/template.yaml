@@ -1476,6 +1476,61 @@ Resources:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
             HostedZoneId: 'Z2FDTNDATAQYW2'
 
+  DumpV3AccountDataFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/dump-v3-account-data
+      Handler: index.handler
+      MemorySize: 512
+      Role: !GetAtt DumpV3AccountDataExecutionRole.Arn
+      Runtime: nodejs10.x
+      Timeout: 300
+      Environment:
+        Variables:
+          CustomersTableName: !Ref DevPortalCustomersTableName
+          UserPoolId: !Ref CognitoUserPool
+          AdminsGroupName: !Ref CognitoAdminsGroup
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  DumpV3AccountDataExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: WriteCloudWatchLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: ReadCustomersTable
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: dynamodb:Scan
+            Resource: !GetAtt CustomersTable.Arn
+      - PolicyName: ListUserPool
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+              - cognito-idp:ListUsersInGroup
+            Resource: !GetAtt CognitoUserPool.Arn
+
 Outputs:
   WebsiteURL:
     Value: !If [ 'DevelopmentMode',
