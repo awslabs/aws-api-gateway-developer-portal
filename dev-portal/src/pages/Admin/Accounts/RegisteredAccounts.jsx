@@ -6,6 +6,11 @@ import * as AccountService from 'services/accounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountsTableColumns from 'components/Admin/Accounts/AccountsTableColumns'
 
+const DELETE_SUCCESS = Symbol('DELETE_SUCCESS')
+const DELETE_FAILURE = Symbol('DELETE_FAILURE')
+const PROMOTE_SUCCESS = Symbol('PROMOTE_SUCCESS')
+const PROMOTE_FAILURE = Symbol('PROMOTE_FAILURE')
+
 const RegisteredAccounts = () => {
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -173,11 +178,6 @@ const PromoteAccountModal = React.memo(
       </Modal>
     ),
 )
-
-const DELETE_SUCCESS = Symbol('DELETE_SUCCESS')
-const DELETE_FAILURE = Symbol('DELETE_FAILURE')
-const PROMOTE_SUCCESS = Symbol('PROMOTE_SUCCESS')
-const PROMOTE_FAILURE = Symbol('PROMOTE_FAILURE')
 
 const MESSAGE_RENDERERS = {
   [DELETE_SUCCESS]: ({ account }, onDismiss) => (
