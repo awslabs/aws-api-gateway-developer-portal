@@ -6,6 +6,7 @@ import '@testing-library/jest-dom/extend-expect'
 import { renderWithRouter } from 'utils/test-utils'
 
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
+import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountService from 'services/accounts'
 
 jest.mock('services/accounts')
@@ -61,7 +62,7 @@ describe('RegisteredAccounts page', () => {
     const page = renderPage()
     await waitForAccountsToLoad(page)
 
-    _.range(10).forEach(index =>
+    _.range(AccountsTable.DEFAULT_PAGE_SIZE).forEach(index =>
       expect(page.queryByText(`${index}@example.com`)).not.toBeNull(),
     )
   })

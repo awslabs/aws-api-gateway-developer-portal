@@ -12,6 +12,8 @@ import {
 
 import styles from './AccountsTable.module.css'
 
+export const DEFAULT_PAGE_SIZE = 10
+
 const FILLER_ACCOUNT = Symbol('FILLER_ACCOUNT')
 
 const NO_FILTER_COLUMN = Symbol('NO_FILTER_COLUMN')
@@ -62,7 +64,7 @@ export const AccountsTable = ({
   onSelectAccount,
   children: toolbarActions,
 }) => {
-  const pageSize = 10
+  const pageSize = DEFAULT_PAGE_SIZE
 
   const [accountsView, setAccountsView] = useState(accounts)
   const [activePage, setActivePage] = useState(0)
