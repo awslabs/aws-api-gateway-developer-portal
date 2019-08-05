@@ -377,11 +377,12 @@ describe('RegisteredAccounts page', () => {
 
 const NUM_MOCK_ACCOUNTS = 157 // should be prime
 
-const MOCK_DATES_REGISTERED = (() =>
-  _.range(NUM_MOCK_ACCOUNTS).map(index => {
-    const now = Date.now()
-    return new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000)
-  }))()
+const MOCK_DATES_REGISTERED = (() => {
+  const now = Date.now()
+  return _.range(NUM_MOCK_ACCOUNTS).map(
+    index => new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000),
+  )
+})()
 
 const MOCK_ACCOUNTS = _.range(NUM_MOCK_ACCOUNTS).map(index => ({
   identityPoolId: `identityPoolId${index}`,
