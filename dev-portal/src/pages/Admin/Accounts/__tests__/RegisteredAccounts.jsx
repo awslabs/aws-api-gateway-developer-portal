@@ -103,7 +103,7 @@ describe('RegisteredAccounts page', () => {
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
       .orderBy(['emailAddress'], ['asc'])
-      .take(10)
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
 
     // Check that last page is correct
@@ -112,7 +112,10 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.click(lastPageButton)
     _(MOCK_ACCOUNTS)
       .orderBy(['emailAddress'], ['asc'])
-      .drop(150)
+      .drop(
+        Math.floor(NUM_MOCK_ACCOUNTS / AccountsTable.DEFAULT_PAGE_SIZE) *
+          AccountsTable.DEFAULT_PAGE_SIZE,
+      )
       .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
 
     // Order descending, go back to first page
@@ -123,7 +126,7 @@ describe('RegisteredAccounts page', () => {
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
       .orderBy(['emailAddress'], ['desc'])
-      .take(10)
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
   })
 
@@ -143,7 +146,7 @@ describe('RegisteredAccounts page', () => {
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
       .orderBy('dateRegistered')
-      .take(10)
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
   })
 
@@ -160,7 +163,7 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.change(filterInput, { target: { value: '11' } })
     _(MOCK_ACCOUNTS)
       .filter(({ emailAddress }) => emailAddress.includes('11'))
-      .take(10)
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
 
     rtl.fireEvent.change(filterInput, { target: { value: '111' } })
@@ -189,7 +192,7 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.change(filterInput, { target: { value: '15' } })
     _(MOCK_ACCOUNTS)
       .filter(({ apiKeyId }) => apiKeyId.includes('15'))
-      .take(10)
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ apiKeyId }) => rtl.getByText(table, apiKeyId))
 
     rtl.fireEvent.change(filterInput, { target: { value: '155' } })
@@ -216,7 +219,7 @@ describe('RegisteredAccounts page', () => {
     _(MOCK_ACCOUNTS)
       .filter(({ emailAddress }) => emailAddress.includes('13'))
       .orderBy('dateRegistered')
-      .take(10)
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
   })
 
