@@ -101,17 +101,19 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.click(emailAddressHeader)
 
     // Check that first page is correct
-    ;[0, ..._.range(100, 109)]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress => rtl.getByText(table, emailAddress))
+    _(MOCK_ACCOUNTS)
+      .orderBy(['emailAddress'], ['asc'])
+      .take(10)
+      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
 
     // Check that last page is correct
     const pagination = page.getByRole('navigation')
     const lastPageButton = rtl.getByLabelText(pagination, 'Last item')
     rtl.fireEvent.click(lastPageButton)
-    ;[..._.range(94, 100), 9]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress => rtl.getByText(table, emailAddress))
+    _(MOCK_ACCOUNTS)
+      .orderBy(['emailAddress'], ['asc'])
+      .drop(150)
+      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
 
     // Order descending, go back to first page
     rtl.fireEvent.click(emailAddressHeader)
@@ -119,9 +121,10 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.click(firstPageButton)
 
     // Check that first page is correct
-    ;[9, ..._.range(99, 90)]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress => rtl.getByText(table, emailAddress))
+    _(MOCK_ACCOUNTS)
+      .orderBy(['emailAddress'], ['desc'])
+      .take(10)
+      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
   })
 
   it('orders accounts by date registered', async () => {
@@ -138,9 +141,10 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.click(dateRegisteredHeader)
 
     // Check that first page is correct
-    ;[0, 105, 53, 1, 106, 54, 2, 107, 55, 3]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress => rtl.getByText(table, emailAddress))
+    _(MOCK_ACCOUNTS)
+      .orderBy('dateRegistered')
+      .take(10)
+      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
   })
 
   it('filters accounts by email address', async () => {
@@ -154,9 +158,10 @@ describe('RegisteredAccounts page', () => {
     const table = page.getByTestId('accountsTable')
 
     rtl.fireEvent.change(filterInput, { target: { value: '11' } })
-    ;[11, ..._.range(110, 119)]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress => rtl.getByText(table, emailAddress))
+    _(MOCK_ACCOUNTS)
+      .filter(({ emailAddress }) => emailAddress.includes('11'))
+      .take(10)
+      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
 
     rtl.fireEvent.change(filterInput, { target: { value: '111' } })
     rtl.getByText(table, '111@example.com')
@@ -182,9 +187,10 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.click(filterByApiKeyIdOption)
 
     rtl.fireEvent.change(filterInput, { target: { value: '15' } })
-    ;[15, 115, ..._.range(150, 157)]
-      .map(index => `apiKeyId${index}`)
-      .forEach(apiKeyId => rtl.getByText(table, apiKeyId))
+    _(MOCK_ACCOUNTS)
+      .filter(({ apiKeyId }) => apiKeyId.includes('15'))
+      .take(10)
+      .forEach(({ apiKeyId }) => rtl.getByText(table, apiKeyId))
 
     rtl.fireEvent.change(filterInput, { target: { value: '155' } })
     rtl.getByText(table, 'apiKeyId155')
@@ -207,9 +213,11 @@ describe('RegisteredAccounts page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: '13' } })
     rtl.fireEvent.click(dateRegisteredHeader)
-    ;[113, 13, ..._.range(131, 138)]
-      .map(index => `apiKeyId${index}`)
-      .forEach(apiKeyId => rtl.getByText(table, apiKeyId))
+    _(MOCK_ACCOUNTS)
+      .filter(({ emailAddress }) => emailAddress.includes('13'))
+      .orderBy('dateRegistered')
+      .take(10)
+      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
   })
 
   it('deletes an account', async () => {
@@ -366,17 +374,18 @@ describe('RegisteredAccounts page', () => {
 
 const NUM_MOCK_ACCOUNTS = 157 // should be prime
 
-const MOCK_ACCOUNTS = (() => {
-  const now = Date.now()
-  return Array.from({ length: NUM_MOCK_ACCOUNTS }).map((_value, index) => ({
-    identityPoolId: `identityPoolId${index}`,
-    userPoolId: `userPoolId${index}`,
-    emailAddress: `${index}@example.com`,
-    dateRegistered: new Date(
-      now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000,
-    ).toJSON(),
-    apiKeyId: `apiKeyId${index}`,
-    registrationMethod: _.sample(['open', 'invite', 'request']),
-    isAdmin: index % 20 === 0,
-  }))
-})()
+const MOCK_DATES_REGISTERED = (() =>
+  _.range(NUM_MOCK_ACCOUNTS).map(index => {
+    const now = Date.now()
+    return new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000)
+  }))()
+
+const MOCK_ACCOUNTS = _.range(NUM_MOCK_ACCOUNTS).map(index => ({
+  identityPoolId: `identityPoolId${index}`,
+  userPoolId: `userPoolId${index}`,
+  emailAddress: `${index}@example.com`,
+  dateRegistered: MOCK_DATES_REGISTERED[index].toJSON(),
+  apiKeyId: `apiKeyId${index}`,
+  registrationMethod: _.sample(['open', 'invite', 'request']),
+  isAdmin: index % 20 === 0,
+}))
