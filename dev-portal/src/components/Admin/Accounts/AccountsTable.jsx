@@ -17,19 +17,23 @@ const FILLER_ACCOUNT = Symbol('FILLER_ACCOUNT')
 const NO_FILTER_COLUMN = Symbol('NO_FILTER_COLUMN')
 const NO_FILTER_VALUE = ''
 const NO_ORDER_COLUMN = Symbol('NO_ORDER_COLUMN')
-const NO_ORDER_DIRECTION = Symbol('NO_ORDER_DIRECTION')
 
-const NEXT_DIRECTION = {
-  [NO_ORDER_DIRECTION]: 'asc',
-  asc: 'desc',
-  desc: NO_ORDER_DIRECTION,
-}
+const ORDER_DIRECTIONS = [
+  {
+    lodashDirection: undefined,
+    iconName: 'sort',
+  },
+  {
+    lodashDirection: 'asc',
+    iconName: 'sort up',
+  },
+  {
+    lodashDirection: 'desc',
+    iconName: 'sort down',
+  },
+]
 
-const DIRECTION_ICON = {
-  [NO_ORDER_DIRECTION]: 'sort',
-  asc: 'sort up',
-  desc: 'sort down',
-}
+const nextDirectionIndex = index => (index + 1) % ORDER_DIRECTIONS.length
 
 /**
  * A paginated table whose rows represent accounts.
@@ -70,7 +74,7 @@ export const AccountsTable = ({
   const [filterColumn, setFilterColumn] = useState(NO_FILTER_COLUMN)
   const [filterValue, setFilterValue] = useState(NO_FILTER_VALUE)
   const [orderColumn, setOrderColumn] = useState(NO_ORDER_COLUMN)
-  const [orderDirection, setOrderDirection] = useState(NO_ORDER_DIRECTION)
+  const [orderDirectionIndex, setOrderDirectionIndex] = useState(0)
 
   useEffect(() => {
     const filterableColumns = columns.filter(column => column.filtering)
@@ -112,10 +116,13 @@ export const AccountsTable = ({
       )
     }
     if (orderColumn !== NO_ORDER_COLUMN) {
-      view = view.orderBy([orderColumn.ordering.iteratee], [orderDirection])
+      view = view.orderBy(
+        [orderColumn.ordering.iteratee],
+        [ORDER_DIRECTIONS[orderDirectionIndex].lodashDirection],
+      )
     }
     setAccountsView(view.value())
-  }, [accounts, filterColumn, filterValue, orderColumn, orderDirection])
+  }, [accounts, filterColumn, filterValue, orderColumn, orderDirectionIndex])
 
   /**
    * Returns a page of accounts from `accountView` according to the given page
@@ -219,8 +226,8 @@ export const AccountsTable = ({
         columns={columns}
         orderColumn={orderColumn}
         setOrderColumn={setOrderColumn}
-        orderDirection={orderDirection}
-        setOrderDirection={setOrderDirection}
+        orderDirectionIndex={orderDirectionIndex}
+        setOrderDirectionIndex={setOrderDirectionIndex}
       />
       <Table.Body>{tableRows}</Table.Body>
       <Table.Footer>
@@ -253,8 +260,8 @@ const TableHeader = React.memo(
     columns,
     orderColumn,
     setOrderColumn,
-    orderDirection,
-    setOrderDirection,
+    orderDirectionIndex,
+    setOrderDirectionIndex,
   }) => {
     // Clicking on a column makes it the "orderColumn". If that column was
     // already the "orderColumn", cycle between order directions (none,
@@ -262,17 +269,18 @@ const TableHeader = React.memo(
     // (ascending).
     const onToggleOrder = column => () => {
       if (column === orderColumn) {
-        const nextDirection = NEXT_DIRECTION[orderDirection]
-        if (nextDirection === NO_ORDER_DIRECTION) {
+        const nextIndex = nextDirectionIndex(orderDirectionIndex)
+        if (nextIndex === 0) {
           setOrderColumn(NO_ORDER_COLUMN)
         }
-        setOrderDirection(nextDirection)
+        setOrderDirectionIndex(nextIndex)
       } else {
         setOrderColumn(column)
-        setOrderDirection(NEXT_DIRECTION[NO_ORDER_DIRECTION])
+        setOrderDirectionIndex(nextDirectionIndex(0))
       }
     }
 
+    const orderDirection = ORDER_DIRECTIONS[orderDirectionIndex]
     return (
       <Table.Header>
         <Table.Row className={styles.headerRow}>
@@ -283,10 +291,10 @@ const TableHeader = React.memo(
             >
               {column.title}
               {column === orderColumn && (
-                <Icon name={DIRECTION_ICON[orderDirection]} />
+                <Icon name={orderDirection.iconName} />
               )}
               {column.ordering && column !== orderColumn && (
-                <Icon name={DIRECTION_ICON[NO_ORDER_DIRECTION]} disabled />
+                <Icon name={ORDER_DIRECTIONS[0].iconName} disabled />
               )}
             </Table.HeaderCell>
           ))}
