@@ -134,7 +134,7 @@ const DeleteAccountModal = React.memo(
           <p>
             Are you sure you want to delete the account{' '}
             <strong>{account.emailAddress}</strong>, and de-activate the
-            associated API key? This action cannot be undone.
+            associated API key? This action is irreversible.
           </p>
         </Modal.Content>
         <Modal.Actions>
@@ -160,8 +160,8 @@ const PromoteAccountModal = React.memo(
             promoting other accounts.
           </p>
           <p>
-            This action can only be undone by
-            contacting the owner of the Developer Portal.
+            Only the owner of the Developer Portal can demote the account,
+            through the Cognito console.
           </p>
         </Modal.Content>
         <Modal.Actions>
