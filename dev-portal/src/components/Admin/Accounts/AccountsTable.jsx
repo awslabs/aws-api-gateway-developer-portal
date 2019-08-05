@@ -37,6 +37,9 @@ const ORDER_DIRECTIONS = [
 
 const nextDirectionIndex = index => (index + 1) % ORDER_DIRECTIONS.length
 
+export const ACCOUNT_ROW_PLACEHOLDER_TESTID = 'accountRowPlaceholder'
+export const ACCOUNT_COLUMN_ID_DATA_ATTR = 'data-account-column-id'
+
 /**
  * A paginated table whose rows represent accounts.
  *
@@ -312,7 +315,7 @@ const LoadingAccountRow = React.memo(({ columnCount }) => (
   <Table.Row>
     {Array.from({ length: columnCount }).map((_value, index) => (
       <Table.Cell key={index}>
-        <Placeholder data-testid='accountRowPlaceholder' fluid>
+        <Placeholder data-testid={ACCOUNT_ROW_PLACEHOLDER_TESTID} fluid>
           &nbsp;
         </Placeholder>
       </Table.Cell>
@@ -332,7 +335,7 @@ const AccountRow = React.memo(({ account, columns, isSelected, onSelect }) => {
   return (
     <Table.Row active={isSelected} onClick={() => onSelect(account)}>
       {columns.map(({ id, render }, index) => (
-        <Table.Cell data-account-column-id={id} key={index}>
+        <Table.Cell {...{[ACCOUNT_COLUMN_ID_DATA_ATTR]: id}} key={index}>
           {render(account)}
         </Table.Cell>
       ))}
