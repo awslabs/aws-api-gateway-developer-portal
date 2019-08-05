@@ -7,6 +7,7 @@ import * as testUtils from 'utils/test-utils'
 import * as AccountsTestUtils from 'utils/AccountsTestUtils'
 
 import AdminAccounts from 'pages/Admin/Accounts/AdminAccounts'
+import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountService from 'services/accounts'
 
 jest.mock('services/accounts')
@@ -31,7 +32,9 @@ describe('AdminAccounts page', () => {
       .mockReturnValue(new Promise(() => {}))
 
     const page = renderPage()
-    expect(page.queryAllByTestId('accountRowPlaceholder')).not.toHaveLength(0)
+    expect(
+      page.queryAllByTestId(AccountsTable.ACCOUNT_ROW_PLACEHOLDER_TESTID),
+    ).not.toHaveLength(0)
   })
 
   it('shows the accounts after loading', async () => {
@@ -41,8 +44,9 @@ describe('AdminAccounts page', () => {
     const page = renderPage()
     await AccountsTestUtils.waitForAccountsToLoad(page)
 
-    _.take(_.range(0, NUM_MOCK_ACCOUNTS, 10), 10).forEach(index =>
-      AccountsTestUtils.expectEmailIn(`${index}@example.com`, page.baseElement),
+    _.take(MOCK_ADMINS, AccountsTable.DEFAULT_PAGE_SIZE).forEach(
+      ({ emailAddress }) =>
+        AccountsTestUtils.expectEmailIn(emailAddress, page.baseElement),
     )
   })
 
@@ -73,14 +77,15 @@ describe('AdminAccounts page', () => {
     await AccountsTestUtils.waitForAccountsToLoad(page)
 
     // Order ascending
-    const table = page.getByTestId('accountsTable')
+    const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
     const emailAddressHeader = rtl.getByText(table, 'Email address')
     rtl.fireEvent.click(emailAddressHeader)
 
     // Check that first page is correct
-    ;[0, 100, 10, 110, 120, 130, 140, 150, 20, 30]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
+    _(MOCK_ADMINS)
+      .orderBy(['emailAddress'])
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
+      .forEach(({ emailAddress }) =>
         AccountsTestUtils.expectEmailIn(emailAddress, table),
       )
 
@@ -88,9 +93,13 @@ describe('AdminAccounts page', () => {
     const pagination = page.getByRole('navigation')
     const lastPageButton = rtl.getByLabelText(pagination, 'Last item')
     rtl.fireEvent.click(lastPageButton)
-    ;[40, 50, 60, 70, 80, 90]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
+    _(MOCK_ADMINS)
+      .orderBy(['emailAddress'])
+      .drop(
+        Math.floor(MOCK_ADMINS.length / AccountsTable.DEFAULT_PAGE_SIZE) *
+          AccountsTable.DEFAULT_PAGE_SIZE,
+      )
+      .forEach(({ emailAddress }) =>
         AccountsTestUtils.expectEmailIn(emailAddress, table),
       )
 
@@ -100,9 +109,10 @@ describe('AdminAccounts page', () => {
     rtl.fireEvent.click(firstPageButton)
 
     // Check that first page is correct
-    ;[90, 80, 70, 60, 50, 40, 30, 20, 150, 140]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
+    _(MOCK_ADMINS)
+      .orderBy(['emailAddress'], ['desc'])
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
+      .forEach(({ emailAddress }) =>
         AccountsTestUtils.expectEmailIn(emailAddress, table),
       )
   })
@@ -116,14 +126,15 @@ describe('AdminAccounts page', () => {
     await AccountsTestUtils.waitForAccountsToLoad(page)
 
     // Order ascending
-    const table = page.getByTestId('accountsTable')
+    const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
     const dateRegisteredHeader = rtl.getByText(table, 'Date promoted')
     rtl.fireEvent.click(dateRegisteredHeader)
 
     // Check that first page is correct
-    ;[110, 60, 120, 70, 20, 130, 80, 30, 140, 90]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
+    _(MOCK_ADMINS)
+      .orderBy(['datePromoted'], ['asc'])
+      .take(AccountsTable.DEFAULT_PAGE_SIZE)
+      .forEach(({ emailAddress }) =>
         AccountsTestUtils.expectEmailIn(emailAddress, table),
       )
   })
@@ -136,24 +147,23 @@ describe('AdminAccounts page', () => {
     const page = renderPage()
     await AccountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
-    const table = page.getByTestId('accountsTable')
+    const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
 
     rtl.fireEvent.change(filterInput, { target: { value: '1' } })
-    ;[110, 120, 130, 140, 150, 100, 10]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
+    _(MOCK_ADMINS)
+      .filter(({ emailAddress }) => emailAddress.includes('1'))
+      .forEach(({ emailAddress }) =>
         AccountsTestUtils.expectEmailIn(emailAddress, table),
       )
 
     rtl.fireEvent.change(filterInput, { target: { value: '9' } })
-    rtl.getByText(table, '90@example.com')
     expect(
       AccountsTestUtils.queryAllByColumnText(
         table,
         'emailAddress',
         /@example\.com/,
-      ),
-    ).toHaveLength(1)
+      ).map(el => el.textContent),
+    ).toEqual(['90@example.com'])
   })
 
   it('filters accounts by promoter email address', async () => {
@@ -164,17 +174,19 @@ describe('AdminAccounts page', () => {
     const page = renderPage()
     await AccountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
-    const filterDropdown = page.getByTestId('filterDropdown')
-    const table = page.getByTestId('accountsTable')
+    const filterDropdown = page.getByTestId(
+      AccountsTable.FILTER_DROPDOWN_TESTID,
+    )
+    const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
 
     rtl.fireEvent.click(filterDropdown)
     const filterByApiKeyIdOption = rtl.getByText(filterDropdown, 'Promoter')
     rtl.fireEvent.click(filterByApiKeyIdOption)
 
     rtl.fireEvent.change(filterInput, { target: { value: '20@example.com' } })
-    ;[90, 100, 110]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
+    _(MOCK_ADMINS)
+      .filter({ promoterEmailAddress: '20@example.com' })
+      .forEach(({ emailAddress }) =>
         AccountsTestUtils.expectEmailIn(emailAddress, table),
       )
     expect(
@@ -203,26 +215,32 @@ describe('AdminAccounts page', () => {
     const page = renderPage()
     await AccountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
-    const filterDropdown = page.getByTestId('filterDropdown')
-    const table = page.getByTestId('accountsTable')
+    const filterDropdown = page.getByTestId(
+      AccountsTable.FILTER_DROPDOWN_TESTID,
+    )
+    const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
 
     rtl.fireEvent.click(filterDropdown)
     const filterByApiKeyIdOption = rtl.getByText(filterDropdown, 'Promoter')
     rtl.fireEvent.click(filterByApiKeyIdOption)
 
     rtl.fireEvent.change(filterInput, { target: { value: 'identityPoolId20' } })
-    ;[90, 100, 110]
-      .map(index => `${index}@example.com`)
-      .forEach(emailAddress =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+    const expectedEmails = _(MOCK_ADMINS)
+      .filter(({ promoterIdentityPoolId }) =>
+        (promoterIdentityPoolId || '').includes('identityPoolId20'),
       )
+      .map(({ emailAddress }) => emailAddress)
+      .sortBy()
+      .value()
     expect(
-      AccountsTestUtils.queryAllByColumnText(
-        table,
-        'emailAddress',
-        /@example\.com/,
+      _.sortBy(
+        AccountsTestUtils.queryAllByColumnText(
+          table,
+          'emailAddress',
+          /@example\.com/,
+        ).map(el => el.textContent),
       ),
-    ).toHaveLength(3)
+    ).toEqual(expectedEmails)
 
     rtl.fireEvent.change(filterInput, { target: { value: 'identityPoolId30' } })
     expect(
@@ -237,31 +255,41 @@ describe('AdminAccounts page', () => {
 
 const NUM_MOCK_ACCOUNTS = 157 // should be prime
 
-const MOCK_ACCOUNTS = (() => {
-  const now = Date.now()
-  const adminStep = 10
-  return Array.from({ length: NUM_MOCK_ACCOUNTS }).map((_value, index) => {
-    let promoter = null
-    if (_.inRange(index, 20, 90)) {
-      promoter = 10
-    } else if (_.inRange(index, 90, 120)) {
-      promoter = 20
-    } else if (_.inRange(index, 120, NUM_MOCK_ACCOUNTS)) {
-      promoter = 100
-    }
+const MOCK_PROMOTERS = _.range(NUM_MOCK_ACCOUNTS).map(index => {
+  if (_.inRange(index, 20, 90)) {
+    return 10
+  } else if (_.inRange(index, 90, 120)) {
+    return 20
+  } else if (_.inRange(index, 120, NUM_MOCK_ACCOUNTS)) {
+    return 100
+  }
+  return null
+})
 
+const MOCK_DATES_PROMOTED = (() => {
+  const now = Date.now()
+  return _.range(NUM_MOCK_ACCOUNTS).map(
+    index =>
+      MOCK_PROMOTERS[index] &&
+      new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000),
+  )
+})()
+
+const MOCK_ADMIN_STEP = 10
+
+const MOCK_ACCOUNTS = (() => {
+  return Array.from({ length: NUM_MOCK_ACCOUNTS }).map((_value, index) => {
+    const promoter = MOCK_PROMOTERS[index]
     return {
       identityPoolId: `identityPoolId${index}`,
       userPoolId: `userPoolId${index}`,
       emailAddress: `${index}@example.com`,
-      datePromoted:
-        promoter &&
-        new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000).toJSON(),
+      datePromoted: MOCK_DATES_PROMOTED[index],
       promoterEmailAddress: promoter && `${promoter}@example.com`,
       promoterIdentityPoolId: promoter && `identityPoolId${promoter}`,
-      isAdmin: index % adminStep === 0,
+      isAdmin: index % MOCK_ADMIN_STEP === 0,
     }
   })
 })()
 
-const MOCK_ADMINS = () => MOCK_ACCOUNTS.filter(account => account.isAdmin)
+const MOCK_ADMINS = MOCK_ACCOUNTS.filter(account => account.isAdmin)

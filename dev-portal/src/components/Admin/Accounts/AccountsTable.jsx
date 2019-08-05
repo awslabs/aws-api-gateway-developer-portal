@@ -38,6 +38,8 @@ const ORDER_DIRECTIONS = [
 const nextDirectionIndex = index => (index + 1) % ORDER_DIRECTIONS.length
 
 export const ACCOUNT_ROW_PLACEHOLDER_TESTID = 'accountRowPlaceholder'
+export const FILTER_DROPDOWN_TESTID = 'filterDropdown'
+export const ACCOUNTS_TABLE_TESTID = 'accountsTable'
 export const ACCOUNT_COLUMN_ID_DATA_ATTR = 'data-account-column-id'
 
 /**
@@ -230,7 +232,7 @@ export const AccountsTable = ({
           options={filterColumnDropdownOptions}
           selection
           value={filter.column.id}
-          data-testid='filterDropdown'
+          data-testid={FILTER_DROPDOWN_TESTID}
         />
       </div>
       <div style={{ float: 'right', marginBottom: '1rem' }}>
@@ -240,8 +242,12 @@ export const AccountsTable = ({
   )
 
   const table = (
-    <Table selectable={!loading} data-testid='accountsTable'>
-      <TableHeader columns={columns} order={order} setOrder={setOrder} />
+    <Table selectable={!loading} data-testid={ACCOUNTS_TABLE_TESTID}>
+      <TableHeader
+        columns={columns}
+        order={order}
+        setOrder={setOrder}
+      />
       <Table.Body>{tableRows}</Table.Body>
       <Table.Footer>
         <Table.Row>
