@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
 
 import { ApiManagement, SideNav } from './'
-import { AdminRoute } from './../../'
+import { AdminRoute } from 'index'
 
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
 import AdminAccounts from 'pages/Admin/Accounts/AdminAccounts'
