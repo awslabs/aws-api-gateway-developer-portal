@@ -97,13 +97,7 @@ export const AccountsTable = ({
     else if (!filterableColumns.includes(filterColumn)) {
       setFilterColumn(NO_FILTER_COLUMN)
     }
-  }, [
-    columns,
-    filterColumn,
-    setFilterColumn,
-    setFilterValue,
-    setFilterableColumns,
-  ])
+  }, [columns, filterColumn])
 
   /**
    * Sets `accountsView` to the filtered and sorted subset of `props.accounts`.
@@ -140,7 +134,7 @@ export const AccountsTable = ({
       }
       return pageItems
     },
-    [accountsView],
+    [accountsView, pageSize],
   )
 
   const totalPages = Math.ceil(accountsView.length / pageSize)
