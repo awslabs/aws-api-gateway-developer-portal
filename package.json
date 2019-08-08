@@ -28,8 +28,8 @@
   "prettier": {
     "trailingComma": "all",
     "tabWidth": 2,
-    "semi": "false",
-    "singleQuote": "true",
-    "jsxSingleQuote": "true"
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true
   }
 }
