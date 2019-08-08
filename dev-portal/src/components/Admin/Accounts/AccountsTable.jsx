@@ -73,10 +73,14 @@ export const AccountsTable = ({
   )
 
   const [filterableColumns, setFilterableColumns] = useState([])
-  const [filterColumn, setFilterColumn] = useState(NO_FILTER_COLUMN)
-  const [filterValue, setFilterValue] = useState(NO_FILTER_VALUE)
-  const [orderColumn, setOrderColumn] = useState(NO_ORDER_COLUMN)
-  const [orderDirectionIndex, setOrderDirectionIndex] = useState(0)
+  const [filter, setFilter] = useState({
+    column: NO_FILTER_COLUMN,
+    value: NO_FILTER_VALUE,
+  })
+  const [order, setOrder] = useState({
+    column: NO_ORDER_COLUMN,
+    directionIndex: 0,
+  })
 
   useEffect(() => {
     const filterableColumns = columns.filter(column => column.filtering)
@@ -84,41 +88,44 @@ export const AccountsTable = ({
 
     // Reset filtering state if no columns are filterable
     if (filterableColumns.length === 0) {
-      setFilterColumn(NO_FILTER_COLUMN)
-      setFilterValue(NO_FILTER_VALUE)
+      setFilter({
+        column: NO_FILTER_COLUMN,
+        value: NO_FILTER_VALUE,
+      })
     }
 
     // Pick the first filterable column if one is available
-    else if (filterColumn === NO_FILTER_COLUMN) {
-      setFilterColumn(filterableColumns[0])
+    else if (filter.column === NO_FILTER_COLUMN) {
+      setFilter(filter => ({ ...filter, column: filterableColumns[0] }))
     }
 
     // Reset filterColumn if it's no longer among the available columns
-    else if (!filterableColumns.includes(filterColumn)) {
-      setFilterColumn(NO_FILTER_COLUMN)
+    else if (!filterableColumns.includes(filter.column)) {
+      setFilter(filter => ({ ...filter, column: NO_FILTER_COLUMN }))
     }
-  }, [columns, filterColumn])
+  }, [columns, filter])
 
   /**
    * Sets `accountsView` to the filtered and sorted subset of `props.accounts`.
    */
   useEffect(() => {
     let view = _(accounts)
-    if (filterColumn !== NO_FILTER_COLUMN) {
-      const filterKey = filterColumn.filtering.accessor
+    if (filter.column !== NO_FILTER_COLUMN) {
+      const filterKey = filter.column.filtering.accessor
       view = view.filter(
         item =>
-          !!item[filterKey] && item[filterKey].toString().includes(filterValue),
+          !!item[filterKey] &&
+          item[filterKey].toString().includes(filter.value),
       )
     }
-    if (orderColumn !== NO_ORDER_COLUMN) {
+    if (order.column !== NO_ORDER_COLUMN) {
       view = view.orderBy(
-        [orderColumn.ordering.iteratee],
-        [ORDER_DIRECTIONS[orderDirectionIndex].lodashDirection],
+        [order.column.ordering.iteratee],
+        [ORDER_DIRECTIONS[order.directionIndex].lodashDirection],
       )
     }
     setAccountsView(view.value())
-  }, [accounts, filterColumn, filterValue, orderColumn, orderDirectionIndex])
+  }, [accounts, filter, order])
 
   /**
    * Returns a page of accounts from `accountView` according to the given page
@@ -178,10 +185,14 @@ export const AccountsTable = ({
   )
 
   const onFilterColumnDropdownChange = (_event, { value }) =>
-    setFilterColumn(
-      filterableColumns.find(column => column.id === value) || NO_FILTER_COLUMN,
-    )
-  const onSearchInputChange = (_event, { value }) => setFilterValue(value)
+    setFilter(filter => ({
+      ...filter,
+      column:
+        filterableColumns.find(column => column.id === value) ||
+        NO_FILTER_COLUMN,
+    }))
+  const onSearchInputChange = (_event, { value }) =>
+    setFilter(filter => ({ ...filter, value }))
 
   const toolbar = (
     <>
@@ -193,7 +204,7 @@ export const AccountsTable = ({
             iconPosition='left'
             icon='search'
             placeholder='Search by...'
-            value={filterValue}
+            value={filter.value}
             onChange={onSearchInputChange}
             style={{ maxWidth: '24em' }}
           />
@@ -206,7 +217,7 @@ export const AccountsTable = ({
           onChange={onFilterColumnDropdownChange}
           options={filterColumnDropdownOptions}
           selection
-          value={filterColumn.id}
+          value={filter.column.id}
           data-testid='filterDropdown'
         />
       </div>
@@ -218,13 +229,7 @@ export const AccountsTable = ({
 
   const table = (
     <Table selectable={!loading} data-testid='accountsTable'>
-      <TableHeader
-        columns={columns}
-        orderColumn={orderColumn}
-        setOrderColumn={setOrderColumn}
-        orderDirectionIndex={orderDirectionIndex}
-        setOrderDirectionIndex={setOrderDirectionIndex}
-      />
+      <TableHeader columns={columns} order={order} setOrder={setOrder} />
       <Table.Body>{tableRows}</Table.Body>
       <Table.Footer>
         <Table.Row>
@@ -251,54 +256,48 @@ export const AccountsTable = ({
   )
 }
 
-const TableHeader = React.memo(
-  ({
-    columns,
-    orderColumn,
-    setOrderColumn,
-    orderDirectionIndex,
-    setOrderDirectionIndex,
-  }) => {
-    // Clicking on a column makes it the "orderColumn". If that column was
-    // already the "orderColumn", cycle between order directions (none,
-    // ascending, descending). Otherwise, start at the beginning of the cycle
-    // (ascending).
-    const onToggleOrder = column => () => {
-      if (column === orderColumn) {
-        const nextIndex = nextDirectionIndex(orderDirectionIndex)
-        if (nextIndex === 0) {
-          setOrderColumn(NO_ORDER_COLUMN)
-        }
-        setOrderDirectionIndex(nextIndex)
-      } else {
-        setOrderColumn(column)
-        setOrderDirectionIndex(nextDirectionIndex(0))
+const TableHeader = React.memo(({ columns, order, setOrder }) => {
+  // Clicking on a column makes it the "order column". If that column was
+  // already the "order column", cycle between order directions (none,
+  // ascending, descending). Otherwise, start at the beginning of the cycle
+  // (ascending).
+  const onToggleOrder = column => () => {
+    const nextOrder = { ...order }
+
+    if (column === order.column) {
+      const nextIndex = nextDirectionIndex(order.directionIndex)
+      if (nextIndex === 0) {
+        nextOrder.column = NO_ORDER_COLUMN
       }
+      nextOrder.directionIndex = nextIndex
+    } else {
+      nextOrder.column = column
+      nextOrder.directionIndex = nextDirectionIndex(0)
     }
 
-    const orderDirection = ORDER_DIRECTIONS[orderDirectionIndex]
-    return (
-      <Table.Header>
-        <Table.Row className={styles.headerRow}>
-          {columns.map((column, index) => (
-            <Table.HeaderCell
-              key={index}
-              onClick={column.ordering && onToggleOrder(column)}
-            >
-              {column.title}
-              {column === orderColumn && (
-                <Icon name={orderDirection.iconName} />
-              )}
-              {column.ordering && column !== orderColumn && (
-                <Icon name={ORDER_DIRECTIONS[0].iconName} disabled />
-              )}
-            </Table.HeaderCell>
-          ))}
-        </Table.Row>
-      </Table.Header>
-    )
-  },
-)
+    setOrder(nextOrder)
+  }
+
+  const orderDirection = ORDER_DIRECTIONS[order.directionIndex]
+  return (
+    <Table.Header>
+      <Table.Row className={styles.headerRow}>
+        {columns.map((column, index) => (
+          <Table.HeaderCell
+            key={index}
+            onClick={column.ordering && onToggleOrder(column)}
+          >
+            {column.title}
+            {column === order.column && <Icon name={orderDirection.iconName} />}
+            {column.ordering && column !== order.column && (
+              <Icon name={ORDER_DIRECTIONS[0].iconName} disabled />
+            )}
+          </Table.HeaderCell>
+        ))}
+      </Table.Row>
+    </Table.Header>
+  )
+})
 
 const LoadingAccountRow = React.memo(({ columnCount }) => (
   <Table.Row>
