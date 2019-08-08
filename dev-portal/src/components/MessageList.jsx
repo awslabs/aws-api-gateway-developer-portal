@@ -1,35 +1,29 @@
 import React, { useState } from 'react'
 
-export const MessageList = ({ messages, dismissMessage, renderers }) => (
-  <>
-    {messages.map((message, index) => {
-      const { type, ...payload } = message
-      if (renderers[type]) {
-        return (
-          <React.Fragment key={index}>
-            {renderers[type](payload, () => dismissMessage(message))}
-          </React.Fragment>
-        )
-      }
-      throw new Error(`Unknown message type: ${type.toString()}`)
-    })}
-  </>
-)
+export const MessageList = ({ messages }) =>
+  messages.map((message, index) => (
+    <React.Fragment key={index}>{message}</React.Fragment>
+  ))
 
-export const useMessageQueue = initialMessages => {
-  const [messages, setMessages] = useState(initialMessages || [])
+/**
+ * A Hook for operating a list of "messages" which should be self-dismissable.
+ * Returns `[messages, sendMessage]`, where:
+ *    - `messages` is an array of renderable messages (of type `React.ReactNode`)
+ *    - `sendMessage` is a function which accepts a renderer callback, and
+ *      calls the callback to obtain a renderable message to append to
+ *      `messages`. The renderer callback should accept a `dismiss` function as
+ *      its sole argument, which removes the renderable message from `messages`
+ *      when called.
+ */
+export const useMessages = () => {
+  const [messages, setMessages] = useState([])
 
-  const sendMessage = target => setMessages([...messages, target])
-  const dismissMessage = target => {
-    const deleteIndex = messages.findIndex(message => message === target)
-    if (deleteIndex === -1) {
-      throw new Error('Message not found')
-    }
-    setMessages([
-      ...messages.slice(0, deleteIndex),
-      ...messages.slice(deleteIndex + 1),
-    ])
+  const sendMessage = renderWithDismiss => {
+    const target = renderWithDismiss(() => {
+      setMessages(messages => messages.filter(message => message !== target))
+    })
+    setMessages(messages => [...messages, target])
   }
 
-  return [messages, sendMessage, dismissMessage]
+  return [messages, sendMessage]
 }

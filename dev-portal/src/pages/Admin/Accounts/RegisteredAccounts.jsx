@@ -6,18 +6,13 @@ import * as AccountService from 'services/accounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountsTableColumns from 'components/Admin/Accounts/AccountsTableColumns'
 
-const DELETE_SUCCESS = Symbol('DELETE_SUCCESS')
-const DELETE_FAILURE = Symbol('DELETE_FAILURE')
-const PROMOTE_SUCCESS = Symbol('PROMOTE_SUCCESS')
-const PROMOTE_FAILURE = Symbol('PROMOTE_FAILURE')
-
 const RegisteredAccounts = () => {
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedAccount, setSelectedAccount] = useState(undefined)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [promoteModalOpen, setPromoteModalOpen] = useState(false)
-  const [messages, sendMessage, dismissMessage] = MessageList.useMessageQueue()
+  const [messages, sendMessage] = MessageList.useMessages()
 
   const refreshAccounts = () =>
     AccountService.fetchRegisteredAccounts().then(accounts =>
@@ -40,14 +35,18 @@ const RegisteredAccounts = () => {
       await AccountService.deleteAccountByIdentityPoolId(
         selectedAccount.identityPoolId,
       )
-      sendMessage({ type: DELETE_SUCCESS, account: selectedAccount })
+      sendMessage(dismiss => (
+        <DeleteSuccessMessage account={selectedAccount} dismiss={dismiss} />
+      ))
       await refreshAccounts()
     } catch (error) {
-      sendMessage({
-        type: DELETE_FAILURE,
-        account: selectedAccount,
-        errorMessage: error.message,
-      })
+      sendMessage(dismiss => (
+        <DeleteFailureMessage
+          account={selectedAccount}
+          dismiss={dismiss}
+          errorMessage={error.message}
+        />
+      ))
     } finally {
       setLoading(false)
     }
@@ -60,27 +59,26 @@ const RegisteredAccounts = () => {
       await AccountService.promoteAccountByIdentityPoolId(
         selectedAccount.identityPoolId,
       )
-      sendMessage({ type: PROMOTE_SUCCESS, account: selectedAccount })
+      sendMessage(dismiss => (
+        <PromoteSuccessMessage account={selectedAccount} dismiss={dismiss} />
+      ))
     } catch (error) {
-      sendMessage({
-        type: PROMOTE_FAILURE,
-        account: selectedAccount,
-        errorMessage: error.message,
-      })
+      sendMessage(dismiss => (
+        <PromoteFailureMessage
+          account={selectedAccount}
+          dismiss={dismiss}
+          errorMessage={error.message}
+        />
+      ))
     } finally {
       setLoading(false)
     }
   }, [sendMessage, selectedAccount])
 
-
   return (
     <Container fluid style={{ padding: '2em' }}>
       <Header as='h1'>Registered accounts</Header>
-      <MessageList.MessageList
-        messages={messages}
-        dismissMessage={dismissMessage}
-        renderers={MESSAGE_RENDERERS}
-      />
+      <MessageList.MessageList messages={messages} />
       <AccountsTable.AccountsTable
         accounts={accounts}
         columns={[
@@ -179,31 +177,8 @@ const PromoteAccountModal = React.memo(
     ),
 )
 
-const MESSAGE_RENDERERS = {
-  [DELETE_SUCCESS]: ({ account }, onDismiss) => (
-    <DeleteSuccessMessage account={account} onDismiss={onDismiss} />
-  ),
-  [DELETE_FAILURE]: ({ account, errorMessage }, onDismiss) => (
-    <DeleteFailureMessage
-      account={account}
-      errorMessage={errorMessage}
-      onDismiss={onDismiss}
-    />
-  ),
-  [PROMOTE_SUCCESS]: ({ account }, onDismiss) => (
-    <PromoteSuccessMessage account={account} onDismiss={onDismiss} />
-  ),
-  [PROMOTE_FAILURE]: ({ account, errorMessage }, onDismiss) => (
-    <PromoteFailureMessage
-      account={account}
-      errorMessage={errorMessage}
-      onDismiss={onDismiss}
-    />
-  ),
-}
-
-const DeleteSuccessMessage = React.memo(({ account, onDismiss }) => (
-  <Message onDismiss={onDismiss} positive>
+const DeleteSuccessMessage = React.memo(({ account, dismiss }) => (
+  <Message onDismiss={dismiss} positive>
     <Message.Content>
       Deleted account <strong>{account.emailAddress}</strong>.
     </Message.Content>
@@ -211,8 +186,8 @@ const DeleteSuccessMessage = React.memo(({ account, onDismiss }) => (
 ))
 
 const DeleteFailureMessage = React.memo(
-  ({ account, errorMessage, onDismiss }) => (
-    <Message onDismiss={onDismiss} negative>
+  ({ account, errorMessage, dismiss }) => (
+    <Message onDismiss={dismiss} negative>
       <Message.Content>
         <p>
           Failed to delete account <strong>{account.emailAddress}</strong>.
@@ -223,8 +198,8 @@ const DeleteFailureMessage = React.memo(
   ),
 )
 
-const PromoteSuccessMessage = React.memo(({ account, onDismiss }) => (
-  <Message onDismiss={onDismiss} positive>
+const PromoteSuccessMessage = React.memo(({ account, dismiss }) => (
+  <Message onDismiss={dismiss} positive>
     <Message.Content>
       Promoted account <strong>{account.emailAddress}</strong>.
     </Message.Content>
@@ -232,8 +207,8 @@ const PromoteSuccessMessage = React.memo(({ account, onDismiss }) => (
 ))
 
 const PromoteFailureMessage = React.memo(
-  ({ account, errorMessage, onDismiss }) => (
-    <Message onDismiss={onDismiss} negative>
+  ({ account, errorMessage, dismiss }) => (
+    <Message onDismiss={dismiss} negative>
       <Message.Content>
         <p>
           Failed to promote account <strong>{account.emailAddress}</strong>.
