@@ -4,6 +4,7 @@ import * as rtl from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
 import * as testUtils from 'utils/test-utils'
+import * as accountsTestUtils from 'utils/accounts-test-utils'
 
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
@@ -17,11 +18,6 @@ testUtils.suppressReact16Dot8ActWarningsGlobally()
 afterEach(rtl.cleanup)
 
 const renderPage = () => testUtils.renderWithRouter(<RegisteredAccounts />)
-
-const waitForAccountsToLoad = page =>
-  rtl.waitForElementToBeRemoved(() =>
-    page.queryAllByTestId('accountRowPlaceholder'),
-  )
 
 describe('RegisteredAccounts page', () => {
   it('renders', async () => {
@@ -44,7 +40,7 @@ describe('RegisteredAccounts page', () => {
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
 
     _.range(AccountsTable.DEFAULT_PAGE_SIZE).forEach(index =>
       expect(page.queryByText(`${index}@example.com`)).not.toBeNull(),
@@ -57,7 +53,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const pagination = page.getByRole('navigation')
 
     const page1Button = rtl.queryByText(pagination, '1')
@@ -77,7 +73,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
 
     // Order ascending
     const table = page.getByTestId('accountsTable')
@@ -120,7 +116,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
 
     // Order ascending
     const table = page.getByTestId('accountsTable')
@@ -140,7 +136,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
     const table = page.getByTestId('accountsTable')
 
@@ -164,7 +160,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
     const filterDropdown = page.getByTestId('filterDropdown')
     const table = page.getByTestId('accountsTable')
@@ -193,7 +189,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
     const table = page.getByTestId('accountsTable')
     const dateRegisteredHeader = rtl.getByText(table, 'Date registered')
@@ -224,7 +220,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(undefined)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const table = page.getByTestId('accountsTable')
     const targetAccountEmailCell = rtl.getByText(table, targetAccountEmail)
     const deleteButton = page.getByText('Delete')
@@ -239,7 +235,7 @@ describe('RegisteredAccounts page', () => {
     rtl.getByText(modal, targetAccountEmail)
     rtl.fireEvent.click(confirmDeleteButton)
 
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     expect(rtl.queryByText(document, 'Confirm deletion')).toBeNull()
     expect(
       AccountService.deleteAccountByIdentityPoolId.mock.calls,
@@ -266,7 +262,7 @@ describe('RegisteredAccounts page', () => {
       .mockImplementation(() => Promise.reject(new Error(errorMessage)))
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const table = page.getByTestId('accountsTable')
     const targetAccountEmailCell = rtl.getByText(table, targetAccountEmail)
     const deleteButton = page.getByText('Delete')
@@ -278,7 +274,7 @@ describe('RegisteredAccounts page', () => {
     rtl.getByText(modal, targetAccountEmail)
     rtl.fireEvent.click(confirmDeleteButton)
 
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     await rtl.wait(() =>
       expect(page.getByText(/Failed to delete account/)).toBeInTheDocument(),
     )
@@ -297,7 +293,7 @@ describe('RegisteredAccounts page', () => {
       .mockResolvedValueOnce(undefined)
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const table = page.getByTestId('accountsTable')
     const targetAccountEmailCell = rtl.getByText(table, targetAccountEmail)
     const promoteButton = page.getByText('Promote to Admin')
@@ -312,7 +308,7 @@ describe('RegisteredAccounts page', () => {
     rtl.getByText(modal, targetAccountEmail)
     rtl.fireEvent.click(confirmPromoteButton)
 
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     expect(rtl.queryByText(document, 'Confirm promotion')).toBeNull()
     expect(
       AccountService.promoteAccountByIdentityPoolId.mock.calls,
@@ -339,7 +335,7 @@ describe('RegisteredAccounts page', () => {
       .mockImplementation(() => Promise.reject(new Error(errorMessage)))
 
     const page = renderPage()
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const table = page.getByTestId('accountsTable')
     const targetAccountEmailCell = rtl.getByText(table, targetAccountEmail)
     const deleteButton = page.getByText('Delete')
@@ -351,7 +347,7 @@ describe('RegisteredAccounts page', () => {
     rtl.getByText(modal, targetAccountEmail)
     rtl.fireEvent.click(confirmDeleteButton)
 
-    await waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     await rtl.wait(() =>
       expect(page.getByText(/Failed to delete account/)).toBeInTheDocument(),
     )
