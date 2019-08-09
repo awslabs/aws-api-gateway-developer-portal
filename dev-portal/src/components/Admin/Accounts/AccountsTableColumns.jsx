@@ -82,6 +82,15 @@ export const DatePromoted = {
   },
 }
 
+export const DateRequested = {
+  id: 'dateRequested',
+  title: 'Date requested',
+  render: account => formatDate(account.dateRequested),
+  ordering: {
+    iteratee: 'dateRequested',
+  },
+}
+
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('default', {
   year: 'numeric',
   month: 'numeric',

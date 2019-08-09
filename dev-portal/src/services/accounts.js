@@ -35,12 +35,20 @@ const mockData = (() => {
   })
 })()
 
+const mockPendingRequestAccounts = _.cloneDeep(mockData).map(
+  ({ dateRegistered, ...rest }) => ({ ...rest, dateRequested: dateRegistered }),
+)
+
 export const fetchRegisteredAccounts = () => {
   return resolveAfter(1500, mockData.slice())
 }
 
 export const fetchAdminAccounts = () => {
   return resolveAfter(1500, mockData.filter(account => account.isAdmin))
+}
+
+export const fetchPendingRequestAccounts = () => {
+  return resolveAfter(1500, mockPendingRequestAccounts.slice())
 }
 
 export const deleteAccountByIdentityPoolId = async identityPoolId => {
@@ -71,4 +79,34 @@ export const promoteAccountByIdentityPoolId = async identityPoolId => {
     throw new Error('Account is already an Admin!')
   }
   account.isAdmin = true
+}
+
+export const approveAccountRequestByIdentityPoolId = async identityPoolId => {
+  await resolveAfter(1500)
+
+  const accountIndex = mockPendingRequestAccounts.findIndex(
+    account => account.identityPoolId === identityPoolId,
+  )
+  if (accountIndex === -1) {
+    throw new Error('Account not found!')
+  }
+  if (mockPendingRequestAccounts[accountIndex].identityPoolId.endsWith('10')) {
+    throw new Error('Something weird happened!')
+  }
+  mockPendingRequestAccounts.splice(accountIndex, 1)
+}
+
+export const denyAccountRequestByIdentityPoolId = async identityPoolId => {
+  await resolveAfter(1500)
+
+  const accountIndex = mockPendingRequestAccounts.findIndex(
+    account => account.identityPoolId === identityPoolId,
+  )
+  if (accountIndex === -1) {
+    throw new Error('Account not found!')
+  }
+  if (mockPendingRequestAccounts[accountIndex].identityPoolId.endsWith('10')) {
+    throw new Error('Something weird happened!')
+  }
+  mockPendingRequestAccounts.splice(accountIndex, 1)
 }
