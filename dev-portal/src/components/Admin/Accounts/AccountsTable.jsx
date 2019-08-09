@@ -111,10 +111,11 @@ export const AccountsTable = ({
   }, [columns, filter])
 
   /**
-   * Sets `accountsView` to the filtered subset of `props.accounts`.
+   * Sets `accountsView` to the filtered and sorted subset of `props.accounts`.
    */
   useEffect(() => {
     let view = _(accounts)
+
     if (filter.value !== '' && filter.column !== NO_FILTER_COLUMN) {
       const filterAccessor = filter.column.filtering.accessor
       if (typeof filterAccessor === 'string') {
@@ -138,6 +139,7 @@ export const AccountsTable = ({
         [ORDER_DIRECTIONS[order.directionIndex].lodashDirection],
       )
     }
+
     setAccountsView(view.value())
   }, [accounts, filter, order])
 
@@ -243,11 +245,7 @@ export const AccountsTable = ({
 
   const table = (
     <Table selectable={!loading} data-testid={ACCOUNTS_TABLE_TESTID}>
-      <TableHeader
-        columns={columns}
-        order={order}
-        setOrder={setOrder}
-      />
+      <TableHeader columns={columns} order={order} setOrder={setOrder} />
       <Table.Body>{tableRows}</Table.Body>
       <Table.Footer>
         <Table.Row>
@@ -341,7 +339,7 @@ const AccountRow = React.memo(({ account, columns, isSelected, onSelect }) => {
   return (
     <Table.Row active={isSelected} onClick={() => onSelect(account)}>
       {columns.map(({ id, render }, index) => (
-        <Table.Cell {...{[ACCOUNT_COLUMN_ID_DATA_ATTR]: id}} key={index}>
+        <Table.Cell {...{ [ACCOUNT_COLUMN_ID_DATA_ATTR]: id }} key={index}>
           {render(account)}
         </Table.Cell>
       ))}
