@@ -10,15 +10,12 @@ export class Admin extends Component {
   render() {
     return (
       <Router>
-        <PageWithSidebar
-          sidebarContent={<SideNav />}
-          content={
-            <React.Fragment>
-              <AdminRoute exact path="/admin" component={ApiManagement} />
-              <AdminRoute path="/admin/apis" component={ApiManagement} />
-            </React.Fragment>
-          }
-        />
+        <PageWithSidebar sidebarContent={<SideNav />}>
+          <React.Fragment>
+            <AdminRoute exact path="/admin" component={ApiManagement} />
+            <AdminRoute path="/admin/apis" component={ApiManagement} />
+          </React.Fragment>
+        </PageWithSidebar>
       </Router>
     )
   }

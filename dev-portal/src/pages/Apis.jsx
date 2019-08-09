@@ -66,7 +66,7 @@ export default observer(class ApisPage extends React.Component {
     return (
       <PageWithSidebar
         sidebarContent={<ApisMenu path={this.props.match} />}
-        content={
+        SidebarPusherProps={{className: "swagger-section"}}>
           <div className="swagger-ui-wrap" id="swagger-ui-container" style={{ padding: "0 20px" }}>
             {errorHeader && errorBody && (
               <React.Fragment>
@@ -80,9 +80,7 @@ export default observer(class ApisPage extends React.Component {
               </React.Fragment>
             )}
           </div>
-        }
-        SidebarPusherProps={{className: "swagger-section"}}
-      />
+        </PageWithSidebar>
     )
   }
 })

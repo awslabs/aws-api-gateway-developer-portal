@@ -11,7 +11,7 @@ import _ from 'lodash'
 
 export default withCollapsibleMobileSidebar(class PageWithSidebar extends React.Component {
   render() {
-    const {sidebarContent, content, SidebarPusherProps} = this.props
+    const {sidebarContent, children, SidebarPusherProps} = this.props
 
     // injected props from withCollapsibleMobileSidebar HOC
     const {isSidebarCollapsed, isMobileScreenResolution, toggleSidebar} = this.props
@@ -49,7 +49,7 @@ export default withCollapsibleMobileSidebar(class PageWithSidebar extends React.
           dimmed={isMobileScreenResolution && !isSidebarCollapsed}
           style={{ marginLeft: contentLeftMargin, position: "absolute", flex: "1 1 auto", overflow: 'auto', width: contentWidth, transition }}
           {...SidebarPusherProps}>
-          {content}
+          {children}
         </Sidebar.Pusher>
       </Sidebar.Pushable>
     )
