@@ -4,7 +4,7 @@ import * as rtl from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
 import * as testUtils from 'utils/test-utils'
-import * as AccountsTestUtils from 'utils/AccountsTestUtils'
+import * as accountsTestUtils from 'utils/accounts-test-utils'
 
 import AdminAccounts from 'pages/Admin/Accounts/AdminAccounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
@@ -42,11 +42,11 @@ describe('AdminAccounts page', () => {
       .fn()
       .mockResolvedValueOnce(MOCK_ADMINS)
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
 
     _.take(MOCK_ADMINS, AccountsTable.DEFAULT_PAGE_SIZE).forEach(
       ({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, page.baseElement),
+        accountsTestUtils.expectEmailIn(emailAddress, page.baseElement),
     )
   })
 
@@ -56,7 +56,7 @@ describe('AdminAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ADMINS)
 
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const pagination = page.getByRole('navigation')
 
     const page1Button = rtl.queryByText(pagination, '1')
@@ -65,7 +65,7 @@ describe('AdminAccounts page', () => {
     const page2Button = rtl.queryByText(pagination, '2')
     expect(page2Button).not.toBeNull()
     rtl.fireEvent.click(page2Button)
-    AccountsTestUtils.expectEmailIn('150@example.com', page.baseElement)
+    accountsTestUtils.expectEmailIn('150@example.com', page.baseElement)
   })
 
   it('orders accounts by email address', async () => {
@@ -74,7 +74,7 @@ describe('AdminAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ADMINS)
 
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
 
     // Order ascending
     const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
@@ -86,7 +86,7 @@ describe('AdminAccounts page', () => {
       .orderBy(['emailAddress'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+        accountsTestUtils.expectEmailIn(emailAddress, table),
       )
 
     // Check that last page is correct
@@ -100,7 +100,7 @@ describe('AdminAccounts page', () => {
           AccountsTable.DEFAULT_PAGE_SIZE,
       )
       .forEach(({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+        accountsTestUtils.expectEmailIn(emailAddress, table),
       )
 
     // Order descending, go back to first page
@@ -113,7 +113,7 @@ describe('AdminAccounts page', () => {
       .orderBy(['emailAddress'], ['desc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+        accountsTestUtils.expectEmailIn(emailAddress, table),
       )
   })
 
@@ -123,7 +123,7 @@ describe('AdminAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ADMINS)
 
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
 
     // Order ascending
     const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
@@ -135,7 +135,7 @@ describe('AdminAccounts page', () => {
       .orderBy(['datePromoted'], ['asc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
       .forEach(({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+        accountsTestUtils.expectEmailIn(emailAddress, table),
       )
   })
 
@@ -145,7 +145,7 @@ describe('AdminAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ADMINS)
 
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
     const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
 
@@ -153,12 +153,12 @@ describe('AdminAccounts page', () => {
     _(MOCK_ADMINS)
       .filter(({ emailAddress }) => emailAddress.includes('1'))
       .forEach(({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+        accountsTestUtils.expectEmailIn(emailAddress, table),
       )
 
     rtl.fireEvent.change(filterInput, { target: { value: '9' } })
     expect(
-      AccountsTestUtils.queryAllByColumnText(
+      accountsTestUtils.queryAllByColumnText(
         table,
         'emailAddress',
         /@example\.com/,
@@ -172,7 +172,7 @@ describe('AdminAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ADMINS)
 
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
     const filterDropdown = page.getByTestId(
       AccountsTable.FILTER_DROPDOWN_TESTID,
@@ -187,10 +187,10 @@ describe('AdminAccounts page', () => {
     _(MOCK_ADMINS)
       .filter({ promoterEmailAddress: '20@example.com' })
       .forEach(({ emailAddress }) =>
-        AccountsTestUtils.expectEmailIn(emailAddress, table),
+        accountsTestUtils.expectEmailIn(emailAddress, table),
       )
     expect(
-      AccountsTestUtils.queryAllByColumnText(
+      accountsTestUtils.queryAllByColumnText(
         table,
         'emailAddress',
         /@example\.com/,
@@ -199,7 +199,7 @@ describe('AdminAccounts page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: '30@example.com' } })
     expect(
-      AccountsTestUtils.queryAllByColumnText(
+      accountsTestUtils.queryAllByColumnText(
         table,
         'emailAddress',
         /@example\.com/,
@@ -213,7 +213,7 @@ describe('AdminAccounts page', () => {
       .mockResolvedValueOnce(MOCK_ADMINS)
 
     const page = renderPage()
-    await AccountsTestUtils.waitForAccountsToLoad(page)
+    await accountsTestUtils.waitForAccountsToLoad(page)
     const filterInput = page.getByPlaceholderText('Search by...')
     const filterDropdown = page.getByTestId(
       AccountsTable.FILTER_DROPDOWN_TESTID,
@@ -234,7 +234,7 @@ describe('AdminAccounts page', () => {
       .value()
     expect(
       _.sortBy(
-        AccountsTestUtils.queryAllByColumnText(
+        accountsTestUtils.queryAllByColumnText(
           table,
           'emailAddress',
           /@example\.com/,
@@ -244,7 +244,7 @@ describe('AdminAccounts page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: 'identityPoolId30' } })
     expect(
-      AccountsTestUtils.queryAllByColumnText(
+      accountsTestUtils.queryAllByColumnText(
         table,
         'emailAddress',
         /@example\.com/,
