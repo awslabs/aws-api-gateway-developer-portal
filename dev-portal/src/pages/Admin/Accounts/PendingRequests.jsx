@@ -127,13 +127,13 @@ const DenyAccountModal = React.memo(
           <p>
             Are you sure you want to deny this account request? The request will
             be permanently deleted, and <strong>{account.emailAddress}</strong>{' '}
-            will need to sign up again to request an account.
+            will need to sign up again in order to request an account.
           </p>
         </Modal.Content>
         <Modal.Actions>
           <Button onClick={onClose}>Cancel</Button>
           <Button negative onClick={onConfirm}>
-            Promote
+            Deny
           </Button>
         </Modal.Actions>
       </Modal>
