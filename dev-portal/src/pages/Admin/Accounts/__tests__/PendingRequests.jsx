@@ -164,6 +164,84 @@ describe('PendingRequests page', () => {
         .map(el => el.textContent),
     ).toEqual(['90@example.com'])
   })
+
+  it('denies multiple accounts', async () => {
+    const deletedEmails = []
+    AccountService.fetchPendingRequestAccounts = jest
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(
+          MOCK_ACCOUNTS.filter(
+            account =>
+              !deletedEmails.some(
+                deletedEmail => account.emailAddress === deletedEmail,
+              ),
+          ),
+        ),
+      )
+    AccountService.denyAccountRequestByIdentityPoolId = jest
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined)
+
+    const page = renderPage()
+    await accountsTestUtils.waitForAccountsToLoad(page)
+    const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
+
+    // Select and delete 3@example.com
+    const targetCell1 = rtl.getByText(table, '3@example.com')
+    rtl.fireEvent.click(targetCell1)
+
+    const denyButton = page.getByText('Deny')
+    expect(denyButton.disabled).toEqual(false)
+    rtl.fireEvent.click(denyButton)
+
+    let modal = rtl
+      .getByText(document, 'Confirm request denial')
+      .closest('.modal')
+    let confirmDenyButton = rtl.getByText(modal, 'Deny')
+    deletedEmails.push('3@example.com')
+    rtl.fireEvent.click(confirmDenyButton)
+
+    await accountsTestUtils.waitForAccountsToLoad(page)
+    accountsTestUtils.expectEmailIn('0@example.com', table)
+    expect(
+      accountsTestUtils.queryByColumnText(
+        table,
+        'emailAddress',
+        '3@example.com',
+      ),
+    ).toBeNull()
+
+    // Select and delete 4@example.com
+    expect(denyButton.disabled).toEqual(true)
+    const targetCell2 = rtl.getByText(table, '4@example.com')
+    rtl.fireEvent.click(targetCell2)
+    expect(denyButton.disabled).toEqual(false)
+    rtl.fireEvent.click(denyButton)
+
+    modal = rtl.getByText(document, 'Confirm request denial').closest('.modal')
+    await rtl.wait(() => rtl.getByText(modal, /4@example\.com/))
+    deletedEmails.push('4@example.com')
+    confirmDenyButton = rtl.getByText(modal, 'Deny')
+    rtl.fireEvent.click(confirmDenyButton)
+
+    await accountsTestUtils.waitForAccountsToLoad(page)
+    expect(
+      accountsTestUtils.queryByColumnText(
+        table,
+        'emailAddress',
+        '3@example.com',
+      ),
+    ).toBeNull()
+    expect(
+      accountsTestUtils.queryByColumnText(
+        table,
+        'emailAddress',
+        '4@example.com',
+      ),
+    ).toBeNull()
+  })
 })
 
 const NUM_MOCK_ACCOUNTS = 157 // should be prime

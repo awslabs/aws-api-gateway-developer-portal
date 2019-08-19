@@ -84,29 +84,28 @@ export const promoteAccountByIdentityPoolId = async identityPoolId => {
 export const approveAccountRequestByIdentityPoolId = async identityPoolId => {
   await resolveAfter(1500)
 
-  const accountIndex = mockPendingRequestAccounts.findIndex(
-    account => account.identityPoolId === identityPoolId,
-  )
-  if (accountIndex === -1) {
+  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityPoolId))) {
     throw new Error('Account not found!')
   }
-  if (mockPendingRequestAccounts[accountIndex].identityPoolId.endsWith('10')) {
+  if (identityPoolId.endsWith('10')) {
     throw new Error('Something weird happened!')
   }
-  mockPendingRequestAccounts.splice(accountIndex, 1)
+
+  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityPoolId))
 }
 
 export const denyAccountRequestByIdentityPoolId = async identityPoolId => {
   await resolveAfter(1500)
 
-  const accountIndex = mockPendingRequestAccounts.findIndex(
-    account => account.identityPoolId === identityPoolId,
-  )
-  if (accountIndex === -1) {
+  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityPoolId))) {
     throw new Error('Account not found!')
   }
-  if (mockPendingRequestAccounts[accountIndex].identityPoolId.endsWith('10')) {
+  if (identityPoolId.endsWith('10')) {
     throw new Error('Something weird happened!')
   }
-  mockPendingRequestAccounts.splice(accountIndex, 1)
+
+  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityPoolId))
 }
+
+const matchingIdentityId = targetId => account =>
+  account.identityPoolId === targetId

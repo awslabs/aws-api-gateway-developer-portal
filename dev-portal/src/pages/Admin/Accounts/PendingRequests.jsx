@@ -60,6 +60,7 @@ const PendingRequests = () => {
       sendMessage(dismiss => (
         <DenySuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
+      await refreshAccounts()
     } catch (error) {
       sendMessage(dismiss => (
         <DenyFailureMessage
