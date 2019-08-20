@@ -6,7 +6,7 @@ import { AdminRoute } from 'index'
 
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
 import AdminAccounts from 'pages/Admin/Accounts/AdminAccounts'
-import AccountInvites from 'pages/Admin/Accounts/AccountInvites'
+import PendingInvites from 'pages/Admin/Accounts/PendingInvites'
 import PendingRequests from 'pages/Admin/Accounts/PendingRequests'
 
 export class Admin extends Component {
@@ -20,7 +20,7 @@ export class Admin extends Component {
             <AdminRoute path="/admin/apis" component={ApiManagement} />
             <AdminRoute exact path="/admin/accounts" component={RegisteredAccounts} />
             <AdminRoute exact path="/admin/accounts/admins" component={AdminAccounts} />
-            <AdminRoute exact path="/admin/accounts/invites" component={AccountInvites} />
+            <AdminRoute exact path="/admin/accounts/invites" component={PendingInvites} />
             <AdminRoute exact path="/admin/accounts/requests" component={PendingRequests} />
           </div>
         </div>

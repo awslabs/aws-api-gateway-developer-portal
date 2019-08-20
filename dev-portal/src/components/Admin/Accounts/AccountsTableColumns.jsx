@@ -73,6 +73,21 @@ export const Promoter = {
   },
 }
 
+export const Inviter = {
+  id: 'inviter',
+  title: 'Inviter',
+  render: ({ inviterIdentityPoolId, inviterEmailAddress }) =>
+    inviterIdentityPoolId
+      ? `${inviterEmailAddress} (${inviterIdentityPoolId})`
+      : '',
+  filtering: {
+    accessor: ({ inviterIdentityPoolId, inviterEmailAddress }) =>
+      inviterIdentityPoolId
+        ? `${inviterEmailAddress} ${inviterIdentityPoolId}`
+        : '',
+  },
+}
+
 export const DatePromoted = {
   id: 'datePromoted',
   title: 'Date promoted',
@@ -88,6 +103,15 @@ export const DateRequested = {
   render: account => formatDate(account.dateRequested),
   ordering: {
     iteratee: 'dateRequested',
+  },
+}
+
+export const DateInvited = {
+  id: 'dateInvited',
+  title: 'Date invited',
+  render: account => formatDate(account.dateInvited),
+  ordering: {
+    iteratee: 'dateInvited',
   },
 }
 
