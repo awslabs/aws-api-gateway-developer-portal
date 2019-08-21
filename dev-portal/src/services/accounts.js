@@ -35,12 +35,20 @@ const mockData = (() => {
   })
 })()
 
+const mockPendingRequestAccounts = _.cloneDeep(mockData).map(
+  ({ dateRegistered, ...rest }) => ({ ...rest, dateRequested: dateRegistered }),
+)
+
 export const fetchRegisteredAccounts = () => {
   return resolveAfter(1500, mockData.slice())
 }
 
 export const fetchAdminAccounts = () => {
   return resolveAfter(1500, mockData.filter(account => account.isAdmin))
+}
+
+export const fetchPendingRequestAccounts = () => {
+  return resolveAfter(1500, mockPendingRequestAccounts.slice())
 }
 
 export const deleteAccountByIdentityPoolId = async identityPoolId => {
@@ -72,3 +80,32 @@ export const promoteAccountByIdentityPoolId = async identityPoolId => {
   }
   account.isAdmin = true
 }
+
+export const approveAccountRequestByIdentityPoolId = async identityPoolId => {
+  await resolveAfter(1500)
+
+  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityPoolId))) {
+    throw new Error('Account not found!')
+  }
+  if (identityPoolId.endsWith('10')) {
+    throw new Error('Something weird happened!')
+  }
+
+  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityPoolId))
+}
+
+export const denyAccountRequestByIdentityPoolId = async identityPoolId => {
+  await resolveAfter(1500)
+
+  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityPoolId))) {
+    throw new Error('Account not found!')
+  }
+  if (identityPoolId.endsWith('10')) {
+    throw new Error('Something weird happened!')
+  }
+
+  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityPoolId))
+}
+
+const matchingIdentityId = targetId => account =>
+  account.identityPoolId === targetId
