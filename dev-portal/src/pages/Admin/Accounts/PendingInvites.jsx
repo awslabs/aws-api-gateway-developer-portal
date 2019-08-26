@@ -160,7 +160,7 @@ const CreateInviteModal = ({ onConfirm, open, onClose }) => {
       <Modal.Content>
         <p>
           Enter an email address below and select <strong>Create</strong> to
-          send an account invite.
+          send an invitation to create an account.
         </p>
         <Input
           placeholder='Email address'
