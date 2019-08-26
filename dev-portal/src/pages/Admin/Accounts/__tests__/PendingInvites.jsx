@@ -235,15 +235,9 @@ describe('PendingInvites page', () => {
       .filter(el => el.textContent === 'Create')[0]
     expect(confirmCreateButton).toBeInTheDocument()
 
-    expect(confirmCreateButton.disabled).toBe(true)
-    rtl.fireEvent.change(emailInput, { target: { value: '000' } })
-    expect(confirmCreateButton.disabled).toBe(true)
-    rtl.fireEvent.change(emailInput, { target: { value: '000@' } })
-    expect(confirmCreateButton.disabled).toBe(true)
     rtl.fireEvent.change(emailInput, {
       target: { value: '000@example.com' },
     })
-    expect(confirmCreateButton.disabled).toBe(false)
     rtl.fireEvent.click(confirmCreateButton)
 
     await accountsTestUtils.waitForAccountsToLoad(page)
@@ -258,6 +252,55 @@ describe('PendingInvites page', () => {
     const table = page.getByTestId(AccountsTable.ACCOUNTS_TABLE_TESTID)
     rtl.fireEvent.change(filterInput, { target: { value: '000' } })
     accountsTestUtils.expectEmailIn('000@example.com', table)
+  })
+
+  it('prevents creating an invite for an invalid email address', async () => {
+    AccountService.fetchPendingInviteAccounts = jest.fn().mockResolvedValue([])
+
+    const page = renderPage()
+    await accountsTestUtils.waitForAccountsToLoad(page)
+
+    const startCreateButton = page.getByText(/Create invite/)
+    rtl.fireEvent.click(startCreateButton)
+    const createModal = await rtl.waitForElement(() =>
+      rtl.getByText(document, 'Create invite').closest('.modal'),
+    )
+
+    const emailInput = rtl.getByPlaceholderText(createModal, 'Email address')
+    const confirmCreateButton = rtl
+      .getAllByRole(createModal, 'button')
+      .filter(el => el.textContent === 'Create')[0]
+    expect(confirmCreateButton).toBeInTheDocument()
+
+    const pleaseEnterAValidEmail = rtl.queryByText(
+      createModal,
+      'Please enter a valid email address.',
+    )
+    const pleaseEnterAValidEmailIsVisible = () =>
+      !pleaseEnterAValidEmail.classList.contains('hidden')
+
+    expect(confirmCreateButton.disabled).toBe(true)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
+
+    rtl.fireEvent.change(emailInput, { target: { value: '000' } })
+    expect(confirmCreateButton.disabled).toBe(true)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
+
+    rtl.fireEvent.change(emailInput, { target: { value: '000@' } })
+    expect(confirmCreateButton.disabled).toBe(true)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
+
+    rtl.fireEvent.change(emailInput, { target: { value: '000@example.com' } })
+    expect(confirmCreateButton.disabled).toBe(false)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(false)
+
+    rtl.fireEvent.change(emailInput, { target: { value: '000' } })
+    expect(confirmCreateButton.disabled).toBe(true)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
+
+    rtl.fireEvent.change(emailInput, { target: { value: '' } })
+    expect(confirmCreateButton.disabled).toBe(true)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
   })
 
   it('shows a message when creation fails', async () => {

@@ -155,17 +155,21 @@ const CreateInviteModal = ({ onConfirm, open, onClose }) => {
   }, [onConfirm, email])
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={onClose} size={'small'}>
       <Modal.Header>Create invite</Modal.Header>
       <Modal.Content>
         <p>
           Enter an email address below and select <strong>Create</strong> to
           send an invitation to create an account.
         </p>
+        <Message hidden={isEmailValid} warning>
+          Please enter a valid email address.
+        </Message>
         <Input
           placeholder='Email address'
           value={email}
           onChange={onChangeEmailAddress}
+          style={{ width: '100%' }}
         />
       </Modal.Content>
       <Modal.Actions>
