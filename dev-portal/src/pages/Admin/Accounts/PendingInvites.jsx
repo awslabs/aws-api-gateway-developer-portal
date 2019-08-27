@@ -53,14 +53,6 @@ const PendingInvites = () => {
       clearCreateModalMessages()
       try {
         await AccountService.createInviteByEmail(emailAddress)
-        closeCreateModal()
-        clearCreateModalMessages()
-        sendMessage(dismiss => (
-          <CreateSuccessMessage emailAddress={emailAddress} dismiss={dismiss} />
-        ))
-        // Don't need to wait for this
-        refreshAccounts().then(() => setLoading(false))
-        return true
       } catch (error) {
         sendCreateModalMessage(dismiss => (
           <CreateFailureMessage
@@ -72,6 +64,14 @@ const PendingInvites = () => {
         setLoading(false)
         return false
       }
+      closeCreateModal()
+      clearCreateModalMessages()
+      sendMessage(dismiss => (
+        <CreateSuccessMessage emailAddress={emailAddress} dismiss={dismiss} />
+      ))
+      // Don't need to wait for this
+      refreshAccounts().then(() => setLoading(false))
+      return true
     },
     [
       sendMessage,
