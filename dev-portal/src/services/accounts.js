@@ -7,13 +7,17 @@ const mockData = (() => {
   const now = Date.now()
   const adminStep = 10
   return Array.from({ length: NUM_MOCK_ACCOUNTS }).map((_value, index) => {
+    let inviter = 1
     let promoter = null
     if (_.inRange(index, 20, 90)) {
       promoter = 10
+      inviter = 10
     } else if (_.inRange(index, 90, 120)) {
       promoter = 20
+      inviter = 20
     } else if (_.inRange(index, 120, NUM_MOCK_ACCOUNTS)) {
       promoter = 100
+      inviter = 100
     }
 
     return {
@@ -25,6 +29,8 @@ const mockData = (() => {
         new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000).toJSON(),
       promoterEmailAddress: promoter && `${promoter}@example.com`,
       promoterIdentityPoolId: promoter && `identityPoolId${promoter}`,
+      inviterEmailAddress: inviter && `${inviter}@example.com`,
+      inviterIdentityPoolId: inviter && `identityPoolId${inviter}`,
       dateRegistered: new Date(
         now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000,
       ).toJSON(),
@@ -39,6 +45,13 @@ const mockPendingRequestAccounts = _.cloneDeep(mockData).map(
   ({ dateRegistered, ...rest }) => ({ ...rest, dateRequested: dateRegistered }),
 )
 
+const mockPendingInviteAccounts = _.cloneDeep(mockData).map(
+  ({ dateRegistered, ...rest }) => ({
+    ...rest,
+    dateInvited: dateRegistered,
+  }),
+)
+
 export const fetchRegisteredAccounts = () => {
   return resolveAfter(1500, mockData.slice())
 }
@@ -49,6 +62,10 @@ export const fetchAdminAccounts = () => {
 
 export const fetchPendingRequestAccounts = () => {
   return resolveAfter(1500, mockPendingRequestAccounts.slice())
+}
+
+export const fetchPendingInviteAccounts = () => {
+  return resolveAfter(1500, mockPendingInviteAccounts.slice())
 }
 
 export const deleteAccountByIdentityPoolId = async identityPoolId => {
@@ -64,6 +81,38 @@ export const deleteAccountByIdentityPoolId = async identityPoolId => {
     throw new Error('Something weird happened!')
   }
   mockData.splice(accountIndex, 1)
+}
+
+export const deleteInviteByIdentityPoolId = async identityPoolId => {
+  await resolveAfter(1500)
+
+  const accountIndex = mockPendingInviteAccounts.findIndex(
+    account => account.identityPoolId === identityPoolId,
+  )
+  if (accountIndex === -1) {
+    throw new Error('Account not found!')
+  }
+  if (identityPoolId.endsWith('10')) {
+    throw new Error('Something weird happened!')
+  }
+  mockPendingInviteAccounts.splice(accountIndex, 1)
+}
+
+export const createInviteByEmail = async emailAddress => {
+  await resolveAfter(1500)
+
+  const account = {
+      identityPoolId: `temp`,
+      userPoolId: `temp`,
+      emailAddress,
+      dateInvited: new Date(Date.now()).toJSON(),
+      inviterEmailAddress: `you@localhost`,
+      inviterIdentityPoolId: `yourIdentityId`,
+      apiKeyId: `temp`,
+      registrationMethod: `invite`,
+  }
+
+  mockPendingInviteAccounts.push(account)
 }
 
 export const promoteAccountByIdentityPoolId = async identityPoolId => {
