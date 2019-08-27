@@ -42,13 +42,13 @@ const mockData = (() => {
 })()
 
 const mockPendingRequestAccounts = _.cloneDeep(mockData).map(
-  ({ dateRegistered, ...rest }) => ({ ...rest, dateRequested: dateRegistered }),
+  ({ DateRegistered, ...rest }) => ({ ...rest, DateRequested: DateRegistered }),
 )
 
 const mockPendingInviteAccounts = _.cloneDeep(mockData).map(
-  ({ dateRegistered, ...rest }) => ({
+  ({ DateRegistered, ...rest }) => ({
     ...rest,
-    dateInvited: dateRegistered,
+    DateInvited: DateRegistered,
   }),
 )
 
