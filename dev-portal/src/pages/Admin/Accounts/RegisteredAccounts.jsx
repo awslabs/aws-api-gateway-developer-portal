@@ -32,9 +32,7 @@ const RegisteredAccounts = () => {
     setLoading(true)
     setDeleteModalOpen(false)
     try {
-      await AccountService.deleteAccountByIdentityPoolId(
-        selectedAccount.identityPoolId,
-      )
+      await AccountService.deleteAccountByIdentityId(selectedAccount.IdentityId)
       sendMessage(dismiss => (
         <DeleteSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
@@ -56,8 +54,8 @@ const RegisteredAccounts = () => {
     setLoading(true)
     setPromoteModalOpen(false)
     try {
-      await AccountService.promoteAccountByIdentityPoolId(
-        selectedAccount.identityPoolId,
+      await AccountService.promoteAccountByIdentityId(
+        selectedAccount.IdentityId,
       )
       sendMessage(dismiss => (
         <PromoteSuccessMessage account={selectedAccount} dismiss={dismiss} />
@@ -136,7 +134,7 @@ const DeleteAccountModal = React.memo(
         <Modal.Content>
           <p>
             Are you sure you want to delete the account{' '}
-            <strong>{account.emailAddress}</strong>, and de-activate the
+            <strong>{account.EmailAddress}</strong>, and de-activate the
             associated API key? This action is irreversible.
           </p>
         </Modal.Content>
@@ -158,7 +156,7 @@ const PromoteAccountModal = React.memo(
         <Modal.Content>
           <p>
             Are you sure you want to promote the account{' '}
-            <strong>{account.emailAddress}</strong> to Admin? This will allow
+            <strong>{account.EmailAddress}</strong> to Admin? This will allow
             the account to perform any Admin actions, including deleting and
             promoting other accounts.
           </p>
@@ -180,7 +178,7 @@ const PromoteAccountModal = React.memo(
 const DeleteSuccessMessage = React.memo(({ account, dismiss }) => (
   <Message onDismiss={dismiss} positive>
     <Message.Content>
-      Deleted account <strong>{account.emailAddress}</strong>.
+      Deleted account <strong>{account.EmailAddress}</strong>.
     </Message.Content>
   </Message>
 ))
@@ -190,7 +188,7 @@ const DeleteFailureMessage = React.memo(
     <Message onDismiss={dismiss} negative>
       <Message.Content>
         <p>
-          Failed to delete account <strong>{account.emailAddress}</strong>.
+          Failed to delete account <strong>{account.EmailAddress}</strong>.
         </p>
         {errorMessage && <p>Error message: {errorMessage}</p>}
       </Message.Content>
@@ -201,7 +199,7 @@ const DeleteFailureMessage = React.memo(
 const PromoteSuccessMessage = React.memo(({ account, dismiss }) => (
   <Message onDismiss={dismiss} positive>
     <Message.Content>
-      Promoted account <strong>{account.emailAddress}</strong>.
+      Promoted account <strong>{account.EmailAddress}</strong>.
     </Message.Content>
   </Message>
 ))
@@ -211,7 +209,7 @@ const PromoteFailureMessage = React.memo(
     <Message onDismiss={dismiss} negative>
       <Message.Content>
         <p>
-          Failed to promote account <strong>{account.emailAddress}</strong>.
+          Failed to promote account <strong>{account.EmailAddress}</strong>.
         </p>
         {errorMessage && <p>Error message: {errorMessage}</p>}
       </Message.Content>

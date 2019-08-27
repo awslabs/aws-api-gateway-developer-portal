@@ -30,8 +30,8 @@ const PendingRequests = () => {
   const onConfirmApprove = useCallback(async () => {
     setLoading(true)
     try {
-      await AccountService.approveAccountRequestByIdentityPoolId(
-        selectedAccount.identityPoolId,
+      await AccountService.approveAccountRequestByIdentityId(
+        selectedAccount.IdentityId,
       )
       sendMessage(dismiss => (
         <ApproveSuccessMessage account={selectedAccount} dismiss={dismiss} />
@@ -54,8 +54,8 @@ const PendingRequests = () => {
     setLoading(true)
     setDenyModalOpen(false)
     try {
-      await AccountService.denyAccountRequestByIdentityPoolId(
-        selectedAccount.identityPoolId,
+      await AccountService.denyAccountRequestByIdentityId(
+        selectedAccount.IdentityId,
       )
       sendMessage(dismiss => (
         <DenySuccessMessage account={selectedAccount} dismiss={dismiss} />
@@ -127,7 +127,7 @@ const DenyAccountModal = React.memo(
         <Modal.Content>
           <p>
             Are you sure you want to deny this account request? The request will
-            be permanently deleted, and <strong>{account.emailAddress}</strong>{' '}
+            be permanently deleted, and <strong>{account.EmailAddress}</strong>{' '}
             will need to sign up again in order to request an account.
           </p>
         </Modal.Content>
@@ -144,7 +144,7 @@ const DenyAccountModal = React.memo(
 const ApproveSuccessMessage = React.memo(({ account, dismiss }) => (
   <Message onDismiss={dismiss} positive>
     <Message.Content>
-      Approved account request for <strong>{account.emailAddress}</strong>.
+      Approved account request for <strong>{account.EmailAddress}</strong>.
     </Message.Content>
   </Message>
 ))
@@ -155,7 +155,7 @@ const ApproveFailureMessage = React.memo(
       <Message.Content>
         <p>
           Failed to approve account request for{' '}
-          <strong>{account.emailAddress}</strong>.
+          <strong>{account.EmailAddress}</strong>.
         </p>
         {errorMessage && <p>Error message: {errorMessage}</p>}
       </Message.Content>
@@ -166,7 +166,7 @@ const ApproveFailureMessage = React.memo(
 const DenySuccessMessage = React.memo(({ account, dismiss }) => (
   <Message onDismiss={dismiss} positive>
     <Message.Content>
-      Denied account request for <strong>{account.emailAddress}</strong>.
+      Denied account request for <strong>{account.EmailAddress}</strong>.
     </Message.Content>
   </Message>
 ))
@@ -176,7 +176,7 @@ const DenyFailureMessage = React.memo(({ account, errorMessage, dismiss }) => (
     <Message.Content>
       <p>
         Failed to deny account request for{' '}
-        <strong>{account.emailAddress}</strong>.
+        <strong>{account.EmailAddress}</strong>.
       </p>
       {errorMessage && <p>Error message: {errorMessage}</p>}
     </Message.Content>
