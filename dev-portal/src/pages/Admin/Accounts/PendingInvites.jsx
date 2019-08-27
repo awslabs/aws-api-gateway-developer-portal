@@ -26,6 +26,11 @@ const PendingInvites = () => {
     false,
   )
   const [messages, sendMessage] = MessageList.useMessages()
+  const [
+    createModalMessages,
+    sendCreateModalMessage,
+    clearCreateModalMessages,
+  ] = MessageList.useMessages()
 
   const refreshAccounts = () =>
     AccountService.fetchPendingInviteAccounts().then(accounts =>
@@ -45,26 +50,35 @@ const PendingInvites = () => {
   const onConfirmCreate = useCallback(
     async emailAddress => {
       setLoading(true)
-      closeCreateModal()
+      clearCreateModalMessages()
       try {
         await AccountService.createInviteByEmail(emailAddress)
+        closeCreateModal()
+        clearCreateModalMessages()
         sendMessage(dismiss => (
           <CreateSuccessMessage emailAddress={emailAddress} dismiss={dismiss} />
         ))
-        await refreshAccounts()
+        // Don't need to wait for this
+        refreshAccounts().then(() => setLoading(false))
+        return true
       } catch (error) {
-        sendMessage(dismiss => (
+        sendCreateModalMessage(dismiss => (
           <CreateFailureMessage
             emailAddress={emailAddress}
             dismiss={dismiss}
             errorMessage={error.message}
           />
         ))
-      } finally {
         setLoading(false)
+        return false
       }
     },
-    [sendMessage, closeCreateModal],
+    [
+      sendMessage,
+      sendCreateModalMessage,
+      clearCreateModalMessages,
+      closeCreateModal,
+    ],
   )
 
   const onConfirmDelete = useCallback(async () => {
@@ -117,6 +131,7 @@ const PendingInvites = () => {
         onConfirm={onConfirmCreate}
         open={isCreateModalOpen}
         onClose={closeCreateModal}
+        messages={createModalMessages}
       />
       <DeleteInviteModal
         account={selectedAccount}
@@ -142,16 +157,24 @@ const TableActions = React.memo(
   ),
 )
 
-const CreateInviteModal = ({ onConfirm, open, onClose }) => {
+/*
+ * Note: `onConfirm` should return a boolean indicating whether the creation
+ * succeeded.
+ */
+const CreateInviteModal = ({ onConfirm, open, onClose, messages }) => {
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
   const isEmailValid = useMemo(() => /^[^@\s]+@[^@\s]+$/.test(email), [email])
   const onChangeEmailAddress = useCallback(
     (_event, { value }) => setEmail(value),
     [],
   )
-  const onClickCreate = useCallback(() => {
-    onConfirm(email)
-    setEmail('')
+  const onClickCreate = useCallback(async () => {
+    setLoading(true)
+    if (await onConfirm(email)) {
+      setEmail('')
+    }
+    setLoading(false)
   }, [onConfirm, email])
 
   return (
@@ -162,19 +185,28 @@ const CreateInviteModal = ({ onConfirm, open, onClose }) => {
           Enter an email address below and select <strong>Create</strong> to
           send an invitation to create an account.
         </p>
-        <Message hidden={isEmailValid} warning>
+        <MessageList.MessageList messages={messages} />
+        <Message hidden={isEmailValid || loading} warning>
           Please enter a valid email address.
         </Message>
         <Input
           placeholder='Email address'
           value={email}
           onChange={onChangeEmailAddress}
+          disabled={loading}
           style={{ width: '100%' }}
         />
       </Modal.Content>
       <Modal.Actions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button positive disabled={!isEmailValid} onClick={onClickCreate}>
+        <Button disabled={loading} loading={loading} onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          positive
+          disabled={!isEmailValid}
+          loading={loading}
+          onClick={onClickCreate}
+        >
           Create
         </Button>
       </Modal.Actions>

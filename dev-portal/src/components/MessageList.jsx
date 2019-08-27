@@ -40,5 +40,9 @@ export const useMessages = () => {
     }))
   }
 
-  return [state.messages, sendMessage]
+  const clearMessages = () => {
+    setState(state => ({ ...state, messages: [] }))
+  }
+
+  return [state.messages, sendMessage, clearMessages]
 }

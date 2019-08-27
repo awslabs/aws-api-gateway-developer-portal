@@ -329,12 +329,12 @@ describe('PendingInvites page', () => {
     rtl.fireEvent.click(confirmCreateButton)
 
     await accountsTestUtils.waitForAccountsToLoad(page)
-    page.getAllByText((_content, element) =>
+    rtl.getAllByText(createModal, (_content, element) =>
       element.textContent.startsWith(
         'Failed to send account invite to 000@example.com',
       ),
     )
-    page.getAllByText((_content, element) =>
+    rtl.getAllByText(createModal, (_content, element) =>
       element.textContent.startsWith(
         'Error message: You must construct additional pylons',
       ),
