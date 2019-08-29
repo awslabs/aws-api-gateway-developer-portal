@@ -1,7 +1,7 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-'use strict';
+'use strict'
 
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -25,19 +25,33 @@ app.put('/subscriptions/:usagePlanId', handlers.putSubscription)
 app.get('/subscriptions/:usagePlanId/usage', handlers.getUsage)
 app.delete('/subscriptions/:usagePlanId', handlers.deleteSubscription)
 app.post('/marketplace-confirm/:usagePlanId', handlers.postMarketplaceConfirm)
-app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscription)
+app.put(
+  '/marketplace-subscriptions/:usagePlanId',
+  handlers.putMarketplaceSubscription,
+)
 app.get('/feedback', handlers.getFeedback)
 app.post('/feedback', handlers.postFeedback)
 app.get('/catalog/:id/sdk', handlers.getSdk)
 
-
 // admin APIs
 app.get('/admin/catalog/visibility', handlers.getAdminCatalogVisibility)
 app.post('/admin/catalog/visibility', handlers.postAdminCatalogVisibility)
-app.delete('/admin/catalog/visibility/:id', handlers.deleteAdminCatalogVisibility)
-app.delete('/admin/catalog/visibility/generic/:genericId', handlers.deleteAdminCatalogVisibility)
-app.put('/admin/catalog/:id/sdkGeneration', handlers.putAdminCatalogSdkGeneration)
-app.delete('/admin/catalog/:id/sdkGeneration', handlers.deleteAdminCatalogSdkGeneration)
+app.delete(
+  '/admin/catalog/visibility/:id',
+  handlers.deleteAdminCatalogVisibility,
+)
+app.delete(
+  '/admin/catalog/visibility/generic/:genericId',
+  handlers.deleteAdminCatalogVisibility,
+)
+app.put(
+  '/admin/catalog/:id/sdkGeneration',
+  handlers.putAdminCatalogSdkGeneration,
+)
+app.delete(
+  '/admin/catalog/:id/sdkGeneration',
+  handlers.deleteAdminCatalogSdkGeneration,
+)
 
 // The aws-serverless-express library creates a server and listens on a Unix
 // Domain Socket for you, so you can remove the usual call to app.listen.

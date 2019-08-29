@@ -102,14 +102,14 @@ export const createInviteByEmail = async emailAddress => {
   await resolveAfter(1500)
 
   const account = {
-      IdentityId: `temp`,
-      UserId: `temp`,
-      EmailAddress: emailAddress,
-      DateInvited: new Date(Date.now()).toJSON(),
-      InviterEmailAddress: `you@localhost`,
-      InviterIdentityId: `yourIdentityId`,
-      ApiKeyId: `temp`,
-      RegistrationMethod: `invite`,
+    IdentityId: `temp`,
+    UserId: `temp`,
+    EmailAddress: emailAddress,
+    DateInvited: new Date(Date.now()).toJSON(),
+    InviterEmailAddress: `you@localhost`,
+    InviterIdentityId: `yourIdentityId`,
+    ApiKeyId: `temp`,
+    RegistrationMethod: `invite`,
   }
 
   mockPendingInviteAccounts.push(account)
@@ -118,9 +118,7 @@ export const createInviteByEmail = async emailAddress => {
 export const promoteAccountByIdentityId = async identityId => {
   await resolveAfter(1500)
 
-  const account = mockData.find(
-    account => account.IdentityId === identityId,
-  )
+  const account = mockData.find(account => account.IdentityId === identityId)
   if (account === undefined) {
     throw new Error('Account not found!')
   }
