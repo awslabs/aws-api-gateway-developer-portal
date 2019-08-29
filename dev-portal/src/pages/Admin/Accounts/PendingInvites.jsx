@@ -85,9 +85,7 @@ const PendingInvites = () => {
     setLoading(true)
     closeDeleteModal()
     try {
-      await AccountService.deleteInviteByIdentityPoolId(
-        selectedAccount.identityPoolId,
-      )
+      await AccountService.deleteInviteByIdentityId(selectedAccount.IdentityId)
       sendMessage(dismiss => (
         <DeleteSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
@@ -224,7 +222,7 @@ const DeleteInviteModal = ({ account, onConfirm, open, onClose }) =>
       <Modal.Content>
         <p>
           Are you sure you want to delete this account invite for{' '}
-          <strong>{account.emailAddress}</strong>? This action is irreversible.
+          <strong>{account.EmailAddress}</strong>? This action is irreversible.
         </p>
       </Modal.Content>
       <Modal.Actions>
@@ -258,7 +256,7 @@ const CreateFailureMessage = ({ emailAddress, errorMessage, dismiss }) => (
 const DeleteSuccessMessage = ({ account, dismiss }) => (
   <Message onDismiss={dismiss} positive>
     <Message.Content>
-      Deleted account invite for <strong>{account.emailAddress}</strong>.
+      Deleted account invite for <strong>{account.EmailAddress}</strong>.
     </Message.Content>
   </Message>
 )
@@ -268,7 +266,7 @@ const DeleteFailureMessage = ({ account, errorMessage, dismiss }) => (
     <Message.Content>
       <p>
         Failed to delete account invite for{' '}
-        <strong>{account.emailAddress}</strong>.
+        <strong>{account.EmailAddress}</strong>.
       </p>
       {errorMessage && <p>Error message: {errorMessage}</p>}
     </Message.Content>

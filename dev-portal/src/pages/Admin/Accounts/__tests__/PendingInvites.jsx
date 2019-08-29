@@ -9,6 +9,7 @@ import * as accountsTestUtils from 'utils/accounts-test-utils'
 import PendingInvites from 'pages/Admin/Accounts/PendingInvites'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountService from 'services/accounts'
+import * as AccountsTableColumns from 'components/Admin/Accounts/AccountsTableColumns'
 
 jest.mock('services/accounts')
 
@@ -45,8 +46,8 @@ describe('PendingInvites page', () => {
     await accountsTestUtils.waitForAccountsToLoad(page)
 
     _.take(MOCK_ACCOUNTS, AccountsTable.DEFAULT_PAGE_SIZE).forEach(
-      ({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, page.baseElement),
+      ({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, page.baseElement),
     )
   })
 
@@ -83,10 +84,10 @@ describe('PendingInvites page', () => {
 
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
-      .orderBy(['emailAddress'])
+      .orderBy(['EmailAddress'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     // Check that last page is correct
@@ -94,13 +95,13 @@ describe('PendingInvites page', () => {
     const lastPageButton = rtl.getByLabelText(pagination, 'Last item')
     rtl.fireEvent.click(lastPageButton)
     _(MOCK_ACCOUNTS)
-      .orderBy(['emailAddress'])
+      .orderBy(['EmailAddress'])
       .drop(
         Math.floor(MOCK_ACCOUNTS.length / AccountsTable.DEFAULT_PAGE_SIZE) *
           AccountsTable.DEFAULT_PAGE_SIZE,
       )
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     // Order descending, go back to first page
@@ -110,10 +111,10 @@ describe('PendingInvites page', () => {
 
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
-      .orderBy(['emailAddress'], ['desc'])
+      .orderBy(['EmailAddress'], ['desc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
   })
 
@@ -132,10 +133,10 @@ describe('PendingInvites page', () => {
 
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
-      .orderBy(['dateInvited'], ['asc'])
+      .orderBy(['DateInvited'], ['asc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
   })
 
@@ -151,16 +152,20 @@ describe('PendingInvites page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: '1' } })
     _(MOCK_ACCOUNTS)
-      .filter(({ emailAddress }) => emailAddress.includes('1'))
+      .filter(({ EmailAddress }) => EmailAddress.includes('1'))
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     rtl.fireEvent.change(filterInput, { target: { value: '90' } })
     expect(
       accountsTestUtils
-        .queryAllByColumnText(table, 'emailAddress', /@example\.com/)
+        .queryAllByColumnText(
+          table,
+          AccountsTableColumns.EmailAddress.id,
+          /@example\.com/,
+        )
         .map(el => el.textContent),
     ).toEqual(['90@example.com'])
   })
@@ -186,8 +191,8 @@ describe('PendingInvites page', () => {
     _(MOCK_ACCOUNTS)
       .filter({ inviterEmailAddress: '20@example.com' })
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     rtl.fireEvent.change(filterInput, { target: { value: '30@example.com' } })
@@ -211,12 +216,12 @@ describe('PendingInvites page', () => {
       .fn()
       .mockImplementation(emailAddress => {
         createdAccounts.push({
-          identityPoolId: `createedIdentityId${createdAccounts.length}`,
-          userPoolId: `createdUserId${createdAccounts.length}`,
-          emailAddress: emailAddress,
-          dateInvited: new Date(),
-          inviterEmailAddress: 'you@example.com',
-          inviterIdentityPoolId: 'me',
+          IdentityId: `createedIdentityId${createdAccounts.length}`,
+          UserId: `createdUserId${createdAccounts.length}`,
+          EmailAddress: emailAddress,
+          DateInvited: new Date(),
+          InviterEmailAddress: 'you@example.com',
+          InviterIdentityId: 'me',
         })
       })
 
@@ -348,15 +353,14 @@ describe('PendingInvites page', () => {
       .mockImplementation(() =>
         Promise.resolve(
           MOCK_ACCOUNTS.filter(
-            ({ identityPoolId }) =>
-              !deletedIdentityIds.includes(identityPoolId),
+            ({ IdentityId }) => !deletedIdentityIds.includes(IdentityId),
           ),
         ),
       )
-    AccountService.deleteInviteByIdentityPoolId = jest
+    AccountService.deleteInviteByIdentityId = jest
       .fn()
-      .mockImplementation(identityPoolId => {
-        deletedIdentityIds.push(identityPoolId)
+      .mockImplementation(identityId => {
+        deletedIdentityIds.push(identityId)
       })
 
     const page = renderPage()
@@ -367,7 +371,7 @@ describe('PendingInvites page', () => {
 
     const targetAccountEmailCell = accountsTestUtils.queryByColumnText(
       page.baseElement,
-      'emailAddress',
+      AccountsTableColumns.EmailAddress.id,
       '5@example.com',
     )
     expect(targetAccountEmailCell).toBeInTheDocument()
@@ -404,7 +408,7 @@ describe('PendingInvites page', () => {
     expect(
       accountsTestUtils.queryByColumnText(
         table,
-        'emailAddress',
+        AccountsTableColumns.EmailAddress.id,
         '5@example.com',
       ),
     ).toBeNull()
@@ -414,7 +418,7 @@ describe('PendingInvites page', () => {
     AccountService.fetchPendingInviteAccounts = jest
       .fn()
       .mockResolvedValue(MOCK_ACCOUNTS)
-    AccountService.deleteInviteByIdentityPoolId = jest
+    AccountService.deleteInviteByIdentityId = jest
       .fn()
       .mockRejectedValue(new Error('Target lost.'))
 
@@ -423,7 +427,7 @@ describe('PendingInvites page', () => {
 
     const targetAccountEmailCell = accountsTestUtils.queryByColumnText(
       page.baseElement,
-      'emailAddress',
+      AccountsTableColumns.EmailAddress.id,
       '2@example.com',
     )
     expect(targetAccountEmailCell).toBeInTheDocument()
@@ -473,10 +477,10 @@ const MOCK_DATES_INVITED = (() => {
 })()
 
 const MOCK_ACCOUNTS = MOCK_INVITERS.map((inviter, index) => ({
-  identityPoolId: `identityPoolId${index}`,
-  userPoolId: `userPoolId${index}`,
-  emailAddress: `${index}@example.com`,
-  dateInvited: MOCK_DATES_INVITED[index],
-  inviterEmailAddress: inviter && `${inviter}@example.com`,
-  inviterIdentityPoolId: inviter && `identityPoolId${inviter}`,
+  IdentityId: `identityId${index}`,
+  UserId: `userId${index}`,
+  EmailAddress: `${index}@example.com`,
+  DateInvited: MOCK_DATES_INVITED[index],
+  InviterEmailAddress: inviter && `${inviter}@example.com`,
+  InviterIdentityId: inviter && `identityId${inviter}`,
 }))

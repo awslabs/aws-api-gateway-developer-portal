@@ -23,95 +23,87 @@
  */
 
 export const EmailAddress = {
-  id: 'emailAddress',
+  id: 'EmailAddress',
   title: 'Email address',
-  render: account => account.emailAddress,
+  render: account => account.EmailAddress,
   ordering: {
-    iteratee: 'emailAddress',
+    iteratee: 'EmailAddress',
   },
   filtering: {
-    accessor: 'emailAddress',
+    accessor: 'EmailAddress',
   },
 }
 
 export const DateRegistered = {
-  id: 'dateRegistered',
+  id: 'DateRegistered',
   title: 'Date registered',
-  render: account => formatDate(account.dateRegistered),
+  render: account => formatDate(account.DateRegistered),
   ordering: {
-    iteratee: 'dateRegistered',
+    iteratee: 'DateRegistered',
   },
 }
 
 export const RegistrationMethod = {
-  id: 'registrationMethod',
+  id: 'RegistrationMethod',
   title: 'Registration method',
-  render: account => account.registrationMethod,
+  render: account => account.RegistrationMethod,
 }
 
 export const ApiKeyId = {
-  id: 'apiKeyId',
+  id: 'ApiKeyId',
   title: 'API key ID',
-  render: account => account.apiKeyId,
+  render: account => account.ApiKeyId,
   filtering: {
-    accessor: 'apiKeyId',
+    accessor: 'ApiKeyId',
   },
 }
 
 export const Promoter = {
-  id: 'promoter',
+  id: 'Promoter',
   title: 'Promoter',
-  render: ({ promoterIdentityPoolId, promoterEmailAddress }) =>
-    promoterIdentityPoolId
-      ? `${promoterEmailAddress} (${promoterIdentityPoolId})`
-      : '',
+  render: ({ PromoterIdentityId, PromoterEmailAddress }) =>
+    PromoterIdentityId ? `${PromoterEmailAddress} (${PromoterIdentityId})` : '',
   filtering: {
-    accessor: ({ promoterIdentityPoolId, promoterEmailAddress }) =>
-      promoterIdentityPoolId
-        ? `${promoterEmailAddress} ${promoterIdentityPoolId}`
-        : '',
+    accessor: ({ PromoterIdentityId, PromoterEmailAddress }) =>
+      PromoterIdentityId ? `${PromoterEmailAddress} ${PromoterIdentityId}` : '',
   },
 }
 
 export const Inviter = {
-  id: 'inviter',
+  id: 'Inviter',
   title: 'Inviter',
-  render: ({ inviterIdentityPoolId, inviterEmailAddress }) =>
-    inviterIdentityPoolId
-      ? `${inviterEmailAddress} (${inviterIdentityPoolId})`
-      : '',
+  render: ({ InviterIdentityId, InviterEmailAddress }) =>
+    InviterIdentityId ? `${InviterEmailAddress} (${InviterIdentityId})` : '',
   filtering: {
-    accessor: ({ inviterIdentityPoolId, inviterEmailAddress }) =>
-      inviterIdentityPoolId
-        ? `${inviterEmailAddress} ${inviterIdentityPoolId}`
-        : '',
+    accessor: ({ InviterIdentityId, InviterEmailAddress }) =>
+      InviterIdentityId ? `${InviterEmailAddress} ${InviterIdentityId}` : '',
   },
 }
 
 export const DatePromoted = {
-  id: 'datePromoted',
+  id: 'DatePromoted',
   title: 'Date promoted',
-  render: ({ datePromoted }) => (datePromoted ? formatDate(datePromoted) : ''),
+  render: ({ DatePromoted }) => (DatePromoted ? formatDate(DatePromoted) : ''),
   ordering: {
-    iteratee: 'datePromoted',
+    iteratee: 'DatePromoted',
   },
 }
 
 export const DateRequested = {
-  id: 'dateRequested',
+  id: 'DateRequested',
   title: 'Date requested',
-  render: account => formatDate(account.dateRequested),
+  render: account => formatDate(account.DateRequested),
   ordering: {
-    iteratee: 'dateRequested',
+    iteratee: 'DateRequested',
   },
 }
 
 export const DateInvited = {
-  id: 'dateInvited',
+  id: 'DateInvited',
   title: 'Date invited',
-  render: account => formatDate(account.dateInvited),
+  render: account => formatDate(account.DateInvited),
   ordering: {
-    iteratee: 'dateInvited',
+    iteratee: 'DateInvited',
   },
 }
 
