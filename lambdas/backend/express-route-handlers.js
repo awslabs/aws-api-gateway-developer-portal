@@ -1,11 +1,15 @@
+const AWS = require('aws-sdk')
+const Datauri = require('datauri')
+const hash = require('object-hash')
+
+const catalog = require('./catalog/index')
+
 const customersController = require('dev-portal-common/customers-controller')
 const feedbackController = require('dev-portal-common/feedback-controller')
-const AWS = require('aws-sdk')
-const catalog = require('./catalog/index')
-const hash = require('object-hash')
 const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
-
-const Datauri = require('datauri')
+const { inspectStringify } = require('dev-portal-common/inspect-stringify')
+const { promisify2 } = require('dev-portal-common/promisify2')
+const { getEnv } = require('dev-portal-common/get-env')
 
 // replace these to match your site URL. Note: Use TLS, not plain HTTP, for your production site!
 const domain = `${process.env.CLIENT_BUCKET_NAME}.s3-website-${process.env.AWS_DEFAULT_REGION}.amazonaws.com`
@@ -51,54 +55,36 @@ function getUsagePlanFromCatalog(usagePlanId) {
   )
 }
 
-function postSignIn(req, res) {
+const postSignIn = async (req, res) => {
   const cognitoIdentityId = getCognitoIdentityId(req)
-  console.log(`POST /signin for Cognito ID: ${cognitoIdentityId}`)
-
   const cognitoUserId = getCognitoUserId(req)
+  console.log(`POST /signin for identity ID [${cognitoIdentityId}]`)
 
-  function errFunc(data) {
-    console.log(`error: ${data}`)
-    res.status(500).json(data)
+  try {
+    // We want to uphold the invariant that "if the logged-in account has a
+    // CustomersTable item, then its Id, UserPoolId, and ApiKeyId attributes
+    // are set correctly".
+    //
+    // The ApiKeyId attribute of the CustomersTable item must already exist if
+    // the item itself exists; if not, it will be updated later by
+    // `ensureApiKeyForCustomer`. So we can safely pass a dummy here while
+    // upholding the invariant.
+    await promisify2(customersController.ensureCustomerItem)(
+      cognitoIdentityId,
+      cognitoUserId,
+      'NO_API_KEY',
+    )
+    await customersController.ensureApiKeyForCustomer({
+      userId: cognitoUserId,
+      identityId: cognitoIdentityId,
+    })
+  } catch (error) {
+    console.log(`error: ${error}`)
+    res.status(500).json(error)
+    return
   }
 
-  // ensure an API Key exists for this customer and that the Cognito identity and API Key Id are tracked in DDB
-  customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, data => {
-    console.log(`Get Api Key data ${JSON.stringify(data)}`)
-
-    if (data.items.length === 0) {
-      console.log(`No API Key found for customer ${cognitoIdentityId}`)
-
-      customersController.createApiKey(
-        cognitoIdentityId,
-        cognitoUserId,
-        errFunc,
-        createData => {
-          console.log(
-            `Create API Key data: ${JSON.stringify(createData, null, 4)}`,
-          )
-          const keyId = createData.id
-
-          console.log(`Got key ID ${keyId}`)
-
-          customersController
-            .ensureCustomerItem(
-              cognitoIdentityId,
-              cognitoUserId,
-              keyId,
-              errFunc,
-            )
-            .then(() => res.status(200).json({}))
-        },
-      )
-    } else {
-      const keyId = data.items[0].id
-
-      customersController
-        .ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc)
-        .then(() => res.status(200).json({}))
-    }
-  })
+  res.status(200).json({})
 }
 
 function getCatalog(req, res) {
@@ -419,28 +405,22 @@ async function getSdk(req, res) {
     catalogObject = findApiInCatalog(restApiId, stageName, await catalog())
 
   if (!catalogObject) {
-    res
-      .status(400)
-      .json({
-        message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.`,
-      })
+    res.status(400).json({
+      message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.`,
+    })
   } else if (!catalogObject.sdkGeneration) {
-    res
-      .status(400)
-      .json({
-        message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.`,
-      })
+    res.status(400).json({
+      message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.`,
+    })
   } else {
     let parameters = req.query.parameters
     if (typeof parameters === 'string') {
       try {
         parameters = JSON.parse(parameters)
       } catch (e) {
-        return res
-          .status(400)
-          .json({
-            message: `Input parameters for API with ID (${restApiId}) and Stage (${stageName}) were a string, but not parsable JSON: ${parameters}`,
-          })
+        return res.status(400).json({
+          message: `Input parameters for API with ID (${restApiId}) and Stage (${stageName}) were a string, but not parsable JSON: ${parameters}`,
+        })
       }
     }
     console.log(req.query.parameters)
@@ -636,11 +616,9 @@ async function postAdminCatalogVisibility(req, res) {
     try {
       const swaggerObject = JSON.parse(req.body.swagger)
       if (!(swaggerObject.info && swaggerObject.info.title)) {
-        res
-          .status(400)
-          .json({
-            message: 'Invalid input. API specification file must have a title.',
-          })
+        res.status(400).json({
+          message: 'Invalid input. API specification file must have a title.',
+        })
       }
 
       console.log(`Given the input of type ${typeof swaggerObject}:`)
@@ -791,6 +769,162 @@ async function deleteAdminCatalogSdkGeneration(req, res) {
   await exports.idempotentSdkGenerationUpdate(false, req.params.id, res)
 }
 
+const makeErrorResponse = (error, message = null) => {
+  const response = { message: message === null ? error.message : message }
+  if (getEnv('DevelopmentMode', 'false') === 'true') {
+    response.stack = error.stack
+  }
+  return response
+}
+
+const ACCOUNT_LIST_METHODS_BY_FILTER = {
+  pendingRequest: customersController.listPendingRequestAccounts,
+  pendingInvite: customersController.listPendingInviteAccounts,
+  admin: customersController.listAdminAccounts,
+  registered: customersController.listRegisteredAccounts,
+}
+
+const getAccounts = async (req, res) => {
+  console.log(`GET /accounts`)
+
+  const filter = req.query['filter']
+  if (!Object.keys(ACCOUNT_LIST_METHODS_BY_FILTER).includes(filter)) {
+    res.status(400).json({
+      message: 'Invalid value for "filter" query parameter.',
+    })
+    return
+  }
+
+  try {
+    const accounts = await ACCOUNT_LIST_METHODS_BY_FILTER[filter]()
+    res.status(200).json({ accounts })
+  } catch (error) {
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
+const approveRequest = async (req, res) => {
+  const userId = req.params.userId
+  if (!(typeof userId === 'string' && userId.length > 0)) {
+    res
+      .status(400)
+      .json({ message: 'Invalid value for "userId" URL parameter.' })
+    return
+  }
+
+  try {
+    await customersController.approveAccountPendingRequest(userId)
+    res.status(200).json({})
+  } catch (error) {
+    console.log('Error:', error)
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
+const denyRequest = async (req, res) => {
+  const userId = req.params.userId
+  if (!(typeof userId === 'string' && userId.length > 0)) {
+    res
+      .status(400)
+      .json({ message: 'Invalid value for "userId" URL parameter.' })
+    return
+  }
+
+  try {
+    await customersController.denyAccountPendingRequest(userId)
+    res.status(200).json({})
+  } catch (error) {
+    console.log('Error:', error)
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
+const deleteAccount = async (req, res) => {
+  const userId = req.params.userId
+  if (!(typeof userId === 'string' && userId.length > 0)) {
+    res
+      .status(400)
+      .json({ message: 'Invalid value for "userId" URL parameter.' })
+    return
+  }
+
+  try {
+    await customersController.deleteAccountByUserId(userId)
+    res.status(200).json({})
+  } catch (error) {
+    console.log('Error:', error)
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
+const promoteAccount = async (req, res) => {
+  const userId = req.params.userId
+
+  if (!(typeof userId === 'string' && userId.length > 0)) {
+    res
+      .status(400)
+      .json({ message: 'Invalid value for "userId" URL parameter.' })
+    return
+  }
+
+  try {
+    const promoterUserId = getCognitoUserId(req)
+    await customersController.addAccountToAdminsGroup({
+      targetUserId: userId,
+      promoterUserId,
+    })
+    res.status(200).json({})
+  } catch (error) {
+    console.log('Error:', error)
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
+const createInvite = async (req, res) => {
+  const { targetEmailAddress } = req.body
+  if (
+    !(typeof targetEmailAddress === 'string' && targetEmailAddress.length > 0)
+  ) {
+    res
+      .status(400)
+      .json({ message: 'Invalid value for "targetEmailAddress" parameter.' })
+    return
+  }
+
+  try {
+    const inviterUserId = getCognitoUserId(req)
+    const preLoginAccount = await customersController.createAccountInvite({
+      targetEmailAddress,
+      inviterUserId,
+    })
+    res.status(200).json(preLoginAccount)
+  } catch (error) {
+    console.log('Error:', error)
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
+const resendInvite = async (req, res) => {
+  const { targetEmailAddress } = req.body
+  if (
+    !(typeof targetEmailAddress === 'string' && targetEmailAddress.length > 0)
+  ) {
+    res
+      .status(400)
+      .json({ message: 'Invalid value for "targetEmailAddress" parameter.' })
+    return
+  }
+
+  try {
+    const inviterUserId = getCognitoUserId(req)
+    await customersController.resendAccountInvite({ targetEmailAddress })
+    res.status(200).json({})
+  } catch (error) {
+    console.log('Error:', error)
+    res.status(500).json(makeErrorResponse(error))
+  }
+}
+
 exports = module.exports = {
   postSignIn,
   getCatalog,
@@ -810,6 +944,13 @@ exports = module.exports = {
   putAdminCatalogSdkGeneration,
   deleteAdminCatalogSdkGeneration,
   idempotentSdkGenerationUpdate,
+  getAccounts,
+  approveRequest,
+  denyRequest,
+  deleteAccount,
+  promoteAccount,
+  createInvite,
+  resendInvite,
   s3: new AWS.S3(),
   apigateway: new AWS.APIGateway(),
   lambda: new AWS.Lambda(),

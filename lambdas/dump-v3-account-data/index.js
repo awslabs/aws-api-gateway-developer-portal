@@ -8,6 +8,7 @@
 
 const AWS = require('aws-sdk')
 const pager = require('dev-portal-common/pager')
+const { getCognitoUserSub } = require('dev-portal-common/get-cognito-user-sub')
 
 const handler = async (_event, _context) => {
   const {
@@ -69,14 +70,6 @@ const fetchAccountData = async ({
     .join('\n')
   return `${ACCOUNT_DATA_TSV_HEADER}\n${accountsAsTsv}\n`
 }
-
-/**
- * Get the `sub` attribute of a UserType object.
- *
- * See https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UserType.html.
- */
-const getCognitoUserSub = user =>
-  user.Attributes.find(attribute => attribute.Name === 'sub').Value
 
 /**
  * Fetches the UserPoolIds of all users in the AdminsGroup.

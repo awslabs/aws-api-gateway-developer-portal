@@ -32,7 +32,7 @@ const RegisteredAccounts = () => {
     setLoading(true)
     setDeleteModalOpen(false)
     try {
-      await AccountService.deleteAccountByIdentityId(selectedAccount.IdentityId)
+      await AccountService.deleteAccountByUserId(selectedAccount.UserId)
       sendMessage(dismiss => (
         <DeleteSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
@@ -54,9 +54,7 @@ const RegisteredAccounts = () => {
     setLoading(true)
     setPromoteModalOpen(false)
     try {
-      await AccountService.promoteAccountByIdentityId(
-        selectedAccount.IdentityId,
-      )
+      await AccountService.promoteAccountByUserId(selectedAccount.UserId)
       sendMessage(dismiss => (
         <PromoteSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))

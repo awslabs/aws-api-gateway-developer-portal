@@ -8,6 +8,7 @@ import { Menu, Image } from 'semantic-ui-react'
 import {
   isAdmin,
   isAuthenticated,
+  isRegistered,
   logout,
   getLoginRedirectUrl,
 } from 'services/self'
@@ -38,9 +39,11 @@ export const NavBar = observer(
               Admin Panel
             </Menu.Item>
           )}
-          <Menu.Item key='dashboard' as={Link} to='/dashboard'>
-            My Dashboard
-          </Menu.Item>
+          {isRegistered() && (
+            <Menu.Item key='dashboard' as={Link} to='/dashboard'>
+              My Dashboard
+            </Menu.Item>
+          )}
           <Menu.Item key='signout' as='a' onClick={logout}>
             Sign Out
           </Menu.Item>

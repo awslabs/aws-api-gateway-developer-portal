@@ -210,7 +210,7 @@ describe('AdminAccounts page', () => {
     ).toHaveLength(0)
   })
 
-  it('filters accounts by promoter identity pool ID', async () => {
+  it('filters accounts by promoter user ID', async () => {
     AccountService.fetchAdminAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ADMINS)
@@ -227,10 +227,10 @@ describe('AdminAccounts page', () => {
     const filterByApiKeyIdOption = rtl.getByText(filterDropdown, 'Promoter')
     rtl.fireEvent.click(filterByApiKeyIdOption)
 
-    rtl.fireEvent.change(filterInput, { target: { value: 'identityId20' } })
+    rtl.fireEvent.change(filterInput, { target: { value: 'userId20' } })
     const expectedEmails = _(MOCK_ADMINS)
-      .filter(({ PromoterIdentityId }) =>
-        (PromoterIdentityId || '').includes('identityId20'),
+      .filter(({ PromoterUserId }) =>
+        (PromoterUserId || '').includes('userId20'),
       )
       .map(({ EmailAddress }) => EmailAddress)
       .sortBy()
@@ -247,7 +247,7 @@ describe('AdminAccounts page', () => {
       ),
     ).toEqual(expectedEmails)
 
-    rtl.fireEvent.change(filterInput, { target: { value: 'identityId30' } })
+    rtl.fireEvent.change(filterInput, { target: { value: 'userId30' } })
     expect(
       accountsTestUtils.queryAllByColumnText(
         table,
@@ -291,7 +291,7 @@ const MOCK_ACCOUNTS = _.range(0, NUM_MOCK_ACCOUNTS, MOCK_ADMIN_STEP).map(
       EmailAddress: `${index}@example.com`,
       DatePromoted: MOCK_DATES_PROMOTED[index],
       PromoterEmailAddress: promoter && `${promoter}@example.com`,
-      PromoterIdentityId: promoter && `identityId${promoter}`,
+      PromoterUserId: promoter && `userId${promoter}`,
       isAdmin: index % MOCK_ADMIN_STEP === 0,
     }
   },

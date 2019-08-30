@@ -53,6 +53,15 @@ app.delete(
   handlers.deleteAdminCatalogSdkGeneration,
 )
 
+// Account management APIs
+app.get('/accounts', handlers.getAccounts)
+app.post('/accounts', handlers.createInvite)
+app.put('/accounts/resendInvite', handlers.resendInvite)
+app.put('/accounts/:userId/approveRequest', handlers.approveRequest)
+app.put('/accounts/:userId/denyRequest', handlers.denyRequest)
+app.put('/accounts/:userId/promoteToAdmin', handlers.promoteAccount)
+app.delete('/accounts/:userId', handlers.deleteAccount)
+
 // The aws-serverless-express library creates a server and listens on a Unix
 // Domain Socket for you, so you can remove the usual call to app.listen.
 // app.listen(3000)

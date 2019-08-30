@@ -17,18 +17,25 @@ import {
 } from 'services/api'
 import * as jwt_decode from 'jwt-decode'
 
-export function isAuthenticated() {
-  return store.idToken
-}
+export const isAuthenticated = () => !!store.idToken
 
-export function isAdmin() {
+const getPreferredRole = () =>
+  jwt_decode(store.idToken)['cognito:preferred_role'] || ''
+
+export const isRegistered = () => {
+  if (!store.idToken) {
+    return false
+  }
+
+  const role = getPreferredRole()
   return (
-    store.idToken &&
-    `${jwt_decode(store.idToken)['cognito:preferred_role']}`.includes(
-      '-CognitoAdminRole-',
-    )
+    role.includes('-CognitoAdminRole-') ||
+    role.includes('-CognitoRegisteredRole-')
   )
 }
+
+export const isAdmin = () =>
+  store.idToken && getPreferredRole().includes('-CognitoAdminRole-')
 
 export function init() {
   initApiGatewayClient() // init a blank client (will get overwritten if we have creds)

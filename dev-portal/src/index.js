@@ -27,7 +27,7 @@ import NavBar from 'components/NavBar'
 import Feedback from './components/Feedback'
 import ApiSearch from './components/ApiSearch'
 
-import { isAdmin, init, login, logout } from 'services/self'
+import { isAdmin, isRegistered, init, login, logout } from 'services/self'
 import './index.css'
 
 loadFragments()
@@ -36,6 +36,15 @@ loadFragments()
 // the following is true && the current
 // user is not an administrator
 const feedbackEnabled = window.config.feedbackEnabled
+
+export const RegisteredRoute = ({ component: Component, ...rest }) => (
+  <Route
+    {...rest}
+    render={props =>
+      isRegistered() ? <Component {...props} /> : <Redirect to='/' />
+    }
+  />
+)
 
 export const AdminRoute = ({ component: Component, ...rest }) => (
   <Route
@@ -81,7 +90,7 @@ class App extends React.Component {
               }}
             />
             <Route path='/getting-started' component={GettingStarted} />
-            <Route path='/dashboard' component={Dashboard} />
+            <RegisteredRoute path='/dashboard' component={Dashboard} />
             <AdminRoute path='/admin' component={Admin} />
             <Route exact path='/apis' component={Apis} />
             <Route exact path='/apis/search' component={ApiSearch} />

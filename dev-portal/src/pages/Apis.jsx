@@ -11,7 +11,7 @@ import 'swagger-ui/dist/swagger-ui.css'
 import { Container, Header, Icon } from 'semantic-ui-react'
 
 // services
-import { isAuthenticated } from 'services/self'
+import { isRegistered } from 'services/self'
 import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog'
 
 // components
@@ -38,20 +38,32 @@ export default observer(
         this.props.match.params.stage,
       ).then(api => {
         if (api) {
+          let cell = {
+            shouldPreauthorizeApiKey: false,
+            preauthorizeApiKey: () => {
+              cell.shouldPreauthorizeApiKey = true
+            },
+          }
           let swaggerUiConfig = {
             dom_id: '#swagger-ui-container',
             plugins: [SwaggerLayoutPlugin],
             supportedSubmitMethods: [],
             spec: api.swagger,
-            onComplete: () => {
-              if (store.apiKey)
-                uiHandler.preauthorizeApiKey('api_key', store.apiKey)
-            },
+            onComplete: () => cell.preauthorizeApiKey(),
           }
-          if (isAuthenticated()) {
+          if (isRegistered()) {
             delete swaggerUiConfig.supportedSubmitMethods
           }
+
           let uiHandler = SwaggerUI(swaggerUiConfig)
+          cell.preauthorizeApiKey = () => {
+            if (store.apiKey) {
+              uiHandler.preauthorizeApiKey('api_key', store.apiKey)
+            }
+          }
+          if (cell.shouldPreauthorizeApiKey) {
+            cell.preauthorizeApiKey()
+          }
         }
       })
     }
