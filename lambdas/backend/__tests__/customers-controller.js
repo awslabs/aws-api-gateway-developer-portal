@@ -2,95 +2,104 @@ const customers = require('dev-portal-common/customers-controller')
 const promiser = require('../../setup-jest').promiser
 
 describe('customersController', () => {
-    test('ensureCustomerItem verifies that DDB is up-to-date', async () => {
-        let error = jest.fn(),
-            callback = jest.fn(),
-            entry = {
-                Id: 'cognitoIdentityId',
-                UserPoolId: 'cognitoUserId',
-                ApiKeyId: 'keyId'
-            }
+  test('ensureCustomerItem verifies that DDB is up-to-date', async () => {
+    let error = jest.fn(),
+      callback = jest.fn(),
+      entry = {
+        Id: 'cognitoIdentityId',
+        UserPoolId: 'cognitoUserId',
+        ApiKeyId: 'keyId',
+      }
+    process.env['PreLoginAccountsTableName'] = 'PreLoginAccountsTable'
 
-        customers.dynamoDb.get = jest.fn().mockReturnValue(promiser({ Item: entry }))
-
-        let returnValue = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId', 'keyId', error, callback)
-
-        expect(customers.dynamoDb.get).toHaveBeenCalledTimes(1)
-        expect(customers.dynamoDb.get).toHaveBeenCalledWith({
-            TableName: 'DevPortalCustomers',
-            Key: {
-                Id: 'cognitoIdentityId'
-            }
-        })
-
-        expect(returnValue).toEqual(entry)
+    customers.dynamoDb.get = jest.fn().mockImplementation(({ TableName }) => {
+      if (TableName === 'DevPortalCustomers') {
+        return promiser({ Item: entry })
+      } else {
+        return promiser({ Items: [] })
+      }
     })
 
-    test('ensureCustomerItem fixes DDB if it is not up-to-date', async () => {
-        let error = jest.fn(),
-            callback = jest.fn(),
-            entry = {
-                Id: 'cognitoIdentityId',
-                UserPoolId: 'cognitoUserId',
-                ApiKeyId: 'keyId'
-            }
+    let returnValue = await customers.ensureCustomerItem(
+      'cognitoIdentityId',
+      'cognitoUserId',
+      'keyId',
+      error,
+      callback,
+    )
 
-        customers.dynamoDb.get = jest.fn().mockReturnValue(promiser({ Item: undefined }))
-
-        customers.dynamoDb.put = jest.fn().mockReturnValue(promiser({}))
-
-        let returnValue = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId', 'keyId', error, callback)
-
-        expect(customers.dynamoDb.get).toHaveBeenCalledTimes(1)
-        expect(customers.dynamoDb.get).toHaveBeenCalledWith({
-            TableName: 'DevPortalCustomers',
-            Key: {
-                Id: 'cognitoIdentityId'
-            }
-        })
-
-        expect(customers.dynamoDb.put).toHaveBeenCalledTimes(1)
-        expect(customers.dynamoDb.put).toHaveBeenCalledWith({
-            TableName: 'DevPortalCustomers',
-            Item: entry
-        })
-
-        expect(returnValue).toEqual(entry)
+    expect(customers.dynamoDb.get).toHaveBeenCalledTimes(2)
+    expect(customers.dynamoDb.get).toHaveBeenCalledWith({
+      TableName: 'PreLoginAccountsTable',
+      Key: {
+        UserId: 'cognitoUserId',
+      },
+    })
+    expect(customers.dynamoDb.get).toHaveBeenCalledWith({
+      TableName: 'DevPortalCustomers',
+      Key: {
+        Id: 'cognitoIdentityId',
+      },
     })
 
-    test('ensureCustomerItem backfills UserPoolId', async () => {
-        let error = jest.fn(),
-            callback = jest.fn(),
-            oldEntry = {
-                Id: 'cognitoIdentityId',
-                ApiKeyId: 'keyId'
-            },
-            entry = {
-                Id: 'cognitoIdentityId',
-                UserPoolId: 'cognitoUserId',
-                ApiKeyId: 'keyId'
-            }
+    expect(returnValue).toEqual(entry)
+  })
 
-        customers.dynamoDb.get = jest.fn().mockReturnValue(promiser({ Item: oldEntry }))
+  test('ensureCustomerItem fixes DDB if it is not up-to-date', async () => {
+    let error = jest.fn()
+    let callback = jest.fn()
 
-        customers.dynamoDb.put = jest.fn().mockReturnValue(promiser({}))
+    process.env['PreLoginAccountsTableName'] = 'PreLoginAccountsTable'
 
-        let returnValue = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId', 'keyId', error, callback)
+    customers.dynamoDb.get = jest
+      .fn()
+      .mockImplementation(({ TableName }) => {
+        if (TableName === 'PreLoginAccountsTable') {
+          return promiser({
+            UserId: 'cognitoUserId',
+            RegistrationStatus: 'registered',
+          })
+        } else if (TableName === 'CustomersTable') {
+          return promiser({})
+        }
+      })
 
-        expect(customers.dynamoDb.get).toHaveBeenCalledTimes(1)
-        expect(customers.dynamoDb.get).toHaveBeenCalledWith({
-            TableName: 'DevPortalCustomers',
-            Key: {
-                Id: 'cognitoIdentityId'
-            }
-        })
+    customers.dynamoDb.put = jest.fn().mockReturnValue(promiser({}))
 
-        expect(customers.dynamoDb.put).toHaveBeenCalledTimes(1)
-        expect(customers.dynamoDb.put).toHaveBeenCalledWith({
-            TableName: 'DevPortalCustomers',
-            Item: entry
-        })
+    let returnValue = await customers.ensureCustomerItem(
+      'cognitoIdentityId',
+      'cognitoUserId',
+      'keyId',
+      error,
+      callback,
+    )
 
-        expect(returnValue).toEqual(entry)
+    // Once for PreLoginAccountsTable, once for CustomersTable
+    expect(customers.dynamoDb.get).toHaveBeenCalledTimes(2)
+    expect(customers.dynamoDb.get).toHaveBeenCalledWith({
+      TableName: 'PreLoginAccountsTable',
+      Key: {
+        UserId: 'cognitoUserId',
+      },
     })
+    expect(customers.dynamoDb.get).toHaveBeenCalledWith({
+      TableName: 'DevPortalCustomers',
+      Key: {
+        Id: 'cognitoIdentityId',
+      },
+    })
+
+    const expectedPutItem = {
+      TableName: 'DevPortalCustomers',
+      Item: {
+        Id: 'cognitoIdentityId',
+        UserPoolId: 'cognitoUserId',
+        RegistrationStatus: 'registered',
+      },
+    }
+    expect(customers.dynamoDb.put).toHaveBeenCalledTimes(1)
+    expect(customers.dynamoDb.put).toHaveBeenCalledWith(expectedPutItem)
+
+    expect(returnValue).toEqual(expectedPutItem)
+  })
 })

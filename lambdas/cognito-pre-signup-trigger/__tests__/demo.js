@@ -1,11 +1,10 @@
-const confirmationStrategy = require('../index')
+const index = require('../index')
 
-test('should always confirm users', () => {
-    const mockCallback = jest.fn(),
-          event = {}
-
-    confirmationStrategy.handler(event, {}, mockCallback)
-
-    expect(mockCallback).toHaveBeenCalledTimes(1)
-    expect(mockCallback).toHaveBeenCalledWith(null, { response: { autoConfirmUser: true } })
-});
+test('should always confirm users', async () => {
+  const event = {
+    userName: 'username',
+    request: { userAttributes: {} },
+  }
+  const result = await index.handler(event)
+  expect(result).toEqual(event)
+})
