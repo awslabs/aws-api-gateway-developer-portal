@@ -492,7 +492,7 @@ async function postAdminCatalogVisibility(req, res) {
         // try {
             let swagger = await exports.apigateway.getExport({
                 restApiId: req.body.apiKey.split('_')[0],
-                stageName: req.body.apiKey.split('_')[1],
+                stageName: req.body.apiKey.substr(req.body.apiKey.indexOf('_') + 1),
                 exportType: 'swagger',
                 parameters: {
                     "extensions": "apigateway"
