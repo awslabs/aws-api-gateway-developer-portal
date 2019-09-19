@@ -280,7 +280,7 @@ describe('postAdminCatalogVisibility', () => {
         expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Success' })
     })
 
-    test('exports and uploads swagger doc for api gateway managed apis with underscore in stage name', async () => {
+    test('exports and uploads swagger doc for subscribable api gateway managed apis with underscore in stage name', async () => {
         let req = generateRequestContext()
         req.body = { apiKey: 'a1b2c3_prod_1', subscribable: true }
 
@@ -315,6 +315,41 @@ describe('postAdminCatalogVisibility', () => {
         expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Success' })
     })
 
+    test('exports and uploads swagger doc for unsubscribable api gateway managed apis with underscore in stage name', async () => {
+        let req = generateRequestContext()
+        req.body = { apiKey: 'a1b2c3_prod_1', subscribable: false }
+
+        apigateway.getExport = jest.fn().mockReturnValue(promiser({
+            body: {
+                message: 'swagger document'
+            }
+        }))
+
+        s3.upload = jest.fn().mockReturnValue(promiser())
+
+        process.env.StaticBucketName = 'myBucket'
+
+        await postAdminCatalogVisibility(req, mockResponseObject)
+
+        expect(apigateway.getExport).toHaveBeenCalledWith({
+            restApiId: 'a1b2c3',
+            stageName: 'prod_1',
+            exportType: 'swagger',
+            parameters: {
+                extensions: 'apigateway'
+            }
+        })
+
+        expect(s3.upload).toHaveBeenCalledWith({
+            Bucket: 'myBucket',
+            Key: 'catalog/unsubscribable_a1b2c3_prod_1.json',
+            Body: { message: 'swagger document' }
+        })
+
+        expect(mockResponseObject.status).toHaveBeenCalledWith(200)
+        expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Success' })
+    })
+
     test('uploads swagger doc for generic apis', async () => {
         let req = generateRequestContext()
         req.body = { swagger: JSON.stringify({ message: 'swagger document' }) }
@@ -335,6 +370,7 @@ describe('postAdminCatalogVisibility', () => {
         expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Success' })
     })
 
+
     test('rejects requests without apiKey or swagger fields', async () => {
         let req = generateRequestContext()
 
@@ -342,6 +378,16 @@ describe('postAdminCatalogVisibility', () => {
 
         expect(mockResponseObject.status).toHaveBeenCalledWith(400)
         expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Invalid input' })
+    })
+
+    test('rejects requests with apiKey without underscore', async () => {
+        let req = generateRequestContext()
+        req.body = { apiKey: 'a1b2c3', subscribable: false}
+
+        await postAdminCatalogVisibility(req, mockResponseObject)
+
+        expect(mockResponseObject.status).toHaveBeenCalledWith(500)
+        expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Internal Server Error' })
     })
 })
 

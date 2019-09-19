@@ -483,16 +483,23 @@ async function getAdminCatalogVisibility(req, res) {
     }
 }
 
+function stageName(apiKey){
+    if(apiKey.indexOf('_') < 0){
+        throw new Error('Expected apiKey format to be apiId_stageName')
+    }
+    return apiKey.substr(apiKey.indexOf('_') + 1);
+}
+
 async function postAdminCatalogVisibility(req, res) {
     console.log(`POST /admin-catalog-visibility for Cognito ID: ${getCognitoIdentityId(req)}`)
 
     // for apigateway managed APIs, provide "apiId_stageName"
     // in the apiKey field
     if(req.body && req.body.apiKey) {
-        // try {
+        try {
             let swagger = await exports.apigateway.getExport({
                 restApiId: req.body.apiKey.split('_')[0],
-                stageName: req.body.apiKey.substr(req.body.apiKey.indexOf('_') + 1),
+                stageName: stageName(req.body.apiKey),
                 exportType: 'swagger',
                 parameters: {
                     "extensions": "apigateway"
@@ -510,10 +517,10 @@ async function postAdminCatalogVisibility(req, res) {
                     Body: swagger.body
                 }
     
-            } else if (req.body.subscribable === 'false') {
+            } else if (req.body.subscribable === 'false' || req.body.subscribable === false) {
                 params = {
                     Bucket: process.env.StaticBucketName,
-                    Key: `catalog/unsubscribable_${req.body.apiKey.split('_')[0]}_${req.body.apiKey.split('_')[1]}.json`,
+                    Key: `catalog/unsubscribable_${req.body.apiKey.split('_')[0]}_${stageName(req.body.apiKey)}.json`,
                     Body: swagger.body
                 }
             }
@@ -522,7 +529,11 @@ async function postAdminCatalogVisibility(req, res) {
             await exports.s3.upload(params).promise()
 
             res.status(200).json({ message: 'Success' })
-        // }
+        }catch(error){
+            console.error(error)
+            res.status(500).json({ message: 'Internal Server Error' })
+            return
+        }
 
     // for generic swagger, just provide the swagger body
     } else if(req.body && req.body.swagger) {
