@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 'use strict';
-const controller = require('./_common/customers-controller.js')
+const controller = require('dev-portal-common/customers-controller')
 
 console.log("starting listener function")
 

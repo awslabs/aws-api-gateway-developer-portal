@@ -1,7 +1,7 @@
 'use strict';
 
 let AWS = require('aws-sdk'),
-    notifyCFN = require('./notify-cfn'),
+    notifyCFN = require('dev-portal-common/notify-cfn'),
     fse = require('fs-extra'),
     klaw = require('klaw'),
     through = require('through2'),
