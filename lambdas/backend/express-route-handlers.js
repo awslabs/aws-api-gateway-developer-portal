@@ -1,9 +1,9 @@
-const customersController = require('./_common/customers-controller.js')
-const feedbackController = require('./_common/feedback-controller.js')
+const customersController = require('dev-portal-common/customers-controller')
+const feedbackController = require('dev-portal-common/feedback-controller')
 const AWS = require('aws-sdk')
 const catalog = require('./catalog/index')
 const hash = require('object-hash')
-const { getAllUsagePlans } = require('./shared/get-all-usage-plans')
+const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
 
 const Datauri = require('datauri')
 
