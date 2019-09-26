@@ -81,11 +81,27 @@ const PendingInvites = () => {
     ],
   )
 
+  const onConfirmResend = useCallback(async () => {
+    setLoading(true)
+    try {
+      await AccountService.resendInviteByEmail(selectedAccount.EmailAddress)
+      sendMessage(dismiss => (
+        <ResendSuccessMessage account={selectedAccount} dismiss={dismiss} />
+      ))
+    } catch (error) {
+      sendMessage(dismiss => (
+        <ResendFailureMessage account={selectedAccount} dismiss={dismiss} />
+      ))
+    } finally {
+      setLoading(false)
+    }
+  }, [sendMessage, selectedAccount])
+
   const onConfirmDelete = useCallback(async () => {
     setLoading(true)
     closeDeleteModal()
     try {
-      await AccountService.deleteInviteByIdentityId(selectedAccount.IdentityId)
+      await AccountService.deleteInviteByUserId(selectedAccount.UserId)
       sendMessage(dismiss => (
         <DeleteSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
@@ -121,6 +137,8 @@ const PendingInvites = () => {
         <TableActions
           canCreate={!loading}
           onClickCreate={openCreateModal}
+          canResend={!loading && selectedAccount}
+          onClickResend={onConfirmResend}
           canDelete={!loading && selectedAccount}
           onClickDelete={openDeleteModal}
         />
@@ -145,6 +163,8 @@ export default PendingInvites
 const TableActions = ({
   canCreate,
   onClickCreate,
+  canResend,
+  onClickResend,
   canDelete,
   onClickDelete,
 }) => (
@@ -154,6 +174,7 @@ const TableActions = ({
       disabled={!canCreate}
       onClick={onClickCreate}
     />
+    <Button content='Resend' disabled={!canResend} onClick={onClickResend} />
     <Button content='Delete' disabled={!canDelete} onClick={onClickDelete} />
   </Button.Group>
 )
@@ -247,6 +268,26 @@ const CreateFailureMessage = ({ emailAddress, errorMessage, dismiss }) => (
     <Message.Content>
       <p>
         Failed to send account invite to <strong>{emailAddress}</strong>.
+      </p>
+      {errorMessage && <p>Error message: {errorMessage}</p>}
+    </Message.Content>
+  </Message>
+)
+
+const ResendSuccessMessage = ({ account, dismiss }) => (
+  <Message onDismiss={dismiss} positive>
+    <Message.Content>
+      Resent account invite to <strong>{account.EmailAddress}</strong>.
+    </Message.Content>
+  </Message>
+)
+
+const ResendFailureMessage = ({ account, errorMessage, dismiss }) => (
+  <Message onDismiss={dismiss} negative>
+    <Message.Content>
+      <p>
+        Failed to resend account invite to{' '}
+        <strong>{account.EmailAddress}</strong>.
       </p>
       {errorMessage && <p>Error message: {errorMessage}</p>}
     </Message.Content>

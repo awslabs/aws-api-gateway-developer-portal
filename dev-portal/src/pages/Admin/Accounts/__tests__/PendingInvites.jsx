@@ -216,12 +216,12 @@ describe('PendingInvites page', () => {
       .fn()
       .mockImplementation(emailAddress => {
         createdAccounts.push({
-          IdentityId: `createedIdentityId${createdAccounts.length}`,
+          IdentityId: `createdIdentityId${createdAccounts.length}`,
           UserId: `createdUserId${createdAccounts.length}`,
           EmailAddress: emailAddress,
           DateInvited: new Date(),
           InviterEmailAddress: 'you@example.com',
-          InviterIdentityId: 'me',
+          InviterUserId: 'me',
         })
       })
 
@@ -347,20 +347,20 @@ describe('PendingInvites page', () => {
   })
 
   it('deletes an invite', async () => {
-    const deletedIdentityIds = []
+    const deletedUserIds = []
     AccountService.fetchPendingInviteAccounts = jest
       .fn()
       .mockImplementation(() =>
         Promise.resolve(
           MOCK_ACCOUNTS.filter(
-            ({ IdentityId }) => !deletedIdentityIds.includes(IdentityId),
+            ({ UserId }) => !deletedUserIds.includes(UserId),
           ),
         ),
       )
-    AccountService.deleteInviteByIdentityId = jest
+    AccountService.deleteInviteByUserId = jest
       .fn()
-      .mockImplementation(identityId => {
-        deletedIdentityIds.push(identityId)
+      .mockImplementation(userId => {
+        deletedUserIds.push(userId)
       })
 
     const page = renderPage()
@@ -418,7 +418,7 @@ describe('PendingInvites page', () => {
     AccountService.fetchPendingInviteAccounts = jest
       .fn()
       .mockResolvedValue(MOCK_ACCOUNTS)
-    AccountService.deleteInviteByIdentityId = jest
+    AccountService.deleteInviteByUserId = jest
       .fn()
       .mockRejectedValue(new Error('Target lost.'))
 
@@ -482,5 +482,5 @@ const MOCK_ACCOUNTS = MOCK_INVITERS.map((inviter, index) => ({
   EmailAddress: `${index}@example.com`,
   DateInvited: MOCK_DATES_INVITED[index],
   InviterEmailAddress: inviter && `${inviter}@example.com`,
-  InviterIdentityId: inviter && `identityId${inviter}`,
+  InviterUserId: inviter && `userId${inviter}`,
 }))

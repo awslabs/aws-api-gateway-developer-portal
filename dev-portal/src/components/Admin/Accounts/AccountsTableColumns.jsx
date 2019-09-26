@@ -61,22 +61,22 @@ export const ApiKeyId = {
 export const Promoter = {
   id: 'Promoter',
   title: 'Promoter',
-  render: ({ PromoterIdentityId, PromoterEmailAddress }) =>
-    PromoterIdentityId ? `${PromoterEmailAddress} (${PromoterIdentityId})` : '',
+  render: ({ PromoterUserId, PromoterEmailAddress }) =>
+    PromoterUserId ? `${PromoterEmailAddress} (${PromoterUserId})` : '',
   filtering: {
-    accessor: ({ PromoterIdentityId, PromoterEmailAddress }) =>
-      PromoterIdentityId ? `${PromoterEmailAddress} ${PromoterIdentityId}` : '',
+    accessor: ({ PromoterUserId, PromoterEmailAddress }) =>
+      PromoterUserId ? `${PromoterEmailAddress} ${PromoterUserId}` : '',
   },
 }
 
 export const Inviter = {
   id: 'Inviter',
   title: 'Inviter',
-  render: ({ InviterIdentityId, InviterEmailAddress }) =>
-    InviterIdentityId ? `${InviterEmailAddress} (${InviterIdentityId})` : '',
+  render: ({ InviterUserId, InviterEmailAddress }) =>
+    InviterUserId ? `${InviterEmailAddress} (${InviterUserId})` : '',
   filtering: {
-    accessor: ({ InviterIdentityId, InviterEmailAddress }) =>
-      InviterIdentityId ? `${InviterEmailAddress} ${InviterIdentityId}` : '',
+    accessor: ({ InviterUserId, InviterEmailAddress }) =>
+      InviterUserId ? `${InviterEmailAddress} ${InviterUserId}` : '',
   },
 }
 

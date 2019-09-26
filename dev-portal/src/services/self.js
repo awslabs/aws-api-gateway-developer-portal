@@ -6,17 +6,36 @@ import AWS from 'aws-sdk'
 // services
 import { store } from 'services/state'
 import { updateAllUserData } from 'services/api-catalog'
-import { initApiGatewayClient, apiGatewayClient, cognitoDomain, cognitoIdentityPoolId, cognitoUserPoolId, cognitoClientId, cognitoRegion } from 'services/api'
-import * as jwt_decode from "jwt-decode";
+import {
+  initApiGatewayClient,
+  apiGatewayClient,
+  cognitoDomain,
+  cognitoIdentityPoolId,
+  cognitoUserPoolId,
+  cognitoClientId,
+  cognitoRegion,
+} from 'services/api'
+import * as jwt_decode from 'jwt-decode'
 
-export function isAuthenticated() {
-  return store.idToken
+export const isAuthenticated = () => !!store.idToken
+
+const getPreferredRole = () =>
+  jwt_decode(store.idToken)['cognito:preferred_role'] || ''
+
+export const isRegistered = () => {
+  if (!store.idToken) {
+    return false
+  }
+
+  const role = getPreferredRole()
+  return (
+    role.includes('-CognitoAdminRole-') ||
+    role.includes('-CognitoRegisteredRole-')
+  )
 }
 
-export function isAdmin() {
-  return store.idToken &&
-  `${jwt_decode(store.idToken)['cognito:preferred_role']}`.includes('-CognitoAdminRole-')
-}
+export const isAdmin = () =>
+  store.idToken && getPreferredRole().includes('-CognitoAdminRole-')
 
 export function init() {
   initApiGatewayClient() // init a blank client (will get overwritten if we have creds)
@@ -29,7 +48,8 @@ export function init() {
 
   try {
     idToken = localStorage.getItem(cognitoUserPoolId)
-    if (idToken) { // this `if` prevents console.error spam
+    if (idToken) {
+      // this `if` prevents console.error spam
       parsedToken = jwt_decode(idToken)
       valid = parsedToken.exp * 1000 > new Date()
     }
@@ -60,7 +80,8 @@ export function login() {
           if (param[0] === 'access_token') accessToken = param[1]
         })
 
-      if (idToken) { // we get both, we set both, but we only really care about the idToken
+      if (idToken) {
+        // we get both, we set both, but we only really care about the idToken
         username = jwt_decode(idToken)['cognito:username']
 
         localStorage.setItem(cognitoUserPoolId, idToken)
@@ -77,25 +98,26 @@ export function login() {
   })
 }
 
-export const getLoginRedirectUrl = () => `${window.location.protocol}//${window.location.host}/index.html?action=login`
-export const getLogoutRedirectUrl = () => `${window.location.protocol}//${window.location.host}/index.html?action=logout`
+export const getLoginRedirectUrl = () =>
+  `${window.location.protocol}//${window.location.host}/index.html?action=login`
+export const getLogoutRedirectUrl = () =>
+  `${window.location.protocol}//${window.location.host}/index.html?action=logout`
 
 function setCredentials() {
   let preferred_role = jwt_decode(store.idToken)['cognito:preferred_role']
   let params = {
     IdentityPoolId: cognitoIdentityPoolId,
     Logins: {
-      [`cognito-idp.${cognitoRegion}.amazonaws.com/${cognitoUserPoolId}`]: store.idToken
-    }
+      [`cognito-idp.${cognitoRegion}.amazonaws.com/${cognitoUserPoolId}`]: store.idToken,
+    },
   }
 
-  if (preferred_role)
-    params.RoleArn = preferred_role
+  if (preferred_role) params.RoleArn = preferred_role
 
   AWS.config.credentials = new AWS.CognitoIdentityCredentials(params)
 
   return new Promise((resolve, reject) => {
-    AWS.config.credentials.refresh((error) => {
+    AWS.config.credentials.refresh(error => {
       if (error) {
         console.error(error)
         return reject(error)
@@ -103,9 +125,10 @@ function setCredentials() {
 
       initApiGatewayClient(AWS.config.credentials)
       updateAllUserData()
-  
-      return apiGatewayClient()
-        .then(apiGatewayClient => apiGatewayClient.post('/signin', {}, {}, {}))
+
+      return apiGatewayClient().then(apiGatewayClient =>
+        apiGatewayClient.post('/signin', {}, {}, {}),
+      )
     })
   })
 }
