@@ -17,6 +17,7 @@ import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
 // components
 import ApisMenu from 'components/ApisMenu'
 import SwaggerLayoutPlugin from 'components/SwaggerUiLayout'
+import PageWithSidebar from 'components/PageWithSidebar'
 
 // state
 import { store } from 'services/state.js'
@@ -63,9 +64,9 @@ export default observer(class ApisPage extends React.Component {
     }
 
     return (
-      <div style={{ display: "flex", flex: "1 1 auto", overflow: "hidden" }}>
-        <ApisMenu path={this.props.match} />
-        <div className="swagger-section" style={{ flex: "1 1 auto", overflow: 'auto' }}>
+      <PageWithSidebar
+        sidebarContent={<ApisMenu path={this.props.match} />}
+        SidebarPusherProps={{className: "swagger-section"}}>
           <div className="swagger-ui-wrap" id="swagger-ui-container" style={{ padding: "0 20px" }}>
             {errorHeader && errorBody && (
               <React.Fragment>
@@ -79,8 +80,7 @@ export default observer(class ApisPage extends React.Component {
               </React.Fragment>
             )}
           </div>
-        </div>
-      </div>
+        </PageWithSidebar>
     )
   }
 })
