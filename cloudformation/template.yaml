@@ -984,7 +984,7 @@ Resources:
       Handler: index.handler
       MemorySize: 1024
       Role: !GetAtt BackendLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 30
       Environment:
         Variables:
@@ -1018,7 +1018,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt BackendLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 30
 
   CognitoUserPoolsConfirmationStrategyFunction:
@@ -1028,7 +1028,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt CognitoStrategyLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 3
 
   CognitoUserPool:
@@ -1094,7 +1094,7 @@ Resources:
   CognitoUserPoolClientSettingsBackingFn:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       MemorySize: 128
       Timeout: 300
       CodeUri: ../lambdas/cfn-cognito-user-pools-client-settings
@@ -1174,7 +1174,7 @@ Resources:
   CognitoUserPoolDomainBackingFn:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       MemorySize: 128
       Timeout: 300
       CodeUri: ../lambdas/cfn-cognito-user-pools-domain
@@ -1307,7 +1307,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt CatalogUpdaterLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 20
       Environment:
         Variables:
@@ -1329,7 +1329,7 @@ Resources:
       Handler: index.handler
       MemorySize: 512
       Role: !GetAtt AssetUploaderLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 300
       Environment:
         Variables:
