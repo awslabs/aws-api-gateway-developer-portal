@@ -350,7 +350,7 @@ async function getSdk(req, res) {
     // this is important because the lambda function has permission to fetch any API's SDK
     // we don't want to leak customer API shapes if they have privileged APIs not in the catalog
     let restApiId = req.params.id.split('_')[0],
-        stageName = req.params.id.split('_')[1],
+        stageName = stageName(req.params.id),
         catalogObject = findApiInCatalog(restApiId, stageName, await catalog())
 
     if(!catalogObject) {
@@ -577,7 +577,7 @@ async function deleteAdminCatalogVisibility(req, res) {
 
         catalogObject.apiGateway.forEach((usagePlan) => {
             usagePlan.apis.forEach((api) => {
-                if(api.id === req.params.id.split('_')[0] && api.stage === req.params.id.split('_')[1]) {
+                if(api.id === req.params.id.split('_')[0] && api.stage === stageName(req.params.id)) {
                     unsubscribable = false
                 }
             })

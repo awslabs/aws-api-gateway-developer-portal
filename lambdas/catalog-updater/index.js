@@ -83,9 +83,9 @@ function getSwaggerFile(file) {
         console.log(`File ${file.Key} was saved with an API_STAGE name of ${result.apiStageKey}.`)
       }
       else if (file.Key.replace('catalog/', '').match(isUnsubscribableApiStageKeyRegex)) {
-        result.apiId = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[0]
-        result.stage = file.Key.replace('catalog/unsubscribable_', '').split('.')[0].split('_')[1]
-        result.generic = true
+        const apiStageKey = file.Key.replace('catalog/unsubscribable_', '').split('.')[0]
+        result.apiId = apiStageKey.split('_')[0]
+        result.stage = apiStageKey.substr(apiStageKey.indexOf('_') + 1)
         result.id = hash(result.body)
       }
       // if the file wasn't saved with its name as an API_STAGE key, assume it's a generic api
