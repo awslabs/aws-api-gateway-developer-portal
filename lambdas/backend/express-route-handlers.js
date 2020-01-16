@@ -40,6 +40,13 @@ function getCognitoKey(req) {
     return req.apiGateway.event.requestContext.authorizer.claims.iss + ' ' + getCognitoUsername(req)
 }
 
+function stageName(apiKey){
+    if(apiKey.indexOf('_') < 0){
+        throw new Error('Expected apiKey format to be apiId_stageName')
+    }
+    return apiKey.substr(apiKey.indexOf('_') + 1);
+}
+
 function getUsagePlanFromCatalog(usagePlanId) {
     return catalog()
         .then((catalog) => catalog.apiGateway.find(usagePlan => usagePlan.id === usagePlanId))
@@ -481,13 +488,6 @@ async function getAdminCatalogVisibility(req, res) {
         // TODO: Should this be 'error' or 'message'?
         res.status(500).json({ error: 'Internal Server Error' })
     }
-}
-
-function stageName(apiKey){
-    if(apiKey.indexOf('_') < 0){
-        throw new Error('Expected apiKey format to be apiId_stageName')
-    }
-    return apiKey.substr(apiKey.indexOf('_') + 1);
 }
 
 async function postAdminCatalogVisibility(req, res) {
