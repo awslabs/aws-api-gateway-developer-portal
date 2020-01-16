@@ -357,18 +357,18 @@ async function getSdk(req, res) {
     // this is important because the lambda function has permission to fetch any API's SDK
     // we don't want to leak customer API shapes if they have privileged APIs not in the catalog
     let restApiId = req.params.id.split('_')[0],
-        stageName = stageName(req.params.id),
-        catalogObject = findApiInCatalog(restApiId, stageName, await catalog())
+        extractedStageName = stageName(req.params.id),
+        catalogObject = findApiInCatalog(restApiId, extractedStageName, await catalog())
 
     if(!catalogObject) {
-        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.` })
+        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${extractedStageName}) could not be found.` })
     } else if(!catalogObject.sdkGeneration) {
-        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.` })
+        res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${extractedStageName}) is not enabled for SDK generation.` })
     } else {
         let parameters = req.query.parameters
         if (typeof parameters === 'string') {
             try { parameters = JSON.parse(parameters) } catch (e) {
-                return res.status(400).json({ message: `Input parameters for API with ID (${restApiId}) and Stage (${stageName}) were a string, but not parsable JSON: ${parameters}` })
+                return res.status(400).json({ message: `Input parameters for API with ID (${restApiId}) and Stage (${extractedStageName}) were a string, but not parsable JSON: ${parameters}` })
             }
         }
         console.log(req.query.parameters)
@@ -376,7 +376,7 @@ async function getSdk(req, res) {
         let resultsBuffer = (await exports.apigateway.getSdk({
             restApiId,
             sdkType: req.query.sdkType,
-            stageName,
+            stageName: extractedStageName,
             parameters
         }).promise()).body
 
