@@ -386,9 +386,8 @@ async function getAdminCatalogVisibility(req, res) {
 
         let visibility = { apiGateway: [] },
             catalogObject = await catalog(),
-            apis = (await exports.apigateway.getRestApis().promise()).items
+            apis = (await exports.apigateway.getRestApis({limit: 500}).promise()).items
 
-        console.log(`network request: ${JSON.stringify(apis, null, 4)}`)
         console.log(`apis: ${JSON.stringify(apis, null, 4)}`)
 
         let promises = []
