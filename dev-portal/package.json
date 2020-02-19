@@ -26,7 +26,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build; rm -rf ../lambdas/static-asset-uploader/build; cp -r ./build ../lambdas/static-asset-uploader",
     "deploy": "node ./scripts/deploy-stack.js",
-    "write-config": "node -e 'require(\"./scripts/write-config.js\")(true)'",
+    "write-config": "node ./scripts/write-config.js",
     "release": "npm run build && npm run deploy",
     "test": "react-scripts test",
     "cover": "react-scripts test --coverage",

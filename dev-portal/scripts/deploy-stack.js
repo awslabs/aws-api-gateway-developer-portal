@@ -1,48 +1,72 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-const { execute, r } = require('./utils.js')
+const { execute, r, red, green } = require('./utils.js')
 
 const deployerConfig = require('../deployer.config.js')
 const writeConfig = require('./write-config.js')
 
-// required inputs
-const stackName = deployerConfig.stackName
-const buildAssetsBucket = deployerConfig.buildAssetsBucket
-const siteAssetsBucket = deployerConfig.siteAssetsBucket
-const apiAssetsBucket = deployerConfig.apiAssetsBucket
+const errors = []
 
-// required (and defaulted) inputs
-const samTemplate = deployerConfig.samTemplate || r(`../../cloudformation/template.yaml`)
-const packageConfig = deployerConfig.packageConfig || r(`../../cloudformation/packaged.yaml`)
-const customersTableName = deployerConfig.customersTableName || 'DevPortalCustomers'
-
-// optional inputs
-const cognitoDomainName = deployerConfig.cognitoDomainName || ''
-const staticAssetRebuildMode = deployerConfig.staticAssetRebuildMode || ''
-
-// AWS SAM CLI configuration
-const awsSamCliProfile = deployerConfig.awsSamCliProfile;
-const profileOption = awsSamCliProfile ? `--profile ${awsSamCliProfile}` : ''
-
-function main() {
-  Promise.resolve()
-      .then(() => execute(`sam package --template-file ${samTemplate} --output-template-file ${packageConfig} --s3-bucket ${buildAssetsBucket} ${profileOption}`, true))
-.then(() => execute(`sam deploy --template-file ${packageConfig} --stack-name ${stackName} --capabilities CAPABILITY_NAMED_IAM --parameter-overrides StaticAssetRebuildToken="${Date.now()}" StaticAssetRebuildMode="${staticAssetRebuildMode}" DevPortalSiteS3BucketName="${siteAssetsBucket}" ArtifactsS3BucketName="${apiAssetsBucket}" DevPortalCustomersTableName="${customersTableName}" CognitoDomainNameOrPrefix="${cognitoDomainName}" --s3-bucket ${buildAssetsBucket} ${profileOption}`, true))
-.then(() => writeConfig(true))
-.then(() => console.log('\n' + 'Process Complete! Run `npm run start` to launch run the dev portal locally.\n'.green()))
-.catch(err => {
-    console.log(("" + err).red())
-  })
+function getRequired(key) {
+  const value = deployerConfig[key]
+  if (value) return value
+  errors.push(key + ' must be defined')
 }
 
-if (samTemplate && packageConfig && stackName && buildAssetsBucket && siteAssetsBucket && apiAssetsBucket && customersTableName) {
-  main()
+function getOptional(key, orElse) {
+  return deployerConfig[key] || orElse
+}
+
+// required inputs
+const stackName = getRequired('stackName')
+const buildAssetsBucket = getRequired('buildAssetsBucket')
+const siteAssetsBucket = getRequired('siteAssetsBucket')
+const apiAssetsBucket = getRequired('apiAssetsBucket')
+const cognitoDomainName = getRequired('cognitoDomainName')
+
+// required (and defaulted) inputs
+const samTemplate = getOptional('samTemplate', r(`../../cloudformation/template.yaml`))
+const packageConfig = getOptional('packageConfig', r(`../../cloudformation/packaged.yaml`))
+const customersTableName = getOptional('customersTableName', 'DevPortalCustomers')
+
+// optional inputs
+const staticAssetRebuildMode = getOptional('staticAssetRebuildMode', '')
+
+// AWS SAM CLI configuration
+const awsSamCliProfile = getOptional('awsSamCliProfile')
+
+async function main() {
+  execute('sam', [
+    'package',
+    '--template-file', samTemplate,
+    '--output-template-file', packageConfig,
+    '--s3-bucket', buildAssetsBucket,
+    ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
+  ])
+  execute('sam', [
+    'deploy',
+    '--template-file', packageConfig,
+    '--stack-name', stackName,
+    '--capabilities', 'CAPABILITY_NAMED_IAM',
+    '--parameter-overrides',
+    `StaticAssetRebuildToken=${Date.now()}`,
+    ...(staticAssetRebuildMode ? [`StaticAssetRebuildMode=${staticAssetRebuildMode}`] : []),
+    `DevPortalSiteS3BucketName=${siteAssetsBucket}`,
+    `ArtifactsS3BucketName=${apiAssetsBucket}`,
+    `DevPortalCustomersTableName=${customersTableName}`,
+    `CognitoDomainNameOrPrefix=${cognitoDomainName}`,
+    '--s3-bucket', buildAssetsBucket,
+    ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
+  ])
+  await writeConfig()
+  console.log()
+  console.log(green('Process Complete! Run `npm run start` to launch run the dev portal locally.'))
+  console.log()
+}
+
+if (errors.length) {
+  for (const error of errors) console.error(red(error))
 } else {
-  !samTemplate && console.log('samTemplate must be defined')
-  !packageConfig && console.log('packageConfig must be defined')
-  !stackName && console.log('stackName must be defined')
-  !buildAssetsBucket && console.log('buildAssetsBucket must be defined')
-  !siteAssetsBucket && console.log('siteAssetsBucket must be defined')
-  !apiAssetsBucket && console.log('apiAssetsBucket must be defined')
+  main().catch(err => console.error(red(err)))
 }
