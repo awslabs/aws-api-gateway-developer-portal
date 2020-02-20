@@ -16,7 +16,7 @@ export default observer(() => {
         // eslint-disable-next-line react/jsx-key
         return <Message
           {...notify}
-          onDismiss={() => clearNofication(notify)}
+          onDismiss={() => clearNotification(notify)}
           style={{ margin: 0, marginBottom: '15px' }}
         />
         /* eslint-enable react/jsx-closing-bracket-location */
@@ -31,6 +31,6 @@ export function addNotification ({ compact = true, negative = true, floating = t
   })
 }
 
-function clearNofication (notification) {
+function clearNotification (notification) {
   store.notifications = store.notifications.filter(notify => notify !== notification)
 }

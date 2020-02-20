@@ -993,7 +993,7 @@ Resources:
       Description: 'Common code used by lambdas'
       ContentUri: ../lambdas/common-layer/
       CompatibleRuntimes:
-        - nodejs8.10
+        - nodejs12.x
 
   DevPortalLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1483,7 +1483,7 @@ Resources:
       Handler: index.handler
       MemorySize: 512
       Role: !GetAtt DumpV3AccountDataExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Timeout: 300
       Environment:
         Variables:
