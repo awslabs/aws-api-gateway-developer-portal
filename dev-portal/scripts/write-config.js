@@ -1,29 +1,32 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-const util = require('util');
 const fetch = require('node-fetch')
-const writeFile = util.promisify(require('fs').writeFile)
+const writeFile = require('fs').writeFileSync
 
-const { execute, r } = require('./utils.js')
+const { execute, r, red } = require('./utils.js')
 
-const buildConfig = require('../deployer.config.js')
-const stackName = buildConfig.stackName
+const deployerConfig = require('../deployer.config.js')
+const stackName = deployerConfig.stackName
 
 // AWS SAM CLI configuration
-const awsSamCliProfile = buildConfig.awsSamCliProfile;
-const profileOption = awsSamCliProfile ? `--profile ${awsSamCliProfile}` : ''
+const awsSamCliProfile = deployerConfig.awsSamCliProfile
 
-function writeConfig (swallowOutput) {
-  return execute(`aws cloudformation describe-stacks --stack-name ${stackName} ${profileOption}`, swallowOutput)
-      .then((result) => {
-    const websiteUrl = (JSON.parse(result.stdout).Stacks[0].Outputs)
-        .find(output => output.OutputKey === "WebsiteURL").OutputValue
-
-  return fetch(`${websiteUrl}/config.js`).then(response => response.text())
-})
-.then(output => writeFile(r(`../public/config.js`), output))
-.catch(console.error)
+async function writeConfig () {
+  const result = execute('aws', [
+    'cloudformation', 'describe-stacks',
+    '--stack-name', stackName,
+    ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
+  ])
+  const websiteUrl = JSON.parse(result.toString('utf-8')).Stacks[0].Outputs
+    .find(output => output.OutputKey === "WebsiteURL").OutputValue
+  const response = await fetch(`${websiteUrl}/config.js`)
+  const output = await response.text()
+  writeFile(r(`../public/config.js`), output, 'utf-8')
 }
 
 module.exports = writeConfig
+
+if (require.main === module) {
+  writeConfig().catch(err => console.error(red(err)))
+}
