@@ -19,17 +19,34 @@
     "fs-extra": "^7.0.1",
     "jest": "^24.9.0",
     "memorystream": "^0.3.1",
-    "prettier": "1.18.2",
+    "standard": "^14.3.1",
     "xml-js": "^1.6.8"
   },
   "dependencies": {
     "request-promise": "^4.2.4"
   },
-  "prettier": {
-    "trailingComma": "all",
-    "tabWidth": 2,
-    "semi": false,
-    "singleQuote": true,
-    "jsxSingleQuote": true
+  "standard": {
+    "ignore": [
+      "/lambdas/static-asset-uploader/build/**",
+      "/lambdas/backend/node_modules/**",
+      "/lambdas/catalog-updater/node_modules/**",
+      "/lambdas/cfn-cognito-user-pools-client-settings/node_modules/**",
+      "/lambdas/cfn-cognito-user-pools-domain/node_modules/**",
+      "/lambdas/cognito-user-pools-confirmation-strategy/node_modules/**",
+      "/lambdas/dump-v3-account-data/node_modules/**",
+      "/lambdas/listener/node_modules/**",
+      "/lambdas/shared/node_modules/**",
+      "/lambdas/static-asset-uploader/node_modules/**",
+      "/dev-portal/public/apigateway-js-sdk/**",
+      "/dev-portal/node_modules/**"
+    ],
+    "globals": [
+      "jest",
+      "describe",
+      "test",
+      "expect",
+      "beforeEach",
+      "afterEach"
+    ]
   }
 }

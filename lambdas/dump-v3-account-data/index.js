@@ -4,7 +4,7 @@
 // Dumps account data (as defined in v3) from Cognito and DynamoDB, to be used
 // for migration to v4. Outputs tsv as a JSON string.
 
-'use strict';
+'use strict'
 
 const AWS = require('aws-sdk')
 const pager = require('dev-portal-common/pager')
@@ -13,7 +13,7 @@ const handler = async (_event, _context) => {
   const {
     CustomersTableName: customersTableName,
     UserPoolId: userPoolId,
-    AdminsGroupName: adminsGroupName,
+    AdminsGroupName: adminsGroupName
   } = process.env
 
   console.log('Got params:')
@@ -21,8 +21,7 @@ const handler = async (_event, _context) => {
   console.log(`userPoolId: ${userPoolId}`)
   console.log(`adminsGroupName: ${adminsGroupName}`)
 
-  return await
-    fetchAccountData({ customersTableName, userPoolId, adminsGroupName })
+  return fetchAccountData({ customersTableName, userPoolId, adminsGroupName })
 }
 
 /**
@@ -34,7 +33,7 @@ const ACCOUNT_DATA_FIELDS = [
   'isAdmin',
   'identityPoolId',
   'userPoolId',
-  'apiKeyId',
+  'apiKeyId'
 ]
 
 /**
@@ -47,7 +46,7 @@ const fetchAccountData = async ({ customersTableName, userPoolId, adminsGroupNam
     await Promise.all([
       fetchAdminUserIds({ userPoolId, adminsGroupName }),
       fetchCustomersTableItems({ tableName: customersTableName }),
-      fetchUsernamesByUserId({ userPoolId }),
+      fetchUsernamesByUserId({ userPoolId })
     ])
 
   let accounts = accountsFromTable
@@ -74,7 +73,7 @@ const fetchAdminUserIds = async ({ userPoolId, adminsGroupName }) => {
   const admins = await pager.fetchUsersInCognitoUserPoolGroup({
     userPoolId,
     groupName: adminsGroupName,
-    cognitoClient: exports.cognitoClient,
+    cognitoClient: exports.cognitoClient
   })
   return new Set(admins.map(admin => getCognitoUserSub(admin)))
 }
@@ -86,7 +85,7 @@ const fetchAdminUserIds = async ({ userPoolId, adminsGroupName }) => {
 const fetchUsernamesByUserId = async ({ userPoolId }) => {
   const users = await pager.fetchUsersInCognitoUserPool({
     userPoolId,
-    cognitoClient: exports.cognitoClient,
+    cognitoClient: exports.cognitoClient
   })
   return new Map(users.map(user => [getCognitoUserSub(user), user.Username]))
 }
@@ -100,13 +99,13 @@ const fetchCustomersTableItems = async ({ tableName }) => {
     tableName,
     extraParams: {
       Limit: 2,
-      ProjectionExpression: 'Id, UserPoolId, ApiKeyId',
-    },
+      ProjectionExpression: 'Id, UserPoolId, ApiKeyId'
+    }
   })
   return rawItems.map(item => ({
     identityPoolId: item.Id.S,
     userPoolId: item.UserPoolId.S,
-    apiKeyId: item.ApiKeyId.S,
+    apiKeyId: item.ApiKeyId.S
   }))
 }
 
@@ -117,7 +116,7 @@ const fetchCustomersTableItems = async ({ tableName }) => {
 const insertIsAdmin = ({ adminUserIds, accounts }) => accounts
   .map(account => ({
     ...account,
-    isAdmin: adminUserIds.has(account.userPoolId),
+    isAdmin: adminUserIds.has(account.userPoolId)
   }))
 
 /**
@@ -127,7 +126,7 @@ const insertIsAdmin = ({ adminUserIds, accounts }) => accounts
 const insertUsernames = ({ accounts, usernamesByUserId }) => accounts
   .map(account => ({
     ...account,
-    username: usernamesByUserId.get(account.userPoolId),
+    username: usernamesByUserId.get(account.userPoolId)
   }))
 
 /**

@@ -22,25 +22,25 @@ export const loadFragments = () => {
 }
 
 /**
- * 
+ *
  * Pre-load the custom-content markdown, parses its frontmatter, and renders it as JSX. This method is asynchronous and doesn't actually return anything -- instead, it acts on a MobX Observable -- the fragment. The fragment is an object with a `jsx` property that maps to the rendered component, and any number of other properties collected from the front-matter.
- * 
+ *
  * @param {String} path   Path to the file to load in. Should be a markdown file.
  * @param {String} fragment   Name of the fragment. Determines where rendered data gets stored.
- * 
- * @returns {Object} 
+ *
+ * @returns {Object}
  */
-function loadHtml(path, fragment) {
+function loadHtml (path, fragment) {
   // if we want to display a loading indicator, this would be where
   fragments[fragment] = { jsx: () => null }
 
-  fetch(path).then(response => response.text().then(text => {
-    let parsedMarkdown = frontmatter(text)
+  window.fetch(path).then(response => response.text().then(text => {
+    const parsedMarkdown = frontmatter(text)
 
     fragments[fragment] = {
       jsx: () => (
-        <Markdown 
-          escapeHtml={false} 
+        <Markdown
+          escapeHtml={false}
           source={parsedMarkdown.body}
           renderers={renderers}
         />
@@ -51,18 +51,19 @@ function loadHtml(path, fragment) {
 }
 
 /**
- * Renderers is a map of node type to component. 
- * 
+ * Renderers is a map of node type to component.
+ *
  * In this case, we only override links. Any time react-markdown tries to render a link, it'll render this component. Normal links will work, but the cause a full page reload. We don't want that, so we can replacing them with react-router Links. However, replacing external links with react-router Links causes them to not work at all. We don't want that either, so we attempt to determine if a link is external or not, and use `Link` or `a` appropriately.
  */
 const renderers = {
   link: ({ href, ...props }) => {
     // if absolute url, use an `a` tag
     // https://stackoverflow.com/a/19709846/4060061
-    if (/^(?:[a-z]+:)?\/\//i.test(href))
-      return <a href={href} target="_blank" rel="noopener noreferrer" {...props} />
+    if (/^(?:[a-z]+:)?\/\//i.test(href)) {
+      return <a href={href} target='_blank' rel='noopener noreferrer' {...props} />
+    }
 
-    // replace links with react-router-dom tags so that they 
+    // replace links with react-router-dom tags so that they
     return <Link to={href} {...props} />
   }
 }

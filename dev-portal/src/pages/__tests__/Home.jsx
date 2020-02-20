@@ -1,12 +1,12 @@
 import React from 'react'
-import {cleanup} from '@testing-library/react'
+import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
-import {renderWithRouter} from '__tests__/utils'
+import { renderWithRouter } from '__tests__/utils'
 
-import {fragments} from 'services/get-fragments'
+import { fragments } from 'services/get-fragments'
 
-import {HomePage} from 'pages/Home'
+import { HomePage } from 'pages/Home'
 
 beforeEach(() => {
   // Mock fragment

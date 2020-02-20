@@ -78,9 +78,9 @@ describe('fetchFeedback', async () => {
         }]
       }))
 
-      const result = await controller.fetchFeedback()
-      
-      expect(controller.dynamoDb.scan).toHaveBeenCalledTimes(2)
-      expect(result).toEqual(expectedOutput)
+    const result = await controller.fetchFeedback()
+
+    expect(controller.dynamoDb.scan).toHaveBeenCalledTimes(2)
+    expect(result).toEqual(expectedOutput)
   })
 })

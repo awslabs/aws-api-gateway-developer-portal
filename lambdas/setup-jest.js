@@ -2,7 +2,6 @@
 global.console.log = jest.fn()
 global.console.dir = jest.fn()
 
-
 // helpers
 /**
  * Returns an object with a promise method that returns a promise. Primarily used to mock out the AWS SDKS, which
@@ -29,45 +28,45 @@ global.console.dir = jest.fn()
  * @param mockRejectedValue, the value the promise returned by promise() will reject with. Overrides mockResolveValue
  * @returns {{ Object }}, an object with a promise method that returns a promise
  */
-function promiser(mockResolveValue, mockRejectedValue) {
-    return {
-        promise: function () {
-            return !mockRejectedValue ? Promise.resolve(mockResolveValue) : Promise.reject(mockRejectedValue)
-        }
+function promiser (mockResolveValue, mockRejectedValue) {
+  return {
+    promise: function () {
+      return !mockRejectedValue ? Promise.resolve(mockResolveValue) : Promise.reject(mockRejectedValue)
     }
+  }
 }
 
-function generateResponseContext() {
-    return {
-        status: jest.fn().mockReturnValue({
-            json: jest.fn()
-        }),
-        attachment: jest.fn().mockReturnValue({
-            send: jest.fn()
-        }),
-        send: jest.fn().mockReturnValue({
-            send: jest.fn()
-        })
-    }
+function generateResponseContext () {
+  return {
+    status: jest.fn().mockReturnValue({
+      json: jest.fn()
+    }),
+    attachment: jest.fn().mockReturnValue({
+      send: jest.fn()
+    }),
+    send: jest.fn().mockReturnValue({
+      send: jest.fn()
+    })
+  }
 }
 
-function generateRequestContext() {
-    return {
-        apiGateway: {
-            event: {
-                requestContext: {
-                    identity: {
-                        cognitoIdentityId: 'qwertyuiop'
-                    }
-                }
-            }
+function generateRequestContext () {
+  return {
+    apiGateway: {
+      event: {
+        requestContext: {
+          identity: {
+            cognitoIdentityId: 'qwertyuiop'
+          }
         }
+      }
     }
+  }
 }
 
 // export helpers
 exports = module.exports = {
-    promiser,
-    generateRequestContext,
-    generateResponseContext
+  promiser,
+  generateRequestContext,
+  generateResponseContext
 }

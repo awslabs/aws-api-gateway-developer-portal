@@ -12,7 +12,7 @@ import { Container, Header, Icon } from 'semantic-ui-react'
 
 // services
 import { isAuthenticated } from 'services/self'
-import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog';
+import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog'
 
 // components
 import ApisMenu from 'components/ApisMenu'
@@ -24,63 +24,63 @@ import { store } from 'services/state.js'
 import { observer } from 'mobx-react'
 
 export default observer(class ApisPage extends React.Component {
-  componentDidMount() { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
-  componentDidUpdate() { this.updateApi() }
+  componentDidMount () { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
+  componentDidUpdate () { this.updateApi() }
 
-  updateApi = () => {
+  updateApi () {
     return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
       .then(api => {
         if (api) {
-          let swaggerUiConfig = {
+          const swaggerUiConfig = {
             dom_id: '#swagger-ui-container',
             plugins: [SwaggerLayoutPlugin],
             supportedSubmitMethods: [],
             spec: api.swagger,
             onComplete: () => {
-              if (store.apiKey)
-                uiHandler.preauthorizeApiKey("api_key", store.apiKey)
+              if (store.apiKey) { uiHandler.preauthorizeApiKey('api_key', store.apiKey) }
             }
           }
           if (isAuthenticated()) {
             delete swaggerUiConfig.supportedSubmitMethods
           }
-          let uiHandler = SwaggerUI(swaggerUiConfig)
+          const uiHandler = SwaggerUI(swaggerUiConfig)
         }
       })
   }
 
-  render() {
+  render () {
     let errorHeader
-    let errorBody 
+    let errorBody
 
     if (store.apiList.loaded) {
       if (!store.apiList.apiGateway.length && !store.apiList.generic.length) {
-        errorHeader = `No APIs Published`
-        errorBody = `Your administrator hasn't added any APIs to your account. Please contact them to publish an API.`
+        errorHeader = 'No APIs Published'
+        errorBody = 'Your administrator hasn\'t added any APIs to your account. Please contact them to publish an API.'
       } else if (!store.api) {
-        errorHeader = `No Such API`
-        errorBody = `The selected API doesn't exist.`
+        errorHeader = 'No Such API'
+        errorBody = 'The selected API doesn\'t exist.'
       }
     }
 
     return (
       <PageWithSidebar
         sidebarContent={<ApisMenu path={this.props.match} />}
-        SidebarPusherProps={{className: "swagger-section"}}>
-          <div className="swagger-ui-wrap" id="swagger-ui-container" style={{ padding: "0 20px" }}>
-            {errorHeader && errorBody && (
-              <React.Fragment>
-                <Header as='h2' icon textAlign="center" style={{ padding: "40px 0px" }}>
-                  <Icon name='warning sign' circular />
-                  <Header.Content>{errorHeader}</Header.Content>
-                </Header>
-                <Container text textAlign='justified'>
-                  <p>{errorBody}</p>
-                </Container>
-              </React.Fragment>
-            )}
-          </div>
-        </PageWithSidebar>
+        SidebarPusherProps={{ className: 'swagger-section' }}
+      >
+        <div className='swagger-ui-wrap' id='swagger-ui-container' style={{ padding: '0 20px' }}>
+          {errorHeader && errorBody && (
+            <>
+              <Header as='h2' icon textAlign='center' style={{ padding: '40px 0px' }}>
+                <Icon name='warning sign' circular />
+                <Header.Content>{errorHeader}</Header.Content>
+              </Header>
+              <Container text textAlign='justified'>
+                <p>{errorBody}</p>
+              </Container>
+            </>
+          )}
+        </div>
+      </PageWithSidebar>
     )
   }
 })

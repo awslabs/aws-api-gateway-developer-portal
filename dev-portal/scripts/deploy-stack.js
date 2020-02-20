@@ -8,13 +8,13 @@ const writeConfig = require('./write-config.js')
 
 const errors = []
 
-function getRequired(key) {
+function getRequired (key) {
   const value = deployerConfig[key]
   if (value) return value
   errors.push(key + ' must be defined')
 }
 
-function getOptional(key, orElse) {
+function getOptional (key, orElse) {
   return deployerConfig[key] || orElse
 }
 
@@ -26,17 +26,18 @@ const apiAssetsBucket = getRequired('apiAssetsBucket')
 const cognitoDomainName = getRequired('cognitoDomainName')
 
 // required (and defaulted) inputs
-const samTemplate = getOptional('samTemplate', r(`../../cloudformation/template.yaml`))
-const packageConfig = getOptional('packageConfig', r(`../../cloudformation/packaged.yaml`))
+const samTemplate = getOptional('samTemplate', r('../../cloudformation/template.yaml'))
+const packageConfig = getOptional('packageConfig', r('../../cloudformation/packaged.yaml'))
 const customersTableName = getOptional('customersTableName', 'DevPortalCustomers')
 
 // optional inputs
 const staticAssetRebuildMode = getOptional('staticAssetRebuildMode', '')
+const developmentMode = getOptional('developmentMode')
 
 // AWS SAM CLI configuration
 const awsSamCliProfile = getOptional('awsSamCliProfile')
 
-async function main() {
+async function main () {
   execute('sam', [
     'package',
     '--template-file', samTemplate,
@@ -55,6 +56,7 @@ async function main() {
     `DevPortalSiteS3BucketName=${siteAssetsBucket}`,
     `ArtifactsS3BucketName=${apiAssetsBucket}`,
     `DevPortalCustomersTableName=${customersTableName}`,
+    ...(developmentMode ? [`DevelopmentMode=${developmentMode}`] : []),
     `CognitoDomainNameOrPrefix=${cognitoDomainName}`,
     '--s3-bucket', buildAssetsBucket,
     ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])

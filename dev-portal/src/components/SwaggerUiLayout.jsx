@@ -28,19 +28,19 @@ const InfoReplacement = observer(({ specSelectors }) => {
   const externalDocs = specSelectors.externalDocs()
 
   return (
-    <Container fluid textAlign='left' className="fixfloat" style={{ padding: "40px 0px" }}>
-      <div style={{ display: "flex" }}>
-        <div style={{ flex: "0 0 auto", marginRight: "20px" }}>
+    <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
+      <div style={{ display: 'flex' }}>
+        <div style={{ flex: '0 0 auto', marginRight: '20px' }}>
           <Image size='small' src={store.api.logo} />
         </div>
         <div>
           <Header as='h1'>{store.api.swagger.info.title}</Header>
-          <div style={{ display: "flex" }}>
-            <div style={{ marginRight: "20px" }}>
+          <div style={{ display: 'flex' }}>
+            <div style={{ marginRight: '20px' }}>
               {store.api.generic && (
-                <p style={{ fontWeight: "bold" }}>Version</p>
+                <p style={{ fontWeight: 'bold' }}>Version</p>
               )}
-              <p style={{ fontWeight: "bold" }}>Endpoint</p>
+              <p style={{ fontWeight: 'bold' }}>Endpoint</p>
               {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
             </div>
             <div>
@@ -61,16 +61,14 @@ const InfoReplacement = observer(({ specSelectors }) => {
 })
 
 const SubscriptionButtons = observer(class SubscriptionButtons extends React.Component {
-  state = {}
-
-  render() {
+  render () {
     const { api } = store
     return (
       (api && isAuthenticated()) ? !api.generic ? (
         api.subscribed ? (
           <Button onClick={() => unsubscribe(api.usagePlan.id)}>Unsubscribe</Button>
         ) : (
-          <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
+          <Button onClick={() => subscribe(api.usagePlan.id)}>Subscribe</Button>
         )
       ) : <Header as='h4' color='grey'>This API is not configured for subscription from the portal.</Header> : null
     )

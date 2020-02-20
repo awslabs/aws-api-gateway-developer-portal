@@ -31,10 +31,13 @@ module.exports = {
   // customersTableName: `DevPortalCustomers`,
 
   // Set this to overwrite-content if you want to reset your custom content back to the defaults. Defaults to ``
-  // staticAssetRebuildMode: `overwrite-content` // ONLY SET
+  // staticAssetRebuildMode: `overwrite-content`, // ONLY SET
   
   // AWS SAM CLI profile option: optional specific profile from your AWS credential file. Not used by default
-  //awsSamCliProfile: "my-profile"
+  //awsSamCliProfile: "my-profile",
+  
+  // Set this to `true` if you want to enable development mode. It's `false` by default, and unless you're actively developing on the developer portal itself locally, you should generally leave it unset as it disables most CORS protections.
+  //developmentMode: false
 }
 ```
 5. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use

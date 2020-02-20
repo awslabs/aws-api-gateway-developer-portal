@@ -19,10 +19,10 @@ async function writeConfig () {
     ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
   ])
   const websiteUrl = JSON.parse(result.toString('utf-8')).Stacks[0].Outputs
-    .find(output => output.OutputKey === "WebsiteURL").OutputValue
+    .find(output => output.OutputKey === 'WebsiteURL').OutputValue
   const response = await fetch(`${websiteUrl}/config.js`)
   const output = await response.text()
-  writeFile(r(`../public/config.js`), output, 'utf-8')
+  writeFile(r('../public/config.js'), output, 'utf-8')
 }
 
 module.exports = writeConfig

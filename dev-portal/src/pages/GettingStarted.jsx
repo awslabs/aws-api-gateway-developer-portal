@@ -13,7 +13,7 @@ import { fragments } from 'services/get-fragments'
 import { Container } from 'semantic-ui-react'
 
 export default observer(() => (
-  <Container style={{ padding: "40px" }}>
+  <Container style={{ padding: '40px' }}>
     <fragments.GettingStarted.jsx />
   </Container>
 ))

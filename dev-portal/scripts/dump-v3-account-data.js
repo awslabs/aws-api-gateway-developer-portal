@@ -13,9 +13,9 @@ const { execute } = require('./utils.js')
 
 const fetchLambdaOutput = async ({ stackName, workDir }) => {
   const resourceData = JSON.parse((await execute(
-    `aws cloudformation describe-stack-resource`
-    + ` --logical-resource-id DumpV3AccountDataFn`
-    + ` --stack-name ${stackName}`, true)).stdout)
+    'aws cloudformation describe-stack-resource' +
+    ' --logical-resource-id DumpV3AccountDataFn' +
+    ` --stack-name ${stackName}`, true)).stdout)
   const lambdaId = resourceData.StackResourceDetail.PhysicalResourceId
   const outFile = `${workDir}${path.sep}lambdaOut`
   await execute(
@@ -27,7 +27,7 @@ const fetchLambdaOutput = async ({ stackName, workDir }) => {
 
 const main = async () => {
   if (process.argv.length !== 4) {
-    const [ node, script ] = process.argv
+    const [node, script] = process.argv
     console.error(`Usage: ${node} ${script} STACK_NAME OUTPUT_FILE`)
     process.exitCode = 127
     return
@@ -52,7 +52,7 @@ const main = async () => {
     throw new Error(`Failed to write to ${outFile}: ${error.message}`)
   }
 
-  console.log(`Done.`)
+  console.log('Done.')
 }
 
 if (!module.parent) {

@@ -1,7 +1,7 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-'use strict';
+'use strict'
 
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -29,7 +29,6 @@ app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscr
 app.get('/feedback', handlers.getFeedback)
 app.post('/feedback', handlers.postFeedback)
 app.get('/catalog/:id/sdk', handlers.getSdk)
-
 
 // admin APIs
 app.get('/admin/catalog/visibility', handlers.getAdminCatalogVisibility)

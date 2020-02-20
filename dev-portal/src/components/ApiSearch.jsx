@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 
 import { Link } from 'react-router-dom'
 import { Menu, Search, Grid } from 'semantic-ui-react'
@@ -16,14 +16,14 @@ const resultRenderer = (result) => (
     key={result.title}
     as={Link}
     to={result.url}
-    style={{display: 'inline-block', width: '100%', height: '100%'}}
+    style={{ display: 'inline-block', width: '100%', height: '100%' }}
   >
     {result.title}
   </Menu.Item>
 )
 
 export default observer(class ApiSearch extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props)
 
     this.state = {
@@ -35,29 +35,65 @@ export default observer(class ApiSearch extends Component {
       loaded: store.apiList.loaded,
       categories: {}
     }
+
+    this.handleResultSelect = (e, { result }) => {
+      console.log(result)
+    }
+
+    this.handleSearchChange = (e, { value }) => {
+      this.setState(({ search: { isLoading, ...searchRest }, ...rest }) => ({
+        ...rest,
+        search: {
+          ...searchRest,
+          isLoading: true,
+          value
+        }
+      }))
+
+      setTimeout(() => {
+        if (this.state.search.value.length < 1) return this.resetComponent()
+
+        const re = new RegExp(_.escapeRegExp(this.state.search.value), 'i')
+        const isMatch = result => re.test(result.title) || re.test(result.searchable)
+
+        const filteredResults = _.reduce(
+          this.state.categories,
+          (memo, data, name) => {
+            const results = _.filter(data.results, isMatch)
+            if (results.length) memo[name] = { name, results } // eslint-disable-line no-param-reassign
+
+            return memo
+          }, {})
+
+        this.setState(({ search: { value }, ...rest }) => ({
+          ...rest,
+          search: { isLoading: false, value },
+          results: filteredResults
+        }))
+      }, 300)
+    }
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.createSearchCategories(store.apiList.apiGateway, store.apiList.generic)
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate (prevProps, prevState) {
     if (prevState.loading !== store.apiList.loaded) {
       this.createSearchCategories(store.apiList.apiGateway, store.apiList.generic)
       this.setState((prev) => ({ ...prev, loading: store.apiList.loaded }))
     }
   }
 
-  createSearchCategories = (apiGateway, generic) => {
-
-    let categories = {
-      "Subscribable": {
-        "name": "Subscribable",
-        "results": []
+  createSearchCategories (apiGateway, generic) {
+    const categories = {
+      Subscribable: {
+        name: 'Subscribable',
+        results: []
       },
-      "Not Subscribable": {
-        "name": "Not Subscribable",
-        "results": []
+      'Not Subscribable': {
+        name: 'Not Subscribable',
+        results: []
       }
     }
 
@@ -71,65 +107,30 @@ export default observer(class ApiSearch extends Component {
     })
 
     generic.forEach(({ id, swagger, stage = false, ...rest }) => {
-      let api = {
+      const api = {
         url: `/apis/${id}`,
         title: `${swagger.info.title}`,
         searchable: `${JSON.stringify(swagger)}${stage || ''}`
       }
       if (stage) api.stage = stage
-      categories["Not Subscribable"].results.push(api)
+      categories['Not Subscribable'].results.push(api)
     })
 
     this.setState((prev) => ({ ...prev, categories }), () => { console.log(this.state.categories) })
   }
 
-  
-  handleResultSelect = (e, { result }) => {
-    console.log(result)
+  resetComponent () {
+    this.setState((prev) => ({ ...prev, search: { isLoading: false, value: '' }, results: [] }))
   }
-  
-  handleSearchChange = (e, { value }) => {
-    this.setState(({ search: { isLoading, ...searchRest }, ...rest }) => ({
-      ...rest,
-      search: {
-        ...searchRest,
-        isLoading: true,
-        value
-      }}))
-    
-    setTimeout(() => {
-      if (this.state.search.value.length < 1) return this.resetComponent()
-      
-      const re = new RegExp(_.escapeRegExp(this.state.search.value), 'i')
-      const isMatch = result => re.test(result.title) || re.test(result.searchable)
-      
-      const filteredResults = _.reduce(
-        this.state.categories,
-        (memo, data, name) => {
-          const results = _.filter(data.results, isMatch)
-          if (results.length) memo[name] = { name, results } // eslint-disable-line no-param-reassign
-          
-          return memo
-        }, {})
-        
-        this.setState(({ search: { value }, ...rest }) => ({
-          ...rest,
-          search: { isLoading: false, value },
-          results: filteredResults
-        }))
-      }, 300)
-    }
 
-    resetComponent = () => this.setState((prev) => ({ ...prev, search: { isLoading: false, value: '' }, results: [] }))
+  render () {
+    const { isLoading, value } = this.state.search
+    const { results } = this.state
 
-    render() {
-      const { isLoading, value } = this.state.search
-      const { results } = this.state
-
-      return (
-        <div style={{ display: "flex", flex: "1 1 auto", overflow: "hidden" }}>
+    return (
+      <div style={{ display: 'flex', flex: '1 1 auto', overflow: 'hidden' }}>
         <ApisMenu path={this.props.match} />
-        <Grid style={{padding: '2em'}}>
+        <Grid style={{ padding: '2em' }}>
           <Grid.Column>
             <Search
               category
@@ -141,10 +142,10 @@ export default observer(class ApiSearch extends Component {
               resultRenderer={resultRenderer}
               value={value}
               {...this.props}
-              />
+            />
           </Grid.Column>
         </Grid>
       </div>
-    );
+    )
   }
 })

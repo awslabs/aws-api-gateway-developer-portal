@@ -6,5 +6,5 @@
 // Right now, it always returns true.
 
 exports.handler = (event, context, callback) => {
-    event.response = { autoConfirmUser: true }; callback(null, event);
+  event.response = { autoConfirmUser: true }; callback(null, event)
 }
