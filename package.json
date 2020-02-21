@@ -38,7 +38,8 @@
       "/lambdas/shared/node_modules/**",
       "/lambdas/static-asset-uploader/node_modules/**",
       "/dev-portal/public/apigateway-js-sdk/**",
-      "/dev-portal/node_modules/**"
+      "/dev-portal/node_modules/**",
+      "/lambdas/*/node_modules/**"
     ],
     "globals": [
       "jest",

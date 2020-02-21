@@ -1,3 +1,5 @@
+'use strict'
+
 const util = require('util')
 const customersController = require('dev-portal-common/customers-controller')
 const feedbackController = require('dev-portal-common/feedback-controller')

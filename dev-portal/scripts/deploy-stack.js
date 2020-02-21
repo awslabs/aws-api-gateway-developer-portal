@@ -56,7 +56,7 @@ async function main () {
     `DevPortalSiteS3BucketName=${siteAssetsBucket}`,
     `ArtifactsS3BucketName=${apiAssetsBucket}`,
     `DevPortalCustomersTableName=${customersTableName}`,
-    ...(developmentMode ? [`DevelopmentMode=${developmentMode}`] : []),
+    ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
     `CognitoDomainNameOrPrefix=${cognitoDomainName}`,
     '--s3-bucket', buildAssetsBucket,
     ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])

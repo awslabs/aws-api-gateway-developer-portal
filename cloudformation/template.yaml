@@ -126,11 +126,21 @@ Parameters:
       - 'true'
     ConstraintDescription: Malformed input - Parameter DevelopmentMode value must be either 'true' or 'false'
 
+  LocalDevelopmentMode:
+    Type: String
+    Description: Enabling this disables CORS for easier local development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
+    Default: 'false'
+    AllowedValues: 
+      - 'false'
+      - 'true'
+    ConstraintDescription: Malformed input - Parameter LocalDevelopmentMode value must be either 'true' or 'false'
+
 Conditions:
   UseCustomDomainName: !And [!And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]], !Condition NotDevelopmentMode]
   NoCustomDomainName: !And [!Not [ !Condition UseCustomDomainName ], !Condition NotDevelopmentMode]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
   EnableFeedbackSubmission: !Not [!Equals [!Ref DevPortalAdminEmail, '']]
+  LocalDevelopmentMode: !Or [!Equals [!Ref DevelopmentMode, 'true'], !Equals [!Ref LocalDevelopmentMode, 'true']]
   DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
   NotDevelopmentMode: !Not [!Condition DevelopmentMode]
   InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
@@ -194,7 +204,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -241,7 +251,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -288,7 +298,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -335,7 +345,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -408,7 +418,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -468,7 +478,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -520,7 +530,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -1134,7 +1144,7 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
-      CallbackURL: !If [ DevelopmentMode,
+      CallbackURL: !If [ LocalDevelopmentMode,
         [
           'http://localhost:3000/index.html?action=login',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=login' ]]
@@ -1143,7 +1153,7 @@ Resources:
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
         ]
       ]
-      LogoutURL: !If [ DevelopmentMode,
+      LogoutURL: !If [ LocalDevelopmentMode,
         [
           'http://localhost:3000/index.html?action=logout',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=logout' ]]
