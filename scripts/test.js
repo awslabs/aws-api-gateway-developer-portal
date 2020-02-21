@@ -1,7 +1,7 @@
 const { spawn, spawnSync } = require('child_process')
 const path = require('path')
 const convert = require('xml-js')
-const fse = require('fs-extra')
+const fs = require('fs')
 
 // output with color, even in CI mode & through pipes
 process.env.FORCE_COLOR = true
@@ -9,6 +9,15 @@ process.env.FORCE_COLOR = true
 function formatLine (line) {
   // add the leftmost pipe (jest is missing it) and also pad with a space or hyphen, as appropriate
   return line[0] === '-' ? '|-' + line + '\n' : '| ' + line + '\n'
+}
+
+function readFile (...args) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(...args, (err, data) => {
+      if (err) reject(err)
+      else resolve(data)
+    })
+  })
 }
 
 function augmentChildProcess (childProcess, withCoverage) {
@@ -50,11 +59,9 @@ function augmentChildProcess (childProcess, withCoverage) {
 
     childProcess.on('close', (code) => {
       if (code !== 0) {
-        // eslint-disable-next-line prefer-promise-reject-errors
-        reject({
-          message: errors.join('\n'),
-          code: code
-        })
+        const error = new Error(errors.join('\n'))
+        error.code = code
+        reject(error)
       } else {
         resolve(table)
       }
@@ -88,27 +95,17 @@ function bufferToCoverageObject (fileBodyBuffer) {
 }
 
 async function synthesizeCoverage () {
-  const lambdaCoveragePromise =
-        fse.readFile(path.join(process.cwd(), 'lambdas', 'coverage', 'clover.xml'))
-          .then(bufferToCoverageObject)
-  const devPortalCoveragePromise =
-        fse.readFile(path.join(process.cwd(), 'dev-portal', 'coverage', 'clover.xml'))
-          .then(bufferToCoverageObject)
+  const [lambdas, devPortal] = await Promise.all([
+    readFile(path.resolve('lambdas/coverage/clover.xml')).then(bufferToCoverageObject),
+    readFile(path.resolve('dev-portal/coverage/clover.xml')).then(bufferToCoverageObject)
+  ])
+  const overall = {}
 
-  return Promise.all([lambdaCoveragePromise, devPortalCoveragePromise])
-    .then((results) => {
-      const finalResults = {}
+  Object.keys(lambdas).forEach((key) => {
+    overall[key] = parseInt(lambdas[key], 10) + parseInt(devPortal[key], 10)
+  })
 
-      Object.keys(results[0]).forEach((key) => {
-        finalResults[key] = results.reduce((accumulator, object) => accumulator + parseInt(object[key], 10), 0)
-      })
-
-      return {
-        lambdas: results[0],
-        devPortal: results[1],
-        overall: finalResults
-      }
-    })
+  return { lambdas, devPortal, overall }
 }
 
 function formatCoverageItem (coverage, itemName) {
@@ -135,16 +132,11 @@ function processCoverage (coverage) {
   console.log(`    Elements: ${formatCoverageItem(coverage.overall, 'elements')}`)
 }
 
-function handleError (error) {
-  console.error(error.message)
-  process.exit(error.code)
-}
-
 async function runTests (withCoverage) {
-  const promises = []
-  promises.push(testLambdas(withCoverage).then(console.log))
-  promises.push(testDevPortal(withCoverage).then(console.log))
-  await Promise.all(promises).catch(handleError)
+  await Promise.all([
+    testLambdas(withCoverage).then(console.log),
+    testDevPortal(withCoverage).then(console.log)
+  ])
 
   if (withCoverage) processCoverage(await synthesizeCoverage())
 }
