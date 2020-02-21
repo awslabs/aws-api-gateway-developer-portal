@@ -48,7 +48,7 @@ export default withCollapsibleMobileSidebar(class PageWithSidebar extends React.
         }
         <Sidebar.Pusher
           dimmed={isMobileScreenResolution && !isSidebarCollapsed}
-          style={{ marginLeft: contentLeftMargin, position: 'absolute', flex: '1 1 auto', overflow: 'auto', width: contentWidth, transition }}
+          style={{ marginLeft: contentLeftMargin, position: 'absolute', flex: '1 1 auto', height: '100%', overflow: 'auto', width: contentWidth, transition }}
           {...SidebarPusherProps}
         >
           {children}
