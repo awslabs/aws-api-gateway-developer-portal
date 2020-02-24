@@ -28,7 +28,7 @@ export default observer(function ApisMenu(props) {
   // grab it from the first apiGateway api OR
   // grab it from the first generic api
   let selectedApiId = (
-    this.props.path.params.apiId ||
+    props.path.params.apiId ||
     (hasGatewayApis && store.apiList.apiGateway[0].id) ||
     (hasGenericApis && store.apiList.generic[0].id)
   )
@@ -37,24 +37,23 @@ export default observer(function ApisMenu(props) {
     selectedApiId = false
   }
 
-  let selectedStage= ( this.props.path.params.stage || (hasGatewayApis && store.apiList.apiGateway[0].stage) )
+  let selectedStage= (props.path.params.stage || (hasGatewayApis && store.apiList.apiGateway[0].stage) )
 
   // If we're still loading, display a spinner.
   // If we're not loading, and we don't have any apis, display a message.
   // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis 
+  if (loadingApis) {
+    return <Loader active />
+  }
+  if (!hasGatewayApis && !hasGenericApis) {
+    return <p style={{ padding: "13px 16px", color: "whitesmoke" }}>No APIs Published</p>
+  }
   return (
-    <Menu inverted vertical attached style={{ margin: 0, borderRadius: 0, flex: "0 0 auto", position: "relative", overflowY: "scroll" }} {...this.props}>
-      {loadingApis && <Loader active />}
-      {(hasGatewayApis || hasGenericApis) ? (
-        <React.Fragment>
-          <Menu.Item key="search" as={Link} to="/apis/search" active={props.path.url === '/apis/search'}>Search APIs</Menu.Item>
-          {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} selectedStage={selectedStage} />}
-          {hasGenericApis && <GenericApiSubsection title="Not Subscribable" listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
-        </React.Fragment>
-      ) : (
-        <p style={{ padding: "13px 16px", color: "whitesmoke" }}>No APIs Published</p>
-      )}
-    </Menu>
+    <React.Fragment>
+      <Menu.Item key="search" as={Link} to="/apis/search" active={props.path.url === '/apis/search'}>Search APIs</Menu.Item>
+      {hasGatewayApis && <ApiSubsection title="Subscribable" listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} selectedStage={selectedStage} />}
+      {hasGenericApis && <GenericApiSubsection title="Not Subscribable" listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
+    </React.Fragment>
   )
 })
 

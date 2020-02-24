@@ -1,18 +1,18 @@
 {
-  "files": {
-    "main.css": "/static/css/main.4ae54ac6.chunk.css",
-    "main.js": "/static/js/main.d8afcf50.chunk.js",
-    "main.js.map": "/static/js/main.d8afcf50.chunk.js.map",
-    "runtime~main.js": "/static/js/runtime~main.a8a9905a.js",
-    "runtime~main.js.map": "/static/js/runtime~main.a8a9905a.js.map",
-    "static/css/2.1eb883ec.chunk.css": "/static/css/2.1eb883ec.chunk.css",
-    "static/js/2.73aa822c.chunk.js": "/static/js/2.73aa822c.chunk.js",
-    "static/js/2.73aa822c.chunk.js.map": "/static/js/2.73aa822c.chunk.js.map",
-    "index.html": "/index.html",
-    "precache-manifest.ec275c1f0e82d91d12e8e0176d1955ad.js": "/precache-manifest.ec275c1f0e82d91d12e8e0176d1955ad.js",
-    "service-worker.js": "/service-worker.js",
-    "static/css/2.1eb883ec.chunk.css.map": "/static/css/2.1eb883ec.chunk.css.map",
-    "static/css/main.4ae54ac6.chunk.css.map": "/static/css/main.4ae54ac6.chunk.css.map",
-    "static/media/semantic.css": "/static/media/outline-icons.ef60a4f6.woff"
-  }
+    "files": {
+        "main.css": "/static/css/main.4ae54ac6.chunk.css",
+        "main.js": "/static/js/main.74ad274d.chunk.js",
+        "main.js.map": "/static/js/main.74ad274d.chunk.js.map",
+        "runtime~main.js": "/static/js/runtime~main.a8a9905a.js",
+        "runtime~main.js.map": "/static/js/runtime~main.a8a9905a.js.map",
+        "static/css/2.1eb883ec.chunk.css": "/static/css/2.1eb883ec.chunk.css",
+        "static/js/2.73aa822c.chunk.js": "/static/js/2.73aa822c.chunk.js",
+        "static/js/2.73aa822c.chunk.js.map": "/static/js/2.73aa822c.chunk.js.map",
+        "index.html": "/index.html",
+        "precache-manifest.7bc8b8ed34ac29d68fefcf197eea6db1.js": "/precache-manifest.7bc8b8ed34ac29d68fefcf197eea6db1.js",
+        "service-worker.js": "/service-worker.js",
+        "static/css/2.1eb883ec.chunk.css.map": "/static/css/2.1eb883ec.chunk.css.map",
+        "static/css/main.4ae54ac6.chunk.css.map": "/static/css/main.4ae54ac6.chunk.css.map",
+        "static/media/semantic.css": "/static/media/outline-icons.ef60a4f6.woff"
+    }
 }

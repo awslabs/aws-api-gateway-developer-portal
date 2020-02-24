@@ -45,7 +45,7 @@ export const NavBar = observer(
     }
 
     render() {
-      return <Menu inverted borderless attached style={{ flex: "0 0 auto" }} >
+      return <Menu inverted borderless attached style={{ flex: "0 0 auto" }} stackable >
         <Menu.Item as={Link} to="/">
           <Image size='mini' src="/custom-content/nav-logo.png" style={{ paddingRight: "10px" }} />
           {fragments.Home.title}

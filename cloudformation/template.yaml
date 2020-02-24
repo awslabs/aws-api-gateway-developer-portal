@@ -987,6 +987,14 @@ Resources:
           - !Ref 'AWS::AccountId'
           - ':marketplace-test-topic'
 
+  LambdaCommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: 'Common code used by lambdas'
+      ContentUri: ../lambdas/common-layer/
+      CompatibleRuntimes:
+        - nodejs8.10
+
   DevPortalLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1005,7 +1013,6 @@ Resources:
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
-
       # Adds the API as a trigger
       Events:
         ProxyApiRoot:
@@ -1020,6 +1027,8 @@ Resources:
             RestApiId: !Ref ApiGatewayApi
             Path: /{proxy+}
             Method: ANY
+      Layers:
+        - !Ref LambdaCommonLayer
 
   SubscriptionListenerLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1030,6 +1039,8 @@ Resources:
       Role: !GetAtt BackendLambdaExecutionRole.Arn
       Runtime: nodejs12.x
       Timeout: 30
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPoolsConfirmationStrategyFunction:
     Type: AWS::Serverless::Function
@@ -1040,6 +1051,8 @@ Resources:
       Role: !GetAtt CognitoStrategyLambdaExecutionRole.Arn
       Runtime: nodejs12.x
       Timeout: 3
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
@@ -1110,6 +1123,8 @@ Resources:
       CodeUri: ../lambdas/cfn-cognito-user-pools-client-settings
       Handler: index.handler
       Role: !GetAtt CognitoUserPoolClientSettingsBackingFnRole.Arn
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPoolClientSettings:
     Type: AWS::CloudFormation::CustomResource
@@ -1190,6 +1205,8 @@ Resources:
       CodeUri: ../lambdas/cfn-cognito-user-pools-domain
       Handler: index.handler
       Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPoolDomain:
     Type: AWS::CloudFormation::CustomResource
@@ -1322,6 +1339,8 @@ Resources:
       Environment:
         Variables:
           BucketName: !Ref ArtifactsS3BucketName
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CatalogUpdaterLambdaPermissions:
     Type: AWS::Lambda::Permission
@@ -1344,6 +1363,8 @@ Resources:
       Environment:
         Variables:
           StaticBucketName: !Ref ArtifactsS3BucketName
+      Layers:
+        - !Ref LambdaCommonLayer
 
   StaticAssetUploader:
     Type: AWS::CloudFormation::CustomResource
@@ -1454,6 +1475,61 @@ Resources:
             # this is a "magic string" for using CFN aliases; see this link:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
             HostedZoneId: 'Z2FDTNDATAQYW2'
+
+  DumpV3AccountDataFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/dump-v3-account-data
+      Handler: index.handler
+      MemorySize: 512
+      Role: !GetAtt DumpV3AccountDataExecutionRole.Arn
+      Runtime: nodejs10.x
+      Timeout: 300
+      Environment:
+        Variables:
+          CustomersTableName: !Ref DevPortalCustomersTableName
+          UserPoolId: !Ref CognitoUserPool
+          AdminsGroupName: !Ref CognitoAdminsGroup
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  DumpV3AccountDataExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: WriteCloudWatchLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: ReadCustomersTable
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: dynamodb:Scan
+            Resource: !GetAtt CustomersTable.Arn
+      - PolicyName: ListUserPool
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+              - cognito-idp:ListUsersInGroup
+            Resource: !GetAtt CognitoUserPool.Arn
 
 Outputs:
   WebsiteURL:

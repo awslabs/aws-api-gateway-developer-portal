@@ -114,7 +114,7 @@ describe('generalizeFilePath', () => {
 describe('notifyCFNThatUploadSucceeded', () => {
     test('should notify cloudformation that the action succeeded', () => {
         let responseData = {}, event = {}, context = {},
-            response = require('../notify-cfn')
+            response = require('dev-portal-common/notify-cfn')
 
         response.ofSuccess = jest.fn()
 
@@ -127,7 +127,7 @@ describe('notifyCFNThatUploadSucceeded', () => {
 describe('notifyCFNThatUploadFailed', () => {
     test('should notify cloudformation that the action failed', () => {
         let error = new Error(), event = { 'event': 'object' }, context = { 'context': 'object' },
-            response = require('../notify-cfn')
+            response = require('dev-portal-common/notify-cfn')
 
         response.ofFailure = jest.fn()
 
