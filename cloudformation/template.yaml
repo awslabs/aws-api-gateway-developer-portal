@@ -72,7 +72,7 @@ Parameters:
 
   StaticAssetRebuildMode:
     Type: String
-    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
+    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost.
     Default: ''
     AllowedValues:
       - 'overwrite-content'
@@ -112,7 +112,7 @@ Parameters:
     Type: String
     Description: Only applicable if creating a custom domain name for your dev portal. Defaults to false, and you'll need to provide your own nameserver hosting. If set to true, a Route53 HostedZone and RecordSet are created for you.
     Default: 'false'
-    AllowedValues: 
+    AllowedValues:
       - 'false'
       - 'true'
     ConstraintDescription: Malformed input - Parameter UseRoute53Nameservers value must be either 'true' or 'false'
@@ -121,7 +121,7 @@ Parameters:
     Type: String
     Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, CORS, etc.) for easier development. It also breaks frontend routing (except to /index.html), including deep linking and page refresh. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
     Default: 'false'
-    AllowedValues: 
+    AllowedValues:
       - 'false'
       - 'true'
     ConstraintDescription: Malformed input - Parameter DevelopmentMode value must be either 'true' or 'false'
@@ -805,7 +805,7 @@ Resources:
           - Effect: Allow
             Action:
             - s3:ListBucket
-            Resource: 
+            Resource:
               - !Join
                 - ''
                 - - 'arn:aws:s3:::'
@@ -1059,67 +1059,13 @@ Resources:
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
-    # It's really unintuitive, but changing any of the properties here will cause stack updates to deploy non-functionally.
-    # The CognitoUserPoolClientSettings custom resource runs after this resource and adds a bunch of fields.
-    # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
-    # settings won't be set, e.g., CallbackURL.
     Properties:
       UserPoolId: !Ref CognitoUserPool
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
-
-  CognitoUserPoolClientSettingsBackingFnRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          -
-            Effect: Allow
-            Action: 'sts:AssumeRole'
-            Principal:
-              Service: lambda.amazonaws.com
-      Policies:
-        - PolicyName: WriteCloudWatchLogs
-          PolicyDocument: 
-            Version: '2012-10-17'
-            Statement: 
-              -
-                Effect: Allow
-                Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Resource: 'arn:aws:logs:*:*:*'
-        - PolicyName: UpdateUserPoolClient
-          PolicyDocument: 
-            Version: '2012-10-17'
-            Statement: 
-              -
-                Effect: Allow
-                Action: 'cognito-idp:UpdateUserPoolClient'
-                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
-
-  CognitoUserPoolClientSettingsBackingFn:
-    Type: AWS::Serverless::Function
-    Properties:
-      Runtime: nodejs12.x
-      MemorySize: 128
-      Timeout: 300
-      CodeUri: ../lambdas/cfn-cognito-user-pools-client-settings
-      Handler: index.handler
-      Role: !GetAtt CognitoUserPoolClientSettingsBackingFnRole.Arn
-
-  CognitoUserPoolClientSettings:
-    Type: AWS::CloudFormation::CustomResource
-    Properties:
-      Timeout: 360
-      ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool
-      UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
-      CallbackURL: !If [ DevelopmentMode,
+      CallbackURLs: !If [ DevelopmentMode,
         [
           'http://localhost:3000/index.html?action=login',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=login' ]]
@@ -1128,7 +1074,7 @@ Resources:
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
         ]
       ]
-      LogoutURL: !If [ DevelopmentMode,
+      LogoutURLs: !If [ DevelopmentMode,
         [
           'http://localhost:3000/index.html?action=logout',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=logout' ]]
@@ -1141,64 +1087,12 @@ Resources:
       AllowedOAuthFlows: [ "implicit" ]
       AllowedOAuthScopes: [ "openid" ]
 
-  CognitoUserPoolDomainBackingFnRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          -
-            Effect: Allow
-            Action: 'sts:AssumeRole'
-            Principal:
-              Service: lambda.amazonaws.com
-      Policies:
-        - PolicyName: WriteCloudWatchLogs
-          PolicyDocument: 
-            Version: '2012-10-17'
-            Statement: 
-              -
-                Effect: Allow
-                Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Resource: 'arn:aws:logs:*:*:*'
-        - PolicyName: ManageUserPoolDomain
-          PolicyDocument: 
-            Version: '2012-10-17'
-            Statement: 
-              -
-                Effect: Allow
-                Action: 'cognito-idp:CreateUserPoolDomain'
-                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
-              -
-                Effect: Allow
-                Action: 'cognito-idp:DeleteUserPoolDomain'
-                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
-              -
-                Effect: Allow
-                Action: 'cognito-idp:DescribeUserPoolDomain'
-                Resource: '*'
-
-  CognitoUserPoolDomainBackingFn:
-    Type: AWS::Serverless::Function
-    Properties:
-      Runtime: nodejs12.x
-      MemorySize: 128
-      Timeout: 300
-      CodeUri: ../lambdas/cfn-cognito-user-pools-domain
-      Handler: index.handler
-      Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
-
   CognitoUserPoolDomain:
-    Type: AWS::CloudFormation::CustomResource
+    Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Timeout: 360
-      ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       Domain: !Ref CognitoDomainNameOrPrefix
-  
+
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
@@ -1356,7 +1250,7 @@ Resources:
       IdentityPoolId: !Ref CognitoIdentityPool
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
-      UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
+      UserPoolDomain: !Sub "https://${CognitoDomainNameOrPrefix}.auth.ap-southeast-2.amazoncognito.com"
       MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
