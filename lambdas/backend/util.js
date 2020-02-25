@@ -36,12 +36,9 @@ exports.s3 = new AWS.S3()
 exports.apigateway = new AWS.APIGateway()
 exports.lambda = new AWS.Lambda()
 
-let usagePlanCatalog = []
-
 exports.catalog = () => {
   // TODO: This was previously cached, and could be again, except that there's no mechanism to cache-bust the lambda
   // function when the user updates the catalog. This led to confusing behavior, so I removed it.
-  console.log(`usagePlanCatalog: ${JSON.stringify(usagePlanCatalog, null, 4)}`)
   const params = {
     Bucket: process.env.StaticBucketName,
     Key: 'catalog.json'
@@ -53,8 +50,7 @@ exports.catalog = () => {
     .then((catalog) => {
       const cleanCatalog = JSON.parse(catalog.Body.toString())
       console.log(`catalog: ${JSON.stringify(cleanCatalog, null, 4)}`)
-      usagePlanCatalog = cleanCatalog
-      return usagePlanCatalog
+      return cleanCatalog
     })
     .catch((error) => {
       // don't break if there's no catalog file
