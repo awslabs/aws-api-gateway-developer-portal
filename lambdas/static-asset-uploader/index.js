@@ -290,8 +290,8 @@ class State {
       if (this.event.RequestType === 'Delete') {
         console.log(`bucketName: ${bucketName}, staticBucketName: ${staticBucketName}`)
         try {
-          await cleanS3Bucket(bucketName)
-          await cleanS3Bucket(staticBucketName)
+          await module.exports.cleanS3Bucket(bucketName)
+          await module.exports.cleanS3Bucket(staticBucketName)
           return await this.notifyCFNThatUploadSucceeded({ status: 'delete_success', bucket: bucketName })
         } catch (error) {
           await this.notifyCFNThatUploadFailed(error)
@@ -299,7 +299,7 @@ class State {
       } else if (!this.event.ResourceProperties.BucketName) {
         return await this.notifyCFNThatUploadFailed('Bucket name must be specified! See the SAM template.')
       } else {
-        await createCatalogDirectory(staticBucketName)
+        await module.exports.createCatalogDirectory(staticBucketName)
         await createSdkGenerationFile(staticBucketName)
         return await this.uploadStaticAssets(bucketName)
       }
@@ -317,5 +317,10 @@ async function handler (event, context) {
 exports = module.exports = {
   s3,
   handler,
-  State
+  State,
+  sanitizeFilePath,
+  generalizeFilePath,
+  determineContentType,
+  cleanS3Bucket,
+  createCatalogDirectory
 }
