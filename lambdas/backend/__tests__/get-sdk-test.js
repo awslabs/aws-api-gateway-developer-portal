@@ -1,14 +1,18 @@
-const handlers = require('../express-route-handlers')
-const apigateway = require('../express-route-handlers').apigateway
-const promiser = require('../../setup-jest').promiser
-const generateResponseContext = require('../../setup-jest').generateResponseContext
-const generateRequestContext = require('../../setup-jest').generateRequestContext
+const util = require('../util')
+const { promiser, generateRequestContext, generateResponseContext } = require('../../setup-jest')
+const catalogSdk = require('../routes/catalog/sdk')
 
-const catalog = require('../catalog/index')
-
-jest.mock('../catalog/index')
+const originalCatalog = util.catalog
 
 describe('getSdk', () => {
+  beforeEach(() => {
+    util.catalog = jest.fn()
+  })
+
+  afterEach(() => {
+    util.catalog = originalCatalog
+  })
+
   test('it should return a generated SDK, proxying through params', async () => {
     const req = generateRequestContext()
     const res = generateResponseContext()
@@ -17,11 +21,11 @@ describe('getSdk', () => {
     req.query = {}
     req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
 
-    apigateway.getSdk = jest.fn().mockReturnValue(promiser({
+    util.apigateway.getSdk = jest.fn().mockReturnValue(promiser({
       body: Buffer.from('returnedSDK')
     }))
 
-    catalog.mockReturnValue({
+    util.catalog.mockReturnValue({
       apiGateway: [
         {
           apis: [
@@ -36,12 +40,12 @@ describe('getSdk', () => {
       generic: {}
     })
 
-    await handlers.getSdk(req, res)
+    await catalogSdk.get(req, res)
 
-    expect(catalog).toHaveBeenCalledTimes(1)
+    expect(util.catalog).toHaveBeenCalledTimes(1)
 
-    expect(apigateway.getSdk).toHaveBeenCalledTimes(1)
-    expect(apigateway.getSdk).toHaveBeenCalledWith({
+    expect(util.apigateway.getSdk).toHaveBeenCalledTimes(1)
+    expect(util.apigateway.getSdk).toHaveBeenCalledWith({
       restApiId: 'apiId',
       sdkType: 'ruby',
       stageName: 'stageName',
@@ -59,7 +63,7 @@ describe('getSdk', () => {
     req.params = { id: 'anApi_notInTheCatalog' }
     req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
 
-    catalog.mockReturnValue({
+    util.catalog.mockReturnValue({
       apiGateway: [
         {
           apis: [
@@ -74,11 +78,11 @@ describe('getSdk', () => {
       generic: {}
     })
 
-    await handlers.getSdk(req, res)
+    await catalogSdk.get(req, res)
 
-    expect(catalog).toHaveBeenCalledTimes(1)
+    expect(util.catalog).toHaveBeenCalledTimes(1)
 
-    expect(apigateway.getSdk).toHaveBeenCalledTimes(0)
+    expect(util.apigateway.getSdk).toHaveBeenCalledTimes(0)
 
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.status).toHaveBeenCalledWith(400)
@@ -95,7 +99,7 @@ describe('getSdk', () => {
     req.query.sdkType = 'whitespace'
     req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
 
-    catalog.mockReturnValue({
+    util.catalog.mockReturnValue({
       apiGateway: [
         {
           apis: [
@@ -115,11 +119,11 @@ describe('getSdk', () => {
       generic: {}
     })
 
-    await handlers.getSdk(req, res)
+    await catalogSdk.get(req, res)
 
-    expect(catalog).toHaveBeenCalledTimes(1)
+    expect(util.catalog).toHaveBeenCalledTimes(1)
 
-    expect(apigateway.getSdk).toHaveBeenCalledTimes(0)
+    expect(util.apigateway.getSdk).toHaveBeenCalledTimes(0)
 
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.status).toHaveBeenCalledWith(400)
