@@ -22,12 +22,19 @@ export const GetSdkButton = observer(() => {
     <span>
       <Dropdown text='Download SDK' pointing className='link item'>
         {sdkTypes.map((type) => (
-          <div className='item' key={type.id} onClick={() => confirmDownload(type)}>
+          <div className='item' key={type.id} onClick={() => confirmDownload(type, getSdk)}>
             {type.friendlyName}
           </div>
         ))}
       </Dropdown>
-      {store.api.downloadingSdk && <Loader active inline size='tiny' />}
+      <Dropdown text='Export API' pointing className='link item'>
+        {exportTypes.map((type) => (
+          <div className='item' key={type.id} onClick={() => confirmDownload(type, getExport)}>
+            {type.friendlyName}
+          </div>
+        ))}
+      </Dropdown>
+      {store.api.downloadingSdkOrApi && <Loader active inline size='tiny' />}
     </span>
   )
 })
@@ -66,8 +73,8 @@ class Dropdown extends React.Component {
   }
 }
 
-function confirmDownload (type) {
-  if (type.configurationProperties.length) { modal.open(GetSdkModal, { type }) } else { getSdk(type.id) }
+function confirmDownload (type, getDownload) {
+  if (type.configurationProperties.length) { modal.open(GetSdkModal, { type, getDownload }) } else { getDownload(type.id) }
 }
 
 /**
@@ -79,7 +86,11 @@ export class GetSdkModal extends React.Component {
 
     // generate a null state value for each required property (to validate against)
     const fields = props.type.configurationProperties.reduce((obj, property) => {
-      if (property.required) { obj[property.name] = null }
+      if (property.type === 'boolean') {
+        obj[property.name] = false
+      } else if (property.required) {
+        obj[property.name] = null
+      }
       return obj
     }, {})
 
@@ -87,10 +98,11 @@ export class GetSdkModal extends React.Component {
       fields
     }
 
-    this.handleChange = (event, { id, value }) => {
+    this.handleChange = (event, { id, checked, value }) => {
       this.setState((prevState) => {
+        const prop = this.props.type.configurationProperties.find(({ name }) => name === id)
         const newState = _.cloneDeep(prevState)
-        newState.fields[id] = value
+        newState.fields[id] = prop.type === 'boolean' ? checked : value
         return newState
       })
     }
@@ -98,7 +110,7 @@ export class GetSdkModal extends React.Component {
     this.handleSubmit = () => {
       if (!this.isDisabled().disabled) {
         modal.close()
-        getSdk(this.props.type.id, JSON.stringify(this.state.fields))
+        this.props.getDownload(this.props.type.id, this.state.fields)
       }
     }
   }
@@ -107,7 +119,7 @@ export class GetSdkModal extends React.Component {
   // it's intended to be used like <Component {...this.canSubmit()} />
   isDisabled () {
     const hasEmptyValue = !!Object.entries(this.state.fields)
-      .find(([key, value]) => !value)
+      .find(([key, value]) => value == null || value === '')
 
     return { disabled: hasEmptyValue }
   }
@@ -119,12 +131,17 @@ export class GetSdkModal extends React.Component {
     /* eslint-disable react/jsx-closing-tag-location */
     /* eslint-disable react/jsx-handler-names */
     return <>
-      <Header icon='archive' content={`Download the ${type.friendlyName} SDK`} />
+      <Header icon='archive' content={`Download the ${type.longName}`} />
       <Modal.Content>
         <Form onSubmit={this.handleSubmit}>
           {type.configurationProperties.map(property => (
             // only display required fields for now
-            property.required ? <Form.Input
+            property.type === 'boolean' ? <Form.Checkbox
+              key={property.name}
+              id={property.name}
+              label={`${property.friendlyName}`}
+              onChange={this.handleChange}
+            /> : property.required ? <Form.Input
               key={property.name}
               id={property.name}
               label={`${property.friendlyName} (required)`}
@@ -153,6 +170,7 @@ const sdkTypes = [
   {
     id: 'android',
     friendlyName: 'Android',
+    longName: 'Android SDK',
     description: '',
     configurationProperties: [
       {
@@ -181,12 +199,14 @@ const sdkTypes = [
   {
     id: 'javascript',
     friendlyName: 'JavaScript',
+    longName: 'JavaScript SDK',
     description: '',
     configurationProperties: []
   },
   {
     id: 'ios-objective-c',
     friendlyName: 'iOS (Objective-C)',
+    longName: 'iOS SDK (Objective-C)',
     description: '',
     configurationProperties: [
       {
@@ -200,6 +220,7 @@ const sdkTypes = [
   {
     id: 'ios-swift',
     friendlyName: 'iOS (Swift)',
+    longName: 'iOS SDK (Swift)',
     description: '',
     configurationProperties: [
       {
@@ -213,6 +234,7 @@ const sdkTypes = [
   {
     id: 'java',
     friendlyName: 'Java',
+    longName: 'Java SDK',
     description: 'Java SDK generator for API Gateway APIs',
     configurationProperties: [
       {
@@ -262,6 +284,7 @@ const sdkTypes = [
   {
     id: 'ruby',
     friendlyName: 'Ruby',
+    longName: 'Ruby SDK',
     description: 'Ruby SDK generator for API Gateway APIs',
     configurationProperties: [
       {
@@ -286,6 +309,73 @@ const sdkTypes = [
   }
 ]
 
+const exportTypes = [
+  {
+    id: 'oas30',
+    friendlyName: 'OpenAPI 3',
+    longName: 'OpenAPI 3 definitions',
+    description: '',
+    configurationProperties: [
+      {
+        name: 'extensions.integrations',
+        friendlyName: 'Include x-amazon-apigateway-integration extensions',
+        description: '',
+        type: 'boolean'
+      },
+      {
+        name: 'extensions.authorizers',
+        friendlyName: 'Include x-amazon-apigateway-authorizer extensions',
+        description: '',
+        type: 'boolean'
+      },
+      {
+        name: 'extensions.postman',
+        friendlyName: 'Include extensions to allow importing into Postman',
+        description: '',
+        type: 'boolean'
+      },
+      {
+        name: 'accept.yaml',
+        friendlyName: 'Export as YAML (default is JSON)',
+        description: '',
+        type: 'boolean'
+      }
+    ]
+  },
+  {
+    id: 'swagger',
+    friendlyName: 'Swagger',
+    longName: 'Swagger (OpenAPI 2) definitions',
+    description: '',
+    configurationProperties: [
+      {
+        name: 'extensions.integrations',
+        friendlyName: 'Include x-amazon-apigateway-integration extensions',
+        description: '',
+        type: 'boolean'
+      },
+      {
+        name: 'extensions.authorizers',
+        friendlyName: 'Include x-amazon-apigateway-authorizer extensions',
+        description: '',
+        type: 'boolean'
+      },
+      {
+        name: 'extensions.postman',
+        friendlyName: 'Include extensions to allow importing into Postman',
+        description: '',
+        type: 'boolean'
+      },
+      {
+        name: 'accept.yaml',
+        friendlyName: 'Export as YAML (default is JSON)',
+        description: '',
+        type: 'boolean'
+      }
+    ]
+  }
+]
+
 /**
  *
  * Let's talk about this for a moment. For some reason, passing data through the server adds (or removes?)
@@ -298,26 +388,31 @@ const sdkTypes = [
  *
  */
 
-function getSdk (sdkType, parameters = '{}') {
+function fetchBlob ({ blobType, endpointName, sdkType, exportType, parameters }) {
   const apiId = store.api.apiId || store.api.id
   const stageName = store.api.stage
 
-  store.api.downloadingSdk = true
+  store.api.downloadingSdkOrApi = true
 
   return apiGatewayClient()
-    .then(apiGatewayClient => apiGatewayClient.get(`/catalog/${apiId}_${stageName}/sdk`, { sdkType }, {}, {
-      queryParams: { parameters }
-      // leaving this as a comment so we know how to switch to a file in the future
-      // config: { responseType: "blob" }
-    }))
-    .then(({ data, ...rest }) => {
-      downloadFile(data, `${apiId}_${stageName}-${sdkType}.zip`)
+    .then(apiGatewayClient => apiGatewayClient.get(
+      `/catalog/${apiId}_${stageName}/${endpointName}`,
+      { sdkType, exportType },
+      {},
+      {
+        queryParams: { parameters: JSON.stringify(parameters) }
+        // leaving this as a comment so we know how to switch to a file in the future
+        // config: { responseType: "blob" }
+      }
+    ))
+    .then(({ data }) => {
+      downloadFile(data, `${apiId}_${stageName}-${sdkType || exportType}.zip`)
     })
     .catch(({ data } = {}) => {
-      addNotification({ header: 'An error occurred while attempting to download the SDK.', content: data.message })
+      addNotification({ header: `An error occurred while attempting to download the ${blobType}.`, content: data.message })
     })
     .finally(() => {
-      store.api.downloadingSdk = false
+      store.api.downloadingSdkOrApi = false
     })
 }
 
@@ -335,4 +430,38 @@ function downloadFile (dataUri, fileName) {
   document.body.removeChild(downloadLinkElement)
   // }
   // reader.readAsDataURL(data)
+}
+
+function getSdk (sdkType, parameters = {}) {
+  return fetchBlob({
+    blobType: 'SDK',
+    endpointName: 'sdk',
+    sdkType,
+    parameters
+  })
+}
+
+function getExport (exportType, parameters = {}) {
+  if (exportType === 'oas30' || exportType === 'swagger') {
+    const extensions = []
+    if (parameters['extensions.integrations']) extensions.push('integrations')
+    if (parameters['extensions.authorizers']) extensions.push('authorizers')
+    if (parameters['extensions.postman']) extensions.push('postman')
+    const accepts = parameters['accept.yaml'] ? 'application/yaml' : 'application/json'
+    parameters = _.omit(parameters, [
+      'extensions.integrations',
+      'extensions.authorizers',
+      'extensions.postman',
+      'accept.yaml'
+    ])
+    if (extensions.length) parameters.extensions = extensions.join('')
+    parameters.accepts = accepts
+  }
+
+  return fetchBlob({
+    blobType: 'API export',
+    endpointName: 'api',
+    exportType,
+    parameters
+  })
 }

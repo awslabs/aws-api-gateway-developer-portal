@@ -29,6 +29,7 @@ app.put('/marketplace-subscriptions/:usagePlanId', handlers.putMarketplaceSubscr
 app.get('/feedback', handlers.getFeedback)
 app.post('/feedback', handlers.postFeedback)
 app.get('/catalog/:id/sdk', handlers.getSdk)
+app.get('/catalog/:id/export', require('./routes/catalog/export/get'))
 
 // admin APIs
 app.get('/admin/catalog/visibility', handlers.getAdminCatalogVisibility)
