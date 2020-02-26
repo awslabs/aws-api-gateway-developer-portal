@@ -41,6 +41,7 @@ const InfoReplacement = observer(({ specSelectors }) => {
                 <p style={{ fontWeight: 'bold' }}>Version</p>
               )}
               <p style={{ fontWeight: 'bold' }}>Endpoint</p>
+              <p style={{ fontWeight: 'bold' }}>Description</p>
               {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
             </div>
             <div>
@@ -48,6 +49,9 @@ const InfoReplacement = observer(({ specSelectors }) => {
                 <p>{store.api.swagger.info.version}</p>
               )}
               <p>https://{host}{basePath}</p>
+              {store.api.swagger.info.description ? (
+                <p>{store.api.swagger.info.description}</p>
+              ) : null}
               {/* <p>{store.api.usagePlan.name}</p> */}
             </div>
           </div>
