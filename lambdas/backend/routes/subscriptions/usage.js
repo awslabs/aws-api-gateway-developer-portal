@@ -13,34 +13,36 @@ exports.get = (req, res) => {
     res.status(500).json(data)
   }
 
-  util.getUsagePlanFromCatalog(usagePlanId).then((usagePlan) => {
-    const isUsagePlanInCatalog = Boolean(usagePlan)
+  util.catalog()
+    .then(catalog => util.getUsagePlanFromCatalog(usagePlanId, catalog))
+    .then(usagePlan => {
+      const isUsagePlanInCatalog = Boolean(usagePlan)
 
-    // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
-    if (!isUsagePlanInCatalog) {
-      res.status(404).json({ error: 'Invalid Usage Plan ID' })
-    } else {
-      customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
-        const keyId = data.items[0].id
+      // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
+      if (!isUsagePlanInCatalog) {
+        res.status(404).json({ error: 'Invalid Usage Plan ID' })
+      } else {
+        customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
+          const keyId = data.items[0].id
 
-        const params = {
-          endDate: req.query.end,
-          startDate: req.query.start,
-          usagePlanId,
-          keyId,
-          limit: 1000
-        }
-
-        util.apigateway.getUsage(params, (err, usageData) => {
-          if (err) {
-            console.log(`get usage err ${JSON.stringify(err)}`)
-            errFunc(err)
-          } else {
-            console.log(`get usage data ${JSON.stringify(usageData)}`)
-            res.status(200).json(usageData)
+          const params = {
+            endDate: req.query.end,
+            startDate: req.query.start,
+            usagePlanId,
+            keyId,
+            limit: 1000
           }
+
+          util.apigateway.getUsage(params, (err, usageData) => {
+            if (err) {
+              console.log(`get usage err ${JSON.stringify(err)}`)
+              errFunc(err)
+            } else {
+              console.log(`get usage data ${JSON.stringify(usageData)}`)
+              res.status(200).json(usageData)
+            }
+          })
         })
-      })
-    }
-  })
+      }
+    })
 }

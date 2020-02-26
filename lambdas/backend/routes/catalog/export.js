@@ -13,9 +13,9 @@ exports.get = async (req, res) => {
   const catalogObject = util.findApiInCatalog(restApiId, stageName, await util.catalog())
 
   if (!catalogObject) {
-    res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.` })
+    res.status(404).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) could not be found.` })
   } else if (!catalogObject.sdkGeneration) {
-    res.status(400).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for SDK generation.` })
+    res.status(403).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for API export generation.` })
   } else {
     let parameters = req.query.parameters
     if (typeof parameters === 'string') {

@@ -8,7 +8,7 @@ import { observer } from 'mobx-react'
 
 import { store } from 'services/state'
 
-export default observer(() => {
+export default observer(function AlertPopup () {
   return (
     <Segment basic style={{ position: 'absolute', right: 0, margin: 0, top: '56px', display: 'flex', flexDirection: 'column' }}>
       {store.notifications.map(notify => {
