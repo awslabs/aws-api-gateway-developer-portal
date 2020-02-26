@@ -74,7 +74,11 @@ class Dropdown extends React.Component {
 }
 
 function confirmDownload (type, getDownload) {
-  if (type.configurationProperties.length) { modal.open(GetSdkModal, { type, getDownload }) } else { getDownload(type.id) }
+  if (type.configurationProperties.length) {
+    modal.open(<GetSdkModal type={type} getDownload={getDownload} />)
+  } else {
+    getDownload(type.id)
+  }
 }
 
 /**
@@ -86,8 +90,10 @@ export class GetSdkModal extends React.Component {
 
     // generate a null state value for each required property (to validate against)
     const fields = props.type.configurationProperties.reduce((obj, property) => {
-      if (property.type === 'boolean') {
+      if (property.type === 'checkbox') {
         obj[property.name] = false
+      } else if (property.type === 'radio') {
+        obj[property.name] = property.default
       } else if (property.required) {
         obj[property.name] = null
       }
@@ -98,11 +104,11 @@ export class GetSdkModal extends React.Component {
       fields
     }
 
-    this.handleChange = (event, { id, checked, value }) => {
+    this.handleChange = (event, { name, checked, value }) => {
       this.setState((prevState) => {
-        const prop = this.props.type.configurationProperties.find(({ name }) => name === id)
+        const prop = this.props.type.configurationProperties.find(property => property.name === name)
         const newState = _.cloneDeep(prevState)
-        newState.fields[id] = prop.type === 'boolean' ? checked : value
+        newState.fields[name] = prop.type === 'checkbox' ? checked : value
         return newState
       })
     }
@@ -124,6 +130,51 @@ export class GetSdkModal extends React.Component {
     return { disabled: hasEmptyValue }
   }
 
+  renderProperty (property) {
+    if (property.type === 'checkbox') {
+      return (
+        <Form.Checkbox
+          name={property.name}
+          label={`${property.friendlyName}`}
+          onChange={this.handleChange}
+        />
+      )
+    } else if (
+      property.type === 'radio' &&
+      property.values.some(value => property.default === value.name)
+    ) {
+      return (
+        <Form.Group inline>
+          <Form.Field>{property.friendlyName}</Form.Field>
+          <>
+            {property.values.map(({ friendlyName, name }) => (
+              <Form.Radio
+                key={name}
+                name={property.name}
+                label={`${friendlyName}`}
+                value={name}
+                checked={this.state.fields[property.name] === name}
+                onChange={this.handleChange}
+              />
+            ))}
+          </>
+        </Form.Group>
+      )
+    } else if (property.required) {
+      return (
+        <Form.Input
+          name={property.name}
+          label={`${property.friendlyName} (required)`}
+          placeholder={property.friendlyName}
+          onChange={this.handleChange}
+        />
+      )
+    } else {
+      // only display required fields for now
+      return null
+    }
+  }
+
   render () {
     const type = this.props.type
 
@@ -135,19 +186,9 @@ export class GetSdkModal extends React.Component {
       <Modal.Content>
         <Form onSubmit={this.handleSubmit}>
           {type.configurationProperties.map(property => (
-            // only display required fields for now
-            property.type === 'boolean' ? <Form.Checkbox
-              key={property.name}
-              id={property.name}
-              label={`${property.friendlyName}`}
-              onChange={this.handleChange}
-            /> : property.required ? <Form.Input
-              key={property.name}
-              id={property.name}
-              label={`${property.friendlyName} (required)`}
-              placeholder={property.friendlyName}
-              onChange={this.handleChange}
-            /> : null
+            <React.Fragment key={property.name}>
+              {this.renderProperty(property)}
+            </React.Fragment>
           ))}
         </Form>
       </Modal.Content>
@@ -320,25 +361,30 @@ const exportTypes = [
         name: 'extensions.integrations',
         friendlyName: 'Include x-amazon-apigateway-integration extensions',
         description: '',
-        type: 'boolean'
+        type: 'checkbox'
       },
       {
         name: 'extensions.authorizers',
         friendlyName: 'Include x-amazon-apigateway-authorizer extensions',
         description: '',
-        type: 'boolean'
+        type: 'checkbox'
       },
       {
         name: 'extensions.postman',
         friendlyName: 'Include extensions to allow importing into Postman',
         description: '',
-        type: 'boolean'
+        type: 'checkbox'
       },
       {
-        name: 'accept.yaml',
-        friendlyName: 'Export as YAML (default is JSON)',
+        name: 'accept',
+        friendlyName: 'Export format',
         description: '',
-        type: 'boolean'
+        type: 'radio',
+        default: 'application/json',
+        values: [
+          { name: 'application/json', friendlyName: 'JSON' },
+          { name: 'application/yaml', friendlyName: 'YAML' }
+        ]
       }
     ]
   },
@@ -352,25 +398,30 @@ const exportTypes = [
         name: 'extensions.integrations',
         friendlyName: 'Include x-amazon-apigateway-integration extensions',
         description: '',
-        type: 'boolean'
+        type: 'checkbox'
       },
       {
         name: 'extensions.authorizers',
         friendlyName: 'Include x-amazon-apigateway-authorizer extensions',
         description: '',
-        type: 'boolean'
+        type: 'checkbox'
       },
       {
         name: 'extensions.postman',
         friendlyName: 'Include extensions to allow importing into Postman',
         description: '',
-        type: 'boolean'
+        type: 'checkbox'
       },
       {
-        name: 'accept.yaml',
-        friendlyName: 'Export as YAML (default is JSON)',
+        name: 'accept',
+        friendlyName: 'Export format',
         description: '',
-        type: 'boolean'
+        type: 'radio',
+        default: 'application/json',
+        values: [
+          { name: 'application/json', friendlyName: 'JSON' },
+          { name: 'application/yaml', friendlyName: 'YAML' }
+        ]
       }
     ]
   }
