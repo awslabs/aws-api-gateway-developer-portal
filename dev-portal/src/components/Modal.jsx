@@ -15,12 +15,12 @@ export default class GlobalModal extends React.Component {
     this.state = {
       open: false,
       modalProps: {},
-      modalBody: null
+      children: null
     }
 
-    modal.open = (modalBody, modalProps) => {
+    modal.open = (children, modalProps = {}) => {
       this.setState({
-        modalBody,
+        children,
         modalProps,
         open: true
       })
@@ -34,7 +34,7 @@ export default class GlobalModal extends React.Component {
     return (
       <>
         <Modal {...this.state.modalProps} open={this.state.open}>
-          {this.state.modalBody ? <this.state.modalBody {...this.state.modalProps} /> : null}
+          {this.state.children}
         </Modal>
       </>
     )
