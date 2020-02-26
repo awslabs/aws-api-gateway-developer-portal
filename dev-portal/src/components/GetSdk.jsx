@@ -448,10 +448,10 @@ function fetchBlob ({ blobType, endpointName, sdkType, exportType, parameters })
   return apiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient.get(
       `/catalog/${apiId}_${stageName}/${endpointName}`,
-      { sdkType, exportType },
+      { sdkType },
       {},
       {
-        queryParams: { parameters: JSON.stringify(parameters) }
+        queryParams: { exportType, parameters: JSON.stringify(parameters) }
         // leaving this as a comment so we know how to switch to a file in the future
         // config: { responseType: "blob" }
       }
@@ -498,20 +498,17 @@ function getExport (exportType, parameters = {}) {
     if (parameters['extensions.integrations']) extensions.push('integrations')
     if (parameters['extensions.authorizers']) extensions.push('authorizers')
     if (parameters['extensions.postman']) extensions.push('postman')
-    const accepts = parameters['accept.yaml'] ? 'application/yaml' : 'application/json'
     parameters = _.omit(parameters, [
       'extensions.integrations',
       'extensions.authorizers',
-      'extensions.postman',
-      'accept.yaml'
+      'extensions.postman'
     ])
     if (extensions.length) parameters.extensions = extensions.join('')
-    parameters.accepts = accepts
   }
 
   return fetchBlob({
     blobType: 'API export',
-    endpointName: 'api',
+    endpointName: 'export',
     exportType,
     parameters
   })

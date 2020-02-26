@@ -1,10 +1,10 @@
 const util = require('../util')
 const { promiser, generateRequestContext, generateResponseContext } = require('../../setup-jest')
-const catalogSdk = require('../routes/catalog/sdk')
+const catalogExport = require('../routes/catalog/export')
 
 const originalCatalog = util.catalog
 
-describe('GET /catalog/:id/sdk', () => {
+describe('GET /catalog/:id/export', () => {
   beforeEach(() => {
     util.catalog = jest.fn()
   })
@@ -13,15 +13,15 @@ describe('GET /catalog/:id/sdk', () => {
     util.catalog = originalCatalog
   })
 
-  test('it should return a generated SDK, proxying through params', async () => {
+  test('it should return a generated API export, proxying through params', async () => {
     const req = generateRequestContext()
     const res = generateResponseContext()
 
     req.params = { id: 'apiId_stageName' }
     req.query = {}
-    req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
+    req.query = { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
 
-    util.apigateway.getSdk = jest.fn().mockReturnValue(promiser({
+    util.apigateway.getExport = jest.fn().mockReturnValue(promiser({
       body: Buffer.from('returnedSDK')
     }))
 
@@ -40,16 +40,16 @@ describe('GET /catalog/:id/sdk', () => {
       generic: {}
     })
 
-    await catalogSdk.get(req, res)
+    await catalogExport.get(req, res)
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
-    expect(util.apigateway.getSdk).toHaveBeenCalledTimes(1)
-    expect(util.apigateway.getSdk).toHaveBeenCalledWith({
+    expect(util.apigateway.getExport).toHaveBeenCalledTimes(1)
+    expect(util.apigateway.getExport).toHaveBeenCalledWith({
       restApiId: 'apiId',
-      sdkType: 'ruby',
+      exportType: 'oas30',
       stageName: 'stageName',
-      parameters: { serviceName: 'my-new-ruby-service' }
+      parameters: { serviceName: 'my-new-openapi-service' }
     })
 
     expect(res.send).toHaveBeenCalledTimes(1)
@@ -61,7 +61,7 @@ describe('GET /catalog/:id/sdk', () => {
     const res = generateResponseContext()
 
     req.params = { id: 'anApi_notInTheCatalog' }
-    req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
+    req.query = { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
 
     util.catalog.mockReturnValue({
       apiGateway: [
@@ -78,11 +78,11 @@ describe('GET /catalog/:id/sdk', () => {
       generic: {}
     })
 
-    await catalogSdk.get(req, res)
+    await catalogExport.get(req, res)
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
-    expect(util.apigateway.getSdk).toHaveBeenCalledTimes(0)
+    expect(util.apigateway.getExport).toHaveBeenCalledTimes(0)
 
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.status).toHaveBeenCalledWith(404)
@@ -90,14 +90,14 @@ describe('GET /catalog/:id/sdk', () => {
     expect(res.status().json).toHaveBeenCalledWith({ message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' })
   })
 
-  test('it should not return SDKs for APIs in the catalog but with SDK generation disabled', async () => {
+  test('it should not return SDKs for APIs in the catalog but with API export generation disabled', async () => {
     const req = generateRequestContext()
     const res = generateResponseContext()
 
     req.params = { id: 'thisApi_shouldNotGenerateSDKs' }
     req.query = {}
-    req.query.sdkType = 'whitespace'
-    req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
+    req.query.exportType = 'whitespace'
+    req.query = { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
 
     util.catalog.mockReturnValue({
       apiGateway: [
@@ -119,15 +119,15 @@ describe('GET /catalog/:id/sdk', () => {
       generic: {}
     })
 
-    await catalogSdk.get(req, res)
+    await catalogExport.get(req, res)
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
-    expect(util.apigateway.getSdk).toHaveBeenCalledTimes(0)
+    expect(util.apigateway.getExport).toHaveBeenCalledTimes(0)
 
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.status).toHaveBeenCalledWith(403)
     expect(res.status().json).toHaveBeenCalledTimes(1)
-    expect(res.status().json).toHaveBeenCalledWith({ message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for SDK generation.' })
+    expect(res.status().json).toHaveBeenCalledWith({ message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for API export generation.' })
   })
 })
