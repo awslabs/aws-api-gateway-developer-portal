@@ -18,7 +18,8 @@
  *    filtering descriptor for this column. If absent, the user cannot filter
  *    on this column.
  * @property {string} filtering.accessor
- *    an Account object property name on which to search
+ *    either an Account object property name, or a function which takes an
+ *    Account object and returns a string, on which to filter
  */
 
 export const EmailAddress = {
@@ -32,18 +33,6 @@ export const EmailAddress = {
     accessor: 'emailAddress',
   },
 }
-
-const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('default', {
-  year: 'numeric',
-  month: 'numeric',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-  second: 'numeric',
-})
-
-const formatDate = isoDateString =>
-  DATE_TIME_FORMATTER.format(new Date(isoDateString))
 
 export const DateRegistered = {
   id: 'dateRegistered',
@@ -68,3 +57,48 @@ export const ApiKeyId = {
     accessor: 'apiKeyId',
   },
 }
+
+export const Promoter = {
+  id: 'promoter',
+  title: 'Promoter',
+  render: ({ promoterIdentityPoolId, promoterEmailAddress }) =>
+    promoterIdentityPoolId
+      ? `${promoterEmailAddress} (${promoterIdentityPoolId})`
+      : '',
+  filtering: {
+    accessor: ({ promoterIdentityPoolId, promoterEmailAddress }) =>
+      promoterIdentityPoolId
+        ? `${promoterEmailAddress} ${promoterIdentityPoolId}`
+        : '',
+  },
+}
+
+export const DatePromoted = {
+  id: 'datePromoted',
+  title: 'Date promoted',
+  render: ({ datePromoted }) => (datePromoted ? formatDate(datePromoted) : ''),
+  ordering: {
+    iteratee: 'datePromoted',
+  },
+}
+
+export const DateRequested = {
+  id: 'dateRequested',
+  title: 'Date requested',
+  render: account => formatDate(account.dateRequested),
+  ordering: {
+    iteratee: 'dateRequested',
+  },
+}
+
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('default', {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+})
+
+const formatDate = isoDateString =>
+  DATE_TIME_FORMATTER.format(new Date(isoDateString))

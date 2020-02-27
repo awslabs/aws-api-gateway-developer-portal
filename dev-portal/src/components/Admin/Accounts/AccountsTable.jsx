@@ -37,6 +37,11 @@ const ORDER_DIRECTIONS = [
 
 const nextDirectionIndex = index => (index + 1) % ORDER_DIRECTIONS.length
 
+export const ACCOUNT_ROW_PLACEHOLDER_TESTID = 'accountRowPlaceholder'
+export const FILTER_DROPDOWN_TESTID = 'filterDropdown'
+export const ACCOUNTS_TABLE_TESTID = 'accountsTable'
+export const ACCOUNT_COLUMN_ID_DATA_ATTR = 'data-account-column-id'
+
 /**
  * A paginated table whose rows represent accounts.
  *
@@ -110,20 +115,31 @@ export const AccountsTable = ({
    */
   useEffect(() => {
     let view = _(accounts)
-    if (filter.column !== NO_FILTER_COLUMN) {
-      const filterKey = filter.column.filtering.accessor
-      view = view.filter(
-        item =>
-          !!item[filterKey] &&
-          item[filterKey].toString().includes(filter.value),
-      )
+
+    if (filter.value !== '' && filter.column !== NO_FILTER_COLUMN) {
+      const filterAccessor = filter.column.filtering.accessor
+      if (typeof filterAccessor === 'string') {
+        view = view.filter(
+          item =>
+            !!item[filterAccessor] &&
+            item[filterAccessor].toString().includes(filter.value),
+        )
+      } else if (typeof filterAccessor === 'function') {
+        view = view.filter(item => filterAccessor(item).includes(filter.value))
+      } else {
+        throw new Error(
+          `Invalid filtering accessor on column ${filter.column.id}`,
+        )
+      }
     }
+
     if (order.column !== NO_ORDER_COLUMN) {
       view = view.orderBy(
         [order.column.ordering.iteratee],
         [ORDER_DIRECTIONS[order.directionIndex].lodashDirection],
       )
     }
+
     setAccountsView(view.value())
   }, [accounts, filter, order])
 
@@ -218,7 +234,7 @@ export const AccountsTable = ({
           options={filterColumnDropdownOptions}
           selection
           value={filter.column.id}
-          data-testid='filterDropdown'
+          data-testid={FILTER_DROPDOWN_TESTID}
         />
       </div>
       <div style={{ float: 'right', marginBottom: '1rem' }}>
@@ -228,7 +244,7 @@ export const AccountsTable = ({
   )
 
   const table = (
-    <Table selectable={!loading} data-testid='accountsTable'>
+    <Table selectable={!loading} data-testid={ACCOUNTS_TABLE_TESTID}>
       <TableHeader columns={columns} order={order} setOrder={setOrder} />
       <Table.Body>{tableRows}</Table.Body>
       <Table.Footer>
@@ -303,7 +319,7 @@ const LoadingAccountRow = React.memo(({ columnCount }) => (
   <Table.Row>
     {Array.from({ length: columnCount }).map((_value, index) => (
       <Table.Cell key={index}>
-        <Placeholder data-testid='accountRowPlaceholder' fluid>
+        <Placeholder data-testid={ACCOUNT_ROW_PLACEHOLDER_TESTID} fluid>
           &nbsp;
         </Placeholder>
       </Table.Cell>
@@ -322,8 +338,10 @@ const FillerAccountRow = React.memo(({ columnCount }) => (
 const AccountRow = React.memo(({ account, columns, isSelected, onSelect }) => {
   return (
     <Table.Row active={isSelected} onClick={() => onSelect(account)}>
-      {columns.map(({ render }, index) => (
-        <Table.Cell key={index}>{render(account)}</Table.Cell>
+      {columns.map(({ id, render }, index) => (
+        <Table.Cell {...{ [ACCOUNT_COLUMN_ID_DATA_ATTR]: id }} key={index}>
+          {render(account)}
+        </Table.Cell>
       ))}
     </Table.Row>
   )
