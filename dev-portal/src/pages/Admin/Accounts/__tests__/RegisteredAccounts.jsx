@@ -9,6 +9,7 @@ import * as accountsTestUtils from 'utils/accounts-test-utils'
 import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountService from 'services/accounts'
+import * as AccountsTableColumns from 'components/Admin/Accounts/AccountsTableColumns'
 
 jest.mock('services/accounts')
 
@@ -82,21 +83,21 @@ describe('RegisteredAccounts page', () => {
 
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
-      .orderBy(['emailAddress'], ['asc'])
+      .orderBy(['EmailAddress'], ['asc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
+      .forEach(({ EmailAddress }) => rtl.getByText(table, EmailAddress))
 
     // Check that last page is correct
     const pagination = page.getByRole('navigation')
     const lastPageButton = rtl.getByLabelText(pagination, 'Last item')
     rtl.fireEvent.click(lastPageButton)
     _(MOCK_ACCOUNTS)
-      .orderBy(['emailAddress'], ['asc'])
+      .orderBy(['EmailAddress'], ['asc'])
       .drop(
         Math.floor(NUM_MOCK_ACCOUNTS / AccountsTable.DEFAULT_PAGE_SIZE) *
           AccountsTable.DEFAULT_PAGE_SIZE,
       )
-      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
+      .forEach(({ EmailAddress }) => rtl.getByText(table, EmailAddress))
 
     // Order descending, go back to first page
     rtl.fireEvent.click(emailAddressHeader)
@@ -105,9 +106,9 @@ describe('RegisteredAccounts page', () => {
 
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
-      .orderBy(['emailAddress'], ['desc'])
+      .orderBy(['EmailAddress'], ['desc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
+      .forEach(({ EmailAddress }) => rtl.getByText(table, EmailAddress))
   })
 
   it('orders accounts by date registered', async () => {
@@ -125,9 +126,9 @@ describe('RegisteredAccounts page', () => {
 
     // Check that first page is correct
     _(MOCK_ACCOUNTS)
-      .orderBy('dateRegistered')
+      .orderBy('DateRegistered')
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
+      .forEach(({ EmailAddress }) => rtl.getByText(table, EmailAddress))
   })
 
   it('filters accounts by email address', async () => {
@@ -142,9 +143,9 @@ describe('RegisteredAccounts page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: '11' } })
     _(MOCK_ACCOUNTS)
-      .filter(({ emailAddress }) => emailAddress.includes('11'))
+      .filter(({ EmailAddress }) => EmailAddress.includes('11'))
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
+      .forEach(({ EmailAddress }) => rtl.getByText(table, EmailAddress))
 
     rtl.fireEvent.change(filterInput, { target: { value: '111' } })
     rtl.getByText(table, '111@example.com')
@@ -171,9 +172,9 @@ describe('RegisteredAccounts page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: '15' } })
     _(MOCK_ACCOUNTS)
-      .filter(({ apiKeyId }) => apiKeyId.includes('15'))
+      .filter(({ ApiKeyId }) => ApiKeyId.includes('15'))
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ apiKeyId }) => rtl.getByText(table, apiKeyId))
+      .forEach(({ ApiKeyId }) => rtl.getByText(table, ApiKeyId))
 
     rtl.fireEvent.change(filterInput, { target: { value: '155' } })
     rtl.getByText(table, 'apiKeyId155')
@@ -197,25 +198,25 @@ describe('RegisteredAccounts page', () => {
     rtl.fireEvent.change(filterInput, { target: { value: '13' } })
     rtl.fireEvent.click(dateRegisteredHeader)
     _(MOCK_ACCOUNTS)
-      .filter(({ emailAddress }) => emailAddress.includes('13'))
-      .orderBy('dateRegistered')
+      .filter(({ EmailAddress }) => EmailAddress.includes('13'))
+      .orderBy('DateRegistered')
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) => rtl.getByText(table, emailAddress))
+      .forEach(({ EmailAddress }) => rtl.getByText(table, EmailAddress))
   })
 
   it('deletes an account', async () => {
     const targetAccountEmail = '1@example.com'
-    const targetAccountIdentityPoolId = 'identityPoolId1'
+    const targetAccountIdentityId = 'identityId1'
 
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
       .mockResolvedValueOnce(
         MOCK_ACCOUNTS.filter(
-          account => account.emailAddress !== targetAccountEmail,
+          account => account.EmailAddress !== targetAccountEmail,
         ),
       )
-    AccountService.deleteAccountByIdentityPoolId = jest
+    AccountService.deleteAccountByIdentityId = jest
       .fn()
       .mockResolvedValueOnce(undefined)
 
@@ -237,12 +238,10 @@ describe('RegisteredAccounts page', () => {
 
     await accountsTestUtils.waitForAccountsToLoad(page)
     expect(rtl.queryByText(document, 'Confirm deletion')).toBeNull()
-    expect(
-      AccountService.deleteAccountByIdentityPoolId.mock.calls,
-    ).toHaveLength(1)
-    expect(
-      AccountService.deleteAccountByIdentityPoolId.mock.calls[0][0],
-    ).toEqual(targetAccountIdentityPoolId)
+    expect(AccountService.deleteAccountByIdentityId.mock.calls).toHaveLength(1)
+    expect(AccountService.deleteAccountByIdentityId.mock.calls[0][0]).toEqual(
+      targetAccountIdentityId,
+    )
 
     await rtl.wait(() =>
       expect(page.getByText(/Deleted account/)).toBeInTheDocument(),
@@ -257,7 +256,7 @@ describe('RegisteredAccounts page', () => {
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
-    AccountService.deleteAccountByIdentityPoolId = jest
+    AccountService.deleteAccountByIdentityId = jest
       .fn()
       .mockImplementation(() => Promise.reject(new Error(errorMessage)))
 
@@ -283,12 +282,12 @@ describe('RegisteredAccounts page', () => {
 
   it('promotes an account', async () => {
     const targetAccountEmail = '2@example.com'
-    const targetAccountIdentityPoolId = 'identityPoolId2'
+    const targetAccountIdentityId = 'identityId2'
 
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
-    AccountService.promoteAccountByIdentityPoolId = jest
+    AccountService.promoteAccountByIdentityId = jest
       .fn()
       .mockResolvedValueOnce(undefined)
 
@@ -310,12 +309,10 @@ describe('RegisteredAccounts page', () => {
 
     await accountsTestUtils.waitForAccountsToLoad(page)
     expect(rtl.queryByText(document, 'Confirm promotion')).toBeNull()
-    expect(
-      AccountService.promoteAccountByIdentityPoolId.mock.calls,
-    ).toHaveLength(1)
-    expect(
-      AccountService.promoteAccountByIdentityPoolId.mock.calls[0][0],
-    ).toEqual(targetAccountIdentityPoolId)
+    expect(AccountService.promoteAccountByIdentityId.mock.calls).toHaveLength(1)
+    expect(AccountService.promoteAccountByIdentityId.mock.calls[0][0]).toEqual(
+      targetAccountIdentityId,
+    )
 
     await rtl.wait(() =>
       expect(page.getByText(/Promoted account/)).toBeInTheDocument(),
@@ -330,7 +327,7 @@ describe('RegisteredAccounts page', () => {
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
-    AccountService.deleteAccountByIdentityPoolId = jest
+    AccountService.deleteAccountByIdentityId = jest
       .fn()
       .mockImplementation(() => Promise.reject(new Error(errorMessage)))
 
@@ -365,11 +362,10 @@ const MOCK_DATES_REGISTERED = (() => {
 })()
 
 const MOCK_ACCOUNTS = _.range(NUM_MOCK_ACCOUNTS).map(index => ({
-  identityPoolId: `identityPoolId${index}`,
-  userPoolId: `userPoolId${index}`,
-  emailAddress: `${index}@example.com`,
-  dateRegistered: MOCK_DATES_REGISTERED[index].toJSON(),
-  apiKeyId: `apiKeyId${index}`,
-  registrationMethod: _.sample(['open', 'invite', 'request']),
-  isAdmin: index % 20 === 0,
+  IdentityId: `identityId${index}`,
+  UserId: `userId${index}`,
+  EmailAddress: `${index}@example.com`,
+  DateRegistered: MOCK_DATES_REGISTERED[index].toJSON(),
+  ApiKeyId: `apiKeyId${index}`,
+  RegistrationMethod: _.sample(['open', 'invite', 'request']),
 }))

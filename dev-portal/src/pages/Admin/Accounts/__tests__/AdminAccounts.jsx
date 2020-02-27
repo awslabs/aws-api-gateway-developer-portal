@@ -9,6 +9,7 @@ import * as accountsTestUtils from 'utils/accounts-test-utils'
 import AdminAccounts from 'pages/Admin/Accounts/AdminAccounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountService from 'services/accounts'
+import * as AccountsTableColumns from 'components/Admin/Accounts/AccountsTableColumns'
 
 jest.mock('services/accounts')
 
@@ -45,8 +46,8 @@ describe('AdminAccounts page', () => {
     await accountsTestUtils.waitForAccountsToLoad(page)
 
     _.take(MOCK_ADMINS, AccountsTable.DEFAULT_PAGE_SIZE).forEach(
-      ({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, page.baseElement),
+      ({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, page.baseElement),
     )
   })
 
@@ -83,10 +84,10 @@ describe('AdminAccounts page', () => {
 
     // Check that first page is correct
     _(MOCK_ADMINS)
-      .orderBy(['emailAddress'])
+      .orderBy(['EmailAddress'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     // Check that last page is correct
@@ -94,13 +95,13 @@ describe('AdminAccounts page', () => {
     const lastPageButton = rtl.getByLabelText(pagination, 'Last item')
     rtl.fireEvent.click(lastPageButton)
     _(MOCK_ADMINS)
-      .orderBy(['emailAddress'])
+      .orderBy(['EmailAddress'])
       .drop(
         Math.floor(MOCK_ADMINS.length / AccountsTable.DEFAULT_PAGE_SIZE) *
           AccountsTable.DEFAULT_PAGE_SIZE,
       )
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     // Order descending, go back to first page
@@ -110,10 +111,10 @@ describe('AdminAccounts page', () => {
 
     // Check that first page is correct
     _(MOCK_ADMINS)
-      .orderBy(['emailAddress'], ['desc'])
+      .orderBy(['EmailAddress'], ['desc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
   })
 
@@ -132,10 +133,10 @@ describe('AdminAccounts page', () => {
 
     // Check that first page is correct
     _(MOCK_ADMINS)
-      .orderBy(['datePromoted'], ['asc'])
+      .orderBy(['DatePromoted'], ['asc'])
       .take(AccountsTable.DEFAULT_PAGE_SIZE)
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
   })
 
@@ -151,18 +152,20 @@ describe('AdminAccounts page', () => {
 
     rtl.fireEvent.change(filterInput, { target: { value: '1' } })
     _(MOCK_ADMINS)
-      .filter(({ emailAddress }) => emailAddress.includes('1'))
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .filter(({ EmailAddress }) => EmailAddress.includes('1'))
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
 
     rtl.fireEvent.change(filterInput, { target: { value: '9' } })
     expect(
-      accountsTestUtils.queryAllByColumnText(
-        table,
-        'emailAddress',
-        /@example\.com/,
-      ).map(el => el.textContent),
+      accountsTestUtils
+        .queryAllByColumnText(
+          table,
+          AccountsTableColumns.EmailAddress.id,
+          /@example\.com/,
+        )
+        .map(el => el.textContent),
     ).toEqual(['90@example.com'])
   })
 
@@ -186,13 +189,13 @@ describe('AdminAccounts page', () => {
     rtl.fireEvent.change(filterInput, { target: { value: '20@example.com' } })
     _(MOCK_ADMINS)
       .filter({ promoterEmailAddress: '20@example.com' })
-      .forEach(({ emailAddress }) =>
-        accountsTestUtils.expectEmailIn(emailAddress, table),
+      .forEach(({ EmailAddress }) =>
+        accountsTestUtils.expectEmailIn(EmailAddress, table),
       )
     expect(
       accountsTestUtils.queryAllByColumnText(
         table,
-        'emailAddress',
+        AccountsTableColumns.EmailAddress.id,
         /@example\.com/,
       ),
     ).toHaveLength(3)
@@ -201,7 +204,7 @@ describe('AdminAccounts page', () => {
     expect(
       accountsTestUtils.queryAllByColumnText(
         table,
-        'emailAddress',
+        AccountsTableColumns.EmailAddress.id,
         /@example\.com/,
       ),
     ).toHaveLength(0)
@@ -224,29 +227,31 @@ describe('AdminAccounts page', () => {
     const filterByApiKeyIdOption = rtl.getByText(filterDropdown, 'Promoter')
     rtl.fireEvent.click(filterByApiKeyIdOption)
 
-    rtl.fireEvent.change(filterInput, { target: { value: 'identityPoolId20' } })
+    rtl.fireEvent.change(filterInput, { target: { value: 'identityId20' } })
     const expectedEmails = _(MOCK_ADMINS)
-      .filter(({ promoterIdentityPoolId }) =>
-        (promoterIdentityPoolId || '').includes('identityPoolId20'),
+      .filter(({ PromoterIdentityId }) =>
+        (PromoterIdentityId || '').includes('identityId20'),
       )
-      .map(({ emailAddress }) => emailAddress)
+      .map(({ EmailAddress }) => EmailAddress)
       .sortBy()
       .value()
     expect(
       _.sortBy(
-        accountsTestUtils.queryAllByColumnText(
-          table,
-          'emailAddress',
-          /@example\.com/,
-        ).map(el => el.textContent),
+        accountsTestUtils
+          .queryAllByColumnText(
+            table,
+            AccountsTableColumns.EmailAddress.id,
+            /@example\.com/,
+          )
+          .map(el => el.textContent),
       ),
     ).toEqual(expectedEmails)
 
-    rtl.fireEvent.change(filterInput, { target: { value: 'identityPoolId30' } })
+    rtl.fireEvent.change(filterInput, { target: { value: 'identityId30' } })
     expect(
       accountsTestUtils.queryAllByColumnText(
         table,
-        'emailAddress',
+        AccountsTableColumns.EmailAddress.id,
         /@example\.com/,
       ),
     ).toHaveLength(0)
@@ -277,19 +282,19 @@ const MOCK_DATES_PROMOTED = (() => {
 
 const MOCK_ADMIN_STEP = 10
 
-const MOCK_ACCOUNTS = (() => {
-  return Array.from({ length: NUM_MOCK_ACCOUNTS }).map((_value, index) => {
+const MOCK_ACCOUNTS = _.range(0, NUM_MOCK_ACCOUNTS, MOCK_ADMIN_STEP).map(
+  index => {
     const promoter = MOCK_PROMOTERS[index]
     return {
-      identityPoolId: `identityPoolId${index}`,
-      userPoolId: `userPoolId${index}`,
-      emailAddress: `${index}@example.com`,
-      datePromoted: MOCK_DATES_PROMOTED[index],
-      promoterEmailAddress: promoter && `${promoter}@example.com`,
-      promoterIdentityPoolId: promoter && `identityPoolId${promoter}`,
+      IdentityId: `identityId${index}`,
+      UserId: `userId${index}`,
+      EmailAddress: `${index}@example.com`,
+      DatePromoted: MOCK_DATES_PROMOTED[index],
+      PromoterEmailAddress: promoter && `${promoter}@example.com`,
+      PromoterIdentityId: promoter && `identityId${promoter}`,
       isAdmin: index % MOCK_ADMIN_STEP === 0,
     }
-  })
-})()
+  },
+)
 
 const MOCK_ADMINS = MOCK_ACCOUNTS.filter(account => account.isAdmin)

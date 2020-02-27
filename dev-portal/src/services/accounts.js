@@ -6,37 +6,50 @@ const NUM_MOCK_ACCOUNTS = 157 // should be prime
 const mockData = (() => {
   const now = Date.now()
   const adminStep = 10
-  return Array.from({ length: NUM_MOCK_ACCOUNTS }).map((_value, index) => {
+  return _.range(NUM_MOCK_ACCOUNTS).map(index => {
+    let inviter = 1
     let promoter = null
     if (_.inRange(index, 20, 90)) {
       promoter = 10
+      inviter = 10
     } else if (_.inRange(index, 90, 120)) {
       promoter = 20
+      inviter = 20
     } else if (_.inRange(index, 120, NUM_MOCK_ACCOUNTS)) {
       promoter = 100
+      inviter = 100
     }
 
     return {
-      identityPoolId: `identityPoolId${index}`,
-      userPoolId: `userPoolId${index}`,
-      emailAddress: `${index}@example.com`,
-      datePromoted:
+      IdentityId: `identityId${index}`,
+      UserId: `userId${index}`,
+      EmailAddress: `${index}@example.com`,
+      DatePromoted:
         promoter &&
         new Date(now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000).toJSON(),
-      promoterEmailAddress: promoter && `${promoter}@example.com`,
-      promoterIdentityPoolId: promoter && `identityPoolId${promoter}`,
-      dateRegistered: new Date(
+      PromoterEmailAddress: promoter && `${promoter}@example.com`,
+      PromoterIdentityId: promoter && `identityId${promoter}`,
+      InviterEmailAddress: inviter && `${inviter}@example.com`,
+      InviterIdentityId: inviter && `identityId${inviter}`,
+      DateRegistered: new Date(
         now + ((index * 3) % NUM_MOCK_ACCOUNTS) * 1000,
       ).toJSON(),
-      apiKeyId: `apiKeyId${index}`,
-      registrationMethod: _.sample(['open', 'invite', 'request']),
+      ApiKeyId: `apiKeyId${index}`,
+      RegistrationMethod: _.sample(['open', 'invite', 'request']),
       isAdmin: index % adminStep === 0,
     }
   })
 })()
 
 const mockPendingRequestAccounts = _.cloneDeep(mockData).map(
-  ({ dateRegistered, ...rest }) => ({ ...rest, dateRequested: dateRegistered }),
+  ({ DateRegistered, ...rest }) => ({ ...rest, DateRequested: DateRegistered }),
+)
+
+const mockPendingInviteAccounts = _.cloneDeep(mockData).map(
+  ({ DateRegistered, ...rest }) => ({
+    ...rest,
+    DateInvited: DateRegistered,
+  }),
 )
 
 export const fetchRegisteredAccounts = () => {
@@ -51,26 +64,62 @@ export const fetchPendingRequestAccounts = () => {
   return resolveAfter(1500, mockPendingRequestAccounts.slice())
 }
 
-export const deleteAccountByIdentityPoolId = async identityPoolId => {
+export const fetchPendingInviteAccounts = () => {
+  return resolveAfter(1500, mockPendingInviteAccounts.slice())
+}
+
+export const deleteAccountByIdentityId = async identityId => {
   await resolveAfter(1500)
 
   const accountIndex = mockData.findIndex(
-    account => account.identityPoolId === identityPoolId,
+    account => account.IdentityId === identityId,
   )
   if (accountIndex === -1) {
     throw new Error('Account not found!')
   }
-  if (identityPoolId.endsWith('10')) {
+  if (identityId.endsWith('10')) {
     throw new Error('Something weird happened!')
   }
   mockData.splice(accountIndex, 1)
 }
 
-export const promoteAccountByIdentityPoolId = async identityPoolId => {
+export const deleteInviteByIdentityId = async identityId => {
+  await resolveAfter(1500)
+
+  const accountIndex = mockPendingInviteAccounts.findIndex(
+    account => account.IdentityId === identityId,
+  )
+  if (accountIndex === -1) {
+    throw new Error('Account not found!')
+  }
+  if (identityId.endsWith('10')) {
+    throw new Error('Something weird happened!')
+  }
+  mockPendingInviteAccounts.splice(accountIndex, 1)
+}
+
+export const createInviteByEmail = async emailAddress => {
+  await resolveAfter(1500)
+
+  const account = {
+      IdentityId: `temp`,
+      UserId: `temp`,
+      EmailAddress: emailAddress,
+      DateInvited: new Date(Date.now()).toJSON(),
+      InviterEmailAddress: `you@localhost`,
+      InviterIdentityId: `yourIdentityId`,
+      ApiKeyId: `temp`,
+      RegistrationMethod: `invite`,
+  }
+
+  mockPendingInviteAccounts.push(account)
+}
+
+export const promoteAccountByIdentityId = async identityId => {
   await resolveAfter(1500)
 
   const account = mockData.find(
-    account => account.identityPoolId === identityPoolId,
+    account => account.IdentityId === identityId,
   )
   if (account === undefined) {
     throw new Error('Account not found!')
@@ -81,31 +130,31 @@ export const promoteAccountByIdentityPoolId = async identityPoolId => {
   account.isAdmin = true
 }
 
-export const approveAccountRequestByIdentityPoolId = async identityPoolId => {
+export const approveAccountRequestByIdentityId = async identityId => {
   await resolveAfter(1500)
 
-  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityPoolId))) {
+  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityId))) {
     throw new Error('Account not found!')
   }
-  if (identityPoolId.endsWith('10')) {
+  if (identityId.endsWith('10')) {
     throw new Error('Something weird happened!')
   }
 
-  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityPoolId))
+  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityId))
 }
 
-export const denyAccountRequestByIdentityPoolId = async identityPoolId => {
+export const denyAccountRequestByIdentityId = async identityId => {
   await resolveAfter(1500)
 
-  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityPoolId))) {
+  if (!mockPendingRequestAccounts.some(matchingIdentityId(identityId))) {
     throw new Error('Account not found!')
   }
-  if (identityPoolId.endsWith('10')) {
+  if (identityId.endsWith('10')) {
     throw new Error('Something weird happened!')
   }
 
-  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityPoolId))
+  _.remove(mockPendingRequestAccounts, matchingIdentityId(identityId))
 }
 
 const matchingIdentityId = targetId => account =>
-  account.identityPoolId === targetId
+  account.IdentityId === targetId
