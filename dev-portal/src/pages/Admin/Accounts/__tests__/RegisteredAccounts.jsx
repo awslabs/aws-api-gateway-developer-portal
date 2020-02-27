@@ -206,7 +206,7 @@ describe('RegisteredAccounts page', () => {
 
   it('deletes an account', async () => {
     const targetAccountEmail = '1@example.com'
-    const targetAccountIdentityId = 'identityId1'
+    const targetAccountUserId = 'userId1'
 
     AccountService.fetchRegisteredAccounts = jest
       .fn()
@@ -216,7 +216,7 @@ describe('RegisteredAccounts page', () => {
           account => account.EmailAddress !== targetAccountEmail,
         ),
       )
-    AccountService.deleteAccountByIdentityId = jest
+    AccountService.deleteAccountByUserId = jest
       .fn()
       .mockResolvedValueOnce(undefined)
 
@@ -238,9 +238,9 @@ describe('RegisteredAccounts page', () => {
 
     await accountsTestUtils.waitForAccountsToLoad(page)
     expect(rtl.queryByText(document, 'Confirm deletion')).toBeNull()
-    expect(AccountService.deleteAccountByIdentityId.mock.calls).toHaveLength(1)
-    expect(AccountService.deleteAccountByIdentityId.mock.calls[0][0]).toEqual(
-      targetAccountIdentityId,
+    expect(AccountService.deleteAccountByUserId.mock.calls).toHaveLength(1)
+    expect(AccountService.deleteAccountByUserId.mock.calls[0][0]).toEqual(
+      targetAccountUserId,
     )
 
     await rtl.wait(() =>
@@ -256,7 +256,7 @@ describe('RegisteredAccounts page', () => {
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
-    AccountService.deleteAccountByIdentityId = jest
+    AccountService.deleteAccountByUserId = jest
       .fn()
       .mockImplementation(() => Promise.reject(new Error(errorMessage)))
 
@@ -282,12 +282,12 @@ describe('RegisteredAccounts page', () => {
 
   it('promotes an account', async () => {
     const targetAccountEmail = '2@example.com'
-    const targetAccountIdentityId = 'identityId2'
+    const targetAccountUserId = 'userId2'
 
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
-    AccountService.promoteAccountByIdentityId = jest
+    AccountService.promoteAccountByUserId = jest
       .fn()
       .mockResolvedValueOnce(undefined)
 
@@ -309,9 +309,9 @@ describe('RegisteredAccounts page', () => {
 
     await accountsTestUtils.waitForAccountsToLoad(page)
     expect(rtl.queryByText(document, 'Confirm promotion')).toBeNull()
-    expect(AccountService.promoteAccountByIdentityId.mock.calls).toHaveLength(1)
-    expect(AccountService.promoteAccountByIdentityId.mock.calls[0][0]).toEqual(
-      targetAccountIdentityId,
+    expect(AccountService.promoteAccountByUserId.mock.calls).toHaveLength(1)
+    expect(AccountService.promoteAccountByUserId.mock.calls[0][0]).toEqual(
+      targetAccountUserId,
     )
 
     await rtl.wait(() =>
@@ -327,7 +327,7 @@ describe('RegisteredAccounts page', () => {
     AccountService.fetchRegisteredAccounts = jest
       .fn()
       .mockResolvedValueOnce(MOCK_ACCOUNTS)
-    AccountService.deleteAccountByIdentityId = jest
+    AccountService.deleteAccountByUserId = jest
       .fn()
       .mockImplementation(() => Promise.reject(new Error(errorMessage)))
 

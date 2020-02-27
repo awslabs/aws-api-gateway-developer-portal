@@ -1,6 +1,15 @@
 'use strict'
 
 const AWS = require('aws-sdk')
+const { getEnv } = require('dev-portal-common/get-env')
+
+exports.makeErrorResponse = (error, message = null) => {
+  const response = { message: message === null ? error.message : message }
+  if (getEnv('DevelopmentMode', 'false') === 'true' || getEnv('LocalDevelopmentMode', 'false') === 'true') {
+    response.stack = error.stack
+  }
+  return response
+}
 
 exports.getCognitoIdentityId = req => {
   return req.apiGateway.event.requestContext.identity.cognitoIdentityId

@@ -13,9 +13,24 @@ export function isAuthenticated () {
   return store.idToken
 }
 
+function getPreferredRole () {
+  return jwtDecode(store.idToken)['cognito:preferred_role'] || ''
+}
+
+export function isRegistered () {
+  if (!store.idToken) {
+    return false
+  }
+
+  const role = getPreferredRole()
+  return (
+    role.includes('-CognitoAdminRole-') ||
+    role.includes('-CognitoRegisteredRole-')
+  )
+}
+
 export function isAdmin () {
-  return store.idToken &&
-  `${jwtDecode(store.idToken)['cognito:preferred_role']}`.includes('-CognitoAdminRole-')
+  return store.idToken && getPreferredRole().includes('-CognitoAdminRole-')
 }
 
 export function init () {
@@ -78,8 +93,10 @@ export function login () {
   })
 }
 
-export const getLoginRedirectUrl = () => `${window.location.protocol}//${window.location.host}/index.html?action=login`
-export const getLogoutRedirectUrl = () => `${window.location.protocol}//${window.location.host}/index.html?action=logout`
+export const getLoginRedirectUrl = () =>
+  `${window.location.protocol}//${window.location.host}/index.html?action=login`
+export const getLogoutRedirectUrl = () =>
+  `${window.location.protocol}//${window.location.host}/index.html?action=logout`
 
 function setCredentials () {
   const preferredRole = jwtDecode(store.idToken)['cognito:preferred_role']
@@ -90,12 +107,12 @@ function setCredentials () {
     }
   }
 
-  if (preferredRole) { params.RoleArn = preferredRole }
+  if (preferredRole) params.RoleArn = preferredRole
 
   AWS.config.credentials = new AWS.CognitoIdentityCredentials(params)
 
   return new Promise((resolve, reject) => {
-    AWS.config.credentials.refresh((error) => {
+    AWS.config.credentials.refresh(error => {
       if (error) {
         console.error(error)
         return reject(error)
