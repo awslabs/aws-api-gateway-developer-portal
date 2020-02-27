@@ -20,6 +20,7 @@ Metadata:
         Parameters:
           - CognitoIdentityPoolName
           - DevPortalCustomersTableName
+          - AccountRegistrationMode
       -
         Label:
           default: "Subscription Notification Configuration"
@@ -134,6 +135,15 @@ Parameters:
       - 'false'
       - 'true'
     ConstraintDescription: Malformed input - Parameter LocalDevelopmentMode value must be either 'true' or 'false'
+  
+  AccountRegistrationMode:
+    Type: String
+    Description: Methods allowed for account registration. In 'open' mode, any user may register for an account. In 'request' mode, any user may request an account, but an Admin must approve the request in order for the account to perform any privileged actions (like subscribing to an API). In 'invite' mode, users cannot register or request an account; instead, an Admin must send an invite for the user to accept. See the documentation for details.
+    Default: 'open'
+    AllowedValues:
+      - 'open'
+      - 'request'
+      - 'invite'
 
 Conditions:
   UseCustomDomainName: !And [!And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]], !Condition NotDevelopmentMode]
@@ -144,6 +154,7 @@ Conditions:
   DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
   NotDevelopmentMode: !Not [!Condition DevelopmentMode]
   InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
+  InviteAccountRegistrationMode: !Equals [!Ref AccountRegistrationMode, 'invite']
 
 Resources:
   ApiGatewayApi:
@@ -1078,7 +1089,13 @@ Resources:
       Schema:
         - AttributeDataType: String
           Name: email
-          Required: false
+          Required: true
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: !If [
+          InviteAccountRegistrationMode, 'true', 'false',
+        ]
+      AutoVerifiedAttributes: ['email']
+      UsernameAttributes: ['email']
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
