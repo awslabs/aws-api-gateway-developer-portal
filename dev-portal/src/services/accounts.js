@@ -11,84 +11,25 @@ const getAccountsWithFilter = async filter => {
   return response.data.accounts
 }
 
+const url = ([first, ...rest], ...parts) =>
+  first + parts.map((p, i) => encodeURIComponent(p) + rest[i]).join('')
+
+const fetch = (method, target, params = {}) =>
+  getApiGatewayClient()
+    .then(apiGatewayClient => apiGatewayClient[method](target, {}, params, {}))
+    .then(response => response.data)
+
 export const fetchRegisteredAccounts = () => getAccountsWithFilter('registered')
-
 export const fetchAdminAccounts = () => getAccountsWithFilter('admin')
+export const fetchPendingRequestAccounts = () => getAccountsWithFilter('pendingRequest')
+export const fetchPendingInviteAccounts = () => getAccountsWithFilter('pendingInvite')
 
-export const fetchPendingRequestAccounts = () =>
-  getAccountsWithFilter('pendingRequest')
-
-export const fetchPendingInviteAccounts = () =>
-  getAccountsWithFilter('pendingInvite')
-
-export const deleteAccountByUserId = async userId => {
-  const apiGatewayClient = await getApiGatewayClient()
-  userId = encodeURIComponent(userId)
-  const response = await apiGatewayClient.delete(`/accounts/${userId}`)
-  return response.data
-}
-
-export const deleteInviteByUserId = async userId => {
-  const apiGatewayClient = await getApiGatewayClient()
-  userId = encodeURIComponent(userId)
-  const response = await apiGatewayClient.delete(`/accounts/${userId}`)
-  return response.data
-}
-
-export const createInviteByEmail = async emailAddress => {
-  const apiGatewayClient = await getApiGatewayClient()
-  const response = await apiGatewayClient.post(
-    '/accounts',
-    {},
-    { targetEmailAddress: emailAddress },
-    {},
-  )
-  return response.data
-}
-
-export const resendInviteByEmail = async emailAddress => {
-  const apiGatewayClient = await getApiGatewayClient()
-  const response = await apiGatewayClient.put(
-    `/accounts/resendInvite`,
-    {},
-    { targetEmailAddress: emailAddress },
-    {},
-  )
-  return response.data
-}
-
-export const promoteAccountByUserId = async userId => {
-  const apiGatewayClient = await getApiGatewayClient()
-  userId = encodeURIComponent(userId)
-  const response = await apiGatewayClient.put(
-    `/accounts/${userId}/promoteToAdmin`,
-    {},
-    {},
-    {},
-  )
-  return response.data
-}
-
-export const approveAccountRequestByUserId = async userId => {
-  const apiGatewayClient = await getApiGatewayClient()
-  userId = encodeURIComponent(userId)
-  const response = await apiGatewayClient.put(
-    `/accounts/${userId}/approveRequest`,
-    {},
-    {},
-    {},
-  )
-  return response.data
-}
-
-export const denyAccountRequestByUserId = async userId => {
-  const apiGatewayClient = await getApiGatewayClient()
-  userId = encodeURIComponent(userId)
-  const response = await apiGatewayClient.put(
-    `/accounts/${userId}/denyRequest`,
-    {},
-    {},
-    {},
-  )
-  return response.data
-}
+export const deleteAccountByUserId = userId => fetch('delete', url`/accounts/${userId}`)
+// TODO: verify if this is even correct - I suspect it should've posted to
+// `/accounts/:userId/denyRequest` instead.
+export const deleteInviteByUserId = userId => fetch('delete', url`/accounts/${userId}`)
+export const createInviteByEmail = email => fetch('post', '/accounts', { targetEmailAddress: email })
+export const resendInviteByEmail = email => fetch('put', '/accounts/resendInvite', { targetEmailAddress: email })
+export const promoteAccountByUserId = userId => fetch('put', url`/accounts/${userId}/promoteToAdmin`)
+export const approveAccountRequestByUserId = userId => fetch('put', url`/accounts/${userId}/approveRequest`)
+export const denyAccountRequestByUserId = userId => fetch('put', url`/accounts/${userId}/denyRequest`)

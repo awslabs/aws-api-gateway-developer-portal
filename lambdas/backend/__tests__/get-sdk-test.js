@@ -4,7 +4,7 @@ const catalogSdk = require('../routes/catalog/sdk')
 
 const originalCatalog = util.catalog
 
-describe('GET /catalog/:id/sdk', () => {
+describe('GET /catalog/:apiId/sdk', () => {
   beforeEach(() => {
     util.catalog = jest.fn()
   })
@@ -30,7 +30,7 @@ describe('GET /catalog/:id/sdk', () => {
         {
           apis: [
             {
-              id: 'apiId',
+              apiId: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             }
@@ -68,7 +68,7 @@ describe('GET /catalog/:id/sdk', () => {
         {
           apis: [
             {
-              id: 'apiId',
+              apiId: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             }
@@ -104,12 +104,12 @@ describe('GET /catalog/:id/sdk', () => {
         {
           apis: [
             {
-              id: 'apiId',
+              apiId: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             },
             {
-              id: 'thisApi',
+              apiId: 'thisApi',
               stage: 'shouldNotGenerateSDKs',
               sdkGeneration: false
             }
