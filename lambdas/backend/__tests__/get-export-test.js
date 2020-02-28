@@ -4,7 +4,7 @@ const catalogExport = require('../routes/catalog/export')
 
 const originalCatalog = util.catalog
 
-describe('GET /catalog/:id/export', () => {
+describe('GET /catalog/:apiId/export', () => {
   beforeEach(() => {
     util.catalog = jest.fn()
   })
@@ -30,7 +30,7 @@ describe('GET /catalog/:id/export', () => {
         {
           apis: [
             {
-              id: 'apiId',
+              apiId: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             }
@@ -68,7 +68,7 @@ describe('GET /catalog/:id/export', () => {
         {
           apis: [
             {
-              id: 'apiId',
+              apiId: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             }
@@ -104,12 +104,12 @@ describe('GET /catalog/:id/export', () => {
         {
           apis: [
             {
-              id: 'apiId',
+              apiId: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             },
             {
-              id: 'thisApi',
+              apiId: 'thisApi',
               stage: 'shouldNotGenerateSDKs',
               sdkGeneration: false
             }

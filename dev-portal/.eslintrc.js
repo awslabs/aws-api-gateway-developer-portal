@@ -1,5 +1,5 @@
 'use strict'
 
 module.exports = {
-  extends: 'react-app'
+  extends: 'react-app',
 }
