@@ -390,7 +390,7 @@ const exportTypes = [
   },
   {
     id: 'swagger',
-    friendlyName: 'Swagger',
+    friendlyName: 'Swagger 2',
     longName: 'Swagger (OpenAPI 2) definitions',
     description: '',
     configurationProperties: [
