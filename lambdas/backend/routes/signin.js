@@ -1,6 +1,7 @@
 'use strict'
 
 const customersController = require('dev-portal-common/customers-controller')
+const { promisify2 } = require('dev-portal-common/promisify2')
 const util = require('../util')
 
 // strategy borrowed from: https://serverless-stack.com/chapters/mapping-cognito-identity-id-and-user-pool-id.html
@@ -26,38 +27,34 @@ function getCognitoUserId (req) {
 //   return req.apiGateway.event.requestContext.authorizer.claims.iss + ' ' + getCognitoUsername(req)
 // }
 
-exports.post = function postSignIn (req, res) {
+exports.post = async (req, res) => {
   const cognitoIdentityId = util.getCognitoIdentityId(req)
-  console.log(`POST /signin for Cognito ID: ${cognitoIdentityId}`)
-
   const cognitoUserId = getCognitoUserId(req)
+  console.log(`POST /signin for identity ID [${cognitoIdentityId}]`)
 
-  function errFunc (data) {
-    console.log(`error: ${data}`)
-    res.status(500).json(data)
+  try {
+    // We want to uphold the invariant that "if the logged-in account has a
+    // CustomersTable item, then its Id, UserPoolId, and ApiKeyId attributes
+    // are set correctly".
+    //
+    // The ApiKeyId attribute of the CustomersTable item must already exist if
+    // the item itself exists; if not, it will be updated later by
+    // `ensureApiKeyForCustomer`. So we can safely pass a dummy here while
+    // upholding the invariant.
+    await promisify2(customersController.ensureCustomerItem)(
+      cognitoIdentityId,
+      cognitoUserId,
+      'NO_API_KEY'
+    )
+    await customersController.ensureApiKeyForCustomer({
+      userId: cognitoUserId,
+      identityId: cognitoIdentityId
+    })
+  } catch (error) {
+    console.log(`error: ${error}`)
+    res.status(500).json(error)
+    return
   }
 
-  // ensure an API Key exists for this customer and that the Cognito identity and API Key Id are tracked in DDB
-  customersController.getApiKeyForCustomer(cognitoIdentityId, errFunc, (data) => {
-    console.log(`Get Api Key data ${JSON.stringify(data)}`)
-
-    if (data.items.length === 0) {
-      console.log(`No API Key found for customer ${cognitoIdentityId}`)
-
-      customersController.createApiKey(cognitoIdentityId, cognitoUserId, errFunc, (createData) => {
-        console.log(`Create API Key data: ${JSON.stringify(createData, null, 4)}`)
-        const keyId = createData.id
-
-        console.log(`Got key ID ${keyId}`)
-
-        customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc)
-          .then(() => res.status(200).json({}))
-      })
-    } else {
-      const keyId = data.items[0].id
-
-      customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId, keyId, errFunc)
-        .then(() => res.status(200).json({}))
-    }
-  })
+  res.status(200).json({})
 }
