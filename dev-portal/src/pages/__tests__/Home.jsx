@@ -2,7 +2,7 @@ import React from 'react'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
 
-import { renderWithRouter } from '__tests__/utils'
+import { renderWithRouter } from 'utils/test-utils'
 
 import { fragments } from 'services/get-fragments'
 
