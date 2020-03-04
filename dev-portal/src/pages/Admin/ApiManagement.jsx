@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 
 import { Button, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
 
@@ -13,32 +13,60 @@ import { toJS } from 'mobx'
 import { observer } from 'mobx-react'
 
 export const ApiManagement = observer(class ApiManagement extends React.Component {
-  state = {
-    modalOpen: false,
-    errors: []
+  constructor (props) {
+    super(props)
+    this.state = {
+      modalOpen: false,
+      errors: []
+    }
+
+    this.fileInput = React.createRef()
+
+    this.tableSort = (first, second) => {
+      if (first.name !== second.name) {
+        return first.name.localeCompare(second.name)
+      } else {
+        return first.stage.localeCompare(second.stage)
+      }
+    }
+
+    this.genericTableSort = (firstIndex, secondIndex) => {
+      const list = store.visibility.generic
+
+      if (list[firstIndex].name !== list[secondIndex].name) {
+        list[firstIndex].name.localeCompare(list[secondIndex].name)
+      } else {
+        // compare by their index, which happens to be their id
+        return firstIndex.localeCompare(secondIndex)
+      }
+    }
+
+    this.usagePlanSort = (first, second) => {
+      if (first.name !== second.name) {
+        return first.name.localeCompare(second.name)
+      } else {
+        return first.id.localeCompare(second.id)
+      }
+    }
   }
 
-  fileInput = React.createRef()
-
-  componentDidMount() {
+  componentDidMount () {
     this.getApiVisibility()
   }
 
-  uploadAPISpec = (event) => {
-    event.preventDefault();
+  uploadAPISpec (event) {
+    event.preventDefault()
 
     const files = this.fileInput.current.files
     let swagger, swaggerObject, anyFailures
 
     if (files.length > 0) {
       this.setState(prev => ({ ...prev, errors: [] }))
+      files.forEach(file => {
+        const reader = new window.FileReader()
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const reader = new FileReader()
-
-        reader.onload = ((f) => (e) => {
-          if (f.name.includes('yaml')) {
+        reader.onload = (e) => {
+          if (file.name.includes('yaml')) {
             swaggerObject = YAML.parse(e.target.result)
             swagger = JSON.stringify(swaggerObject)
           } else {
@@ -64,16 +92,16 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
               }
               setTimeout(() => this.getApiVisibility(), 2000)
             })
-        })(file);
-        reader.readAsText(file);
-      }
+        }
+        reader.readAsText(file)
+      })
     }
   }
 
-  deleteAPISpec = (apiId) => {
+  deleteAPISpec (apiId) {
     getApi(apiId, false, undefined, true).then(api => {
-      let _api = toJS(api),
-        myHash = hash(_api.swagger)
+      const _api = toJS(api)
+      const myHash = hash(_api.swagger)
 
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
@@ -81,18 +109,17 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           setTimeout(() => this.getApiVisibility(), 2000)
         })
     })
-
   }
 
-  getApiVisibility = () => {
+  getApiVisibility () {
     apiGatewayClient()
       .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
       .then(res => {
         if (res.status === 200) {
           // console.log(`visibility: ${JSON.stringify(res.data, null, 2)}`)
 
-          let apiGateway = res.data.apiGateway
-          let generic = res.data.generic && Object.keys(res.data.generic)
+          const apiGateway = res.data.apiGateway
+          const generic = res.data.generic && Object.keys(res.data.generic)
 
           // console.log(`generic: ${JSON.stringify(generic, null, 2)}`)
           // console.log(`api gateway: ${JSON.stringify(apiGateway, null, 2)}`)
@@ -118,10 +145,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       })
   }
 
-  updateLocalApiGatewayApis = (apisList, updatedApi, parity) => {
+  updateLocalApiGatewayApis (apisList, updatedApi, parity) {
     const updatedApis = apisList.map(stateApi => {
       if (stateApi.id === updatedApi.id && stateApi.stage === updatedApi.stage) {
-        if(parity !== undefined && (parity === true || parity === false)) {
+        if (parity !== undefined && (parity === true || parity === false)) {
           stateApi.visibility = parity
         } else {
           stateApi.visibility = !stateApi.visibility
@@ -130,10 +157,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       return stateApi
     })
 
-      store.visibility = { generic: store.visibility.generic, apiGateway: updatedApis }
+    store.visibility = { generic: store.visibility.generic, apiGateway: updatedApis }
   }
 
-  showApiGatewayApi = (api) => {
+  showApiGatewayApi (api) {
     apiGatewayClient()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
       .then((res) => {
@@ -143,7 +170,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       })
   }
 
-  hideApiGatewayApi = (api) => {
+  hideApiGatewayApi (api) {
     if (!api.subscribable && !api.id && !api.stage) {
       this.deleteAPISpec(api.genericId)
     } else {
@@ -157,47 +184,47 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     }
   }
 
-    showAllApiGatewayApis = (usagePlan) => {
-      Promise.all(usagePlan.apis.map((api) =>
-          apiGatewayClient()
-            .then(app => app.post('/admin/catalog/visibility', {}, {
-              apiKey: `${api.id}_${api.stage}`,
-              subscribable: `${api.subscribable}`
-            }, {}))
-            .then(res => { res.api = api; return res })
-      )).then((promises) => {
-        promises.forEach((result) => {
-          if (result.status === 200) {
-            this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, true)
-          }
-        })
+  showAllApiGatewayApis (usagePlan) {
+    Promise.all(usagePlan.apis.map((api) =>
+      apiGatewayClient()
+        .then(app => app.post('/admin/catalog/visibility', {}, {
+          apiKey: `${api.id}_${api.stage}`,
+          subscribable: `${api.subscribable}`
+        }, {}))
+        .then(res => { res.api = api; return res })
+    )).then((promises) => {
+      promises.forEach((result) => {
+        if (result.status === 200) {
+          this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, true)
+        }
       })
-    }
+    })
+  }
 
-    hideAllApiGatewayApis = (usagePlan) => {
-      Promise.all(usagePlan.apis.map((api) =>
-        apiGatewayClient()
-          .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
-          .then(res => { res.api = api; return res })
-      )).then((promises) => {
-        promises.forEach((result) => {
-          if (result.status === 200) {
-            this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, false)
-          }
-        })
+  hideAllApiGatewayApis (usagePlan) {
+    Promise.all(usagePlan.apis.map((api) =>
+      apiGatewayClient()
+        .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
+        .then(res => { res.api = api; return res })
+    )).then((promises) => {
+      promises.forEach((result) => {
+        if (result.status === 200) {
+          this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, false)
+        }
       })
-    }
+    })
+  }
 
-  updateApiGatewayApi = (api) => {
+  updateApiGatewayApi (api) {
     apiGatewayClient()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
   }
 
-  isSdkGenerationConfigurable = (api) => {
+  isSdkGenerationConfigurable (api) {
     return api.visibility
   }
 
-  toggleSdkGeneration = (apisList, updatedApi) => {
+  toggleSdkGeneration (apisList, updatedApi) {
     apiGatewayClient()
       .then(app => {
         if (updatedApi.sdkGeneration) {
@@ -220,81 +247,62 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       })
   }
 
-  tableSort = (first, second) => {
-    if (first.name !== second.name) {
-      return first.name.localeCompare(second.name)
-    } else {
-      return first.stage.localeCompare(second.stage)
-    }
-  }
-
-  genericTableSort = (firstIndex, secondIndex) => {
-    const list = store.visibility.generic
-
-    if (list[firstIndex].name !== list[secondIndex].name) {
-      list[firstIndex].name.localeCompare(list[secondIndex].name)
-    } else {
-      // compare by their index, which happens to be their id
-      return firstIndex.localeCompare(secondIndex)
-    }
-  }
-
-  usagePlanSort = (first, second) => {
-    if (first.name !== second.name) {
-      return first.name.localeCompare(second.name)
-    } else {
-      return first.id.localeCompare(second.id)
-    }
-  }
-
-  renderHeaderVisibilityButton(usagePlan) {
-    let numberOfApis = usagePlan.apis.length,
-        numberofVisibleApis = usagePlan.apis.filter((api) => api.visibility === true).length
+  renderHeaderVisibilityButton (usagePlan) {
+    const numberOfApis = usagePlan.apis.length
+    const numberofVisibleApis = usagePlan.apis.filter((api) => api.visibility === true).length
 
     // every API is visible, show the "disable" button
-    if(numberOfApis === numberofVisibleApis) {
+    if (numberOfApis === numberofVisibleApis) {
       return (
-        <Button basic
-                color='green'
-                style={{'backgroundColor': 'white', width: '100%'}}
-                onClick={() => this.hideAllApiGatewayApis(usagePlan)}>
+        <Button
+          basic
+          color='green'
+          style={{ backgroundColor: 'white', width: '100%' }}
+          onClick={() => this.hideAllApiGatewayApis(usagePlan)}
+        >
             True
         </Button>
       )
-    }
-    // every API is not visible, show the current state (False) and enable on click
-    else if(numberofVisibleApis === 0) {
+    } else if (numberofVisibleApis === 0) {
+      // every API is not visible, show the current state (False) and enable on click
       return (
-        <Button basic
-                color='red'
-                style={{'backgroundColor': 'white', width: '100%'}}
-                onClick={() => this.showAllApiGatewayApis(usagePlan)}>
+        <Button
+          basic
+          color='red'
+          style={{ backgroundColor: 'white', width: '100%' }}
+          onClick={() => this.showAllApiGatewayApis(usagePlan)}
+        >
             False
         </Button>
       )
-    }
-    // some APIs are visible, some are hidden; show the current state (Partial, with a warning) and enable on click
-    else {
+    } else {
+      // some APIs are visible, some are hidden; show the current state (Partial, with a warning) and enable on click
       return (
-      <Popup content='Users subscribed to any of the APIs in this usage plan will have a valid API key for all APIs in this usage plan, even those that are not visible!' trigger={<Button basic
-                              color='yellow'
-                              style={{ backgroundColor: 'white', width: '100%', paddingLeft: '1em', paddingRight: '1em', minWidth: '88px' }}
-                              onClick={() => this.showAllApiGatewayApis(usagePlan)}>
-        Partial <Icon name='warning sign' style={{ paddingLeft: '5px' }} />
-      </Button>} />
+        <Popup
+          content='Users subscribed to any of the APIs in this usage plan will have a valid API key for all APIs in this usage plan, even those that are not visible!'
+          trigger={
+            <Button
+              basic
+              color='yellow'
+              style={{ backgroundColor: 'white', width: '100%', paddingLeft: '1em', paddingRight: '1em', minWidth: '88px' }}
+              onClick={() => this.showAllApiGatewayApis(usagePlan)}
+            >
+              Partial <Icon name='warning sign' style={{ paddingLeft: '5px' }} />
+            </Button>
+          }
+        />
       )
     }
   }
 
-  sortByUsagePlan() {
-    if(!store.visibility.apiGateway)
-      return this.renderNoApis()
+  sortByUsagePlan () {
+    if (!store.visibility.apiGateway) { return this.renderNoApis() }
 
-    let usagePlans =
+    const usagePlans =
       store.visibility.apiGateway
         .filter((api) => api.usagePlanId)
         .reduce((accumulator, api) => {
-          if(!accumulator.find((usagePlan) => api.usagePlanId === usagePlan.id)) {
+          if (!accumulator.find((usagePlan) => api.usagePlanId === usagePlan.id)) {
             accumulator.push({ id: api.usagePlanId, name: api.usagePlanName })
           }
           return accumulator
@@ -302,33 +310,33 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
         .sort(this.usagePlanSort)
         .map((usagePlan) => {
           return { ...usagePlan, apis: store.visibility.apiGateway.filter((api) => api.usagePlanId === usagePlan.id).sort(this.tableSort) }
-        }),
-    unsubscribable =
+        })
+    const unsubscribable =
       store.visibility.apiGateway
         .filter((api) => !api.usagePlanId)
-          .sort(this.tableSort)
+        .sort(this.tableSort)
 
     return (
-      <React.Fragment>
+      <>
         {usagePlans.map((usagePlan, i) => {
           return (
-            <React.Fragment>
+            <>
               {this.renderHeader(usagePlan, i)}
               {usagePlan.apis.map((api) => api.id !== window.config.restApiId && this.renderRow(api, i))}
-            </React.Fragment>
+            </>
           )
         })}
-        <Table.Row style={{'backgroundColor': '#1678c2', 'color': 'white'}}>
+        <Table.Row style={{ backgroundColor: '#1678c2', color: 'white' }}>
           <Table.Cell colSpan='6'>
             <b>Not Subscribable</b> <i>No Usage Plan</i>
           </Table.Cell>
         </Table.Row>
         {unsubscribable.map((api) => api.id !== window.config.restApiId && this.renderRow(api))}
-      </React.Fragment>
+      </>
     )
   }
 
-  renderNoApis = () => {
+  renderNoApis () {
     return (
       <Table.Row>
         <Table.Cell colSpan='4'>
@@ -338,14 +346,14 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     )
   }
 
-  renderHeader(usagePlan, i) {
+  renderHeader (usagePlan, i) {
     return (
-      <Table.Row key={i} style={{'backgroundColor': '#1678c2', 'color': 'white'}}>
+      <Table.Row key={i} style={{ backgroundColor: '#1678c2', color: 'white' }}>
         <Table.Cell colSpan='3'>
           <b>{usagePlan && usagePlan.name}</b> <i>Usage Plan</i>
         </Table.Cell>
         <Table.Cell>
-            {this.renderHeaderVisibilityButton(usagePlan)}
+          {this.renderHeaderVisibilityButton(usagePlan)}
         </Table.Cell>
         <Table.Cell colSpan='2'>
 
@@ -354,44 +362,50 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     )
   }
 
-  renderRow(api) {
+  renderRow (api) {
     return (
       <Table.Row>
         <Table.Cell collapsing>{api.name}</Table.Cell>
         <Table.Cell>{api.stage}</Table.Cell>
         <Table.Cell>{api.subscribable ? 'Subscribable' : 'Not Subscribable'}</Table.Cell>
         <Table.Cell>
-          <Button basic
-                  color={api.visibility ? 'green' : 'red'}
-                  style={{ width: '100%' }}
-                  onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}>
-              {api.visibility ? 'True' : 'False'}
+          <Button
+            basic
+            color={api.visibility ? 'green' : 'red'}
+            style={{ width: '100%' }}
+            onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}
+          >
+            {api.visibility ? 'True' : 'False'}
           </Button>
         </Table.Cell>
         <Table.Cell>
-          <Button basic
-                  color='blue'
-                  disabled={!api.visibility}
-                  style={{ width: '100%' }}
-                  onClick={() => this.updateApiGatewayApi(api)}>
+          <Button
+            basic
+            color='blue'
+            disabled={!api.visibility}
+            style={{ width: '100%' }}
+            onClick={() => this.updateApiGatewayApi(api)}
+          >
             Update
           </Button>
         </Table.Cell>
         <Table.Cell>
-          <Button basic
-              // color={api.sdkGeneration ? 'green' : 'red'}
-                  color='blue'
-                  style={{ width: '100%' }}
-                  disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
-                  onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}>
-              {api.sdkGeneration ? 'Enabled' : 'Disabled'}
+          <Button
+            basic
+            // color={api.sdkGeneration ? 'green' : 'red'}
+            color='blue'
+            style={{ width: '100%' }}
+            disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
+            onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}
+          >
+            {api.sdkGeneration ? 'Enabled' : 'Disabled'}
           </Button>
         </Table.Cell>
       </Table.Row>
     )
   }
 
-  render() {
+  render () {
     return (
       <div style={{ display: 'flex', width: '100%' }}>
         <div style={{ padding: '2em' }}>
@@ -403,7 +417,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             </Table.Header>
             <Table.Header fullWidth>
               <Table.Row>
-                <Table.HeaderCell collapsing sorted="ascending">API Name</Table.HeaderCell>
+                <Table.HeaderCell collapsing sorted='ascending'>API Name</Table.HeaderCell>
                 <Table.HeaderCell>Stage</Table.HeaderCell>
                 <Table.HeaderCell>API Type</Table.HeaderCell>
                 <Table.HeaderCell>Displayed</Table.HeaderCell>
@@ -412,7 +426,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              { this.sortByUsagePlan() }
+              {this.sortByUsagePlan()}
             </Table.Body>
           </Table>
         </div>
@@ -429,30 +443,30 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                 <Table.HeaderCell colSpan='2'>
                   <Modal
                     closeIcon
-                    closeOnEscape={true}
-                    closeOnDimmerClick={true}
+                    closeOnEscape
+                    closeOnDimmerClick
                     onClose={() => this.setState((prev) => ({ ...prev, modalOpen: false }))}
                     trigger={
                       <Button floated='right' onClick={() => this.setState((prev) => ({ ...prev, modalOpen: true }))}>
                         Add API
-                    </Button>}
+                      </Button>
+                    }
                     open={this.state.modalOpen}
                   >
                     <Modal.Header>Select .JSON, .YAML, or .YML files</Modal.Header>
                     <Modal.Content>
-                      <React.Fragment>
-                        <Form onSubmit={this.uploadAPISpec}>
+                      <>
+                        <Form onSubmit={(e) => this.uploadAPISpec(e)}>
                           <Form.Field>
-                            <label htmlFor="files">Select Files:</label>
-                            <input type="file" id="files" name="files" accept=".json,.yaml,.yml" multiple={true} ref={this.fileInput} />
+                            <label htmlFor='files'>Select Files:</label>
+                            <input type='file' id='files' name='files' accept='.json,.yaml,.yml' multiple ref={this.fileInput} />
                           </Form.Field>
                           {!!this.state.errors.length &&
-                            <Message size='tiny' color='red' list={this.state.errors} header="These files are not parseable or do not contain an api title:" />
-                          }
+                            <Message size='tiny' color='red' list={this.state.errors} header='These files are not parseable or do not contain an api title:' />}
                           <br />
                           <Button type='submit'>Upload</Button>
                         </Form>
-                      </React.Fragment>
+                      </>
                     </Modal.Content>
                   </Modal>
                 </Table.HeaderCell>
@@ -460,25 +474,28 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             </Table.Header>
             <Table.Header fullWidth>
               <Table.Row>
-                <Table.HeaderCell collapsing sorted="ascending">API Name</Table.HeaderCell>
+                <Table.HeaderCell collapsing sorted='ascending'>API Name</Table.HeaderCell>
                 <Table.HeaderCell>Delete</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {store.visibility.generic ? Object.keys(store.visibility.generic).sort(this.genericTableSort).map((apiId, i) =>
-                (
+              {store.visibility.generic
+                ? Object.keys(store.visibility.generic).sort(this.genericTableSort).map((apiId, i) => (
                   <Table.Row key={i}>
                     <Table.Cell collapsing>{store.visibility.generic[apiId].name}</Table.Cell>
                     <Table.Cell>
-                      <Button basic
+                      <Button
+                        basic
                         color='red'
-                        onClick={() => this.deleteAPISpec(apiId)}>
+                        onClick={() => this.deleteAPISpec(apiId)}
+                      >
                         Delete
                       </Button>
                     </Table.Cell>
                   </Table.Row>
-                )) : (
-                  <Table.Row >
+                ))
+                : (
+                  <Table.Row>
                     <Table.Cell colSpan='4'>
                       No APIs found
                     </Table.Cell>
@@ -488,6 +505,6 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           </Table>
         </div>
       </div>
-    );
+    )
   }
 })

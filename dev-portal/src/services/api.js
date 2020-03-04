@@ -14,7 +14,7 @@ AWS.config.region = cognitoRegion
 
 let cachedClient
 
-export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToken } = {}) {
+export function initApiGatewayClient ({ accessKeyId, secretAccessKey, sessionToken } = {}) {
   cachedClient = window.apigClientFactory.newClient({
     accessKey: accessKeyId,
     secretKey: secretAccessKey,
@@ -25,9 +25,9 @@ export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToke
   window.apigw = cachedClient
 }
 
-export function apiGatewayClient() {
+export function apiGatewayClient () {
   if (cachedClient) return Promise.resolve(cachedClient)
-  
+
   return new Promise(resolve => {
     const poller = setInterval(() => {
       if (cachedClient) {
