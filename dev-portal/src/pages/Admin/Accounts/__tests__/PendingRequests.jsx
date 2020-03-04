@@ -184,7 +184,7 @@ describe('PendingRequests page', () => {
           ),
         ),
       )
-    AccountService.denyAccountRequestByIdentityId = jest
+    AccountService.denyAccountRequestByUserId = jest
       .fn()
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined)

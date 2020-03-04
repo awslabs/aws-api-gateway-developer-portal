@@ -30,9 +30,7 @@ const PendingRequests = () => {
   const onConfirmApprove = useCallback(async () => {
     setLoading(true)
     try {
-      await AccountService.approveAccountRequestByIdentityId(
-        selectedAccount.IdentityId,
-      )
+      await AccountService.approveAccountRequestByUserId(selectedAccount.UserId)
       sendMessage(dismiss => (
         <ApproveSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
@@ -54,9 +52,7 @@ const PendingRequests = () => {
     setLoading(true)
     setDenyModalOpen(false)
     try {
-      await AccountService.denyAccountRequestByIdentityId(
-        selectedAccount.IdentityId,
-      )
+      await AccountService.denyAccountRequestByUserId(selectedAccount.UserId)
       sendMessage(dismiss => (
         <DenySuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
