@@ -14,15 +14,15 @@ exports.handler = async event => {
 
   console.log(
     `In Post Confirmation trigger for userId=[${userId}]` +
-      `, in accountRegistrationMode=[${accountRegistrationMode}]`,
+      `, in accountRegistrationMode=[${accountRegistrationMode}]`
   )
 
   // We only care about sign-up confirmation, not forgot-password confirmation.
   if (event.triggerSource !== 'PostConfirmation_ConfirmSignUp') {
     console.info(
-      `Exiting Post Confirmation trigger early because` +
+      'Exiting Post Confirmation trigger early because' +
         ` triggerSource=[${event.triggerSource}]` +
-        ` != "PostConfirmation_ConfirmSignUp"`,
+        ' != "PostConfirmation_ConfirmSignUp"'
     )
     return event
   }
@@ -37,14 +37,14 @@ exports.handler = async event => {
       customersController.addAccountToRegisteredGroup({
         username,
         userPoolId,
-        registeredGroupName,
-      }),
+        registeredGroupName
+      })
     ])
   } else if (accountRegistrationMode === 'request') {
     try {
       await customersController.saveRequestPreLoginAccount({
         userId,
-        emailAddress,
+        emailAddress
       })
     } catch (error) {
       console.error(error)
@@ -53,7 +53,7 @@ exports.handler = async event => {
     // Note: Post Confirmation trigger *does not* run for accounts created via
     // AdminCreateUser (e.g. in Invite mode).
     console.warn(
-      `Unexpected accountRegistrationMode [${accountRegistrationMode}]`,
+      `Unexpected accountRegistrationMode [${accountRegistrationMode}]`
     )
   }
 

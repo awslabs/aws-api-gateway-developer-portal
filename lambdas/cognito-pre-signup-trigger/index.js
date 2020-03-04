@@ -17,7 +17,7 @@ exports.handler = async event => {
 
   console.info(
     `In Pre Signup Trigger for username=[${event.userName}]` +
-      ` and email=[${event.request.userAttributes.email}]`,
+      ` and email=[${event.request.userAttributes.email}]`
   )
 
   return event

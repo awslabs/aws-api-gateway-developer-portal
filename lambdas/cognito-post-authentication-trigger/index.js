@@ -15,7 +15,7 @@ exports.handler = async event => {
 
   try {
     const { account, source } = await customersController.findAccountByUserId(
-      userId,
+      userId
     )
     if (account === null) {
       console.error('No matching account found!')
@@ -28,16 +28,16 @@ exports.handler = async event => {
         account: {
           ...account,
           RegistrationStatus: 'registered',
-          DateRegistered: new Date().toISOString(),
+          DateRegistered: new Date().toISOString()
         },
-        source,
+        source
       })
       const addToRegisteredGroupPromise = customersController.addAccountToRegisteredGroup(
         {
           username: userId,
           userPoolId,
-          registeredGroupName: getEnv('RegisteredGroupName'),
-        },
+          registeredGroupName: getEnv('RegisteredGroupName')
+        }
       )
       await Promise.all([updateStatusPromise, addToRegisteredGroupPromise])
     }
