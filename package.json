@@ -15,37 +15,25 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.21.0",
+    "@typescript-eslint/parser": "^2.21.0",
     "aws-sdk": "^2.406.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-flowtype": "^3.13.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.18.3",
+    "eslint-plugin-react-hooks": "^1.7.0",
+    "eslint-plugin-standard": "^4.0.1",
     "jest": "^24.9.0",
     "memorystream": "^0.3.1",
-    "standard": "^14.3.1",
     "xml-js": "^1.6.8"
   },
   "dependencies": {
     "request-promise": "^4.2.4"
-  },
-  "standard": {
-    "ignore": [
-      "/lambdas/static-asset-uploader/build/**",
-      "/lambdas/backend/node_modules/**",
-      "/lambdas/catalog-updater/node_modules/**",
-      "/lambdas/cfn-cognito-user-pools-client-settings/node_modules/**",
-      "/lambdas/cfn-cognito-user-pools-domain/node_modules/**",
-      "/lambdas/cognito-user-pools-confirmation-strategy/node_modules/**",
-      "/lambdas/dump-v3-account-data/node_modules/**",
-      "/lambdas/listener/node_modules/**",
-      "/lambdas/shared/node_modules/**",
-      "/lambdas/static-asset-uploader/node_modules/**",
-      "/dev-portal/public/apigateway-js-sdk/**",
-      "/dev-portal/node_modules/**"
-    ],
-    "globals": [
-      "jest",
-      "describe",
-      "test",
-      "expect",
-      "beforeEach",
-      "afterEach"
-    ]
   }
 }
