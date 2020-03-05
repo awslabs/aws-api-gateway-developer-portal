@@ -35,7 +35,7 @@ export const NavBar = observer(
       return isAuthenticated() ? (
         <Menu.Menu position='right'>
           {isAdmin() && (
-            <Menu.Item as={Link} to='/admin'>
+            <Menu.Item as={Link} to='/admin/apis'>
               Admin Panel
             </Menu.Item>
           )}
