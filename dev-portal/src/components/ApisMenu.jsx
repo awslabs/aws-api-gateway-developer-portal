@@ -85,6 +85,7 @@ function GenericApiSubsection ({ title, listOfApis, selectedApiId }) {
                   as={Link}
                   to={`/apis/${api.id}`}
                   active={isActive(api.id, `${selectedApiId}`)}
+                  style={{ 'font-weight': '400' }}
                 >
                   {api.stage}
                 </Menu.Item>
@@ -123,6 +124,7 @@ function ApiSubsection ({ title, listOfApis, selectedApiId, selectedStage = fals
                   as={Link}
                   to={`/apis/${id}/${api.stage}`}
                   active={isActive(id, `${selectedApiId}`, `${api.stage}`, selectedStage)}
+                  style={{ 'font-weight': '400' }}
                 >
                   {api.stage}
                 </Menu.Item>
