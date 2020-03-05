@@ -1,5 +1,4 @@
 const index = require('../index')
-const MemoryStream = require('memorystream')
 const promiser = require('../../setup-jest').promiser
 
 describe('sanitizeFilePath', () => {
@@ -94,11 +93,8 @@ describe('createCatalogDirectory', () => {
     }
     index.s3.upload = jest.fn().mockReturnValue(promiser('success!'))
 
-    const promise = index.createCatalogDirectory('bucketName')
+    await index.createCatalogDirectory('bucketName')
 
-    await promise
-
-    expect(promise).resolves.toEqual('success!')
     expect(index.s3.upload).toHaveBeenNthCalledWith(1, expectedInputs)
   })
 })
@@ -118,7 +114,7 @@ describe('notifyCFNThatUploadSucceeded', () => {
 
     response.ofSuccess = jest.fn()
 
-    index.notifyCFNThatUploadSucceeded(responseData, event, context)
+    new index.State(event, context).notifyCFNThatUploadSucceeded(responseData)
 
     expect(response.ofSuccess).toHaveBeenCalledWith({ event, context, responseData })
   })
@@ -131,7 +127,7 @@ describe('notifyCFNThatUploadFailed', () => {
 
     response.ofFailure = jest.fn()
 
-    index.notifyCFNThatUploadFailed(error, event, context)
+    new index.State(event, context).notifyCFNThatUploadFailed(error)
 
     expect(response.ofFailure).toHaveBeenCalledWith({ event, context, error })
   })
@@ -148,17 +144,18 @@ describe('handler', () => {
     const context = {
       test: 'context'
     }
+    const state = new index.State(event, context)
 
     process.env.StaticBucketName = 'staticBucketName'
-    index.cleanS3Bucket =
-            jest.fn().mockResolvedValue(null)
-    index.notifyCFNThatUploadSucceeded = jest.fn()
+    index.cleanS3Bucket = jest.fn().mockResolvedValue(null)
+    state.notifyCFNThatUploadSucceeded = jest.fn()
 
-    await index.handler(event, context)
+    await state.handler()
 
+    expect(index.cleanS3Bucket).toHaveBeenCalledTimes(2)
     expect(index.cleanS3Bucket).toHaveBeenCalledWith('bucketName')
     expect(index.cleanS3Bucket).toHaveBeenCalledWith('staticBucketName')
-    expect(index.notifyCFNThatUploadSucceeded).toHaveBeenCalledWith(expect.any(Object), event, context)
+    expect(state.notifyCFNThatUploadSucceeded).toHaveBeenCalledWith(expect.any(Object))
 
     delete process.env.StaticBucketName
   })
@@ -173,16 +170,17 @@ describe('handler', () => {
     const context = {
       test: 'context'
     }
+    const state = new index.State(event, context)
 
     process.env.StaticBucketName = 'staticBucketName'
     index.createCatalogDirectory = jest.fn().mockResolvedValue()
-    index.uploadStaticAssets = jest.fn()
+    state.uploadStaticAssets = jest.fn()
     index.s3.headObject = jest.fn().mockReturnValue(promiser({}))
 
-    await index.handler(event, context)
+    await state.handler()
 
     expect(index.createCatalogDirectory).toHaveBeenCalledWith('staticBucketName')
-    expect(index.uploadStaticAssets).toHaveBeenCalledWith('bucketName', event, context)
+    expect(state.uploadStaticAssets).toHaveBeenCalledWith('bucketName')
 
     expect(index.s3.headObject).toHaveBeenCalledTimes(1)
     expect(index.s3.headObject).toHaveBeenCalledWith({
@@ -195,92 +193,13 @@ describe('handler', () => {
 
   test('should notify CFN of failure if bucket name is not defined in the event', async () => {
     const event = { ResourceProperties: {} }; const context = {}
+    const state = new index.State(event, context)
 
-    index.notifyCFNThatUploadFailed = jest.fn()
+    state.notifyCFNThatUploadFailed = jest.fn()
 
-    await index.handler(event, context)
+    await state.handler()
 
-    expect(index.notifyCFNThatUploadFailed).toHaveBeenCalledTimes(1)
-    expect(index.notifyCFNThatUploadFailed).toHaveBeenCalledWith(expect.any(String), event, context)
-  })
-})
-
-describe('excludeDirFactory', () => {
-  test('returns a stream filter that excludes directories', () => {
-    const fileObj = { stats: { isDirectory: () => false } }
-    const dirObj = { stats: { isDirectory: () => true } }
-    const stream = new MemoryStream(null, { objectMode: true, readable: true, writable: true })
-    const dirFilter = index.excludeDirFactory()
-    const results = []
-
-    stream.write(fileObj)
-    stream.write(dirObj)
-
-    stream
-      .pipe(dirFilter)
-      .on('data', (data) => {
-        results.push(data)
-      })
-      .on('end', (res) => {
-        expect(results.length).toBe(1)
-        expect(results[0]).toEqual(fileObj)
-      })
-
-    stream.end()
-  })
-})
-
-describe('excludeCustomContentFactory', () => {
-  function doStreamTest (inputs, filter) {
-    return new Promise((resolve) => {
-      const stream = new MemoryStream(null, { objectMode: true, readable: true, writable: true })
-      const results = []
-
-      for (const input of inputs) {
-        stream.write(input)
-      }
-
-      stream
-        .pipe(filter)
-        .on('data', (data) => {
-          results.push(data)
-        })
-        .on('end', () => {
-          resolve(results)
-        })
-      stream.end()
-    })
-  }
-
-  test('on update, filters stream to remove custom content', async () => {
-    const removed = { path: 'foo/bar/build/custom-content/junk' }
-    const kept = { path: 'some/other/file/path' }
-    const customFilter = index.excludeCustomContentFactory('Update', undefined)
-    const results = await doStreamTest([removed, kept], customFilter)
-
-    expect(results.length).toBe(1)
-    expect(results[0]).toEqual(kept)
-  })
-
-  test('on create, allows all stream objects to pass through', async () => {
-    const first = { path: 'foo/bar/build/custom-content/junk' }
-    const second = { path: 'some/other/file/path' }
-    const customFilter = index.excludeCustomContentFactory('Create', undefined)
-    const results = await doStreamTest([first, second], customFilter)
-
-    expect(results.length).toBe(2)
-    expect(results[0]).toEqual(first)
-    expect(results[1]).toEqual(second)
-  })
-
-  test('when RebuildMode is set to true, allows all stream objects to pass through', async () => {
-    const first = { path: 'foo/bar/build/custom-content/junk' }
-    const second = { path: 'some/other/file/path' }
-    const customFilter = index.excludeCustomContentFactory('Update', 'overwrite-content')
-    const results = await doStreamTest([first, second], customFilter)
-
-    expect(results.length).toBe(2)
-    expect(results[0]).toEqual(first)
-    expect(results[1]).toEqual(second)
+    expect(state.notifyCFNThatUploadFailed).toHaveBeenCalledTimes(1)
+    expect(state.notifyCFNThatUploadFailed).toHaveBeenCalledWith(expect.any(String))
   })
 })
