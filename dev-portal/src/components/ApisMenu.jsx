@@ -59,7 +59,7 @@ export default observer(function ApisMenu (props) {
 
 function GenericApiSubsection ({ title, listOfApis, selectedApiId }) {
   return (
-    <>
+    <Menu inverted vertical borderless attached style={{ flex: '0 0 auto', width: 'auto' }}>
       <Menu.Header
         style={{
           padding: '13px 5px 13px 16px',
@@ -78,13 +78,13 @@ function GenericApiSubsection ({ title, listOfApis, selectedApiId }) {
           {api.swagger.info.title}
         </Menu.Item>
       ))}
-    </>
+    </Menu>
   )
 }
 
 function ApiSubsection ({ title, listOfApis, selectedApiId, selectedStage = false }) {
   return (
-    <>
+    <Menu inverted vertical borderless attached style={{ flex: '0 0 auto', width: 'auto' }}>
       <Menu.Header
         style={{
           padding: '13px 5px 13px 16px',
@@ -103,6 +103,6 @@ function ApiSubsection ({ title, listOfApis, selectedApiId, selectedStage = fals
           {api.swagger.info.title}
         </Menu.Item>
       ))}
-    </>
+    </Menu>
   )
 }

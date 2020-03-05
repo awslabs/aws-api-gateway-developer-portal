@@ -24,13 +24,17 @@ import { store } from 'services/state.js'
 import { observer } from 'mobx-react'
 
 export default observer(class ApisPage extends React.Component {
+  containerRef = React.createRef()
+  removed = false
+  
   componentDidMount () { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
   componentDidUpdate () { this.updateApi() }
+  componentWillUnmount () { this.removed = true }
 
   updateApi () {
     return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
       .then(api => {
-        if (api) {
+        if (api && !this.removed) {
           const cell = {
             shouldPreauthorizeApiKey: false,
             preauthorizeApiKey: () => {
@@ -38,7 +42,7 @@ export default observer(class ApisPage extends React.Component {
             }
           }
           const swaggerUiConfig = {
-            dom_id: '#swagger-ui-container',
+            domNode: this.containerRef.current,
             plugins: [SwaggerLayoutPlugin],
             supportedSubmitMethods: [],
             spec: api.swagger,
@@ -80,7 +84,7 @@ export default observer(class ApisPage extends React.Component {
         sidebarContent={<ApisMenu path={this.props.match} />}
         SidebarPusherProps={{ className: 'swagger-section' }}
       >
-        <div className='swagger-ui-wrap' id='swagger-ui-container' style={{ padding: '0 20px' }}>
+        <div className='swagger-ui-wrap' ref={this.containerRef} style={{ padding: '0 20px' }}>
           {errorHeader && errorBody && (
             <>
               <Header as='h2' icon textAlign='center' style={{ padding: '40px 0px' }}>
