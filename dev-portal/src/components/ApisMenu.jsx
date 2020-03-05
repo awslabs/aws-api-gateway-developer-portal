@@ -68,14 +68,29 @@ function GenericApiSubsection ({ title, listOfApis, selectedApiId }) {
       >
         {title}
       </Menu.Header>
-      {listOfApis.map(api => (
+      {_.toPairs(_.groupBy(listOfApis, api => api.apiId || api.id)).map(([id, apis]) => (
         <Menu.Item
-          key={api.id}
-          as={Link}
-          to={`/apis/${api.id}`}
-          active={isActive(api.id.toString(), selectedApiId.toString())}
+          key={id}
+          className='link'
+          active={apis.some(api => isActive(`${api.id}`, `${selectedApiId}`))}
         >
-          {api.swagger.info.title}
+          {apis[0].swagger.info.title}
+          {apis.length === 1 ? (
+            apis[0].stage != null ? ` (${apis[0].stage})` : null
+          ) : (
+            <Menu.Menu>
+              {apis.map(api => (
+                <Menu.Item
+                  key={api.id}
+                  as={Link}
+                  to={`/apis/${api.id}`}
+                  active={isActive(api.id, `${selectedApiId}`)}
+                >
+                  {api.stage}
+                </Menu.Item>
+              ))}
+            </Menu.Menu>
+          )}
         </Menu.Item>
       ))}
     </Menu>
@@ -93,14 +108,27 @@ function ApiSubsection ({ title, listOfApis, selectedApiId, selectedStage = fals
       >
         {title}
       </Menu.Header>
-      {listOfApis.map(api => (
+      {_.toPairs(_.groupBy(listOfApis, "id")).map(([id, apis]) => (
         <Menu.Item
-          key={`${api.id}_${api.stage}`}
-          as={Link}
-          to={`/apis/${api.id}/${api.stage}`}
-          active={isActive(api.id.toString(), selectedApiId.toString(), api.stage.toString(), selectedStage)}
+          key={id}
+          className='link'
+          active={isActive(id, `${selectedApiId}`)}
         >
-          {api.swagger.info.title}
+          {apis[0].swagger.info.title}
+          {apis.length === 1 ? ` (${apis[0].stage})` : (
+            <Menu.Menu>
+              {apis.map(api => (
+                <Menu.Item
+                  key={`${id}_${api.stage}`}
+                  as={Link}
+                  to={`/apis/${id}/${api.stage}`}
+                  active={isActive(id, `${selectedApiId}`, `${api.stage}`, selectedStage)}
+                >
+                  {api.stage}
+                </Menu.Item>
+              ))}
+            </Menu.Menu>
+          )}
         </Menu.Item>
       ))}
     </Menu>
