@@ -5,7 +5,13 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, Image } from 'semantic-ui-react'
 
-import { isAdmin, isAuthenticated, logout, getLoginRedirectUrl } from 'services/self'
+import {
+  isAdmin,
+  isAuthenticated,
+  isRegistered,
+  logout,
+  getLoginRedirectUrl
+} from 'services/self'
 
 import { cognitoDomain, cognitoClientId } from '../services/api'
 
@@ -26,24 +32,30 @@ export const NavBar = observer(
     }
 
     insertAuthMenu () {
-      return isAuthenticated()
-        ? (
-          <Menu.Menu position='right'>
-            {isAdmin() && <Menu.Item as={Link} to='/admin'>Admin Panel</Menu.Item>}
-            <Menu.Item key='dashboard' as={Link} to='/dashboard'>My Dashboard</Menu.Item>
-            <Menu.Item key='signout' as='a' onClick={logout}>Sign Out</Menu.Item>
-          </Menu.Menu>
-        ) : (
-          <Menu.Menu position='right'>
-            <Menu.Item
-              key='register' as='a'
-              href={this.getCognitoUrl('login')}
-            >
-                Sign In
+      return isAuthenticated() ? (
+        <Menu.Menu position='right'>
+          {isAdmin() && (
+            <Menu.Item as={Link} to='/admin/apis'>
+              Admin Panel
             </Menu.Item>
-            <Register />
-          </Menu.Menu>
-        )
+          )}
+          {isRegistered() && (
+            <Menu.Item key='dashboard' as={Link} to='/dashboard'>
+              My Dashboard
+            </Menu.Item>
+          )}
+          <Menu.Item key='signout' as='a' onClick={logout}>
+            Sign Out
+          </Menu.Item>
+        </Menu.Menu>
+      ) : (
+        <Menu.Menu position='right'>
+          <Menu.Item key='register' as='a' href={this.getCognitoUrl('login')}>
+            Sign In
+          </Menu.Item>
+          <Register />
+        </Menu.Menu>
+      )
     }
 
     render () {

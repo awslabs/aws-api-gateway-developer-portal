@@ -8,6 +8,7 @@
 
 const AWS = require('aws-sdk')
 const pager = require('dev-portal-common/pager')
+const { getCognitoUserSub } = require('dev-portal-common/get-cognito-user-sub')
 
 const handler = async (_event, _context) => {
   const {
@@ -53,18 +54,11 @@ const fetchAccountData = async ({ customersTableName, userPoolId, adminsGroupNam
   accounts = insertIsAdmin({ accounts, adminUserIds })
   accounts = insertUsernames({ accounts, usernamesByUserId })
 
-  const accountsAsTsv =
-    accounts.map(account => accountDataAsTsv(account)).join('\n')
+  const accountsAsTsv = accounts
+    .map(account => accountDataAsTsv(account))
+    .join('\n')
   return `${ACCOUNT_DATA_TSV_HEADER}\n${accountsAsTsv}\n`
 }
-
-/**
- * Get the `sub` attribute of a UserType object.
- *
- * See https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UserType.html.
- */
-const getCognitoUserSub =
-  user => user.Attributes.find(attribute => attribute.Name === 'sub').Value
 
 /**
  * Fetches the UserPoolIds of all users in the AdminsGroup.
@@ -113,8 +107,8 @@ const fetchCustomersTableItems = async ({ tableName }) => {
  * Returns a copy of the `accounts` Array, except each element has `isAdmin`
  * set to `true` iff its UserPoolId is in the `adminUserIds` set.
  */
-const insertIsAdmin = ({ adminUserIds, accounts }) => accounts
-  .map(account => ({
+const insertIsAdmin = ({ adminUserIds, accounts }) =>
+  accounts.map(account => ({
     ...account,
     isAdmin: adminUserIds.has(account.userPoolId)
   }))
@@ -123,8 +117,8 @@ const insertIsAdmin = ({ adminUserIds, accounts }) => accounts
  * Returns a copy of the `accounts` array, except each element has `username`
  * set to the username as specified in the `usernamesByUserId` Map.
  */
-const insertUsernames = ({ accounts, usernamesByUserId }) => accounts
-  .map(account => ({
+const insertUsernames = ({ accounts, usernamesByUserId }) =>
+  accounts.map(account => ({
     ...account,
     username: usernamesByUserId.get(account.userPoolId)
   }))
@@ -138,9 +132,10 @@ const insertUsernames = ({ accounts, usernamesByUserId }) => accounts
  *
  * [1]: https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UserType.html
  */
-const accountDataAsTsv = account => ACCOUNT_DATA_FIELDS
-  .map(key => key === 'emailAddress' ? '' : account[key].toString())
-  .join('\t')
+const accountDataAsTsv = account =>
+  ACCOUNT_DATA_FIELDS.map(key =>
+    key === 'emailAddress' ? '' : account[key].toString()
+  ).join('\t')
 
 exports = module.exports = {
   cognitoClient: new AWS.CognitoIdentityServiceProvider(),

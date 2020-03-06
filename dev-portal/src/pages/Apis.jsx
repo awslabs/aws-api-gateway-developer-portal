@@ -11,7 +11,7 @@ import 'swagger-ui/dist/swagger-ui.css'
 import { Container, Header, Icon } from 'semantic-ui-react'
 
 // services
-import { isAuthenticated } from 'services/self'
+import { isRegistered } from 'services/self'
 import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog'
 
 // components
@@ -24,26 +24,43 @@ import { store } from 'services/state.js'
 import { observer } from 'mobx-react'
 
 export default observer(class ApisPage extends React.Component {
+  containerRef = React.createRef()
+  removed = false
+  
   componentDidMount () { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
   componentDidUpdate () { this.updateApi() }
+  componentWillUnmount () { this.removed = true }
 
   updateApi () {
     return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
       .then(api => {
-        if (api) {
+        if (api && !this.removed) {
+          const cell = {
+            shouldPreauthorizeApiKey: false,
+            preauthorizeApiKey: () => {
+              cell.shouldPreauthorizeApiKey = true
+            }
+          }
           const swaggerUiConfig = {
-            dom_id: '#swagger-ui-container',
+            domNode: this.containerRef.current,
             plugins: [SwaggerLayoutPlugin],
             supportedSubmitMethods: [],
             spec: api.swagger,
-            onComplete: () => {
-              if (store.apiKey) { uiHandler.preauthorizeApiKey('api_key', store.apiKey) }
-            }
+            onComplete: () => cell.preauthorizeApiKey()
           }
-          if (isAuthenticated()) {
+          if (isRegistered()) {
             delete swaggerUiConfig.supportedSubmitMethods
           }
+
           const uiHandler = SwaggerUI(swaggerUiConfig)
+          cell.preauthorizeApiKey = () => {
+            if (store.apiKey) {
+              uiHandler.preauthorizeApiKey('api_key', store.apiKey)
+            }
+          }
+          if (cell.shouldPreauthorizeApiKey) {
+            cell.preauthorizeApiKey()
+          }
         }
       })
   }
@@ -67,7 +84,7 @@ export default observer(class ApisPage extends React.Component {
         sidebarContent={<ApisMenu path={this.props.match} />}
         SidebarPusherProps={{ className: 'swagger-section' }}
       >
-        <div className='swagger-ui-wrap' id='swagger-ui-container' style={{ padding: '0 20px' }}>
+        <div className='swagger-ui-wrap' ref={this.containerRef} style={{ padding: '0 20px' }}>
           {errorHeader && errorBody && (
             <>
               <Header as='h2' icon textAlign='center' style={{ padding: '40px 0px' }}>
