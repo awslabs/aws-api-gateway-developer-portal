@@ -156,7 +156,10 @@ class State {
   }
 
   addConfigFile (bucketName) {
+    const MILLIS_PER_MINUTE = 60 /* seconds */ * 1000 /* milliseconds */
     const configObject = {
+      // let's go ahead and convert it to milliseconds
+      clientSessionTimeout: this.event.ResourceProperties.ClientSessionTimeout * MILLIS_PER_MINUTE,
       restApiId: this.event.ResourceProperties.RestApiId,
       region: this.event.ResourceProperties.Region,
       identityPoolId: this.event.ResourceProperties.IdentityPoolId,
