@@ -1,7 +1,7 @@
 'use strict'
 
 const customersController = require('dev-portal-common/customers-controller')
-const util = require('../util')
+const util = require('../../util')
 
 exports.put = async (req, res) => {
   const { targetEmailAddress } = req.body
