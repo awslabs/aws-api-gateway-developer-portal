@@ -33,7 +33,6 @@ const customersTableName = getOptional('customersTableName')
 const preLoginAccountsTableName = getOptional('preLoginAccountsTableName')
 const feedbackTableName = getOptional('feedbackTableName')
 const cognitoIdentityPoolName = getOptional('cognitoIdentityPoolName')
-const clientSessionTimeout = getOptional('clientSessionTimeout')
 
 // optional inputs
 const staticAssetRebuildMode = getOptional('staticAssetRebuildMode', '')
@@ -64,7 +63,6 @@ async function main () {
     ...(preLoginAccountsTableName ? [`DevPortalPreLoginAccountsTableName=${preLoginAccountsTableName}`] : []),
     ...(feedbackTableName ? [`DevPortalFeedbackTableName=${feedbackTableName}`] : []),
     ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName=${cognitoIdentityPoolName}`] : []),
-    ...(clientSessionTimeout ? [`ClientSessionTimeout=${clientSessionTimeout}`] : []),
     ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
     `CognitoDomainNameOrPrefix=${cognitoDomainName}`,
     '--s3-bucket', buildAssetsBucket,

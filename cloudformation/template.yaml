@@ -149,12 +149,6 @@ Parameters:
       - 'open'
       - 'request'
       - 'invite'
-  
-  ClientSessionTimeout:
-    Type: Number
-    MinValue: 0
-    Description: Amount of time in minutes to allow for a client to be inactive before being disconnected from the server. Set to 0 to disable the timeout.
-    Default: 60
 
 Conditions:
   UseCustomDomainName: !And [!And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]], !Condition NotDevelopmentMode]
@@ -1667,7 +1661,6 @@ Resources:
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
       DevelopmentMode: !Ref DevelopmentMode
-      ClientSessionTimeout: !Ref ClientSessionTimeout
       FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
 
   CloudFrontOriginAccessIdentity:
