@@ -9,6 +9,7 @@ import { store } from 'services/state'
 import _ from 'lodash'
 
 import ApisMenu from './ApisMenu'
+import PageWithSidebar from 'components/PageWithSidebar'
 import './ApiSearch.css'
 
 const resultRenderer = (result) => (
@@ -127,25 +128,25 @@ export default observer(class ApiSearch extends Component {
     const { isLoading, value } = this.state.search
     const { results } = this.state
 
-    return (
-      <div style={{ display: 'flex', flex: '1 1 auto', overflow: 'hidden' }}>
-        <ApisMenu path={this.props.match} />
-        <Grid style={{ padding: '2em' }}>
-          <Grid.Column>
-            <Search
-              category
-              loading={isLoading}
-              onResultSelect={this.handleResultSelect}
-              showNoResults={!isLoading}
-              onSearchChange={_.debounce(this.handleSearchChange, 500, { leading: true })}
-              results={results}
-              resultRenderer={resultRenderer}
-              value={value}
-              {...this.props}
-            />
-          </Grid.Column>
-        </Grid>
-      </div>
-    )
+    return <PageWithSidebar
+      sidebarContent={<ApisMenu path={this.props.match} activateFirst={false} />}
+      SidebarPusherProps={{ className: 'swagger-section' }}
+    >
+      <Grid style={{ padding: '2em' }}>
+        <Grid.Column>
+          <Search
+            category
+            loading={isLoading}
+            onResultSelect={this.handleResultSelect}
+            showNoResults={!isLoading}
+            onSearchChange={_.debounce(this.handleSearchChange, 500, { leading: true })}
+            results={results}
+            resultRenderer={resultRenderer}
+            value={value}
+            {...this.props}
+          />
+        </Grid.Column>
+      </Grid>
+    </PageWithSidebar>
   }
 })
