@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Redirect } from 'react-router-dom'
 
 // semantic-ui
 import { Menu, Loader } from 'semantic-ui-react'
@@ -13,6 +13,9 @@ import { store } from 'services/state'
 
 // utilities
 import _ from 'lodash'
+import Sidebar from 'components/Sidebar/Sidebar'
+import SidebarHeader from 'components/Sidebar/SidebarHeader'
+import MenuLink from 'components/MenuLink'
 
 function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
   const apiGatewayApiList = _.get(store, 'apiList.apiGateway', []).map(api => ({
@@ -38,15 +41,8 @@ function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
     stage: api.stage
   }))
 
-  const result = _.toPairs(_.groupBy(apiGatewayApiList.concat(genericApiList), 'group'))
-    .map(([group, apis]) => ({ group, apis, active: selectedApiId && group === selectedApiId, title: apis[0].title }))
-
-  if (activateFirst && result.length && !_.some(result, 'active')) {
-    result[0].active = true
-    result[0].apis[0].active = true
-  }
-
-  return result
+  return _.toPairs(_.groupBy(apiGatewayApiList.concat(genericApiList), 'group'))
+    .map(([group, apis]) => ({ group, apis, active: _.some(apis, 'active'), title: apis[0].title }))
 }
 
 export default observer(function ApisMenu (props) {
@@ -58,7 +54,7 @@ export default observer(function ApisMenu (props) {
   }
 
   const apiGroupList = getApisWithStages(
-    props.path.url !== '/apis/search' && props.path.params.apiId,
+    props.activateFirst && props.path.params.apiId,
     props.path.params.stage,
     props.activateFirst
   )
@@ -67,50 +63,42 @@ export default observer(function ApisMenu (props) {
     return <p style={{ padding: '13px 16px', color: 'whitesmoke' }}>No APIs Published</p>
   }
 
+  if (props.activateFirst && !props.path.params.apiId) {
+    return <Redirect to={apiGroupList[0].apis[0].route} />
+  }
+
   return (
-    <Menu inverted vertical borderless attached style={{ flex: '0 0 auto', width: 'auto' }}>
-      <Menu.Header
+    <Sidebar>
+      <SidebarHeader
         as={Link}
         className='item'
         to='/apis/search'
         active={props.path.url === '/apis/search'}
-        style={{
-          padding: '13px 5px 13px 16px',
-          color: 'lightsteelblue',
-          fontWeight: '400',
-          fontSize: '1em'
-        }}
+        style={{ fontWeight: '400', fontSize: '1em' }}
       >
         Search APIs
-      </Menu.Header>
+      </SidebarHeader>
 
-      <Menu.Header
-        style={{
-          padding: '13px 5px 13px 16px',
-          color: 'lightsteelblue'
-        }}
-      >
-        APIs
-      </Menu.Header>
+      <SidebarHeader>APIs</SidebarHeader>
 
       <>
         {apiGroupList.map(({ apis, title, group, active }) => (
           apis.length === 1
-            ? <Menu.Item key={group} as={Link} to={apis[0].route} active={active}>
+            ? <MenuLink key={group} to={apis[0].route} active={active}>
               {title}{apis[0].stage ? ` (${apis[0].stage})` : null}
-            </Menu.Item>
-            : <Menu.Item key={group} className='link' active={active}>
+            </MenuLink>
+            : <MenuLink key={group} active={active}>
               {title}
               <Menu.Menu>
                 {apis.map(({ route, stage, active, id }) => (
-                  <Menu.Item key={id} as={Link} to={route} active={active} style={{ fontWeight: '400' }}>
+                  <MenuLink key={id} to={route} active={active} style={{ fontWeight: '400' }}>
                     {stage}
-                  </Menu.Item>
+                  </MenuLink>
                 ))}
               </Menu.Menu>
-            </Menu.Item>
+            </MenuLink>
         ))}
       </>
-    </Menu>
+    </Sidebar>
   )
 })
