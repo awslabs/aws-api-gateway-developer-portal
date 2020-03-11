@@ -22,51 +22,49 @@ export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoRep
 // replaces the InfoContainer component
 // https://github.com/swagger-api/swagger-ui/blob/dd3afdc45656bda2a64ae6a7f9bdad006ea98149/src/core/components/layouts/base.jsx
 
+// Note: this is called not as a component, but as a function within a class component. Do
+// *not* make this a component, and do *not* use hooks or anything similar in it.
 function InfoReplacement ({ specSelectors }) {
-  return <Observer>
-    {() => {
-      const basePath = specSelectors.basePath()
-      const host = specSelectors.host()
-      const externalDocs = specSelectors.externalDocs()
+  const basePath = specSelectors.basePath()
+  const host = specSelectors.host()
+  const externalDocs = specSelectors.externalDocs()
 
-      return (
-        <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
+  return <Observer>
+    {() => <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
+      <div style={{ display: 'flex' }}>
+        <div style={{ flex: '0 0 auto', marginRight: '20px' }}>
+          <Image size='small' src={store.api.logo} />
+        </div>
+        <div>
+          <Header as='h1'>{store.api.swagger.info.title}</Header>
           <div style={{ display: 'flex' }}>
-            <div style={{ flex: '0 0 auto', marginRight: '20px' }}>
-              <Image size='small' src={store.api.logo} />
+            <div style={{ marginRight: '20px' }}>
+              {store.api.generic && (
+                <p style={{ fontWeight: 'bold' }}>Version</p>
+              )}
+              <p style={{ fontWeight: 'bold' }}>Endpoint</p>
+              {store.api.swagger.info.description ? (
+                <p style={{ fontWeight: 'bold' }}>Description</p>
+              ) : null}
+              {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
             </div>
             <div>
-              <Header as='h1'>{store.api.swagger.info.title}</Header>
-              <div style={{ display: 'flex' }}>
-                <div style={{ marginRight: '20px' }}>
-                  {store.api.generic && (
-                    <p style={{ fontWeight: 'bold' }}>Version</p>
-                  )}
-                  <p style={{ fontWeight: 'bold' }}>Endpoint</p>
-                  {store.api.swagger.info.description ? (
-                    <p style={{ fontWeight: 'bold' }}>Description</p>
-                  ) : null}
-                  {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
-                </div>
-                <div>
-                  {store.api.generic && (
-                    <p>{store.api.swagger.info.version}</p>
-                  )}
-                  <p>https://{host}{basePath}</p>
-                  {store.api.swagger.info.description ? (
-                    <p>{store.api.swagger.info.description}</p>
-                  ) : null}
-                  {/* <p>{store.api.usagePlan.name}</p> */}
-                </div>
-              </div>
-              <p>{externalDocs}</p>
-              <SubscriptionButtons />
-              {store.api.sdkGeneration && <GetSdkButton />}
+              {store.api.generic && (
+                <p>{store.api.swagger.info.version}</p>
+              )}
+              <p>https://{host}{basePath}</p>
+              {store.api.swagger.info.description ? (
+                <p>{store.api.swagger.info.description}</p>
+              ) : null}
+              {/* <p>{store.api.usagePlan.name}</p> */}
             </div>
           </div>
-        </Container>
-      )
-    }}
+          <p>{externalDocs}</p>
+          <SubscriptionButtons />
+          {store.api.sdkGeneration && <GetSdkButton />}
+        </div>
+      </div>
+    </Container>}
   </Observer>
 }
 

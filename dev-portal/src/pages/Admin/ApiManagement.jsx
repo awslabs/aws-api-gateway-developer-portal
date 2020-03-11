@@ -12,6 +12,23 @@ import hash from 'object-hash'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react'
 
+function getUsagePlanVisibility (usagePlan) {
+  let hasHidden = false
+  let hasVisible = false
+
+  for (const api of usagePlan.apis) {
+    if (api.visibility) {
+      if (hasHidden) return null
+      hasVisible = true
+    } else {
+      if (hasVisible) return null
+      hasHidden = true
+    }
+  }
+
+  return hasVisible
+}
+
 export const ApiManagement = observer(class ApiManagement extends React.Component {
   constructor (props) {
     super(props)
@@ -248,35 +265,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   renderHeaderVisibilityButton (usagePlan) {
-    const numberOfApis = usagePlan.apis.length
-    const numberofVisibleApis = usagePlan.apis.filter((api) => api.visibility === true).length
+    const usagePlanVisibility = getUsagePlanVisibility(usagePlan)
 
-    // every API is visible, show the "disable" button
-    if (numberOfApis === numberofVisibleApis) {
-      return (
-        <Button
-          basic
-          color='green'
-          style={{ backgroundColor: 'white', width: '100%' }}
-          onClick={() => this.hideAllApiGatewayApis(usagePlan)}
-        >
-            True
-        </Button>
-      )
-    } else if (numberofVisibleApis === 0) {
-      // every API is not visible, show the current state (False) and enable on click
-      return (
-        <Button
-          basic
-          color='red'
-          style={{ backgroundColor: 'white', width: '100%' }}
-          onClick={() => this.showAllApiGatewayApis(usagePlan)}
-        >
-            False
-        </Button>
-      )
-    } else {
-      // some APIs are visible, some are hidden; show the current state (Partial, with a warning) and enable on click
+    // Some APIs are visible, some are hidden. Show the current state (Partial, with a warning) and enable all on click
+    if (usagePlanVisibility == null) {
       return (
         <Popup
           content='Users subscribed to any of the APIs in this usage plan will have a valid API key for all APIs in this usage plan, even those that are not visible!'
@@ -293,6 +285,21 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
         />
       )
     }
+
+    // Either all APIs are visible or none are visible. Toggle this state on click.
+    return (
+      <Button
+        basic
+        color={usagePlanVisibility ? 'green' : 'red'}
+        style={{ backgroundColor: 'white', width: '100%' }}
+        onClick={() => {
+          if (usagePlanVisibility) this.hideAllApiGatewayApis(usagePlan)
+          else this.showAllApiGatewayApis(usagePlan)
+        }}
+      >
+        {usagePlanVisibility ? 'True' : 'False'}
+      </Button>
+    )
   }
 
   sortByUsagePlan () {
@@ -318,11 +325,11 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
 
     return (
       <>
-        {usagePlans.map((usagePlan, i) => {
+        {usagePlans.map(usagePlan => {
           return (
             <>
-              {this.renderHeader(usagePlan, i)}
-              {usagePlan.apis.map((api) => api.id !== window.config.restApiId && this.renderRow(api, i))}
+              {this.renderHeader(usagePlan)}
+              {this.renderApiList(usagePlan.apis)}
             </>
           )
         })}
@@ -331,7 +338,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             <b>Not Subscribable</b> <i>No Usage Plan</i>
           </Table.Cell>
         </Table.Row>
-        {unsubscribable.map((api) => api.id !== window.config.restApiId && this.renderRow(api))}
+        {this.renderApiList(unsubscribable)}
       </>
     )
   }
@@ -346,9 +353,9 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     )
   }
 
-  renderHeader (usagePlan, i) {
+  renderHeader (usagePlan) {
     return (
-      <Table.Row key={i} style={{ backgroundColor: '#1678c2', color: 'white' }}>
+      <Table.Row style={{ backgroundColor: '#1678c2', color: 'white' }}>
         <Table.Cell colSpan='3'>
           <b>{usagePlan && usagePlan.name}</b> <i>Usage Plan</i>
         </Table.Cell>
@@ -356,53 +363,57 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           {this.renderHeaderVisibilityButton(usagePlan)}
         </Table.Cell>
         <Table.Cell colSpan='2'>
-
+          {/* Intentionally empty */}
         </Table.Cell>
       </Table.Row>
     )
   }
 
-  renderRow (api) {
-    return (
-      <Table.Row>
-        <Table.Cell collapsing>{api.name}</Table.Cell>
-        <Table.Cell>{api.stage}</Table.Cell>
-        <Table.Cell>{api.subscribable ? 'Subscribable' : 'Not Subscribable'}</Table.Cell>
-        <Table.Cell>
-          <Button
-            basic
-            color={api.visibility ? 'green' : 'red'}
-            style={{ width: '100%' }}
-            onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}
-          >
-            {api.visibility ? 'True' : 'False'}
-          </Button>
-        </Table.Cell>
-        <Table.Cell>
-          <Button
-            basic
-            color='blue'
-            disabled={!api.visibility}
-            style={{ width: '100%' }}
-            onClick={() => this.updateApiGatewayApi(api)}
-          >
-            Update
-          </Button>
-        </Table.Cell>
-        <Table.Cell>
-          <Button
-            basic
-            // color={api.sdkGeneration ? 'green' : 'red'}
-            color='blue'
-            style={{ width: '100%' }}
-            disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
-            onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}
-          >
-            {api.sdkGeneration ? 'Enabled' : 'Disabled'}
-          </Button>
-        </Table.Cell>
-      </Table.Row>
-    )
+  renderApiList (apis) {
+    return <>
+      {apis.filter(api => api.id !== window.config.restApiId).map(api => (
+        <React.Fragment key={api.stage ? `${api.id}_${api.stage}` : api.id}>
+          <Table.Row>
+            <Table.Cell collapsing>{api.name}</Table.Cell>
+            <Table.Cell>{api.stage}</Table.Cell>
+            <Table.Cell>{api.subscribable ? 'Subscribable' : 'Not Subscribable'}</Table.Cell>
+            <Table.Cell>
+              <Button
+                basic
+                color={api.visibility ? 'green' : 'red'}
+                style={{ width: '100%' }}
+                onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}
+              >
+                {api.visibility ? 'True' : 'False'}
+              </Button>
+            </Table.Cell>
+            <Table.Cell>
+              <Button
+                basic
+                color='blue'
+                disabled={!api.visibility}
+                style={{ width: '100%' }}
+                onClick={() => this.updateApiGatewayApi(api)}
+              >
+              Update
+              </Button>
+            </Table.Cell>
+            <Table.Cell>
+              <Button
+                basic
+                // color={api.sdkGeneration ? 'green' : 'red'}
+                color='blue'
+                style={{ width: '100%' }}
+                disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
+                onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}
+              >
+                {api.sdkGeneration ? 'Enabled' : 'Disabled'}
+              </Button>
+            </Table.Cell>
+          </Table.Row>
+        </React.Fragment>
+      ))}
+    </>
   }
 
   render () {
@@ -480,8 +491,8 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             </Table.Header>
             <Table.Body>
               {store.visibility.generic
-                ? Object.keys(store.visibility.generic).sort(this.genericTableSort).map((apiId, i) => (
-                  <Table.Row key={i}>
+                ? Object.keys(store.visibility.generic).sort(this.genericTableSort).map(apiId => (
+                  <Table.Row key={apiId}>
                     <Table.Cell collapsing>{store.visibility.generic[apiId].name}</Table.Cell>
                     <Table.Cell>
                       <Button
