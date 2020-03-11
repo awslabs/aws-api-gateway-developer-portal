@@ -16,11 +16,11 @@ import MenuLink from 'components/MenuLink'
 export const SideNav = observer(() => isAdmin() && (
   <Sidebar>
     <SidebarHeader>Admin</SidebarHeader>
-    {/* The class name here is to avoid a selector precedence issue */}
     <MenuLink to='/admin/apis'>APIs</MenuLink>
     <MenuLink>
-      <Link to='/admin/accounts' style={{ color: 'inherit' }}>Accounts</Link>
+      Accounts
       <Menu.Menu>
+        <MenuLink to='/admin/accounts'>Users</MenuLink>
         <MenuLink to='/admin/accounts/admins'>Admins</MenuLink>
         <MenuLink to='/admin/accounts/invites'>Invites</MenuLink>
         <MenuLink to='/admin/accounts/requests'>Requests</MenuLink>
