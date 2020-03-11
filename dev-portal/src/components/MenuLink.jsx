@@ -5,9 +5,9 @@ import React from 'react'
 import { Menu } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 
-function MenuLink ({ to, style, ...props }) {
+function MenuLink ({ to, ...props }) {
   if (props.onClick == null && to == null) {
-    return <Menu.Item className='link' {...props} />
+    return <Menu.Item className='link' {...props} style={{ ...props.style, cursor: 'default' }} />
   } else if (props.onClick != null || /^https?:\/\//.test(to)) {
     return <Menu.Item className='link' as='a' href={to} {...props} />
   } else {
