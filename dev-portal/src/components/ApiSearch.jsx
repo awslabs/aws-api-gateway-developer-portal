@@ -66,6 +66,7 @@ export default function ApiSearch (props) {
       <Grid style={{ padding: '2em' }}>
         <Grid.Column>
           <Search
+            placeholder="Search for an API, stage, or any content in an API's definition."
             onSearchChange={handleSearchChange}
             results={results}
             resultRenderer={(result) => (
