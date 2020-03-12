@@ -64,7 +64,7 @@ export default function ApiSearch (props) {
       SidebarPusherProps={{ className: 'swagger-section' }}
     >
       <Grid style={{ padding: '2em' }}>
-        <Grid.Column>
+        <Grid.Column id='api-search'>
           <Search
             placeholder="Search for an API, stage, or any content in an API's definition."
             onSearchChange={handleSearchChange}
