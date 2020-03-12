@@ -14,16 +14,12 @@ import './ApiSearch.css'
 import searchTermRegexp from 'utils/search-term-regexp'
 
 function prepareSearch (searchString) {
-  return Array.from(new Set(searchString.match(searchTermRegexp)))
+  return Array.from(new Set(searchString.toLowerCase().match(searchTermRegexp)))
 }
 
 export default function ApiSearch (props) {
   const [value, setValue] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-
-  // function handleResultSelect (e, { result }) {
-  //   console.log(result)
-  // }
 
   const isLoaded = useObserver(() => store.apiList != null && store.apiList.loaded)
 
@@ -70,7 +66,6 @@ export default function ApiSearch (props) {
       <Grid style={{ padding: '2em' }}>
         <Grid.Column>
           <Search
-            // onResultSelect={handleResultSelect}
             onSearchChange={handleSearchChange}
             results={results}
             resultRenderer={(result) => (
