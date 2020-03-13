@@ -84,7 +84,7 @@ function makeCatalog () {
     const apis = []
     for (let j = 1; j <= 4; j++) {
       for (let k = 1; k <= 4; k++) {
-        apis.push({ apiId: `plan${i}_api${j}`, stage: `plan${i}_stage${k}` })
+        apis.push({ id: `plan${i}_api${j}`, stage: `plan${i}_stage${k}` })
       }
     }
     apiGateway.push({ id: `plan${i}`, apis })
