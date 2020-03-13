@@ -1,6 +1,6 @@
-const util = require('../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../setup-jest')
-const catalogSdk = require('../routes/catalog/sdk')
+const util = require('../../../util')
+const { promiser, generateRequestContext, generateResponseContext } = require('../../../../setup-jest')
+const catalogSdk = require('../../../routes/catalog/sdk')
 
 const originalCatalog = util.catalog
 

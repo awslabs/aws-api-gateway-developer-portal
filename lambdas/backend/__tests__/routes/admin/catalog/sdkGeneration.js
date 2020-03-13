@@ -1,7 +1,7 @@
-const util = require('../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../setup-jest')
+const util = require('../../../../util')
+const { promiser, generateRequestContext, generateResponseContext } = require('../../../../../setup-jest')
 
-const sdkGeneration = require('../routes/admin/catalog/sdkGeneration')
+const sdkGeneration = require('../../../../routes/admin/catalog/sdkGeneration')
 const originalIdempotentSdkGenerationUpdate = sdkGeneration.idempotentSdkGenerationUpdate
 
 describe('PUT /admin/catalog/:id/sdkGeneration', () => {

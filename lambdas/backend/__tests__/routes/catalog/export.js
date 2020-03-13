@@ -1,6 +1,6 @@
-const util = require('../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../setup-jest')
-const catalogExport = require('../routes/catalog/export')
+const util = require('../../../util')
+const { promiser, generateRequestContext, generateResponseContext } = require('../../../../setup-jest')
+const catalogExport = require('../../../routes/catalog/export')
 
 const originalCatalog = util.catalog
 

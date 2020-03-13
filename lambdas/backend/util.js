@@ -24,7 +24,7 @@ exports.getCognitoIdentityId = req => {
 
 exports.getUsagePlanFromCatalog = (usagePlanId, catalog) => {
   for (const usagePlan of catalog.apiGateway) {
-    if (usagePlan.id === usagePlanId) return usagePlanId
+    if (usagePlan.id === usagePlanId) return usagePlan
   }
 
   return null
@@ -69,7 +69,10 @@ exports.catalog = () => {
       if (error.code === 'NoSuchKey') {
         console.error('error: No catalog.json file found. Please upload an api definition to `catalog/`.')
 
-        return []
+        return {
+          apiGateway: [],
+          generic: {}
+        }
       }
 
       console.error('error:', error)
