@@ -45,3 +45,7 @@ h1, h2, h3, h4, h5 {
   margin-left: 1em;
   font-size: 1em;
 }
+
+.ui.inverted.menu .menu a.item:hover {
+  color: #ffffff;
+}

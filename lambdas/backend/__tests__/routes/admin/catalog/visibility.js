@@ -1,7 +1,7 @@
-const util = require('../util')
-const promiser = require('../../setup-jest').promiser
+const util = require('../../../../util')
+const promiser = require('../../../../../setup-jest').promiser
 const hash = require('object-hash')
-const adminCatalogVisibility = require('../routes/admin/catalog/visibility')
+const adminCatalogVisibility = require('../../../../routes/admin/catalog/visibility')
 
 const originalCatalog = util.catalog
 

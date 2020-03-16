@@ -1,3 +1,6 @@
+// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 import React from 'react'
 
 import { isAdmin } from 'services/self'
@@ -6,33 +9,22 @@ import { observer } from 'mobx-react'
 
 import { Link } from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
+import Sidebar from 'components/Sidebar/Sidebar'
+import SidebarHeader from 'components/Sidebar/SidebarHeader'
+import MenuLink from 'components/MenuLink'
 
-export const SideNav = observer(() => (
-  isAdmin() &&
-  (<Menu inverted vertical borderless attached style={{ flex: '0 0 auto' }}>
-    <Menu.Header
-      style={{
-        padding: '13px 5px 13px 16px',
-        color: 'lightsteelblue'
-      }
-    }>
-      Admin
-    </Menu.Header>
-    {/* The class name here is to avoid a selector precedence issue */}
-    <Menu.Item className='link' as={Link} to='/admin/apis'>APIs</Menu.Item>
-    <Menu.Item className='link'>
-      <Link to='/admin/accounts' style={{ color: 'inherit' }}>Accounts</Link>
+export const SideNav = observer(() => isAdmin() && (
+  <Sidebar>
+    <SidebarHeader>Admin</SidebarHeader>
+    <MenuLink to='/admin/apis'>APIs</MenuLink>
+    <MenuLink>
+      Accounts
       <Menu.Menu>
-        <Menu.Item as={Link} to='/admin/accounts/admins'>
-          Admins
-        </Menu.Item>
-        <Menu.Item as={Link} to='/admin/accounts/invites'>
-          Invites
-        </Menu.Item>
-        <Menu.Item as={Link} to='/admin/accounts/requests'>
-          Requests
-        </Menu.Item>
+        <MenuLink to='/admin/accounts'>Users</MenuLink>
+        <MenuLink to='/admin/accounts/admins'>Admins</MenuLink>
+        <MenuLink to='/admin/accounts/invites'>Invites</MenuLink>
+        <MenuLink to='/admin/accounts/requests'>Requests</MenuLink>
       </Menu.Menu>
-    </Menu.Item>
-   </Menu>)
+    </MenuLink>
+  </Sidebar>
 ))

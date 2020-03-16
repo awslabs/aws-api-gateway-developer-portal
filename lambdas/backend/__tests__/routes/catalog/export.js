@@ -1,6 +1,6 @@
-const util = require('../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../setup-jest')
-const catalogExport = require('../routes/catalog/export')
+const util = require('../../../util')
+const { promiser, generateRequestContext, generateResponseContext } = require('../../../../setup-jest')
+const catalogExport = require('../../../routes/catalog/export')
 
 const originalCatalog = util.catalog
 
@@ -30,7 +30,7 @@ describe('GET /catalog/:apiId/export', () => {
         {
           apis: [
             {
-              apiId: 'apiId',
+              id: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             }
@@ -68,7 +68,7 @@ describe('GET /catalog/:apiId/export', () => {
         {
           apis: [
             {
-              apiId: 'apiId',
+              id: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             }
@@ -104,12 +104,12 @@ describe('GET /catalog/:apiId/export', () => {
         {
           apis: [
             {
-              apiId: 'apiId',
+              id: 'apiId',
               stage: 'stageName',
               sdkGeneration: true
             },
             {
-              apiId: 'thisApi',
+              id: 'thisApi',
               stage: 'shouldNotGenerateSDKs',
               sdkGeneration: false
             }

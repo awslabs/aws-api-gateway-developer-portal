@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Redirect } from 'react-router-dom'
 
 // semantic-ui
 import { Menu, Loader } from 'semantic-ui-react'
@@ -13,126 +13,88 @@ import { store } from 'services/state'
 
 // utilities
 import _ from 'lodash'
+import Sidebar from 'components/Sidebar/Sidebar'
+import SidebarHeader from 'components/Sidebar/SidebarHeader'
+import MenuLink from 'components/MenuLink'
 
-function isActive (apiId, selectedApiId, stage, selectedStage) {
-  if (!selectedStage) return (selectedApiId) ? apiId === selectedApiId : false
-  return (selectedApiId) ? apiId === selectedApiId && stage === selectedStage : false
+function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
+  const apiGatewayApiList = _.get(store, 'apiList.apiGateway', []).map(api => ({
+    group: api.id,
+    id: api.stage,
+    title: api.swagger.info.title,
+    route: `/apis/${api.id}/${api.stage}`,
+    active: (
+      (selectedApiId && api.id === selectedApiId) &&
+      (!selectedStage || api.stage === selectedStage)
+    ),
+    stage: api.stage
+  }))
+  const genericApiList = _.get(store, 'apiList.generic', []).map(api => ({
+    group: api.apiId || api.id,
+    id: api.stage || api.id,
+    title: api.swagger.info.title,
+    route: `/apis/${api.id}`,
+    active: (
+      (selectedApiId && (api.id === selectedApiId || api.apiId === selectedApiId)) &&
+      (!selectedStage || api.stage === selectedStage)
+    ),
+    stage: api.stage
+  }))
+
+  return _.toPairs(_.groupBy(apiGatewayApiList.concat(genericApiList), 'group'))
+    .map(([group, apis]) => ({ group, apis, active: _.some(apis, 'active'), title: apis[0].title }))
 }
 
 export default observer(function ApisMenu (props) {
-  const loadingApis = !store.apiList.loaded
-  const hasGatewayApis = !!_.get(store, 'apiList.apiGateway.length')
-  const hasGenericApis = !!_.get(store, 'apiList.generic.length')
-
-  // either grab the selectedApiId from the path OR
-  // grab it from the first apiGateway api OR
-  // grab it from the first generic api
-  let selectedApiId = (
-    props.path.params.apiId ||
-    (hasGatewayApis && store.apiList.apiGateway[0].id) ||
-    (hasGenericApis && store.apiList.generic[0].id)
-  )
-
-  if (props.path.url === '/apis/search') {
-    selectedApiId = false
-  }
-
-  const selectedStage = (props.path.params.stage || (hasGatewayApis && store.apiList.apiGateway[0].stage))
-
   // If we're still loading, display a spinner.
   // If we're not loading, and we don't have any apis, display a message.
   // If we're not loading, and we have some apis, render the appropriate api subsections for apiGateway and generic apis
-  if (loadingApis) {
+  if (!store.apiList.loaded) {
     return <Loader active />
   }
-  if (!hasGatewayApis && !hasGenericApis) {
+
+  const apiGroupList = getApisWithStages(
+    props.activateFirst && props.path.params.apiId,
+    props.path.params.stage,
+    props.activateFirst
+  )
+
+  if (!apiGroupList.length) {
     return <p style={{ padding: '13px 16px', color: 'whitesmoke' }}>No APIs Published</p>
   }
+
+  if (props.activateFirst && !props.path.params.apiId) {
+    return <Redirect to={apiGroupList[0].apis[0].route} />
+  }
+
   return (
-    <>
-      <Menu.Item key='search' as={Link} to='/apis/search' active={props.path.url === '/apis/search'}>Search APIs</Menu.Item>
-      {hasGatewayApis && <ApiSubsection title='Subscribable' listOfApis={store.apiList.apiGateway} selectedApiId={selectedApiId} selectedStage={selectedStage} />}
-      {hasGenericApis && <GenericApiSubsection title='Not Subscribable' listOfApis={store.apiList.generic} selectedApiId={selectedApiId} />}
-    </>
+    <Sidebar>
+      <SidebarHeader
+        as={Link}
+        className='item'
+        to='/apis/search'
+        active={props.path.url === '/apis/search'}
+        style={{ fontWeight: '400', fontSize: '1em' }}
+      >
+        Search APIs
+      </SidebarHeader>
+
+      <SidebarHeader>APIs</SidebarHeader>
+
+      <>
+        {apiGroupList.map(({ apis, title, group, active }) => (
+          <MenuLink key={group} active={active}>
+            {title}
+            <Menu.Menu>
+              {apis.map(({ route, stage, active, id }) => (
+                <MenuLink key={id} to={route} active={active} style={{ fontWeight: '400' }}>
+                  {stage}
+                </MenuLink>
+              ))}
+            </Menu.Menu>
+          </MenuLink>
+        ))}
+      </>
+    </Sidebar>
   )
 })
-
-function GenericApiSubsection ({ title, listOfApis, selectedApiId }) {
-  return (
-    <Menu inverted vertical borderless attached style={{ flex: '0 0 auto', width: 'auto' }}>
-      <Menu.Header
-        style={{
-          padding: '13px 5px 13px 16px',
-          color: 'lightsteelblue'
-        }}
-      >
-        {title}
-      </Menu.Header>
-      {_.toPairs(_.groupBy(listOfApis, api => api.apiId || api.id)).map(([id, apis]) => (
-        <Menu.Item
-          key={id}
-          className='link'
-          active={apis.some(api => isActive(`${api.id}`, `${selectedApiId}`))}
-        >
-          {apis[0].swagger.info.title}
-          {apis.length === 1 ? (
-            apis[0].stage != null ? ` (${apis[0].stage})` : null
-          ) : (
-            <Menu.Menu>
-              {apis.map(api => (
-                <Menu.Item
-                  key={api.id}
-                  as={Link}
-                  to={`/apis/${api.id}`}
-                  active={isActive(api.id, `${selectedApiId}`)}
-                  style={{ 'font-weight': '400' }}
-                >
-                  {api.stage}
-                </Menu.Item>
-              ))}
-            </Menu.Menu>
-          )}
-        </Menu.Item>
-      ))}
-    </Menu>
-  )
-}
-
-function ApiSubsection ({ title, listOfApis, selectedApiId, selectedStage = false }) {
-  return (
-    <Menu inverted vertical borderless attached style={{ flex: '0 0 auto', width: 'auto' }}>
-      <Menu.Header
-        style={{
-          padding: '13px 5px 13px 16px',
-          color: 'lightsteelblue'
-        }}
-      >
-        {title}
-      </Menu.Header>
-      {_.toPairs(_.groupBy(listOfApis, "id")).map(([id, apis]) => (
-        <Menu.Item
-          key={id}
-          className='link'
-          active={isActive(id, `${selectedApiId}`)}
-        >
-          {apis[0].swagger.info.title}
-          {apis.length === 1 ? ` (${apis[0].stage})` : (
-            <Menu.Menu>
-              {apis.map(api => (
-                <Menu.Item
-                  key={`${id}_${api.stage}`}
-                  as={Link}
-                  to={`/apis/${id}/${api.stage}`}
-                  active={isActive(id, `${selectedApiId}`, `${api.stage}`, selectedStage)}
-                  style={{ 'font-weight': '400' }}
-                >
-                  {api.stage}
-                </Menu.Item>
-              ))}
-            </Menu.Menu>
-          )}
-        </Menu.Item>
-      ))}
-    </Menu>
-  )
-}

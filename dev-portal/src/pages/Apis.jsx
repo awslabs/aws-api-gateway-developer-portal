@@ -26,7 +26,7 @@ import { observer } from 'mobx-react'
 export default observer(class ApisPage extends React.Component {
   containerRef = React.createRef()
   removed = false
-  
+
   componentDidMount () { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
   componentDidUpdate () { this.updateApi() }
   componentWillUnmount () { this.removed = true }
@@ -81,7 +81,7 @@ export default observer(class ApisPage extends React.Component {
 
     return (
       <PageWithSidebar
-        sidebarContent={<ApisMenu path={this.props.match} />}
+        sidebarContent={<ApisMenu path={this.props.match} activateFirst={true} />}
         SidebarPusherProps={{ className: 'swagger-section' }}
       >
         <div className='swagger-ui-wrap' ref={this.containerRef} style={{ padding: '0 20px' }}>

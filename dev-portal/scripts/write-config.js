@@ -1,12 +1,14 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+'use strict'
+
 const fetch = require('node-fetch')
 const writeFile = require('fs').writeFileSync
 
 const { execute, r, red } = require('./utils.js')
 
-const deployerConfig = require('../deployer.config.js')
+const deployerConfig = require('./get-deployer-config.js')
 const stackName = deployerConfig.stackName
 
 // AWS SAM CLI configuration

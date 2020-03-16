@@ -1,9 +1,10 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
+'use strict'
 
 const { execute, r, red, green } = require('./utils.js')
 
-const deployerConfig = require('../deployer.config.js')
+const deployerConfig = require('./get-deployer-config.js')
 const writeConfig = require('./write-config.js')
 
 const errors = []
@@ -28,7 +29,10 @@ const cognitoDomainName = getRequired('cognitoDomainName')
 // required (and defaulted) inputs
 const samTemplate = getOptional('samTemplate', r('../../cloudformation/template.yaml'))
 const packageConfig = getOptional('packageConfig', r('../../cloudformation/packaged.yaml'))
-const customersTableName = getOptional('customersTableName', 'DevPortalCustomers')
+const customersTableName = getOptional('customersTableName')
+const preLoginAccountsTableName = getOptional('preLoginAccountsTableName')
+const feedbackTableName = getOptional('feedbackTableName')
+const cognitoIdentityPoolName = getOptional('cognitoIdentityPoolName')
 
 // optional inputs
 const staticAssetRebuildMode = getOptional('staticAssetRebuildMode', '')
@@ -55,7 +59,10 @@ async function main () {
     ...(staticAssetRebuildMode ? [`StaticAssetRebuildMode=${staticAssetRebuildMode}`] : []),
     `DevPortalSiteS3BucketName=${siteAssetsBucket}`,
     `ArtifactsS3BucketName=${apiAssetsBucket}`,
-    `DevPortalCustomersTableName=${customersTableName}`,
+    ...(customersTableName ? [`DevPortalCustomersTableName=${customersTableName}`] : []),
+    ...(preLoginAccountsTableName ? [`DevPortalPreLoginAccountsTableName=${preLoginAccountsTableName}`] : []),
+    ...(feedbackTableName ? [`DevPortalFeedbackTableName=${feedbackTableName}`] : []),
+    ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName=${cognitoIdentityPoolName}`] : []),
     ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
     `CognitoDomainNameOrPrefix=${cognitoDomainName}`,
     '--s3-bucket', buildAssetsBucket,
