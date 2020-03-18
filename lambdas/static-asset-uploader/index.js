@@ -193,7 +193,7 @@ class State {
 
     try {
       const readResults = await new Promise((resolve, reject) => {
-        fs.readFile(filePath, 'utf-8', (err, data) => {
+        fs.readFile(filePath, (err, data) => {
           if (err) reject(err)
           else resolve(data)
         })
