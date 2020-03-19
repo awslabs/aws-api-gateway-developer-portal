@@ -8,6 +8,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const awsServerlessExpress = require('aws-serverless-express')
+const util = require('./util')
 
 const app = express()
 
@@ -21,7 +22,8 @@ function wrapError (func) {
     try {
       await func(req, res, callback)
     } catch (e) {
-      callback(e)
+      console.error(`Error: ${e.stack}`)
+      res.status(500).json(util.makeErrorResponse(e))
     }
   }
 }
