@@ -53,7 +53,7 @@ describe('GET /catalog/:apiId/export', () => {
     })
 
     expect(res.send).toHaveBeenCalledTimes(1)
-    expect(res.send.mock.calls[0][0]).toContain('data:application/zip;base64,')
+    expect(res.send.mock.calls[0][0]).toBeInstanceOf(Buffer)
   })
 
   test('it should not return SDKs for APIs not in the catalog', async () => {

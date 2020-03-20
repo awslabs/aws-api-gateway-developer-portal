@@ -1,6 +1,5 @@
 'use strict'
 
-const Datauri = require('datauri')
 const util = require('../../util')
 
 exports.get = async (req, res) => {
@@ -32,9 +31,6 @@ exports.get = async (req, res) => {
       parameters
     }).promise()).body
 
-    const datauri = new Datauri()
-    datauri.format('.zip', resultsBuffer)
-
-    res.send(datauri.content)
+    res.send(resultsBuffer)
   }
 }
