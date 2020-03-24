@@ -80,7 +80,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
 
     if (files.length > 0) {
       this.setState(prev => ({ ...prev, errors: [] }))
-      files.forEach(file => {
+      ;[].forEach.call(files, file => {
         const reader = new window.FileReader()
 
         reader.onload = (e) => {
@@ -106,7 +106,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
             .then((res) => {
               if (res.status === 200) {
-                this.setState(prev => ({ ...prev, modalOpen: anyFailures, errors: anyFailures ? prev.errors : [] }))
+                this.setState(prev => ({ ...prev, modalOpen: Boolean(anyFailures), errors: anyFailures ? prev.errors : [] }))
               }
               setTimeout(() => this.getApiVisibility(), 2000)
             })
