@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Button, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
+import { Button, Loader, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
 import { getApi } from 'services/api-catalog'
@@ -34,7 +34,8 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     super(props)
     this.state = {
       modalOpen: false,
-      errors: []
+      errors: [],
+      apisUpdating: []
     }
 
     this.fileInput = React.createRef()
@@ -232,9 +233,23 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     })
   }
 
+  isUpdatingApiGatewayApi (api) {
+    return this.state.apisUpdating.includes(`${api.id}_${api.stage}`)
+  }
+
   updateApiGatewayApi (api) {
+    // Simpler than implementing a multiset, and probably also faster.
+    this.setState(({ apisUpdating }) => ({
+      apisUpdating: [...apisUpdating, `${api.id}_${api.stage}`]
+    }))
     apiGatewayClient()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
+      .then(() => this.setState(({ apisUpdating }) => {
+        const index = apisUpdating.indexOf(`${api.id}_${api.stage}`)
+        const newApisUpdating = apisUpdating.slice()
+        newApisUpdating.splice(index, 1)
+        return { apisUpdating: newApisUpdating }
+      }))
   }
 
   isSdkGenerationConfigurable (api) {
@@ -395,7 +410,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                 style={{ width: '100%' }}
                 onClick={() => this.updateApiGatewayApi(api)}
               >
-              Update
+                {this.isUpdatingApiGatewayApi(api) ? <Loader active inline size='mini' /> : 'Update'}
               </Button>
             </Table.Cell>
             <Table.Cell>
