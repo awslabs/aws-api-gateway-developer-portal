@@ -120,7 +120,8 @@ reactTo(
 function fetchApiImage (apiList) {
   apiList.forEach(api => {
     if (!api.logo) {
-      const specificLogo = `/custom-content/api-logos/${api.id}_${api.stage}.png`
+      const key = api.stage == null ? api.id : `${api.id}_${api.stage}`
+      const specificLogo = `/custom-content/api-logos/${key}.png`
 
       // fetch automatically follows redirects; setting redirect to `manual` prevents this
       // we need to prevent it so that we can accurately determine if the image exists
