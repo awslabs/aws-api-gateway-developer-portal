@@ -83,15 +83,17 @@ export default observer(function ApisMenu (props) {
 
       <>
         {apiGroupList.map(({ apis, title, group, active }) => (
-          <MenuLink key={group} active={active}>
+          <MenuLink key={group} active={active} to={apis[0].stage ? null : apis[0].route}>
             {title}
-            <Menu.Menu>
-              {apis.map(({ route, stage, active, id }) => (
-                <MenuLink key={id} to={route} active={active} style={{ fontWeight: '400' }}>
-                  {stage}
-                </MenuLink>
-              ))}
-            </Menu.Menu>
+            {apis[0].stage ? (
+              <Menu.Menu>
+                {apis.map(({ route, stage, active, id }) => (
+                  <MenuLink key={id} to={route} active={active} style={{ fontWeight: '400' }}>
+                    {stage}
+                  </MenuLink>
+                ))}
+              </Menu.Menu>
+            ) : null}
           </MenuLink>
         ))}
       </>
