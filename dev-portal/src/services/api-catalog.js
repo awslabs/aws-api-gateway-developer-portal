@@ -161,9 +161,19 @@ export function updateApiKey (bustCache) {
   const apiKeyOrPromise = store.apiKey ? store.apiKey : apiKeyPromiseCache
   if (!bustCache && apiKeyOrPromise) return Promise.resolve(apiKeyOrPromise)
 
-  return apiGatewayClient()
-    .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
-    .then(({ data }) => (store.apiKey = data.value))
+  const MAX_RETRIES = 5
+  let remaining = MAX_RETRIES
+
+  function loop () {
+    remaining--
+    const promise = apiGatewayClient()
+      .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
+      .then(({ data }) => (store.apiKey = data.value))
+
+    return remaining ? promise.catch(loop) : promise
+  }
+
+  return (apiKeyPromiseCache = loop())
 }
 let apiKeyPromiseCache
 
