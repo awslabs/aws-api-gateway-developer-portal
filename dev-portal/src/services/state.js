@@ -13,6 +13,7 @@ function storeDefaults () {
   return {
     api: undefined,
     apiKey: undefined,
+    apiKeyFetchFailed: false,
 
     apiList: {
       loaded: false,
