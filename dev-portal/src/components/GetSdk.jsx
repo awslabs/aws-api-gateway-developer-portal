@@ -439,7 +439,7 @@ const exportTypes = [
  *
  */
 
-function fetchBlob ({ blobType, endpointName, sdkType, exportType, parameters }) {
+function fetchBlob ({ blobType, endpointName, sdkType, exportType, ext, parameters }) {
   const apiId = store.api.apiId || store.api.id
   const stageName = store.api.stage
 
@@ -451,13 +451,12 @@ function fetchBlob ({ blobType, endpointName, sdkType, exportType, parameters })
       { sdkType },
       {},
       {
-        queryParams: { exportType, parameters: JSON.stringify(parameters) }
-        // leaving this as a comment so we know how to switch to a file in the future
-        // config: { responseType: "blob" }
+        queryParams: { exportType, parameters: JSON.stringify(parameters) },
+        config: { responseType: 'blob' }
       }
     ))
     .then(({ data }) => {
-      downloadFile(data, `${apiId}_${stageName}-${sdkType || exportType}.zip`)
+      downloadFile(data, `${apiId}_${stageName}-${sdkType || exportType}${ext}`)
     })
     .catch(({ data } = {}) => {
       addNotification({ header: `An error occurred while attempting to download the ${blobType}.`, content: data.message })
@@ -467,10 +466,8 @@ function fetchBlob ({ blobType, endpointName, sdkType, exportType, parameters })
     })
 }
 
-function downloadFile (dataUri, fileName) {
-  // leaving this as a comment so we know how to switch to a file in the future
-  // const reader = new FileReader()
-  // reader.onloadend = () => {
+function downloadFile (blob, fileName) {
+  const dataUri = URL.createObjectURL(blob)
   const downloadLinkElement = document.createElement('a')
   downloadLinkElement.setAttribute('href', dataUri)
   downloadLinkElement.setAttribute('download', fileName)
@@ -479,14 +476,14 @@ function downloadFile (dataUri, fileName) {
   document.body.appendChild(downloadLinkElement)
   downloadLinkElement.click()
   document.body.removeChild(downloadLinkElement)
-  // }
-  // reader.readAsDataURL(data)
+  URL.revokeObjectURL(dataUri)
 }
 
 function getSdk (sdkType, parameters = {}) {
   return fetchBlob({
     blobType: 'SDK',
     endpointName: 'sdk',
+    ext: '.zip',
     sdkType,
     parameters
   })
@@ -509,6 +506,7 @@ function getExport (exportType, parameters = {}) {
   return fetchBlob({
     blobType: 'API export',
     endpointName: 'export',
+    ext: '.json',
     exportType,
     parameters
   })
