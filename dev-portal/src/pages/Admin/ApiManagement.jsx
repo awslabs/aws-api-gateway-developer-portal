@@ -3,7 +3,7 @@ import React from 'react'
 import { Button, Loader, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
 
 import { apiGatewayClient } from 'services/api'
-import { getApi } from 'services/api-catalog'
+import { getApi, updateUsagePlansAndApisList } from 'services/api-catalog'
 import { store } from 'services/state'
 
 import * as YAML from 'yamljs'
@@ -127,6 +127,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           setTimeout(() => this.getApiVisibility(), 2000)
         })
     })
+  }
+
+  updateApiListing () {
+    updateUsagePlansAndApisList()
   }
 
   getApiVisibility () {
@@ -432,7 +436,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   render () {
-    return (
+    return <>
+      <div style={{ padding: '2em', paddingBottom: '0' }}>
+        <Button color='blue' onClick={() => this.updateApiListing()}>Update API list</Button>
+      </div>
       <div style={{ display: 'flex', width: '100%' }}>
         <div style={{ padding: '2em' }}>
           <Table celled collapsing>
@@ -531,6 +538,6 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           </Table>
         </div>
       </div>
-    )
+    </>
   }
 })
