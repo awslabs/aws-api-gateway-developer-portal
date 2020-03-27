@@ -1,19 +1,10 @@
 const fs = require('fs')
 const path = require('path')
 const index = require('../index')
-const promiser = require('../../setup-jest').promiser
+const { promiser, bindMock, bindEnv } = require('../../setup-jest')
 
 describe('swaggerFileFilter', () => {
   test('should only process JSON or YAML files in the catalog directory', () => {
-    // not in catalog/ directory, should all fail
-    expect(index.swaggerFileFilter({ Key: 'swagger.json' })).toBe(false)
-    expect(index.swaggerFileFilter({ Key: 'swagger.yaml' })).toBe(false)
-    expect(index.swaggerFileFilter({ Key: 'swagger.yml' })).toBe(false)
-    expect(index.swaggerFileFilter({ Key: 'swagger.json' })).toBe(false)
-    expect(index.swaggerFileFilter({ Key: 'not-swagger' })).toBe(false)
-    expect(index.swaggerFileFilter({ Key: 'not-swagger.json.misleading' })).toBe(false)
-
-    // in catalog/ directory, only the swagger json/yaml/yml should pass
     expect(index.swaggerFileFilter({ Key: 'catalog/swagger.json' })).toBe(true)
     expect(index.swaggerFileFilter({ Key: 'catalog/swagger.yaml' })).toBe(true)
     expect(index.swaggerFileFilter({ Key: 'catalog/swagger.yml' })).toBe(true)
@@ -25,9 +16,7 @@ describe('swaggerFileFilter', () => {
 })
 
 describe('getSwaggerFile', () => {
-  afterEach(() => {
-    index.s3.getObject = jest.fn(() => { throw new Error('getObject called before init') })
-  })
+  const setMock = bindMock()
 
   test('should recognize generic swagger files after fetching them from S3', async () => {
     // generic swagger is swagger not managed by api gateway; we detect this based on it not having any
@@ -35,12 +24,13 @@ describe('getSwaggerFile', () => {
 
     const fileBody = fs.readFileSync(path.join(__dirname, '/generic-swagger.json'))
 
-    index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
+    setMock(index.s3, 'getObject').mockReturnValueOnce(promiser({ Body: fileBody }))
 
     const internalRepr = await index.getSwaggerFile({ Key: 'catalog/swagger.json' })
 
     expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
-    expect(internalRepr.apiStageKey).toBeUndefined()
+    expect(internalRepr.apiId).toBeUndefined()
+    expect(internalRepr.apiStage).toBeUndefined()
     expect(internalRepr.generic).toBe(true)
     expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
   })
@@ -49,13 +39,14 @@ describe('getSwaggerFile', () => {
     // the admin panel uploads files in this format; we then read them and build them into the catalog
     const fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-swagger.json'))
 
-    index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
+    setMock(index.s3, 'getObject').mockReturnValueOnce(promiser({ Body: fileBody }))
 
     const internalRepr = await index.getSwaggerFile({ Key: 'catalog/a1b2c3d4e5_stagename.json' })
 
-    expect(internalRepr.id).toBeUndefined()
-    expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_stagename')
-    expect(internalRepr.generic).toBeUndefined()
+    expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
+    expect(internalRepr.apiId).toBe('a1b2c3d4e5')
+    expect(internalRepr.apiStage).toBe('stagename')
+    expect(internalRepr.generic).toBe(false)
     expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
   })
 
@@ -68,12 +59,13 @@ describe('getSwaggerFile', () => {
 
     const fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-swagger.json'))
 
-    index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
+    setMock(index.s3, 'getObject').mockReturnValueOnce(promiser({ Body: fileBody }))
 
     const internalRepr = await index.getSwaggerFile({ Key: 'catalog/normal-exported-swagger.json' })
 
     expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
-    expect(internalRepr.apiStageKey).toBeUndefined()
+    expect(internalRepr.apiId).toBeUndefined()
+    expect(internalRepr.apiStage).toBeUndefined()
     expect(internalRepr.generic).toBe(true)
     expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
   })
@@ -84,12 +76,13 @@ describe('getSwaggerFile', () => {
 
     const fileBody = fs.readFileSync(path.join(__dirname, '/generic-oas3.json'))
 
-    index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
+    setMock(index.s3, 'getObject').mockReturnValueOnce(promiser({ Body: fileBody }))
 
     const internalRepr = await index.getSwaggerFile({ Key: 'catalog/swagger.json' })
 
     expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
-    expect(internalRepr.apiStageKey).toBeUndefined()
+    expect(internalRepr.apiId).toBeUndefined()
+    expect(internalRepr.apiStage).toBeUndefined()
     expect(internalRepr.generic).toBe(true)
     expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
   })
@@ -98,13 +91,14 @@ describe('getSwaggerFile', () => {
     // the admin panel uploads files in this format; we then read them and build them into the catalog
     const fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-oas3.json'))
 
-    index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
+    setMock(index.s3, 'getObject').mockReturnValueOnce(promiser({ Body: fileBody }))
 
     const internalRepr = await index.getSwaggerFile({ Key: 'catalog/a1b2c3d4e5_oasstagename.json' })
 
-    expect(internalRepr.id).toBeUndefined()
-    expect(internalRepr.apiStageKey).toBe('a1b2c3d4e5_oasstagename')
-    expect(internalRepr.generic).toBeUndefined()
+    expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
+    expect(internalRepr.apiId).toBe('a1b2c3d4e5')
+    expect(internalRepr.apiStage).toBe('oasstagename')
+    expect(internalRepr.generic).toBe(false)
     expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
   })
 
@@ -117,19 +111,23 @@ describe('getSwaggerFile', () => {
 
     const fileBody = fs.readFileSync(path.join(__dirname, '/api-gateway-oas3.json'))
 
-    index.s3.getObject = jest.fn().mockReturnValueOnce(promiser({ Body: fileBody }))
+    setMock(index.s3, 'getObject').mockReturnValueOnce(promiser({ Body: fileBody }))
 
     const internalRepr = await index.getSwaggerFile({ Key: 'catalog/normal-exported-oas3.json' })
 
     expect(internalRepr.id).toBe(index.hash(JSON.parse(fileBody.toString())))
-    expect(internalRepr.apiStageKey).toBeUndefined()
+    expect(internalRepr.apiId).toBeUndefined()
+    expect(internalRepr.apiStage).toBeUndefined()
     expect(internalRepr.generic).toBe(true)
     expect(internalRepr.body).toEqual(JSON.parse(fileBody.toString()))
   })
 })
 
-describe('buildCatalog', () => {
-  test('should generate a correct catalog object from api gateway\'s usage plan', async () => {
+describe('handler', () => {
+  const setMock = bindMock()
+  const setEnv = bindEnv()
+
+  test('should generate a correct catalog object from api gateway\'s usage plan and upload it', async () => {
     const usagePlan = {
       id: 'a1b2c3',
       name: 'Basic',
@@ -137,84 +135,192 @@ describe('buildCatalog', () => {
       quota: { limit: 5, period: 'MONTH', offset: 0 },
       apiStages: [{ apiId: 'a1b2c3d4e5', stage: 'prod' }]
     }
-    const swaggerFileReprs = [
-      { body: 'prodSwaggerBody', apiStageKey: 'a1b2c3d4e5_prod' },
-      { body: 'gammaSwaggerBody', apiStageKey: 'a1b2c3d4e5_gamma' },
-      { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' }
-    ]
+    const files = {
+      'catalog/a1b2c3d4e5_prod.json': {
+        openapi: '3.0.0',
+        info: { version: '1', title: 'prodSwaggerBody' },
+        paths: {}
+      },
+      'catalog/a1b2c3d4e5_gamma.json': {
+        openapi: '3.0.0',
+        info: { version: '1', title: 'gammaSwaggerBody' },
+        paths: {}
+      },
+      'catalog/somehugehash.json': {
+        openapi: '3.0.0',
+        info: { version: '1', title: 'genericSwaggerBody' },
+        paths: {}
+      },
+      'sdkGeneration.json': {}
+    }
+    // NOTE: the order of this matters for the assertion - don't change it unless you know what
+    // you're doing.
     const expectedCatalog = {
-      apiGateway: [{
-        id: 'a1b2c3',
-        name: 'Basic',
-        throttle: { rateLimit: 100, burstLimit: 10 },
-        quota: { limit: 5, period: 'MONTH', offset: 0 },
-        apis: [{
-          swagger: 'prodSwaggerBody',
+      apiGateway: [
+        {
+          id: 'a1b2c3',
+          name: 'Basic',
+          throttle: {
+            rateLimit: 100,
+            burstLimit: 10
+          },
+          quota: {
+            limit: 5,
+            period: 'MONTH',
+            offset: 0
+          },
+          apis: [
+            {
+              id: 'a1b2c3d4e5',
+              apiId: 'a1b2c3d4e5',
+              apiStage: 'prod',
+              sdkGeneration: false,
+              swagger: files['catalog/a1b2c3d4e5_prod.json']
+            }
+          ]
+        }
+      ],
+      generic: [
+        {
           id: 'a1b2c3d4e5',
-          stage: 'prod',
-          sdkGeneration: false
-        }]
-      }],
-      generic: [{
-        swagger: 'genericSwaggerBody',
-        id: 'somehugehash',
-        generic: true,
-        sdkGeneration: false
-      }]
+          apiId: 'a1b2c3d4e5',
+          apiStage: 'gamma',
+          sdkGeneration: false,
+          swagger: files['catalog/a1b2c3d4e5_gamma.json']
+        },
+        {
+          id: index.hash(files['catalog/somehugehash.json']),
+          sdkGeneration: false,
+          swagger: files['catalog/somehugehash.json']
+        }
+      ]
     }
 
-    index.gateway.getUsagePlans = jest.fn().mockReturnValueOnce(promiser({ items: [usagePlan] }))
+    setMock(index.apiGateway, 'getUsagePlans', () => promiser({ items: [usagePlan] }))
+    setMock(index.s3, 'listObjectsV2', () =>
+      promiser({ Contents: Object.keys(files).filter(key => key.startsWith('catalog/')).map(Key => ({ Key })) })
+    )
+    setMock(index.s3, 'getObject', opts => promiser({ Body: Buffer.from(JSON.stringify(files[opts.Key])) }))
+    setMock(index.s3, 'upload', () => promiser())
+    setEnv('BucketName', 'TestBucket')
 
-    expect(await index.buildCatalog(swaggerFileReprs, {})).toEqual(expectedCatalog)
+    await index.handler({})
+    expect(index.s3.upload).toBeCalledWith({
+      Bucket: 'TestBucket',
+      Key: 'catalog.json',
+      Body: JSON.stringify(expectedCatalog),
+      ContentType: 'application/json'
+    })
   })
 })
 
-describe('usagePlanToCatalogObject', () => {
-  const firstValidApi = { swagger: 'prodSwaggerBody', id: 'a1b2c3d4e5', stage: 'prod', sdkGeneration: false }
-  const secondValidApi = { swagger: 'gammaSwaggerBody', id: 'a1b2c3d4e5', stage: 'gamma', sdkGeneration: false }
-
-  const usagePlan = {
-    id: 'MYID',
-    name: 'My Usage Plan',
-    throttle: 1000,
-    quota: 100000,
-    apiStages: [
-      { apiId: 'a1b2c3d4e5', stage: 'prod' },
-      { apiId: 'a1b2c3d4e5', stage: 'gamma' }
-    ]
+describe('CatalogBuilder', () => {
+  const makeApi = (title, id, apiStage, sdkGeneration = false) => {
+    return { id, swagger: { openapi: '3.0.0', info: { version: '1.0.0', title }, paths: {} }, apiId: apiStage != null ? id : undefined, apiStage, sdkGeneration }
   }
+  const makeSwagger = (title, id, apiStage) => {
+    return { id, body: { openapi: '3.0.0', info: { version: '1.0.0', title }, paths: {} }, apiId: apiStage != null ? id : undefined, apiStage, generic: apiStage == null }
+  }
+  const prodApi = makeApi('prodSwaggerBody', 'a1b2c3d4e5', 'prod')
+  const gammaApi = makeApi('gammaSwaggerBody', 'a1b2c3d4e5', 'gamma')
+  const otherApi = makeApi('otherSwaggerBody', 'a1b2c3d4e5', 'delta')
+  const genericApi = makeApi('genericSwaggerBody', 'a1b2c3d4e5f6a1b2c3d4e5f6')
 
-  test('correctly builds catalog', async () => {
+  // These are mutated, hence why they're thunks
+  const prodSwagger = () => makeSwagger('prodSwaggerBody', 'a1b2c3d4e5', 'prod')
+  const gammaSwagger = () => makeSwagger('gammaSwaggerBody', 'a1b2c3d4e5', 'gamma')
+  const otherSwagger = () => makeSwagger('otherSwaggerBody', 'a1b2c3d4e5', 'delta')
+  const genericSwagger = () => makeSwagger('genericSwaggerBody', 'a1b2c3d4e5f6a1b2c3d4e5f6')
+
+  const usagePlans = [
+    {
+      id: 'MYID',
+      name: 'My Usage Plan',
+      throttle: 1000,
+      quota: 100000,
+      apiStages: [
+        { apiId: 'a1b2c3d4e5', stage: 'prod' },
+        { apiId: 'a1b2c3d4e5', stage: 'gamma' }
+      ]
+    }
+  ]
+
+  test('correctly adds mixed apis to catalog', async () => {
     const swaggerFileReprs = [
-      { body: 'prodSwaggerBody', apiStageKey: 'a1b2c3d4e5_prod' }, // included in usage plans
-      { body: 'gammaSwaggerBody', apiStageKey: 'a1b2c3d4e5_gamma' }, // included in usage plans
-      { body: 'otherSwaggerBody', apiStageKey: 'jf8f40f83f5_test' }, // NOT included in usage plans
-      { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
+      // API Gateway-generated, in usage plan
+      prodSwagger(),
+      gammaSwagger(),
+      // API Gateway-generated, not in usage plan
+      otherSwagger(),
+      // Not API Gateway-generated (as in, generic)
+      genericSwagger()
     ]
 
-    const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
+    const builder = new index.CatalogBuilder(usagePlans, {})
+    for (const swagger of swaggerFileReprs) {
+      builder.addToCatalog(swagger)
+    }
 
-    expect(catalogObject.apis.length).toEqual(2)
-    expect(catalogObject.apis[0]).toEqual(firstValidApi)
-    expect(catalogObject.apis[1]).toEqual(secondValidApi)
+    expect(builder.catalog.apiGateway).toEqual([
+      {
+        id: 'MYID',
+        name: 'My Usage Plan',
+        throttle: 1000,
+        quota: 100000,
+        apis: [
+          prodApi,
+          gammaApi
+        ]
+      }
+    ])
+    expect(builder.catalog.generic).toEqual([
+      otherApi,
+      genericApi
+    ])
   })
 
-  test('correctly handles only generic swaggerFileReprs', async () => {
+  test('correctly handles only managed generic swaggerFileReprs', async () => {
     const swaggerFileReprs = [
-      { body: 'genericSwaggerBody', generic: true, id: 'somehugehash' } // NOT included in usage plans (generic)
+      otherSwagger()
     ]
 
-    const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
+    const builder = new index.CatalogBuilder(usagePlans, {})
+    for (const swagger of swaggerFileReprs) {
+      builder.addToCatalog(swagger)
+    }
 
-    expect(catalogObject.apis.length).toEqual(0)
+    expect(builder.catalog.apiGateway).toEqual([])
+    expect(builder.catalog.generic).toEqual([
+      otherApi
+    ])
+  })
+
+  test('correctly handles only unmanaged generic swaggerFileReprs', async () => {
+    const swaggerFileReprs = [
+      genericSwagger()
+    ]
+
+    const builder = new index.CatalogBuilder(usagePlans, {})
+    for (const swagger of swaggerFileReprs) {
+      builder.addToCatalog(swagger)
+    }
+
+    expect(builder.catalog.apiGateway).toEqual([])
+    expect(builder.catalog.generic).toEqual([
+      genericApi
+    ])
   })
 
   test('correctly handles empty swaggerFileReprs', async () => {
     const swaggerFileReprs = []
 
-    const catalogObject = index.usagePlanToCatalogObject(usagePlan, swaggerFileReprs, {})
+    const builder = new index.CatalogBuilder(usagePlans, {})
+    for (const swagger of swaggerFileReprs) {
+      builder.addToCatalog(swagger)
+    }
 
-    expect(catalogObject.apis.length).toEqual(0)
+    expect(builder.catalog.apiGateway).toEqual([])
+    expect(builder.catalog.generic).toEqual([])
   })
 })
 
@@ -222,9 +328,9 @@ describe('copyAnyMethod', () => {
   test('correctly copies ANY methods to other methods in swagger documents', async () => {
     const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/swagger-ANY-method.json'), 'utf8'))
     const anyMethod = fileBody.paths['/']['x-amazon-apigateway-any-method']
-    const catalogObject = index.copyAnyMethod(fileBody)
+    index.copyAnyMethod(fileBody)
 
-    expect(catalogObject.paths['/']).toEqual({
+    expect(fileBody.paths['/']).toEqual({
       get: anyMethod,
       post: anyMethod,
       put: anyMethod,
@@ -239,9 +345,9 @@ describe('copyAnyMethod', () => {
     const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/swagger-ANY+GET-methods.json'), 'utf8'))
     const getMethod = fileBody.paths['/'].get
     const anyMethod = fileBody.paths['/']['x-amazon-apigateway-any-method']
-    const catalogObject = index.copyAnyMethod(fileBody)
+    index.copyAnyMethod(fileBody)
 
-    expect(catalogObject.paths['/']).toEqual({
+    expect(fileBody.paths['/']).toEqual({
       // don't replace get
       get: getMethod,
 
@@ -258,9 +364,9 @@ describe('copyAnyMethod', () => {
   test('correctly copies ANY methods to other methods in oas3 documents', async () => {
     const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/oas3-ANY-method.json'), 'utf8'))
     const anyMethod = fileBody.paths['/']['x-amazon-apigateway-any-method']
-    const catalogObject = index.copyAnyMethod(fileBody)
+    index.copyAnyMethod(fileBody)
 
-    expect(catalogObject.paths['/']).toEqual({
+    expect(fileBody.paths['/']).toEqual({
       get: anyMethod,
       post: anyMethod,
       put: anyMethod,
@@ -275,9 +381,9 @@ describe('copyAnyMethod', () => {
     const fileBody = JSON.parse(fs.readFileSync(path.join(__dirname, '/oas3-ANY+GET-methods.json'), 'utf8'))
     const getMethod = fileBody.paths['/'].get
     const anyMethod = fileBody.paths['/']['x-amazon-apigateway-any-method']
-    const catalogObject = index.copyAnyMethod(fileBody)
+    index.copyAnyMethod(fileBody)
 
-    expect(catalogObject.paths['/']).toEqual({
+    expect(fileBody.paths['/']).toEqual({
       // don't replace get
       get: getMethod,
 
@@ -289,56 +395,5 @@ describe('copyAnyMethod', () => {
       head: anyMethod,
       options: anyMethod
     })
-  })
-})
-
-describe('handler', () => {
-  afterEach(() => {
-    delete process.env.BucketName
-  })
-
-  test('should fetch from S3 and upload to S3 when run', async () => {
-    // this is a very abstract test
-    // we just want to verify that we hand data around correctly
-    // so, string tokens used in place of actual data
-    const mockEvent = {}
-    const expectedUploadParams = {
-      Bucket: 'bucketName',
-      Key: 'catalog.json',
-      ContentType: 'application/json',
-      Body: '"catalog"'
-    }
-
-    process.env.BucketName = 'bucketName'
-
-    // this is the contents of the file sdkGeneration.json in S3
-    index.s3.getObject =
-            jest.fn().mockReturnValue(promiser({ Body: Buffer.from('{ "apiid_stagename": true }') }))
-    // these are all the files in the catalog/ directory of the S3 bucket
-    index.s3.listObjectsV2 =
-            jest.fn(() => true).mockReturnValue(promiser({ Contents: ['listedObjects'] }))
-    index.swaggerFileFilter =
-            jest.fn().mockReturnValue(true)
-    index.getSwaggerFile =
-            jest.fn().mockReturnValue('swagger')
-    index.buildCatalog =
-            jest.fn().mockReturnValue('catalog')
-    index.s3.upload =
-            jest.fn(() => true).mockReturnValue(promiser('uploaded'))
-
-    await index.handler(mockEvent, {})
-
-    expect(index.s3.getObject).toBeCalledTimes(1)
-    expect(index.s3.getObject).toBeCalledWith({ Bucket: 'bucketName', Key: 'sdkGeneration.json' })
-    expect(index.s3.listObjectsV2).toBeCalledTimes(1)
-    expect(index.s3.listObjectsV2).toBeCalledWith({ Bucket: 'bucketName' })
-    expect(index.swaggerFileFilter).toBeCalledTimes(1)
-    expect(index.swaggerFileFilter).toBeCalledWith('listedObjects', expect.anything(), expect.anything())
-    expect(index.getSwaggerFile).toBeCalledTimes(1)
-    expect(index.getSwaggerFile).toBeCalledWith('listedObjects', expect.anything(), expect.anything())
-    expect(index.buildCatalog).toBeCalledTimes(1)
-    expect(index.buildCatalog).toBeCalledWith(['swagger'], { apiid_stagename: true })
-    expect(index.s3.upload).toBeCalledTimes(1)
-    expect(index.s3.upload).toBeCalledWith(expectedUploadParams)
   })
 })
