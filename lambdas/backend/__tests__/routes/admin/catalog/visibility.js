@@ -262,12 +262,13 @@ describe('POST /admin/catalog/visibility', () => {
     req.body = { apiKey: 'a1b2c3_prod', subscribable: true }
 
     util.apigateway.getExport = jest.fn().mockReturnValue(promiser({
-      body: {
-        message: 'swagger document'
-      }
+      body: Buffer.from(JSON.stringify({
+        info: { title: 'swagger document' }
+      }))
     }))
 
     util.s3.upload = jest.fn().mockReturnValue(promiser())
+    util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myBucket'
 
@@ -285,7 +286,9 @@ describe('POST /admin/catalog/visibility', () => {
     expect(util.s3.upload).toHaveBeenCalledWith({
       Bucket: 'myBucket',
       Key: 'catalog/a1b2c3_prod.json',
-      Body: { message: 'swagger document' }
+      Body: Buffer.from(JSON.stringify({
+        info: { title: 'swagger document' }
+      }))
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -294,9 +297,10 @@ describe('POST /admin/catalog/visibility', () => {
 
   test('uploads swagger doc for generic apis', async () => {
     const req = generateRequestContext()
-    req.body = { swagger: JSON.stringify({ message: 'swagger document' }) }
+    req.body = { swagger: JSON.stringify({ info: { title: 'swagger document' } }) }
 
     util.s3.upload = jest.fn().mockReturnValue(promiser())
+    util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myPail'
 
@@ -304,8 +308,8 @@ describe('POST /admin/catalog/visibility', () => {
 
     expect(util.s3.upload).toHaveBeenCalledWith({
       Bucket: 'myPail',
-      Key: `catalog/${hash({ message: 'swagger document' })}.json`,
-      Body: JSON.stringify({ message: 'swagger document' })
+      Key: `catalog/${hash({ info: { title: 'swagger document' } })}.json`,
+      Body: Buffer.from(JSON.stringify({ info: { title: 'swagger document' } }))
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)

@@ -29,13 +29,21 @@ function getUsagePlanVisibility (usagePlan) {
   return hasVisible
 }
 
+function removeFirst (array, item) {
+  const index = array.indexOf(item)
+  const result = array.slice()
+  result.splice(index, 1)
+  return result
+}
+
 export const ApiManagement = observer(class ApiManagement extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       modalOpen: false,
       errors: [],
-      apisUpdating: []
+      apisUpdating: [],
+      apisDeleting: []
     }
 
     this.fileInput = React.createRef()
@@ -106,9 +114,9 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
             .then((res) => {
               if (res.status === 200) {
+                this.getApiVisibility()
                 this.setState(prev => ({ ...prev, modalOpen: Boolean(anyFailures), errors: anyFailures ? prev.errors : [] }))
               }
-              setTimeout(() => this.getApiVisibility(), 2000)
             })
         }
         reader.readAsText(file)
@@ -117,6 +125,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   deleteAPISpec (apiId) {
+    this.setState(({ apisDeleting }) => ({ apisDeleting: [...apisDeleting, apiId] }))
     getApi(apiId, false, undefined, true).then(api => {
       const _api = toJS(api)
       const myHash = hash(_api.swagger)
@@ -124,8 +133,9 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       apiGatewayClient()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
         .then((res) => {
-          setTimeout(() => this.getApiVisibility(), 2000)
+          if (res.status === 200) this.getApiVisibility()
         })
+        .then(() => this.setState(({ apisDeleting }) => ({ apisDeleting: removeFirst(apisDeleting, apiId) })))
     })
   }
 
@@ -237,6 +247,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     return this.state.apisUpdating.includes(`${api.id}_${api.stage}`)
   }
 
+  isRemovingUnmanagedApi (apiId) {
+    return this.state.apisDeleting.includes(apiId)
+  }
+
   updateApiGatewayApi (api) {
     // Simpler than implementing a multiset, and probably also faster.
     this.setState(({ apisUpdating }) => ({
@@ -244,12 +258,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     }))
     apiGatewayClient()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
-      .then(() => this.setState(({ apisUpdating }) => {
-        const index = apisUpdating.indexOf(`${api.id}_${api.stage}`)
-        const newApisUpdating = apisUpdating.slice()
-        newApisUpdating.splice(index, 1)
-        return { apisUpdating: newApisUpdating }
-      }))
+      .then(() => this.setState(({ apisUpdating }) => ({ apisUpdating: removeFirst(apisUpdating, `${api.id}_${api.stage}`) })))
   }
 
   isSdkGenerationConfigurable (api) {
@@ -513,9 +522,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                       <Button
                         basic
                         color='red'
+                        disabled={this.isRemovingUnmanagedApi(apiId)}
                         onClick={() => this.deleteAPISpec(apiId)}
                       >
-                        Delete
+                        {this.isRemovingUnmanagedApi(apiId) ? <Loader active inline size='mini' /> : 'Delete'}
                       </Button>
                     </Table.Cell>
                   </Table.Row>
