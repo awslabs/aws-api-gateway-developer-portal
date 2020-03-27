@@ -37,17 +37,13 @@ function promiser (mockResolveValue, mockRejectedValue) {
 }
 
 function generateResponseContext () {
-  return {
-    status: jest.fn().mockReturnValue({
-      json: jest.fn()
-    }),
-    attachment: jest.fn().mockReturnValue({
-      send: jest.fn()
-    }),
-    send: jest.fn().mockReturnValue({
-      send: jest.fn()
-    })
-  }
+  const result = {}
+  result.status = jest.fn().mockReturnValue(result)
+  result.json = jest.fn().mockReturnValue(result)
+  result.attachment = jest.fn().mockReturnValue(result)
+  result.send = jest.fn().mockReturnValue(result)
+  result.type = jest.fn().mockReturnValue(result)
+  return result
 }
 
 function generateRequestContext () {
