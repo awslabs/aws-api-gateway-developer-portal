@@ -4,6 +4,8 @@ const hash = require('object-hash')
 const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
 const util = require('../../../util')
 
+const inspect = o => JSON.stringify(o, null, 2)
+
 exports.get = async (req, res) => {
   console.log(`GET /admin/catalog/visibility for Cognito ID: ${util.getCognitoIdentityId(req)}`)
   try {
@@ -11,8 +13,7 @@ exports.get = async (req, res) => {
     const catalogObject = await util.catalog()
     const apis = (await util.apigateway.getRestApis().promise()).items
 
-    console.log(`network request: ${JSON.stringify(apis, null, 4)}`)
-    console.log(`apis: ${JSON.stringify(apis, null, 4)}`)
+    console.log(`apis: ${inspect(apis)}`)
 
     const promises = []
     apis.forEach((api) => {
@@ -29,13 +30,16 @@ exports.get = async (req, res) => {
     })
     await Promise.all(promises)
 
-    console.log(`visibility: ${JSON.stringify(visibility, null, 4)}`)
+    console.log(`visibility initial: ${inspect(visibility)}`)
 
     // mark every api gateway managed api-stage in the catalog as visible
     catalogObject.apiGateway.forEach((usagePlan) => {
+      console.log(`usage plan: ${inspect(usagePlan)}`)
       usagePlan.apis.forEach((api) => {
+        console.log(`usage plan api: ${inspect(api)}`)
         visibility.apiGateway.map((apiEntry) => {
-          if (apiEntry.id === api.id && apiEntry.stage === api.stage) {
+          if (apiEntry.id === api.apiId && apiEntry.stage === api.apiStage) {
+            console.log(`matching apiEntry: ${inspect(apiEntry)}`)
             apiEntry.visibility = true
             apiEntry.sdkGeneration = api.sdkGeneration || false
           }
@@ -44,6 +48,8 @@ exports.get = async (req, res) => {
         })
       })
     })
+
+    console.log(`visibility updated visibility: ${inspect(visibility)}`)
 
     const usagePlans = await getAllUsagePlans(util.apigateway)
 
@@ -70,6 +76,8 @@ exports.get = async (req, res) => {
       return apiEntry
     })
 
+    console.log(`visibility updated subscribable: ${inspect(visibility)}`)
+
     // mark every api in the generic catalog as visible
     catalogObject.generic.forEach((catalogEntry) => {
       if (!visibility.generic) {
@@ -84,9 +92,9 @@ exports.get = async (req, res) => {
       if (catalogEntry.stage) { visibility.generic[catalogEntry.id].stage = catalogEntry.stage }
       if (catalogEntry.apiId) { visibility.generic[catalogEntry.id].apiId = catalogEntry.apiId }
       if (catalogEntry.sdkGeneration !== undefined) {
+        console.log(`catalogEntry: ${inspect(catalogEntry)}`)
         visibility.apiGateway.map((api) => {
-          console.log(api)
-          console.log(catalogEntry)
+          console.log(`api: ${inspect(api)}`)
           if (api.id === catalogEntry.apiId && api.stage === catalogEntry.stage) {
             api.sdkGeneration = catalogEntry.sdkGeneration
           }
@@ -94,6 +102,8 @@ exports.get = async (req, res) => {
         })
       }
     })
+
+    console.log(`visibility updated generic: ${inspect(visibility)}`)
 
     res.status(200).json(visibility)
   } catch (err) {
@@ -106,7 +116,9 @@ exports.get = async (req, res) => {
 
 // TODO: switch to SQS with a pair of queues (input with files, output with notifications) and just
 // use that instead for detecting S3 changes.
-async function awaitChange () {
+async function catalogUpdate () {
+  console.log('awaiting catalog update')
+
   // This will end up invoked twice, but I'd like to be able to track how long it takes to
   // update. Ideally, I would also prevent executing the lambda from the S3 side as well, but
   // that's not as easy as it sounds.
@@ -125,14 +137,14 @@ async function uploadFile (file, body) {
   console.log('upload key: ', file)
   console.log('upload body length: ', body.byteLength)
   await util.s3.upload({ Bucket: process.env.StaticBucketName, Key: file, Body: body }).promise()
-  await awaitChange()
+  await catalogUpdate()
 }
 
 async function deleteFile (file) {
   console.log('remove bucket: ', process.env.StaticBucketName)
   console.log('remove key: ', file)
   await util.s3.deleteObject({ Bucket: process.env.StaticBucketName, Key: file }).promise()
-  await awaitChange()
+  await catalogUpdate()
 }
 
 exports.post = async (req, res) => {
@@ -199,9 +211,10 @@ exports.delete = async (req, res) => {
   // in the apiKey field
   console.log('delete request params:', req.params)
   if (req.params && req.params.id) {
+    console.log('managed api')
     const [id, stage] = req.params.id.split('_')
     const unsubscribable = !catalogObject.apiGateway.some(usagePlan =>
-      usagePlan.apis.some(api => api.id === id && api.stage === stage)
+      usagePlan.apis.some(api => api.apiId === id && api.apiStage === stage)
     )
 
     // assumed: apiId_stageName.json is the only format
@@ -212,6 +225,7 @@ exports.delete = async (req, res) => {
     // for generic swagger, provide the hashed swagger body
     // in the id field
   } else if (req.params && req.params.genericId) {
+    console.log('generic api')
     await deleteFile(`catalog/${req.params.genericId}.json`)
     res.status(200).json({ message: 'Success' })
   } else {
