@@ -13,6 +13,7 @@ const hash = require('object-hash')
 const path = require('path')
 
 const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
+const { inspectStringify } = require('dev-portal-common/inspect-stringify')
 
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
@@ -160,8 +161,7 @@ class CatalogBuilder {
   addToCatalog ({ id, body, apiId, apiStage, generic }) {
     const key = generic ? id : `${apiId}_${apiStage}`
     const sdkGeneration = Boolean(this.sdkGeneration[key])
-    console.log(`This API has a key of ${id} and might be in this.sdkGeneration: ${sdkGeneration}`)
-    console.log(this.sdkGeneration)
+    console.log(`This API has a key of ${key} and might be in this.sdkGeneration: ${sdkGeneration}`)
     if (generic) {
       this.catalog.generic.push({ id, apiId, apiStage, sdkGeneration, swagger: body })
     } else {
@@ -186,18 +186,18 @@ class CatalogBuilder {
 }
 
 async function handler (event, context) {
-  console.log(`event: ${JSON.stringify(event, null, 4)}`)
+  console.log(`event: ${inspectStringify(event)}`)
   bucketName = process.env.BucketName
 
   const sdkGeneration = JSON.parse(
     (await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json' }).promise())
       .Body.toString()
   )
-  console.log(sdkGeneration)
+  console.log(`sdkGeneration: ${inspectStringify(sdkGeneration)}`)
 
   const usagePlansPromise = getAllUsagePlans(exports.apiGateway)
   const builderPromise = usagePlansPromise.then(usagePlans => {
-    console.log(`usagePlans: ${JSON.stringify(usagePlans, null, 4)}`)
+    console.log(`usagePlans: ${inspectStringify(usagePlans)}`)
     return new CatalogBuilder(usagePlans, sdkGeneration)
   })
 
@@ -228,7 +228,7 @@ async function handler (event, context) {
   await Promise.all(promises)
   const { catalog } = await builderPromise
 
-  console.log('catalog:', catalog)
+  console.log(`catalog: ${inspectStringify(catalog)}`)
 
   const params = {
     Bucket: bucketName,
