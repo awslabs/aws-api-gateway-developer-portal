@@ -6,6 +6,9 @@ import React from 'react'
 // semantic-ui
 import { Button, Header, Image, Container } from 'semantic-ui-react'
 
+// markdown for external docs description
+import Markdown from 'react-markdown/with-html'
+
 // services
 import { subscribe, unsubscribe } from 'services/api-catalog'
 import { isAuthenticated } from 'services/self'
@@ -25,9 +28,21 @@ export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoRep
 // Note: this is called not as a component, but as a function within a class component. Do
 // *not* make this a component, and do *not* use hooks or anything similar in it.
 function InfoReplacement ({ specSelectors }) {
-  const basePath = specSelectors.basePath()
-  const host = specSelectors.host()
+  let endpoint
+  if (specSelectors.hasHost()) {
+    endpoint = `https://${specSelectors.host()}${specSelectors.basePath()}`
+  } else {
+    const servers = specSelectors.servers()
+    if (servers && servers.size) endpoint = servers.getIn([0, 'url'])
+  }
+
+  const info = specSelectors.info()
+  const version = specSelectors.version()
   const externalDocs = specSelectors.externalDocs()
+  const apiTitle = info.get('title')
+  const apiDescription = info.get('description')
+  const docsDescription = externalDocs.get('description')
+  const docsUrl = externalDocs.get('url')
 
   return <Observer>
     {() => <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
@@ -36,30 +51,27 @@ function InfoReplacement ({ specSelectors }) {
           <Image size='small' src={store.api.logo} />
         </div>
         <div>
-          <Header as='h1'>{store.api.swagger.info.title}</Header>
-          <div style={{ display: 'flex' }}>
+          <Header as='h1'>{apiTitle}</Header>
+          <div style={{ display: 'flex', paddingBottom: '1em' }}>
             <div style={{ marginRight: '20px' }}>
-              {store.api.apiStage != null ? null : (
-                <p style={{ fontWeight: 'bold' }}>Version</p>
-              )}
-              <p style={{ fontWeight: 'bold' }}>Endpoint</p>
-              {store.api.swagger.info.description ? (
-                <p style={{ fontWeight: 'bold' }}>Description</p>
-              ) : null}
+              {store.api.apiStage == null ? <p style={{ fontWeight: 'bold' }}>Version</p> : null}
+              {endpoint ? <p style={{ fontWeight: 'bold' }}>Endpoint</p> : null}
+              {apiDescription ? <p style={{ fontWeight: 'bold' }}>Description</p> : null}
               {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
             </div>
             <div>
-              {store.api.apiStage != null ? null : (
-                <p>{store.api.swagger.info.version}</p>
-              )}
-              <p>https://{host}{basePath}</p>
-              {store.api.swagger.info.description ? (
-                <p>{store.api.swagger.info.description}</p>
-              ) : null}
+              {store.api.apiStage == null ? <p>{version}</p> : null}
+              {endpoint ? <p>{endpoint}</p> : null}
+              {apiDescription ? <p>{apiDescription}</p> : null}
               {/* <p>{store.api.usagePlan.name}</p> */}
             </div>
           </div>
-          <p>{externalDocs}</p>
+          {externalDocs ? (
+            <div style={{ paddingBottom: '1em' }}>
+              {docsDescription ? <Markdown source={docsDescription} /> : null}
+              <a href={docsUrl}>{docsUrl}</a>
+            </div>
+          ) : null}
           <SubscriptionButtons />
           {store.api.sdkGeneration && <GetSdkButton />}
         </div>
@@ -78,7 +90,7 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
         ) : (
           <Button onClick={() => subscribe(api.usagePlan.id)}>Subscribe</Button>
         )
-      ) : <Header as='h4' color='grey'>This version of the API is not configured to be subscribable from the portal. Please contact an admin for more details.</Header> : null
+      ) : <Header style={{ marginTop: '0em' }} as='h4' color='grey'>This version of the API is not configured to be subscribable from the portal. Please contact an admin for more details.</Header> : null
     )
   }
 })
