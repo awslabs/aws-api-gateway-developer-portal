@@ -56,7 +56,8 @@ function generateRequestContext () {
       event: {
         requestContext: {
           identity: {
-            cognitoIdentityId: 'qwertyuiop'
+            cognitoIdentityId: 'qwertyuiop',
+            cognitoAuthenticationProvider: 'cognito-idp.us-west-2.amazonaws.com/us-west-2_qwertyuio,cognito-idp.us-west-2.amazonaws.com/us-west-2_asdfghjkl:CognitoSignIn:a1b2c3d4-a1b2-c3d4-e5f6-a1b2c3d4e5f6'
           }
         }
       }
@@ -68,7 +69,10 @@ function bindEnv () {
   const old = new Map()
 
   afterEach(() => {
-    for (const [key, value] of old) process.env[key] = value
+    for (const [key, value] of old) {
+      if (value != null) process.env[key] = value
+      else delete process.env[key]
+    }
     old.clear()
   })
 

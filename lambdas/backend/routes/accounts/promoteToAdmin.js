@@ -16,6 +16,7 @@ exports.put = async (req, res) => {
     const promoterUserId = util.getCognitoUserId(req)
     await customersController.addAccountToAdminsGroup({
       targetUserId: userId,
+      promoterUserSub: util.getCognitoIdentitySub(req),
       promoterUserId
     })
     res.status(200).json({})
