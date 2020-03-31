@@ -503,7 +503,7 @@ function getExport (exportType, parameters = {}) {
       'extensions.authorizers',
       'extensions.postman'
     ])
-    if (extensions.length) parameters.extensions = extensions.join('')
+    if (extensions.length) parameters.extensions = extensions.join(',')
   }
 
   return fetchBlob({
