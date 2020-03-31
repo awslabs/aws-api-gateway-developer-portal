@@ -1,7 +1,7 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { apiGatewayClient } from 'services/api'
+import { apiGatewayClientWithCredentials } from 'services/api'
 import { store } from 'services/state'
 
 import React from 'react'
@@ -441,11 +441,11 @@ const exportTypes = [
 
 function fetchBlob ({ blobType, endpointName, sdkType, exportType, ext, parameters }) {
   const apiId = store.api.apiId || store.api.id
-  const stageName = store.api.stage
+  const stageName = store.api.apiStage
 
   store.api.downloadingSdkOrApi = true
 
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get(
       `/catalog/${apiId}_${stageName}/${endpointName}`,
       { sdkType },
@@ -458,9 +458,10 @@ function fetchBlob ({ blobType, endpointName, sdkType, exportType, ext, paramete
     .then(({ data }) => {
       downloadFile(data, `${apiId}_${stageName}-${sdkType || exportType}${ext}`)
     })
-    .catch(({ data } = {}) => {
-      addNotification({ header: `An error occurred while attempting to download the ${blobType}.`, content: data.message })
-    })
+    .catch(({ data }) => data.text().then(text => {
+      const result = JSON.parse(text)
+      addNotification({ header: `An error occurred while attempting to download the ${blobType}.`, content: result && result.message })
+    }))
     .finally(() => {
       store.api.downloadingSdkOrApi = false
     })

@@ -40,8 +40,6 @@ function getRemainingSessionTime (idToken) {
 }
 
 export function init () {
-  initApiGatewayClient() // init a blank client (will get overwritten if we have creds)
-
   // attempt to refresh credentials from active session
 
   let idToken
@@ -59,6 +57,7 @@ export function init () {
     logoutTimer = setTimeout(logout, diff)
     setCredentials()
   } else {
+    initApiGatewayClient() // init a blank client (will get overwritten if we have creds)
     logout()
   }
 }

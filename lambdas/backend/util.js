@@ -57,12 +57,12 @@ exports.getUsagePlanFromCatalog = (usagePlanId, catalog) => {
 exports.findApiInCatalog = (restApiId, stageName, catalog) => {
   for (const usagePlan of catalog.apiGateway) {
     for (const api of usagePlan.apis) {
-      if (api.id === restApiId && api.stage === stageName) return api
+      if (api.apiId === restApiId && api.apiStage === stageName) return api
     }
   }
 
   for (const api of Object.values(catalog.generic)) {
-    if (api.apiId === restApiId && api.stage === stageName) return api
+    if (api.apiId === restApiId && api.apiStage === stageName) return api
   }
 
   return null

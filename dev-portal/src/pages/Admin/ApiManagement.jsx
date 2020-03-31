@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Button, Loader, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
 
-import { apiGatewayClient } from 'services/api'
+import { apiGatewayClientWithCredentials } from 'services/api'
 import { getApi } from 'services/api-catalog'
 import { store } from 'services/state'
 
@@ -112,7 +112,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             return
           }
 
-          apiGatewayClient()
+          apiGatewayClientWithCredentials()
             .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
             .then((res) => {
               if (res.status === 200) {
@@ -130,9 +130,9 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     this.setState(({ apisDeleting }) => ({ apisDeleting: [...apisDeleting, apiId] }))
     getApi(apiId, false, undefined, true).then(api => {
       const _api = toJS(api)
-      const key = _api.apiStage ? `${_api.apiId}_${_api.apiStage}` : hash(_api.swagger)
+      const key = _api.stage ? `${_api.id}_${_api.stage}` : hash(_api.swagger)
 
-      apiGatewayClient()
+      apiGatewayClientWithCredentials()
         .then(app => app.delete(`/admin/catalog/visibility/generic/${key}`, {}, {}, {}))
         .then((res) => {
           if (res.status === 200) this.getApiVisibility()
@@ -142,7 +142,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   getApiVisibility () {
-    apiGatewayClient()
+    apiGatewayClientWithCredentials()
       .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
       .then(res => {
         if (res.status === 200) {
@@ -193,7 +193,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   showApiGatewayApi (api) {
     const apiId = api.stage ? `${api.id}_${api.stage}` : api.id
     this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: [...apisDisplayToggling, apiId] }))
-    apiGatewayClient()
+    apiGatewayClientWithCredentials()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
       .then((res) => {
         this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: removeFirst(apisDisplayToggling, apiId) }))
@@ -209,7 +209,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     } else {
       const apiId = api.stage ? `${api.id}_${api.stage}` : api.id
       this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: [...apisDisplayToggling, apiId] }))
-      apiGatewayClient()
+      apiGatewayClientWithCredentials()
         .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
         .then((res) => {
           this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: removeFirst(apisDisplayToggling, apiId) }))
@@ -228,7 +228,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       apisDisplayToggling: [...apisDisplayToggling, ...apiIds]
     }))
     Promise.all(usagePlan.apis.map((api) =>
-      apiGatewayClient()
+      apiGatewayClientWithCredentials()
         .then(app => app.post('/admin/catalog/visibility', {}, {
           apiKey: `${api.id}_${api.stage}`,
           subscribable: `${api.subscribable}`
@@ -255,7 +255,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
       apisDisplayToggling: [...apisDisplayToggling, ...apiIds]
     }))
     Promise.all(usagePlan.apis.map((api) =>
-      apiGatewayClient()
+      apiGatewayClientWithCredentials()
         .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
         .then(res => { res.api = api; return res })
     )).then((promises) => {
@@ -292,7 +292,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     this.setState(({ apisUpdating }) => ({
       apisUpdating: [...apisUpdating, `${api.id}_${api.stage}`]
     }))
-    apiGatewayClient()
+    apiGatewayClientWithCredentials()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
       .then(() => this.setState(({ apisUpdating }) => ({ apisUpdating: removeFirst(apisUpdating, `${api.id}_${api.stage}`) })))
   }
@@ -302,7 +302,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   toggleSdkGeneration (apisList, updatedApi) {
-    apiGatewayClient()
+    apiGatewayClientWithCredentials()
       .then(app => {
         if (updatedApi.sdkGeneration) {
           return app.delete(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})

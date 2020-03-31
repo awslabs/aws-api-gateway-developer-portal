@@ -19,26 +19,26 @@ import MenuLink from 'components/MenuLink'
 
 function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
   const apiGatewayApiList = _.get(store, 'apiList.apiGateway', []).map(api => ({
-    group: api.id,
-    id: api.stage,
+    group: api.apiId,
+    id: api.apiStage,
     title: api.swagger.info.title,
-    route: `/apis/${api.id}/${api.stage}`,
+    route: `/apis/${api.apiId}/${api.apiStage}`,
     active: (
-      (selectedApiId && api.id === selectedApiId) &&
-      (!selectedStage || api.stage === selectedStage)
+      (selectedApiId && api.apiId === selectedApiId) &&
+      (!selectedStage || api.apiStage === selectedStage)
     ),
-    stage: api.stage
+    stage: api.apiStage
   }))
   const genericApiList = _.get(store, 'apiList.generic', []).map(api => ({
     group: api.apiId || api.id,
-    id: api.stage || api.id,
+    id: api.apiStage || api.id,
     title: api.swagger.info.title,
     route: `/apis/${api.id}`,
     active: (
       (selectedApiId && (api.id === selectedApiId || api.apiId === selectedApiId)) &&
-      (!selectedStage || api.stage === selectedStage)
+      (!selectedStage || api.apiStage === selectedStage)
     ),
-    stage: api.stage
+    stage: api.apiStage
   }))
 
   return _.toPairs(_.groupBy(apiGatewayApiList.concat(genericApiList), 'group'))

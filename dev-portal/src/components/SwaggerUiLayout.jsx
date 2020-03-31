@@ -39,7 +39,7 @@ function InfoReplacement ({ specSelectors }) {
           <Header as='h1'>{store.api.swagger.info.title}</Header>
           <div style={{ display: 'flex' }}>
             <div style={{ marginRight: '20px' }}>
-              {store.api.generic && (
+              {store.api.apiStage != null ? null : (
                 <p style={{ fontWeight: 'bold' }}>Version</p>
               )}
               <p style={{ fontWeight: 'bold' }}>Endpoint</p>
@@ -49,7 +49,7 @@ function InfoReplacement ({ specSelectors }) {
               {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
             </div>
             <div>
-              {store.api.generic && (
+              {store.api.apiStage != null ? null : (
                 <p>{store.api.swagger.info.version}</p>
               )}
               <p>https://{host}{basePath}</p>
@@ -72,7 +72,7 @@ const SubscriptionButtons = observer(class SubscriptionButtons extends React.Com
   render () {
     const { api } = store
     return (
-      (api && isAuthenticated()) ? !api.generic ? (
+      (api && isAuthenticated()) ? api.apiStage != null ? (
         api.subscribed ? (
           <Button onClick={() => unsubscribe(api.usagePlan.id)}>Unsubscribe</Button>
         ) : (

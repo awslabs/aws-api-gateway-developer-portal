@@ -121,7 +121,7 @@ reactTo(
 function fetchApiImage (apiList) {
   apiList.forEach(api => {
     if (!api.logo) {
-      const key = api.stage == null ? api.id : `${api.id}_${api.stage}`
+      const key = api.apiStage == null ? api.id : `${api.apiId}_${api.apiStage}`
       const specificLogo = `/custom-content/api-logos/${key}.png`
 
       // fetch automatically follows redirects; setting redirect to `manual` prevents this
