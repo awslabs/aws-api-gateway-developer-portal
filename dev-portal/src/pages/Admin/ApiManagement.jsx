@@ -42,10 +42,13 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     this.state = {
       modalOpen: false,
       errors: [],
+      // Simpler than implementing a multiset, and probably also faster.
+      // TODO: abstract this out. It's getting a bit out of hand.
       plansDisplayToggling: [],
       apisDisplayToggling: [],
       apisUpdating: [],
-      apisDeleting: []
+      apisDeleting: [],
+      apisTogglingSdks: []
     }
 
     this.fileInput = React.createRef()
@@ -288,7 +291,6 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   updateApiGatewayApi (api) {
-    // Simpler than implementing a multiset, and probably also faster.
     this.setState(({ apisUpdating }) => ({
       apisUpdating: [...apisUpdating, `${api.id}_${api.stage}`]
     }))
@@ -301,7 +303,14 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     return api.visibility
   }
 
+  isTogglingSdkGeneration (api) {
+    return this.state.apisTogglingSdks.includes(`${api.id}_${api.stage}`)
+  }
+
   toggleSdkGeneration (apisList, updatedApi) {
+    this.setState(({ apisTogglingSdks }) => ({
+      apisTogglingSdks: [...apisTogglingSdks, `${updatedApi.id}_${updatedApi.stage}`]
+    }))
     apiGatewayClientWithCredentials()
       .then(app => {
         if (updatedApi.sdkGeneration) {
@@ -311,6 +320,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
         }
       })
       .then(res => {
+        this.setState(({ apisTogglingSdks }) => ({ apisTogglingSdks: removeFirst(apisTogglingSdks, `${updatedApi.id}_${updatedApi.stage}`) }))
         if (res.status === 200) {
           const updatedApis = apisList.map(stateApi => {
             if (stateApi.id === updatedApi.id && stateApi.stage === updatedApi.stage) {
@@ -467,7 +477,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                 disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
                 onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}
               >
-                {api.sdkGeneration ? 'Enabled' : 'Disabled'}
+                {this.isTogglingSdkGeneration(api) ? <Loader active inline size='mini' /> : api.sdkGeneration ? 'Enabled' : 'Disabled'}
               </Button>
             </Table.Cell>
           </Table.Row>
