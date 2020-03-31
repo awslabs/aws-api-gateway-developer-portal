@@ -92,16 +92,23 @@ export default observer(() => {
       <Grid.Row>
         <Grid.Column style={{ paddingTop: '40px' }}>
           <Header size='medium'>API Key</Header>
-          <code style={{
-            background: 'black',
-            border: '1px solid gray',
-            padding: '7px 8px',
-            color: 'lightgray',
-            borderRadius: '5px'
-          }}
-          >
-            {store.apiKey}
-          </code>
+          {
+            store.apiKey
+              ? (
+                <code style={{
+                  background: 'black',
+                  border: '1px solid gray',
+                  padding: '7px 8px',
+                  color: 'lightgray',
+                  borderRadius: '5px'
+                }}
+                >
+                  {store.apiKey}
+                </code>
+              )
+              // Note: this should be the same size as the text
+              : <Loader active inline size='tiny' />
+          }
         </Grid.Column>
       </Grid.Row>
       <Divider />
