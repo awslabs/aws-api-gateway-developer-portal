@@ -154,9 +154,10 @@ exports.post = async (req, res) => {
   // in the apiKey field
   if (req.body && req.body.apiKey) {
     // try {
+    const [restApiId, stageName] = req.body.apiKey.split('_')
     const swagger = await util.apigateway.getExport({
-      restApiId: req.body.apiKey.split('_')[0],
-      stageName: req.body.apiKey.split('_')[1],
+      restApiId,
+      stageName,
       exportType: 'swagger',
       parameters: {
         extensions: 'apigateway'
@@ -168,9 +169,9 @@ exports.post = async (req, res) => {
 
     let file
     if (req.body.subscribable === 'true' || req.body.subscribable === true) {
-      file = `catalog/${req.body.apiKey}.json`
+      file = `catalog/${restApiId}_${stageName}.json`
     } else if (req.body.subscribable === 'false') {
-      file = `catalog/unsubscribable_${req.body.apiKey.split('_')[0]}_${req.body.apiKey.split('_')[1]}.json`
+      file = `catalog/unsubscribable_${restApiId}_${stageName}.json`
     } else {
       res.status(400).json({ message: 'Invalid input. Request body must have the `subscribable` key.' })
       return
