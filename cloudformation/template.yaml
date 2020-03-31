@@ -78,7 +78,7 @@ Parameters:
 
   StaticAssetRebuildMode:
     Type: String
-    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
+    Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost.
     Default: ''
     AllowedValues:
       - 'overwrite-content'
@@ -118,7 +118,7 @@ Parameters:
     Type: String
     Description: Only applicable if creating a custom domain name for your dev portal. Defaults to false, and you'll need to provide your own nameserver hosting. If set to true, a Route53 HostedZone and RecordSet are created for you.
     Default: 'false'
-    AllowedValues: 
+    AllowedValues:
       - 'false'
       - 'true'
     ConstraintDescription: Malformed input - Parameter UseRoute53Nameservers value must be either 'true' or 'false'
@@ -127,7 +127,7 @@ Parameters:
     Type: String
     Description: Enabling this weakens security features (OAI, SSL, site S3 bucket with public read ACLs, Cognito callback verification, CORS, etc.) for easier development. It also breaks frontend routing (except to /index.html), including deep linking and page refresh. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
     Default: 'false'
-    AllowedValues: 
+    AllowedValues:
       - 'false'
       - 'true'
     ConstraintDescription: Malformed input - Parameter DevelopmentMode value must be either 'true' or 'false'
@@ -619,6 +619,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Ref DevPortalCustomersTableName
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
       - AttributeName: Id
         AttributeType: S
@@ -627,9 +628,6 @@ Resources:
       KeySchema:
       - AttributeName: Id
         KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
       GlobalSecondaryIndexes:
       - IndexName: MarketplaceCustomerIdIndex
         KeySchema:
@@ -639,9 +637,6 @@ Resources:
           NonKeyAttributes:
           - ApiKeyId
           ProjectionType: INCLUDE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
 
   PreLoginAccountsTable:
     Type: AWS::DynamoDB::Table
@@ -662,15 +657,13 @@ Resources:
     Condition: EnableFeedbackSubmission
     Properties:
       TableName: !Ref DevPortalFeedbackTableName
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
       - AttributeName: Id
         AttributeType: S
       KeySchema:
       - AttributeName: Id
         KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: '5'
-        WriteCapacityUnits: '5'
       GlobalSecondaryIndexes:
       - IndexName: FeedbackIdIndex
         KeySchema:
@@ -678,9 +671,6 @@ Resources:
           KeyType: HASH
         Projection:
           ProjectionType: KEYS_ONLY
-        ProvisionedThroughput:
-          ReadCapacityUnits: '5'
-          WriteCapacityUnits: '5'
 
   FeedbackSubmittedSNSTopic:
     Type: AWS::SNS::Topic
@@ -932,7 +922,7 @@ Resources:
           - Effect: Allow
             Action:
             - s3:ListBucket
-            Resource: 
+            Resource:
               - !Join
                 - ''
                 - - 'arn:aws:s3:::'
@@ -1350,9 +1340,9 @@ Resources:
               Service: lambda.amazonaws.com
       Policies:
         - PolicyName: WriteCloudWatchLogs
-          PolicyDocument: 
+          PolicyDocument:
             Version: '2012-10-17'
-            Statement: 
+            Statement:
               -
                 Effect: Allow
                 Action:
@@ -1361,9 +1351,9 @@ Resources:
                   - 'logs:PutLogEvents'
                 Resource: 'arn:aws:logs:*:*:*'
         - PolicyName: UpdateUserPoolClient
-          PolicyDocument: 
+          PolicyDocument:
             Version: '2012-10-17'
-            Statement: 
+            Statement:
               -
                 Effect: Allow
                 Action: 'cognito-idp:UpdateUserPoolClient'
@@ -1426,9 +1416,9 @@ Resources:
               Service: lambda.amazonaws.com
       Policies:
         - PolicyName: WriteCloudWatchLogs
-          PolicyDocument: 
+          PolicyDocument:
             Version: '2012-10-17'
-            Statement: 
+            Statement:
               -
                 Effect: Allow
                 Action:
@@ -1437,9 +1427,9 @@ Resources:
                   - 'logs:PutLogEvents'
                 Resource: 'arn:aws:logs:*:*:*'
         - PolicyName: ManageUserPoolDomain
-          PolicyDocument: 
+          PolicyDocument:
             Version: '2012-10-17'
-            Statement: 
+            Statement:
               -
                 Effect: Allow
                 Action: 'cognito-idp:CreateUserPoolDomain'
@@ -1472,7 +1462,7 @@ Resources:
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       Domain: !Ref CognitoDomainNameOrPrefix
-  
+
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
