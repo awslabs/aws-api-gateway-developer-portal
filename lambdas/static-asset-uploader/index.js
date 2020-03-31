@@ -3,6 +3,7 @@
 const path = require('path')
 const AWS = require('aws-sdk')
 const notifyCFN = require('dev-portal-common/notify-cfn')
+const { inspectStringify } = require('dev-portal-common/inspect-stringify')
 const fs = require('fs')
 const klaw = require('klaw')
 // const crypto = require('crypto')
@@ -67,9 +68,9 @@ async function cleanS3Bucket (bucketName) {
     Bucket: bucketName
   }).promise()
 
-  console.log(`result: ${JSON.stringify(result, null, 4)}`)
+  console.log(`result: ${inspectStringify(result)}`)
   const keys = result.Contents.map((obj) => {
-    console.log(`obj: ${JSON.stringify(obj)}`)
+    console.log(`obj: ${inspectStringify(obj)}`)
     return { Key: obj.Key }
   })
 
@@ -81,7 +82,7 @@ async function cleanS3Bucket (bucketName) {
         Objects: keys
       }
     })
-    console.log(`deleteObjects result: ${JSON.stringify(result, null, 4)}`)
+    console.log(`deleteObjects result: ${inspectStringify(result)}`)
   }
 }
 
@@ -193,7 +194,7 @@ class State {
 
     try {
       const readResults = await new Promise((resolve, reject) => {
-        fs.readFile(filePath, 'utf-8', (err, data) => {
+        fs.readFile(filePath, null, (err, data) => {
           if (err) reject(err)
           else resolve(data)
         })
@@ -210,6 +211,13 @@ class State {
         params.ACL = 'public-read'
       }
 
+      // body just pollutes logs and takes up space
+      console.log('uploading to s3', {
+        Bucket: params.Bucket,
+        Key: params.Key,
+        BodyLength: params.Body.byteLength,
+        ContentType: params.ContentType
+      })
       uploadPromises.push(s3.upload(params, options).promise())
     } catch (error) {
       console.log('Failed to upload:', error)
@@ -262,6 +270,7 @@ class State {
             console.log('pushing b/c Create', data.path)
           } else if (this.event.ResourceProperties.RebuildMode === 'overwrite-content') {
             // always write everything on an overwrite
+            console.log('pushing b/c RebuildMode=overwrite-content', data.path)
           } else if (!/build\/custom-content/.test(data.path)) {
             // only write non custom-content files on everything else
             console.log('pushing b/c not custom', data.path)
