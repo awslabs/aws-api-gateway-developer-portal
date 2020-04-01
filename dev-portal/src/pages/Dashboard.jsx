@@ -107,7 +107,12 @@ export default observer(() => {
                 </code>
               )
               // Note: this should be the same size as the text
-              : <Loader active inline size='tiny' />
+              : <Loader active inline size='tiny'>
+                {store.apiKeyFetchFailed ? <>
+                  Please wait a minute and try refreshing. If this doesn't work, please contact
+                  the admin for assistance.
+                </> : null}
+              </Loader>
           }
         </Grid.Column>
       </Grid.Row>

@@ -3,7 +3,7 @@
 
 import _ from 'lodash'
 
-import { apiGatewayClient } from './api'
+import { apiGatewayClientWithCredentials } from './api'
 import { store } from './state'
 import { isAdmin } from './self'
 
@@ -41,9 +41,9 @@ export function updateUsagePlansAndApisList (bustCache = false) {
   store.apiList.loaded = false
 
   // eslint-disable-next-line no-return-assign
-  return catalogPromiseCache = apiGatewayClient()
+  return catalogPromiseCache = apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
-    .then(({ data = [] }) => {
+    .then(({ data = { apiGateway: [], generic: [] } }) => {
       store.usagePlans = data.apiGateway
       store.apiList = {
         loaded: true,
@@ -102,7 +102,7 @@ export function getApi (apiId, selectIt = false, stage, cacheBust = false) {
         }
 
         if (stage) {
-          thisApi = store.apiList.apiGateway.find(api => api.id.toString() === apiId && api.stage === stage)
+          thisApi = store.apiList.apiGateway.find(api => api.apiId === apiId && api.apiStage === stage)
         }
       }
 
@@ -113,7 +113,7 @@ export function getApi (apiId, selectIt = false, stage, cacheBust = false) {
 }
 
 export function updateVisibility (cacheBust = false) {
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
     .then(({ data }) => (store.visibility = data))
 }
@@ -130,7 +130,7 @@ export function updateSubscriptions (bustCache = false) {
   if (!bustCache && subscriptionsOrPromise) return Promise.resolve(subscriptionsOrPromise)
 
   // eslint-disable-next-line no-return-assign
-  return subscriptionsPromiseCache = apiGatewayClient()
+  return subscriptionsPromiseCache = apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get('/subscriptions', {}, {}, {}))
     .then(({ data }) => (store.subscriptions = data))
 }
@@ -141,13 +141,13 @@ export function getSubscribedUsagePlan (usagePlanId) {
 }
 
 export function subscribe (usagePlanId) {
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.put('/subscriptions/' + usagePlanId, {}, {}))
     .then(() => updateSubscriptions(true))
 }
 
 export function unsubscribe (usagePlanId) {
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.delete(`/subscriptions/${usagePlanId}`, {}, {}))
     .then(() => updateSubscriptions(true))
 }
@@ -160,10 +160,34 @@ export function unsubscribe (usagePlanId) {
 export function updateApiKey (bustCache) {
   const apiKeyOrPromise = store.apiKey ? store.apiKey : apiKeyPromiseCache
   if (!bustCache && apiKeyOrPromise) return Promise.resolve(apiKeyOrPromise)
+  store.apiKeyFetchFailed = false
 
-  return apiGatewayClient()
-    .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
-    .then(({ data }) => (store.apiKey = data.value))
+  const MAX_RETRIES = 5
+  let remaining = MAX_RETRIES
+
+  const timeouts = [
+    250,
+    500,
+    1000,
+    2000
+  ]
+
+  function loop () {
+    remaining--
+    const promise = apiGatewayClientWithCredentials()
+      .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
+      .then(({ data }) => (store.apiKey = data.value))
+
+    return remaining
+      ? promise.catch(() =>
+        new Promise(resolve => setTimeout(resolve, timeouts[remaining])).then(loop)
+      )
+      : promise
+  }
+
+  return (apiKeyPromiseCache = loop()).catch(() => {
+    store.apiKeyFetchFailed = true
+  })
 }
 let apiKeyPromiseCache
 
@@ -171,7 +195,7 @@ export function fetchUsage (usagePlanId) {
   const date = new Date()
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toJSON().split('T')[0]
   const end = date.toJSON().split('T')[0]
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', { start, end }, {}))
 }
 
@@ -223,6 +247,6 @@ export function confirmMarketplaceSubscription (usagePlanId, token) {
     return
   }
 
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, { token: token }))
 }

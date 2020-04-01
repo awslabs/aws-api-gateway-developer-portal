@@ -147,7 +147,7 @@ Parameters:
     Default: 'open'
     AllowedValues:
       - 'open'
-      - 'request'
+      # - 'request'
       - 'invite'
 
 Conditions:

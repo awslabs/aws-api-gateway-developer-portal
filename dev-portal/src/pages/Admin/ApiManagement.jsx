@@ -2,7 +2,7 @@ import React from 'react'
 
 import { Button, Loader, Table, Modal, Form, Message, Popup, Icon } from 'semantic-ui-react'
 
-import { apiGatewayClient } from 'services/api'
+import { apiGatewayClientWithCredentials } from 'services/api'
 import { getApi } from 'services/api-catalog'
 import { store } from 'services/state'
 
@@ -29,13 +29,26 @@ function getUsagePlanVisibility (usagePlan) {
   return hasVisible
 }
 
+function removeFirst (array, item) {
+  const index = array.indexOf(item)
+  const result = array.slice()
+  result.splice(index, 1)
+  return result
+}
+
 export const ApiManagement = observer(class ApiManagement extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       modalOpen: false,
       errors: [],
-      apisUpdating: []
+      // Simpler than implementing a multiset, and probably also faster.
+      // TODO: abstract this out. It's getting a bit out of hand.
+      plansDisplayToggling: [],
+      apisDisplayToggling: [],
+      apisUpdating: [],
+      apisDeleting: [],
+      apisTogglingSdks: []
     }
 
     this.fileInput = React.createRef()
@@ -102,13 +115,13 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
             return
           }
 
-          apiGatewayClient()
+          apiGatewayClientWithCredentials()
             .then((app) => app.post('/admin/catalog/visibility', {}, { swagger }, {}))
             .then((res) => {
               if (res.status === 200) {
+                this.getApiVisibility()
                 this.setState(prev => ({ ...prev, modalOpen: Boolean(anyFailures), errors: anyFailures ? prev.errors : [] }))
               }
-              setTimeout(() => this.getApiVisibility(), 2000)
             })
         }
         reader.readAsText(file)
@@ -117,20 +130,22 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   deleteAPISpec (apiId) {
+    this.setState(({ apisDeleting }) => ({ apisDeleting: [...apisDeleting, apiId] }))
     getApi(apiId, false, undefined, true).then(api => {
       const _api = toJS(api)
-      const myHash = hash(_api.swagger)
+      const key = _api.stage ? `${_api.id}_${_api.stage}` : hash(_api.swagger)
 
-      apiGatewayClient()
-        .then(app => app.delete(`/admin/catalog/visibility/generic/${myHash}`, {}, {}, {}))
+      apiGatewayClientWithCredentials()
+        .then(app => app.delete(`/admin/catalog/visibility/generic/${key}`, {}, {}, {}))
         .then((res) => {
-          setTimeout(() => this.getApiVisibility(), 2000)
+          if (res.status === 200) this.getApiVisibility()
         })
+        .then(() => this.setState(({ apisDeleting }) => ({ apisDeleting: removeFirst(apisDeleting, apiId) })))
     })
   }
 
   getApiVisibility () {
-    apiGatewayClient()
+    apiGatewayClientWithCredentials()
       .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
       .then(res => {
         if (res.status === 200) {
@@ -179,9 +194,12 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   showApiGatewayApi (api) {
-    apiGatewayClient()
+    const apiId = api.stage ? `${api.id}_${api.stage}` : api.id
+    this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: [...apisDisplayToggling, apiId] }))
+    apiGatewayClientWithCredentials()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
       .then((res) => {
+        this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: removeFirst(apisDisplayToggling, apiId) }))
         if (res.status === 200) {
           this.updateLocalApiGatewayApis(store.visibility.apiGateway, api)
         }
@@ -192,9 +210,12 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     if (!api.subscribable && !api.id && !api.stage) {
       this.deleteAPISpec(api.genericId)
     } else {
-      apiGatewayClient()
+      const apiId = api.stage ? `${api.id}_${api.stage}` : api.id
+      this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: [...apisDisplayToggling, apiId] }))
+      apiGatewayClientWithCredentials()
         .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
         .then((res) => {
+          this.setState(({ apisDisplayToggling }) => ({ apisDisplayToggling: removeFirst(apisDisplayToggling, apiId) }))
           if (res.status === 200) {
             this.updateLocalApiGatewayApis(store.visibility.apiGateway, api)
           }
@@ -203,14 +224,24 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   showAllApiGatewayApis (usagePlan) {
+    // Only toggle APIs that aren't already shown.
+    const apiIds = usagePlan.apis.filter(api => !api.visibility).map(api => `${api.id}_${api.stage}`)
+    this.setState(({ plansDisplayToggling, apisDisplayToggling }) => ({
+      plansDisplayToggling: [...plansDisplayToggling, usagePlan.id],
+      apisDisplayToggling: [...apisDisplayToggling, ...apiIds]
+    }))
     Promise.all(usagePlan.apis.map((api) =>
-      apiGatewayClient()
+      apiGatewayClientWithCredentials()
         .then(app => app.post('/admin/catalog/visibility', {}, {
           apiKey: `${api.id}_${api.stage}`,
           subscribable: `${api.subscribable}`
         }, {}))
         .then(res => { res.api = api; return res })
     )).then((promises) => {
+      this.setState(({ plansDisplayToggling, apisDisplayToggling }) => ({
+        plansDisplayToggling: removeFirst(plansDisplayToggling, usagePlan.id),
+        apisDisplayToggling: apiIds.reduce(removeFirst, apisDisplayToggling)
+      }))
       promises.forEach((result) => {
         if (result.status === 200) {
           this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, true)
@@ -220,11 +251,21 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   hideAllApiGatewayApis (usagePlan) {
+    // Only toggle APIs that aren't already hidden.
+    const apiIds = usagePlan.apis.filter(api => api.visibility).map(api => `${api.id}_${api.stage}`)
+    this.setState(({ plansDisplayToggling, apisDisplayToggling }) => ({
+      plansDisplayToggling: [...plansDisplayToggling, usagePlan.id],
+      apisDisplayToggling: [...apisDisplayToggling, ...apiIds]
+    }))
     Promise.all(usagePlan.apis.map((api) =>
-      apiGatewayClient()
+      apiGatewayClientWithCredentials()
         .then(app => app.delete(`/admin/catalog/visibility/${api.id}_${api.stage}`, {}, {}, {}))
         .then(res => { res.api = api; return res })
     )).then((promises) => {
+      this.setState(({ plansDisplayToggling, apisDisplayToggling }) => ({
+        plansDisplayToggling: removeFirst(plansDisplayToggling, usagePlan.id),
+        apisDisplayToggling: apiIds.reduce(removeFirst, apisDisplayToggling)
+      }))
       promises.forEach((result) => {
         if (result.status === 200) {
           this.updateLocalApiGatewayApis(store.visibility.apiGateway, result.api, false)
@@ -233,31 +274,44 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
     })
   }
 
+  isTogglingPlanDisplay (usagePlan) {
+    return this.state.plansDisplayToggling.includes(usagePlan.id)
+  }
+
+  isTogglingApiDisplay (api) {
+    return this.state.apisDisplayToggling.includes(api.stage ? `${api.id}_${api.stage}` : api.id)
+  }
+
   isUpdatingApiGatewayApi (api) {
     return this.state.apisUpdating.includes(`${api.id}_${api.stage}`)
   }
 
+  isRemovingUnmanagedApi (apiId) {
+    return this.state.apisDeleting.includes(apiId)
+  }
+
   updateApiGatewayApi (api) {
-    // Simpler than implementing a multiset, and probably also faster.
     this.setState(({ apisUpdating }) => ({
       apisUpdating: [...apisUpdating, `${api.id}_${api.stage}`]
     }))
-    apiGatewayClient()
+    apiGatewayClientWithCredentials()
       .then(app => app.post('/admin/catalog/visibility', {}, { apiKey: `${api.id}_${api.stage}`, subscribable: `${api.subscribable}` }, {}))
-      .then(() => this.setState(({ apisUpdating }) => {
-        const index = apisUpdating.indexOf(`${api.id}_${api.stage}`)
-        const newApisUpdating = apisUpdating.slice()
-        newApisUpdating.splice(index, 1)
-        return { apisUpdating: newApisUpdating }
-      }))
+      .then(() => this.setState(({ apisUpdating }) => ({ apisUpdating: removeFirst(apisUpdating, `${api.id}_${api.stage}`) })))
   }
 
   isSdkGenerationConfigurable (api) {
     return api.visibility
   }
 
+  isTogglingSdkGeneration (api) {
+    return this.state.apisTogglingSdks.includes(`${api.id}_${api.stage}`)
+  }
+
   toggleSdkGeneration (apisList, updatedApi) {
-    apiGatewayClient()
+    this.setState(({ apisTogglingSdks }) => ({
+      apisTogglingSdks: [...apisTogglingSdks, `${updatedApi.id}_${updatedApi.stage}`]
+    }))
+    apiGatewayClientWithCredentials()
       .then(app => {
         if (updatedApi.sdkGeneration) {
           return app.delete(`/admin/catalog/${updatedApi.id}_${updatedApi.stage}/sdkGeneration`, {}, {}, {})
@@ -266,6 +320,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
         }
       })
       .then(res => {
+        this.setState(({ apisTogglingSdks }) => ({ apisTogglingSdks: removeFirst(apisTogglingSdks, `${updatedApi.id}_${updatedApi.stage}`) }))
         if (res.status === 200) {
           const updatedApis = apisList.map(stateApi => {
             if (stateApi.id === updatedApi.id && stateApi.stage === updatedApi.stage) {
@@ -294,7 +349,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
               style={{ backgroundColor: 'white', width: '100%', paddingLeft: '1em', paddingRight: '1em', minWidth: '88px' }}
               onClick={() => this.showAllApiGatewayApis(usagePlan)}
             >
-              Partial <Icon name='warning sign' style={{ paddingLeft: '5px' }} />
+              {this.isTogglingPlanDisplay(usagePlan) ? <Loader active inline size='mini' /> : <>Partial <Icon name='warning sign' style={{ paddingLeft: '5px' }} /></>}
             </Button>
           }
         />
@@ -312,7 +367,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           else this.showAllApiGatewayApis(usagePlan)
         }}
       >
-        {usagePlanVisibility ? 'True' : 'False'}
+        {this.isTogglingPlanDisplay(usagePlan) ? <Loader active inline size='mini' /> : usagePlanVisibility ? 'True' : 'False'}
       </Button>
     )
   }
@@ -399,7 +454,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                 style={{ width: '100%' }}
                 onClick={() => api.visibility ? this.hideApiGatewayApi(api) : this.showApiGatewayApi(api)}
               >
-                {api.visibility ? 'True' : 'False'}
+                {this.isTogglingApiDisplay(api) ? <Loader active inline size='mini' /> : api.visibility ? 'True' : 'False'}
               </Button>
             </Table.Cell>
             <Table.Cell>
@@ -422,7 +477,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                 disabled={!api.visibility || !this.isSdkGenerationConfigurable(api)}
                 onClick={() => this.toggleSdkGeneration(store.visibility.apiGateway, api)}
               >
-                {api.sdkGeneration ? 'Enabled' : 'Disabled'}
+                {this.isTogglingSdkGeneration(api) ? <Loader active inline size='mini' /> : api.sdkGeneration ? 'Enabled' : 'Disabled'}
               </Button>
             </Table.Cell>
           </Table.Row>
@@ -432,7 +487,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
   }
 
   render () {
-    return (
+    return <>
       <div style={{ display: 'flex', width: '100%' }}>
         <div style={{ padding: '2em' }}>
           <Table celled collapsing>
@@ -513,9 +568,10 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
                       <Button
                         basic
                         color='red'
+                        disabled={this.isRemovingUnmanagedApi(apiId)}
                         onClick={() => this.deleteAPISpec(apiId)}
                       >
-                        Delete
+                        {this.isRemovingUnmanagedApi(apiId) ? <Loader active inline size='mini' /> : 'Delete'}
                       </Button>
                     </Table.Cell>
                   </Table.Row>
@@ -531,6 +587,6 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
           </Table>
         </div>
       </div>
-    )
+    </>
   }
 })

@@ -30,8 +30,8 @@ describe('GET /catalog/:apiId/export', () => {
         {
           apis: [
             {
-              id: 'apiId',
-              stage: 'stageName',
+              apiId: 'apiId',
+              apiStage: 'stageName',
               sdkGeneration: true
             }
           ]
@@ -68,8 +68,8 @@ describe('GET /catalog/:apiId/export', () => {
         {
           apis: [
             {
-              id: 'apiId',
-              stage: 'stageName',
+              apiId: 'apiId',
+              apiStage: 'stageName',
               sdkGeneration: true
             }
           ]
@@ -86,8 +86,8 @@ describe('GET /catalog/:apiId/export', () => {
 
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.status).toHaveBeenCalledWith(404)
-    expect(res.status().json).toHaveBeenCalledTimes(1)
-    expect(res.status().json).toHaveBeenCalledWith({ message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' })
+    expect(res.json).toHaveBeenCalledTimes(1)
+    expect(res.json).toHaveBeenCalledWith({ message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' })
   })
 
   test('it should not return SDKs for APIs in the catalog but with API export generation disabled', async () => {
@@ -104,13 +104,13 @@ describe('GET /catalog/:apiId/export', () => {
         {
           apis: [
             {
-              id: 'apiId',
-              stage: 'stageName',
+              apiId: 'apiId',
+              apiStage: 'stageName',
               sdkGeneration: true
             },
             {
-              id: 'thisApi',
-              stage: 'shouldNotGenerateSDKs',
+              apiId: 'thisApi',
+              apiStage: 'shouldNotGenerateSDKs',
               sdkGeneration: false
             }
           ]
@@ -127,7 +127,7 @@ describe('GET /catalog/:apiId/export', () => {
 
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.status).toHaveBeenCalledWith(403)
-    expect(res.status().json).toHaveBeenCalledTimes(1)
-    expect(res.status().json).toHaveBeenCalledWith({ message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for API export generation.' })
+    expect(res.json).toHaveBeenCalledTimes(1)
+    expect(res.json).toHaveBeenCalledWith({ message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for API export generation.' })
   })
 })

@@ -41,13 +41,13 @@ describe('GET /admin/catalog/visibility', () => {
           name: 'basic usage plan',
           apis: [
             {
-              id: 'a1b2c3',
-              stage: 'gamma',
+              apiId: 'a1b2c3',
+              apiStage: 'gamma',
               swagger: {}
             },
             {
-              id: 'a1b2c3',
-              stage: 'prod',
+              apiId: 'a1b2c3',
+              apiStage: 'prod',
               swagger: {}
             }
           ]
@@ -57,13 +57,13 @@ describe('GET /admin/catalog/visibility', () => {
           name: 'advanced usage plan',
           apis: [
             {
-              id: 'd1e2f3',
-              stage: 'def',
+              apiId: 'd1e2f3',
+              apiStage: 'def',
               swagger: {}
             },
             {
-              id: 'g1h2i3',
-              stage: 'ghi',
+              apiId: 'g1h2i3',
+              apiStage: 'ghi',
               swagger: {}
             }
           ]
@@ -257,17 +257,18 @@ describe('POST /admin/catalog/visibility', () => {
     util.catalog = originalCatalog
   })
 
-  test('exports and uploads swagger doc for api gateway managed apis', async () => {
+  test('exports and uploads swagger doc for subscribable api gateway managed apis', async () => {
     const req = generateRequestContext()
-    req.body = { apiKey: 'a1b2c3_prod', subscribable: true }
+    req.body = { apiKey: 'a1b2c3_prod', subscribable: 'true' }
 
     util.apigateway.getExport = jest.fn().mockReturnValue(promiser({
-      body: {
-        message: 'swagger document'
-      }
+      body: Buffer.from(JSON.stringify({
+        info: { title: 'swagger document' }
+      }))
     }))
 
     util.s3.upload = jest.fn().mockReturnValue(promiser())
+    util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myBucket'
 
@@ -285,7 +286,47 @@ describe('POST /admin/catalog/visibility', () => {
     expect(util.s3.upload).toHaveBeenCalledWith({
       Bucket: 'myBucket',
       Key: 'catalog/a1b2c3_prod.json',
-      Body: { message: 'swagger document' }
+      Body: Buffer.from(JSON.stringify({
+        info: { title: 'swagger document' }
+      }))
+    })
+
+    expect(mockResponseObject.status).toHaveBeenCalledWith(200)
+    expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Success' })
+  })
+
+  test('exports and uploads swagger doc for unsubscribable api gateway managed apis', async () => {
+    const req = generateRequestContext()
+    req.body = { apiKey: 'a1b2c3_prod', subscribable: 'false' }
+
+    util.apigateway.getExport = jest.fn().mockReturnValue(promiser({
+      body: Buffer.from(JSON.stringify({
+        info: { title: 'swagger document' }
+      }))
+    }))
+
+    util.s3.upload = jest.fn().mockReturnValue(promiser())
+    util.lambda.invoke = jest.fn().mockReturnValue(promiser())
+
+    process.env.StaticBucketName = 'myBucket'
+
+    await adminCatalogVisibility.post(req, mockResponseObject)
+
+    expect(util.apigateway.getExport).toHaveBeenCalledWith({
+      restApiId: 'a1b2c3',
+      stageName: 'prod',
+      exportType: 'swagger',
+      parameters: {
+        extensions: 'apigateway'
+      }
+    })
+
+    expect(util.s3.upload).toHaveBeenCalledWith({
+      Bucket: 'myBucket',
+      Key: 'catalog/unsubscribable_a1b2c3_prod.json',
+      Body: Buffer.from(JSON.stringify({
+        info: { title: 'swagger document' }
+      }))
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -294,9 +335,10 @@ describe('POST /admin/catalog/visibility', () => {
 
   test('uploads swagger doc for generic apis', async () => {
     const req = generateRequestContext()
-    req.body = { swagger: JSON.stringify({ message: 'swagger document' }) }
+    req.body = { swagger: JSON.stringify({ info: { title: 'swagger document' } }) }
 
     util.s3.upload = jest.fn().mockReturnValue(promiser())
+    util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myPail'
 
@@ -304,8 +346,8 @@ describe('POST /admin/catalog/visibility', () => {
 
     expect(util.s3.upload).toHaveBeenCalledWith({
       Bucket: 'myPail',
-      Key: `catalog/${hash({ message: 'swagger document' })}.json`,
-      Body: JSON.stringify({ message: 'swagger document' })
+      Key: `catalog/${hash({ info: { title: 'swagger document' } })}.json`,
+      Body: Buffer.from(JSON.stringify({ info: { title: 'swagger document' } }))
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -329,15 +371,15 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
       apiGateway: [
         {
           apis: [
-            { id: 'unmatched1', stage: 'unmatched1' },
-            { id: 'unmatched2', stage: 'unmatched2' },
-            { id: 'a1b2c3', stage: 'prod' }
+            { apiId: 'unmatched1', apiStage: 'unmatched1' },
+            { apiId: 'unmatched2', apiStage: 'unmatched2' },
+            { apiId: 'a1b2c3', apiStage: 'prod' }
           ]
         },
         {
           apis: [
-            { id: 'unmatched3', stage: 'unmatched3' },
-            { id: 'unmatched4', stage: 'unmatched4' }
+            { apiId: 'unmatched3', apiStage: 'unmatched3' },
+            { apiId: 'unmatched4', apiStage: 'unmatched4' }
           ]
         }
       ]
@@ -348,9 +390,9 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
     util.catalog = originalCatalog
   })
 
-  test('deletes swagger doc from s3 for api gateway managed apis', async () => {
+  test('deletes swagger doc from s3 for subscribable api gateway managed apis', async () => {
     const req = generateRequestContext()
-    req.params = { id: 'a1b2c3_prod' }
+    req.params = { id: 'a1b2c3_prod', subscribable: 'true' }
 
     util.s3.deleteObject = jest.fn().mockReturnValue(promiser())
 
@@ -361,6 +403,25 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
       Key: 'catalog/a1b2c3_prod.json'
+    })
+
+    expect(mockResponseObject.status).toHaveBeenCalledWith(200)
+    expect(mockResponseObject.json).toHaveBeenCalledWith({ message: 'Success' })
+  })
+
+  test('deletes swagger doc from s3 for unsubscribable api gateway managed apis', async () => {
+    const req = generateRequestContext()
+    req.params = { id: 'a1b2c3_unmatched', subscribable: 'false' }
+
+    util.s3.deleteObject = jest.fn().mockReturnValue(promiser())
+
+    process.env.StaticBucketName = 'myOtherBucket'
+
+    await adminCatalogVisibility.delete(req, mockResponseObject)
+
+    expect(util.s3.deleteObject).toHaveBeenCalledWith({
+      Bucket: 'myOtherBucket',
+      Key: 'catalog/unsubscribable_a1b2c3_unmatched.json'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
