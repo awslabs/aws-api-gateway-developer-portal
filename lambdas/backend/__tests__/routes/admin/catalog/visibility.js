@@ -246,6 +246,140 @@ describe('GET /admin/catalog/visibility', () => {
       }
     })
   })
+
+  test('includes unsubscribable API Gateway-managed APIs with subscribable ones', async () => {
+    util.catalog.mockReturnValue(Promise.resolve({
+      apiGateway: [
+        {
+          id: 'aaaaaa',
+          name: 'basic usage plan',
+          apis: [
+            {
+              apiId: 'a1b2c3',
+              apiStage: 'prod',
+              swagger: {}
+            }
+          ]
+        }
+      ],
+      generic: [
+        {
+          apiId: 'd1e2f3',
+          apiStage: 'prod',
+          swagger: {}
+        }
+      ]
+    }))
+
+    util.apigateway.getRestApis = jest.fn().mockReturnValue(promiser({
+      items: [
+        {
+          id: 'a1b2c3',
+          name: 'first'
+        },
+        {
+          id: 'd1e2f3',
+          name: 'second'
+        }
+      ]
+    }))
+
+    util.apigateway.getStages = jest.fn()
+      .mockReturnValueOnce(promiser({
+        item: [
+          {
+            id: 'a1b2c3',
+            name: 'first',
+            stageName: 'prod'
+          },
+          {
+            id: 'a1b2c3',
+            name: 'first',
+            stageName: 'exclude'
+          }
+        ]
+      }))
+      .mockReturnValueOnce(promiser({
+        item: [
+          {
+            id: 'd1e3f3',
+            name: 'second',
+            stageName: 'prod'
+          },
+          {
+            id: 'd1e3f3',
+            name: 'second',
+            stageName: 'exclude'
+          }
+        ]
+      }))
+
+    util.apigateway.getUsagePlans = jest.fn()
+      .mockReturnValue(promiser({
+        items: [
+          {
+            id: 'z1x2c3',
+            name: 'basic',
+            apiStages: [
+              {
+                apiId: 'a1b2c3',
+                stage: 'prod'
+              },
+              {
+                apiId: 'a1b2c3',
+                stage: 'exclude'
+              }
+            ]
+          }
+        ]
+      }))
+
+    await adminCatalogVisibility.get(generateRequestContext(), mockResponseObject)
+
+    expect(util.apigateway.getRestApis).toHaveBeenCalledTimes(1)
+    expect(util.apigateway.getStages).toHaveBeenCalledTimes(2)
+    expect(mockResponseObject.status).toHaveBeenCalledWith(200)
+    expect(mockResponseObject.json).toHaveBeenCalledWith({
+      apiGateway: [
+        {
+          id: 'a1b2c3',
+          stage: 'prod',
+          visibility: true,
+          subscribable: true,
+          name: 'first',
+          usagePlanId: 'z1x2c3',
+          usagePlanName: 'basic',
+          sdkGeneration: false
+        },
+        {
+          id: 'a1b2c3',
+          stage: 'exclude',
+          visibility: false,
+          subscribable: true,
+          name: 'first',
+          usagePlanId: 'z1x2c3',
+          usagePlanName: 'basic',
+          sdkGeneration: false
+        },
+        {
+          id: 'd1e2f3',
+          stage: 'prod',
+          visibility: true,
+          subscribable: false,
+          name: 'second',
+          sdkGeneration: false
+        },
+        {
+          id: 'd1e2f3',
+          stage: 'exclude',
+          visibility: false,
+          subscribable: false,
+          name: 'second',
+          sdkGeneration: false
+        }
+      ]
+    })
+  })
 })
 
 describe('POST /admin/catalog/visibility', () => {

@@ -80,6 +80,15 @@ exports.get = async (req, res) => {
 
     // mark every api in the generic catalog as visible
     catalogObject.generic.forEach((catalogEntry) => {
+      // Unlike in the catalog and elsewhere, the visibility's `apiGateway` contains *all* API
+      // Gateway-managed APIs, and only unmanaged APIs are in `visibility.generic`.
+      if (catalogEntry.apiId != null) {
+        const target = visibility.apiGateway.find((api) =>
+          api.id === catalogEntry.apiId && api.stage === catalogEntry.apiStage
+        )
+        if (target != null) { target.visibility = true; return }
+      }
+
       if (!visibility.generic) {
         visibility.generic = {}
       }
@@ -89,8 +98,6 @@ exports.get = async (req, res) => {
         name: (catalogEntry.swagger && catalogEntry.swagger.info && catalogEntry.swagger.info.title) || 'Untitled'
       }
 
-      if (catalogEntry.stage) { visibility.generic[catalogEntry.id].stage = catalogEntry.stage }
-      if (catalogEntry.apiId) { visibility.generic[catalogEntry.id].apiId = catalogEntry.apiId }
       if (catalogEntry.sdkGeneration !== undefined) {
         console.log(`catalogEntry: ${inspect(catalogEntry)}`)
         visibility.apiGateway.map((api) => {
