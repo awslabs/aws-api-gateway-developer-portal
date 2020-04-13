@@ -1,7 +1,5 @@
-div.ui.icon.input > input {
-  width: 100em;
-}
-
-.ui.category.search .results {
-  width: 100em;
+#api-search .input,
+#api-search input,
+#api-search .results {
+  width: 100%;
 }

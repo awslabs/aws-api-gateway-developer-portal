@@ -20,6 +20,7 @@ Metadata:
         Parameters:
           - CognitoIdentityPoolName
           - DevPortalCustomersTableName
+          - AccountRegistrationMode
       -
         Label:
           default: "Subscription Notification Configuration"
@@ -54,6 +55,11 @@ Parameters:
     Type: String
     Description: The name of the DynamoDB Customers table.
     Default: 'DevPortalCustomers'
+
+  DevPortalPreLoginAccountsTableName:
+    Type: String
+    Description: The name of the DynamoDB PreLoginAccounts table.
+    Default: 'DevPortalPreLoginAccounts'
 
   DevPortalAdminEmail:
     Type: String
@@ -128,14 +134,34 @@ Parameters:
       - 'true'
     ConstraintDescription: Malformed input - Parameter DevelopmentMode value must be either 'true' or 'false'
 
+  LocalDevelopmentMode:
+    Type: String
+    Description: Enabling this disables CORS for easier local development. Do not enable this in production! Additionally, do not update a stack that was previously in development mode to be a production stack; instead, make a new stack that has never been in development mode.
+    Default: 'false'
+    AllowedValues: 
+      - 'false'
+      - 'true'
+    ConstraintDescription: Malformed input - Parameter LocalDevelopmentMode value must be either 'true' or 'false'
+  
+  AccountRegistrationMode:
+    Type: String
+    Description: Methods allowed for account registration. In 'open' mode, any user may register for an account. In 'request' mode, any user may request an account, but an Admin must approve the request in order for the account to perform any privileged actions (like subscribing to an API). In 'invite' mode, users cannot register or request an account; instead, an Admin must send an invite for the user to accept. See the documentation for details.
+    Default: 'open'
+    AllowedValues:
+      - 'open'
+      # - 'request'
+      - 'invite'
+
 Conditions:
   UseCustomDomainName: !And [!And [!Not [!Equals [!Ref CustomDomainName, '']], !Not [!Equals [!Ref CustomDomainNameAcmCertArn, '']]], !Condition NotDevelopmentMode]
   NoCustomDomainName: !And [!Not [ !Condition UseCustomDomainName ], !Condition NotDevelopmentMode]
   UseRoute53: !And [!Equals [!Ref UseRoute53Nameservers, 'true'], !Condition UseCustomDomainName]
   EnableFeedbackSubmission: !Not [!Equals [!Ref DevPortalAdminEmail, '']]
+  LocalDevelopmentMode: !Or [!Equals [!Ref DevelopmentMode, 'true'], !Equals [!Ref LocalDevelopmentMode, 'true']]
   DevelopmentMode: !Equals [!Ref DevelopmentMode, 'true']
   NotDevelopmentMode: !Not [!Condition DevelopmentMode]
   InUSEastOne: !Equals [!Ref 'AWS::Region', 'us-east-1']
+  InviteAccountRegistrationMode: !Equals [!Ref AccountRegistrationMode, 'invite']
 
 Resources:
   ApiGatewayApi:
@@ -196,7 +222,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -243,7 +269,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -290,7 +316,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -337,7 +363,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -410,7 +436,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -470,7 +496,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -522,7 +548,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
@@ -618,6 +644,20 @@ Resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
+
+  PreLoginAccountsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref DevPortalPreLoginAccountsTableName
+      AttributeDefinitions:
+      - AttributeName: UserId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: UserId
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
   FeedbackTable:
     Type: AWS::DynamoDB::Table
@@ -720,6 +760,15 @@ Resources:
                 - !Ref CustomersTable
           - Effect: Allow
             Action:
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            Resource: !GetAtt PreLoginAccountsTable.Arn
+          - Effect: Allow
+            Action:
             - dynamodb:Query
             Resource: !Join
               - ''
@@ -758,8 +807,18 @@ Resources:
               - sns:Publish
               Resource: !Ref FeedbackSubmittedSNSTopic
             - !Ref 'AWS::NoValue'
+          - Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+              - cognito-idp:ListUsersInGroup
+              - cognito-idp:AdminAddUserToGroup
+              - cognito-idp:AdminCreateUser
+              - cognito-idp:AdminDeleteUser
+              - cognito-idp:AdminGetUser
+              - cognito-idp:AdminListGroupsForUser
+            Resource: !GetAtt CognitoUserPool.Arn
 
-  CognitoStrategyLambdaExecutionRole:
+  CognitoPreSignupTriggerExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -781,6 +840,74 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource: arn:aws:logs:*:*:*
+
+  CognitoPostConfirmationTriggerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource: !GetAtt PreLoginAccountsTable.Arn
+          - Effect: Allow
+            Action:
+              - cognito-idp:AdminAddUserToGroup
+            Resource: !GetAtt CognitoUserPool.Arn
+
+  CognitoPostAuthenticationTriggerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:Scan
+              - dynamodb:PutItem
+            Resource: !GetAtt CustomersTable.Arn
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+            Resource: !GetAtt PreLoginAccountsTable.Arn
+          - Effect: Allow
+            Action:
+              - cognito-idp:AdminAddUserToGroup
+            Resource: !GetAtt CognitoUserPool.Arn
 
   CatalogUpdaterLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -949,11 +1076,41 @@ Resources:
           - !Ref ApiGatewayApi
           - '/*/*'
 
-  LambdaCognitoUserPoolExecutionPermission:
+  CognitoPreSignupTriggerFnExecutionPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
+      FunctionName: !GetAtt CognitoPreSignupTriggerFn.Arn
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:cognito-idp:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':userpool/'
+          - !Ref CognitoUserPool
+
+  CognitoPostConfirmationTriggerFnExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt CognitoPostConfirmationTriggerFn.Arn
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:cognito-idp:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':userpool/'
+          - !Ref CognitoUserPool
+
+  CognitoPostAuthenticationTriggerFnExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt CognitoPostAuthenticationTriggerFn.Arn
       Principal: cognito-idp.amazonaws.com
       SourceArn: !Join
         - ''
@@ -989,6 +1146,14 @@ Resources:
           - !Ref 'AWS::AccountId'
           - ':marketplace-test-topic'
 
+  LambdaCommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: 'Common code used by lambdas'
+      ContentUri: ../lambdas/common-layer/
+      CompatibleRuntimes:
+        - nodejs12.x
+
   DevPortalLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -996,18 +1161,22 @@ Resources:
       Handler: index.handler
       MemorySize: 1024
       Role: !GetAtt BackendLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 30
       Environment:
         Variables:
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
           CustomersTableName: !Ref DevPortalCustomersTableName
+          PreLoginAccountsTableName: !Ref DevPortalPreLoginAccountsTableName
           CatalogUpdaterFunctionArn: !GetAtt CatalogUpdaterLambdaFunction.Arn
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
-
+          UserPoolId: !Ref CognitoUserPool
+          AdminsGroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
+          RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
+          DevelopmentMode: !Ref DevelopmentMode
       # Adds the API as a trigger
       Events:
         ProxyApiRoot:
@@ -1022,6 +1191,8 @@ Resources:
             RestApiId: !Ref ApiGatewayApi
             Path: /{proxy+}
             Method: ANY
+      Layers:
+        - !Ref LambdaCommonLayer
 
   SubscriptionListenerLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1030,25 +1201,91 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt BackendLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 30
+      Layers:
+        - !Ref LambdaCommonLayer
 
-  CognitoUserPoolsConfirmationStrategyFunction:
+  CognitoPreSignupTriggerFn:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../lambdas/cognito-user-pools-confirmation-strategy
+      FunctionName: !Sub '${AWS::StackName}-CognitoPreSignupTriggerFn'
+      CodeUri: ../lambdas/cognito-pre-signup-trigger
       Handler: index.handler
       MemorySize: 128
-      Role: !GetAtt CognitoStrategyLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Role: !GetAtt CognitoPreSignupTriggerExecutionRole.Arn
+      Runtime: nodejs10.x
       Timeout: 3
+      Environment:
+        Variables:
+          AccountRegistrationMode: !Ref AccountRegistrationMode
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  CognitoPostConfirmationTriggerFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-CognitoPostConfirmationTriggerFn'
+      CodeUri: ../lambdas/cognito-post-confirmation-trigger
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt CognitoPostConfirmationTriggerExecutionRole.Arn
+      Runtime: nodejs10.x
+      Timeout: 3
+      Environment:
+        Variables:
+          AccountRegistrationMode: !Ref AccountRegistrationMode
+          PreLoginAccountsTableName: !Ref DevPortalPreLoginAccountsTableName
+          RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  CognitoPostAuthenticationTriggerFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-CognitoPostAuthenticationTriggerFn'
+      CodeUri: ../lambdas/cognito-post-authentication-trigger
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt CognitoPostAuthenticationTriggerExecutionRole.Arn
+      Runtime: nodejs10.x
+      Timeout: 3
+      Environment:
+        Variables:
+          CustomersTableName: !Ref DevPortalCustomersTableName
+          PreLoginAccountsTableName: !Ref DevPortalPreLoginAccountsTableName
+          RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Ref CognitoIdentityPoolName
+      # Lambda trigger caveats:
+      #
+      # - We can't use the functions' ARNs here, because there would be a
+      #   circular dependency: some functions reference either the UserPool or
+      #   UserPoolGroups within it.
+      #
+      # - You must declare an AWS::Lambda::Permission for each lambda here, or
+      #   else calls from Cognito will fail with an AccessDeniedException. See
+      #   `CognitoPreSignupTriggerFnExecutionPermission` as an example. More
+      #   reading: <https://stackoverflow.com/a/42460847> and
+      #   <https://forums.aws.amazon.com/thread.jspa?messageID=748566#748566>
       LambdaConfig:
-        PreSignUp: !GetAtt CognitoUserPoolsConfirmationStrategyFunction.Arn
+        PreSignUp: !Join
+          - ''
+          - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
+            - !Sub '${AWS::StackName}-CognitoPreSignupTriggerFn'
+        PostConfirmation: !Join
+          - ''
+          - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
+            - !Sub '${AWS::StackName}-CognitoPostConfirmationTriggerFn'
+        PostAuthentication: !Join
+          - ''
+          - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
+            - !Sub '${AWS::StackName}-CognitoPostAuthenticationTriggerFn'
       Policies:
         PasswordPolicy:
           MinimumLength: 12
@@ -1057,7 +1294,38 @@ Resources:
       Schema:
         - AttributeDataType: String
           Name: email
-          Required: false
+          Required: true
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: !If [
+          InviteAccountRegistrationMode, 'true', 'false',
+        ]
+        InviteMessageTemplate:
+          EmailSubject: 'Developer Portal - Invitation'
+          EmailMessage: !Join [ '', [
+            '<h2>Developer Portal</h2><p>You have been invited to access the developer portal at <a href="',
+            !If [ 'DevelopmentMode',
+              !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+              !If [
+                'UseCustomDomainName',
+                !Join [ '', [ 'https://', !Ref CustomDomainName ]],
+                !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+              ]
+            ],
+            '">',
+            !If [ 'DevelopmentMode',
+              !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+              !If [
+                'UseCustomDomainName',
+                !Join [ '', [ 'https://', !Ref CustomDomainName ]],
+                !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+              ]
+            ],
+            '</a>.</p><p><b>Username:</b> {username}<br><b>Temporary password:</b> {####}</p>'
+          ] ]
+      AutoVerifiedAttributes: ['email']
+      UsernameAttributes: ['email']
+      EmailVerificationSubject: 'Developer Portal - Verification Code'
+      EmailVerificationMessage: '<h2>Developer Portal</h2><p>Your verification code is <b>{####}</b></p>'
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -1106,12 +1374,14 @@ Resources:
   CognitoUserPoolClientSettingsBackingFn:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       MemorySize: 128
       Timeout: 300
       CodeUri: ../lambdas/cfn-cognito-user-pools-client-settings
       Handler: index.handler
       Role: !GetAtt CognitoUserPoolClientSettingsBackingFnRole.Arn
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPoolClientSettings:
     Type: AWS::CloudFormation::CustomResource
@@ -1121,22 +1391,24 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
-      CallbackURL: !If [ DevelopmentMode,
+      CallbackURL: !If [ LocalDevelopmentMode,
         [
           'http://localhost:3000/index.html?action=login',
-          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=login' ]]
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=login' ]],
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
         ],
         [
           !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
         ]
       ]
-      LogoutURL: !If [ DevelopmentMode,
+      LogoutURL: !If [ LocalDevelopmentMode,
         [
           'http://localhost:3000/index.html?action=logout',
-          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=logout' ]]
+          !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=logout' ]],
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=logout' ]],
         ],
         [
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=logout' ]]
+          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=logout' ]],
         ]
       ]
       AllowedOAuthFlowsUserPoolClient: true
@@ -1186,12 +1458,14 @@ Resources:
   CognitoUserPoolDomainBackingFn:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       MemorySize: 128
       Timeout: 300
       CodeUri: ../lambdas/cfn-cognito-user-pools-domain
       Handler: index.handler
       Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CognitoUserPoolDomain:
     Type: AWS::CloudFormation::CustomResource
@@ -1222,6 +1496,7 @@ Resources:
       Roles:
         authenticated: !GetAtt CognitoAuthenticatedRole.Arn
 
+  # Every logged-in Cognito user is "authenticated".
   CognitoAuthenticatedRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1239,6 +1514,42 @@ Resources:
               'cognito-identity.amazonaws.com:amr': authenticated
       Policies:
       - PolicyName: CognitoAuthenticatedRole
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - execute-api:Invoke
+            Resource: !Join
+              - ''
+              - - 'arn:aws:execute-api:'
+                - !Ref 'AWS::Region'
+                - ':'
+                - !Ref 'AWS::AccountId'
+                - ':'
+                - !Ref ApiGatewayApi
+                - /prod/*/signin
+      Path: '/'
+
+  # A logged-in Cognito user, who is not in a "pending" (invite or request)
+  # state, is "registered".
+  CognitoRegisteredRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Federated: cognito-identity.amazonaws.com
+          Action: sts:AssumeRoleWithWebIdentity
+          Condition:
+            StringEquals:
+              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
+            'ForAnyValue:StringLike':
+              'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+      - PolicyName: CognitoRegisteredRole
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -1284,7 +1595,7 @@ Resources:
             'ForAnyValue:StringLike':
               'cognito-identity.amazonaws.com:amr': authenticated
       Policies:
-      - PolicyName: CognitoAuthenticatedRole
+      - PolicyName: CognitoAdminRole
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -1312,6 +1623,15 @@ Resources:
       RoleArn: !GetAtt CognitoAdminRole.Arn
       UserPoolId: !Ref CognitoUserPool
 
+  CognitoRegisteredGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      Description: 'Registered users in the developer portal'
+      GroupName: !Sub '${AWS::StackName}-RegisteredGroup'
+      Precedence: 1
+      RoleArn: !GetAtt CognitoRegisteredRole.Arn
+      UserPoolId: !Ref CognitoUserPool
+
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1319,11 +1639,13 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt CatalogUpdaterLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 20
       Environment:
         Variables:
           BucketName: !Ref ArtifactsS3BucketName
+      Layers:
+        - !Ref LambdaCommonLayer
 
   CatalogUpdaterLambdaPermissions:
     Type: AWS::Lambda::Permission
@@ -1341,11 +1663,13 @@ Resources:
       Handler: index.handler
       MemorySize: 512
       Role: !GetAtt AssetUploaderLambdaExecutionRole.Arn
-      Runtime: nodejs8.10
+      Runtime: nodejs12.x
       Timeout: 300
       Environment:
         Variables:
           StaticBucketName: !Ref ArtifactsS3BucketName
+      Layers:
+        - !Ref LambdaCommonLayer
 
   StaticAssetUploader:
     Type: AWS::CloudFormation::CustomResource
@@ -1456,6 +1780,61 @@ Resources:
             # this is a "magic string" for using CFN aliases; see this link:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
             HostedZoneId: 'Z2FDTNDATAQYW2'
+
+  DumpV3AccountDataFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/dump-v3-account-data
+      Handler: index.handler
+      MemorySize: 512
+      Role: !GetAtt DumpV3AccountDataExecutionRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 300
+      Environment:
+        Variables:
+          CustomersTableName: !Ref DevPortalCustomersTableName
+          UserPoolId: !Ref CognitoUserPool
+          AdminsGroupName: !Ref CognitoAdminsGroup
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  DumpV3AccountDataExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: WriteCloudWatchLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: ReadCustomersTable
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: dynamodb:Scan
+            Resource: !GetAtt CustomersTable.Arn
+      - PolicyName: ListUserPool
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:ListUsers
+              - cognito-idp:ListUsersInGroup
+            Resource: !GetAtt CognitoUserPool.Arn
 
 Outputs:
   WebsiteURL:
