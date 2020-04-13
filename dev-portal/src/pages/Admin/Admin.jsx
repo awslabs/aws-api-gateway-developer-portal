@@ -1,20 +1,33 @@
 import React, { Component } from 'react'
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, Redirect } from 'react-router-dom'
 
 import { ApiManagement, SideNav } from './'
-import { AdminRoute } from './../../';
+import { AdminRoute } from './../../'
+import PageWithSidebar from 'components/PageWithSidebar'
+
+import RegisteredAccounts from 'pages/Admin/Accounts/RegisteredAccounts'
+import AdminAccounts from 'pages/Admin/Accounts/AdminAccounts'
+import PendingInvites from 'pages/Admin/Accounts/PendingInvites'
+// import PendingRequests from 'pages/Admin/Accounts/PendingRequests'
+
+function RedirectToApiManagement () {
+  return <Redirect to='/admin/apis' />
+}
 
 export class Admin extends Component {
-  render() {
+  render () {
     return (
       <Router>
-        <div style={{ display: "flex", flex: "1 1 auto", overflow: "hidden" }}>
-          <SideNav style={{ flex: "0 0 auto" }} />
-          <div style={{ flex: "1 1 auto", overflow: 'auto' }}>
-            <AdminRoute exact path="/admin" component={ApiManagement} />
-            <AdminRoute path="/admin/apis" component={ApiManagement} />
-          </div>
-        </div>
+        <PageWithSidebar sidebarContent={<SideNav />}>
+          <>
+            <AdminRoute exact from='/admin' component={RedirectToApiManagement} />
+            <AdminRoute path='/admin/apis' component={ApiManagement} />
+            <AdminRoute exact path='/admin/accounts' component={RegisteredAccounts} />
+            <AdminRoute exact path='/admin/accounts/admins' component={AdminAccounts} />
+            <AdminRoute exact path='/admin/accounts/invites' component={PendingInvites} />
+            {/* <AdminRoute exact path='/admin/accounts/requests' component={PendingRequests} /> */}
+          </>
+        </PageWithSidebar>
       </Router>
     )
   }

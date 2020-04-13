@@ -36,3 +36,16 @@ h1, h2, h3, h4, h5 {
     0px 2px 4px 0px rgba(34, 36, 38, 0.12), 
     0px 2px 10px 0px rgba(34, 36, 38, 0.15)
 }
+
+.ui.vertical.menu .menu .item {
+  font-size: 0.9em;
+}
+
+.ui.vertical.menu .menu .menu .item {
+  margin-left: 1em;
+  font-size: 1em;
+}
+
+.ui.inverted.menu .menu a.item:hover {
+  color: #ffffff;
+}

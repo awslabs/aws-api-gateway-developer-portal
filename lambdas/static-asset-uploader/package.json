@@ -10,9 +10,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.6.7",
-    "fs-extra": "^7.0.0",
-    "klaw": "^3.0.0",
-    "through2": "^2.0.3"
+    "klaw": "^3.0.0"
   },
   "devDependencies": {}
 }

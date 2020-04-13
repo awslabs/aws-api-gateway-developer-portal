@@ -6,6 +6,9 @@ import React from 'react'
 // semantic-ui
 import { Button, Header, Image, Container } from 'semantic-ui-react'
 
+// markdown for external docs description
+import Markdown from 'react-markdown/with-html'
+
 // services
 import { subscribe, unsubscribe } from 'services/api-catalog'
 import { isAuthenticated } from 'services/self'
@@ -13,7 +16,7 @@ import { isAuthenticated } from 'services/self'
 import { GetSdkButton } from 'components/GetSdk'
 
 // state
-import { observer } from 'mobx-react'
+import { observer, Observer } from 'mobx-react'
 import { store } from 'services/state.js'
 
 // Create the plugin that provides our layout component
@@ -22,57 +25,72 @@ export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoRep
 // replaces the InfoContainer component
 // https://github.com/swagger-api/swagger-ui/blob/dd3afdc45656bda2a64ae6a7f9bdad006ea98149/src/core/components/layouts/base.jsx
 
-const InfoReplacement = observer(({ specSelectors }) => {
-  const basePath = specSelectors.basePath()
-  const host = specSelectors.host()
-  const externalDocs = specSelectors.externalDocs()
+// Note: this is called not as a component, but as a function within a class component. Do
+// *not* make this a component, and do *not* use hooks or anything similar in it.
+function InfoReplacement ({ specSelectors }) {
+  let endpoint
+  if (specSelectors.hasHost()) {
+    endpoint = `https://${specSelectors.host()}${specSelectors.basePath()}`
+  } else {
+    const servers = specSelectors.servers()
+    if (servers && servers.size) endpoint = servers.getIn([0, 'url'])
+  }
 
-  return (
-    <Container fluid textAlign='left' className="fixfloat" style={{ padding: "40px 0px" }}>
-      <div style={{ display: "flex" }}>
-        <div style={{ flex: "0 0 auto", marginRight: "20px" }}>
+  const info = specSelectors.info()
+  const version = specSelectors.version()
+  const externalDocs = specSelectors.externalDocs()
+  const apiTitle = info.get('title')
+  const apiDescription = info.get('description')
+  const docsDescription = externalDocs.get('description')
+  const docsUrl = externalDocs.get('url')
+
+  return <Observer>
+    {() => <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
+      <div style={{ display: 'flex' }}>
+        <div style={{ flex: '0 0 auto', marginRight: '20px' }}>
           <Image size='small' src={store.api.logo} />
         </div>
         <div>
-          <Header as='h1'>{store.api.swagger.info.title}</Header>
-          <div style={{ display: "flex" }}>
-            <div style={{ marginRight: "20px" }}>
-              {store.api.generic && (
-                <p style={{ fontWeight: "bold" }}>Version</p>
-              )}
-              <p style={{ fontWeight: "bold" }}>Endpoint</p>
+          <Header as='h1'>{apiTitle}</Header>
+          <div style={{ display: 'flex', paddingBottom: '1em' }}>
+            <div style={{ marginRight: '20px' }}>
+              {store.api.apiStage == null ? <p style={{ fontWeight: 'bold' }}>Version</p> : null}
+              {endpoint ? <p style={{ fontWeight: 'bold' }}>Endpoint</p> : null}
+              {apiDescription ? <p style={{ fontWeight: 'bold' }}>Description</p> : null}
               {/* <p style={{ fontWeight: "bold" }}>Usage Plan</p> */}
             </div>
             <div>
-              {store.api.generic && (
-                <p>{store.api.swagger.info.version}</p>
-              )}
-              <p>https://{host}{basePath}</p>
+              {store.api.apiStage == null ? <p>{version}</p> : null}
+              {endpoint ? <p>{endpoint}</p> : null}
+              {apiDescription ? <p>{apiDescription}</p> : null}
               {/* <p>{store.api.usagePlan.name}</p> */}
             </div>
           </div>
-          <p>{externalDocs}</p>
+          {externalDocs ? (
+            <div style={{ paddingBottom: '1em' }}>
+              {docsDescription ? <Markdown source={docsDescription} /> : null}
+              <a href={docsUrl}>{docsUrl}</a>
+            </div>
+          ) : null}
           <SubscriptionButtons />
           {store.api.sdkGeneration && <GetSdkButton />}
         </div>
       </div>
-    </Container>
-  )
-})
+    </Container>}
+  </Observer>
+}
 
 const SubscriptionButtons = observer(class SubscriptionButtons extends React.Component {
-  state = {}
-
-  render() {
+  render () {
     const { api } = store
     return (
-      (api && isAuthenticated()) ? !api.generic ? (
+      (api && isAuthenticated()) ? api.apiStage != null ? (
         api.subscribed ? (
           <Button onClick={() => unsubscribe(api.usagePlan.id)}>Unsubscribe</Button>
         ) : (
-          <Button onClick={() => subscribe(api.usagePlan.id)} >Subscribe</Button>
+          <Button onClick={() => subscribe(api.usagePlan.id)}>Subscribe</Button>
         )
-      ) : <Header as='h4' color='grey'>This API is not configured for subscription from the portal.</Header> : null
+      ) : <Header style={{ marginTop: '0em' }} as='h4' color='grey'>This version of the API is not configured to be subscribable from the portal. Please contact an admin for more details.</Header> : null
     )
   }
 })
