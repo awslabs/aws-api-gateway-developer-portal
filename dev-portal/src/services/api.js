@@ -3,18 +3,21 @@
 
 import AWS from 'aws-sdk'
 
-export const awsRegion = window.config.region
-export const cognitoRegion = window.config.region
-export const cognitoUserPoolId = window.config.userPoolId
-export const cognitoIdentityPoolId = window.config.identityPoolId
-export const cognitoClientId = window.config.userPoolClientId
-export const cognitoDomain = window.config.userPoolDomain
+import _ from 'lodash'
+
+export const awsRegion = _.get(window, 'config.region')
+export const cognitoRegion = _.get(window, 'config.region')
+export const cognitoUserPoolId = _.get(window, 'config.userPoolId')
+export const cognitoIdentityPoolId = _.get(window, 'config.identityPoolId')
+export const cognitoClientId = _.get(window, 'config.userPoolClientId')
+export const cognitoDomain = _.get(window, 'config.userPoolDomain')
 
 AWS.config.region = cognitoRegion
 
 let cachedClient
+let cachedClientWithCredentials
 
-export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToken } = {}) {
+export function initApiGatewayClient ({ accessKeyId, secretAccessKey, sessionToken } = {}) {
   cachedClient = window.apigClientFactory.newClient({
     accessKey: accessKeyId,
     secretKey: secretAccessKey,
@@ -22,17 +25,32 @@ export function initApiGatewayClient({ accessKeyId, secretAccessKey, sessionToke
     region: awsRegion
   })
 
+  if (accessKeyId && secretAccessKey && sessionToken) {
+    cachedClientWithCredentials = cachedClient
+  }
+
   window.apigw = cachedClient
 }
 
-export function apiGatewayClient() {
+export function apiGatewayClient () {
   if (cachedClient) return Promise.resolve(cachedClient)
-  
   return new Promise(resolve => {
     const poller = setInterval(() => {
       if (cachedClient) {
         clearInterval(poller)
         resolve(cachedClient)
+      }
+    }, 100)
+  })
+}
+
+export function apiGatewayClientWithCredentials () {
+  if (cachedClientWithCredentials) { return Promise.resolve(cachedClientWithCredentials) }
+  return new Promise(resolve => {
+    const poller = setInterval(() => {
+      if (cachedClientWithCredentials) {
+        clearInterval(poller)
+        resolve(cachedClientWithCredentials)
       }
     }, 100)
   })

@@ -8,21 +8,21 @@ const mockUsagePlanItem = () => ({
   apiStages: [
     {
       apiId: 'anmlcrckrs',
-      stage: 'prod',
+      stage: 'prod'
     },
     {
       apiId: 'jlpnochips',
-      stage: 'beta',
-    },
+      stage: 'beta'
+    }
   ],
   throttle: {
     burstLimit: 10,
-    rateLimit: 10,
+    rateLimit: 10
   },
   quota: {
     limit: 10000,
     offset: 0,
-    period: 'DAY',
+    period: 'DAY'
   }
 })
 
@@ -48,7 +48,7 @@ describe('getAllUsagePlans', () => {
           mockUsagePlanItem(),
           mockUsagePlanItem(),
           mockUsagePlanItem(),
-          mockUsagePlanItem(),
+          mockUsagePlanItem()
         ]
       }))
     }
@@ -67,22 +67,22 @@ describe('getAllUsagePlans', () => {
           mockUsagePlanItem(),
           mockUsagePlanItem(),
           mockUsagePlanItem(),
-          mockUsagePlanItem(),
+          mockUsagePlanItem()
         ],
-        position: 'qwertyuiopasdf%3D%3D',
+        position: 'qwertyuiopasdf%3D%3D'
       })).mockReturnValueOnce(promiser({
         items: [
           mockUsagePlanItem(),
           mockUsagePlanItem(),
           mockUsagePlanItem(),
-          mockUsagePlanItem(),
+          mockUsagePlanItem()
         ],
-        position: 'zxcvbnm1234567%3D%3D',
+        position: 'zxcvbnm1234567%3D%3D'
       })).mockReturnValueOnce(promiser({
         items: [
           mockUsagePlanItem(),
-          mockUsagePlanItem(),
-        ],
+          mockUsagePlanItem()
+        ]
       }))
     }
 
