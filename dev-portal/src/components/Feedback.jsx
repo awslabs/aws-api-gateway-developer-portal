@@ -9,74 +9,77 @@ const initialState = {
 }
 
 class Feedback extends React.PureComponent {
-  constructor(props) {
+  constructor (props) {
     super(props)
 
     this.state = initialState
-  }
 
-  openModal = () => {
-    this.setState({
-      formOpen: true
-    })
-  }
-
-  closeModal = () => {
-    this.setState(initialState)
-  }
-
-  handleSubmit = () => {
-    const { message } = this.state
-    submitFeedback(message).then(() => {
+    this.handleOpenModal = () => {
       this.setState({
-        feedbackSubmitted: true
+        formOpen: true
       })
-    })
+    }
+
+    this.handleCloseModal = () => {
+      this.setState(initialState)
+    }
+
+    this.handleSubmit = () => {
+      const { message } = this.state
+      submitFeedback(message).then(() => {
+        this.setState({
+          feedbackSubmitted: true
+        })
+      })
+    }
   }
 
-  render() {
-    const { 
+  render () {
+    const {
       message,
       formOpen,
       feedbackSubmitted
     } = this.state
-    
+
     return (
-      <Modal 
+      <Modal
         closeIcon
         centered={false}
-        size='tiny' 
+        size='tiny'
         open={formOpen}
-        onClose={this.closeModal}
+        onClose={this.handleCloseModal}
         trigger={
-          <div style={{ 
+          <div style={{
             display: 'block',
-            position: 'fixed', 
+            position: 'fixed',
             top: '80%',
             right: '-62px', // Adjusted for rotation
             transform: 'rotate(90deg)'
-          }}>
-            <Button style={{
-              borderTopLeftRadius: '0',
-              borderTopRightRadius: '0'
-            }} onClick={this.openModal}><i className="envelope outline icon"></i>Got an opinon?</Button>
+          }}
+          >
+            <Button
+              style={{
+                borderTopLeftRadius: '0',
+                borderTopRightRadius: '0'
+              }} onClick={this.handleOpenModal}
+            ><i className='envelope outline icon' />Got an opinon?
+            </Button>
           </div>
-        }>
+        }
+      >
         <Modal.Header>Let us know!</Modal.Header>
         <Modal.Content>
           {!feedbackSubmitted &&
             <Form>
               <Form.Field>
-                <TextArea value={message} onChange={(e) => this.setState({ message: e.target.value})} />
+                <TextArea value={message} onChange={(e) => this.setState({ message: e.target.value })} />
               </Form.Field>
               <Button type='submit' positive onClick={this.handleSubmit}>Submit</Button>
-            </Form>
-          }
+            </Form>}
           {feedbackSubmitted &&
             <Message positive>
               <p>Thanks for your feedback</p>
-            </Message>
-          }
+            </Message>}
         </Modal.Content>
       </Modal>
     )
