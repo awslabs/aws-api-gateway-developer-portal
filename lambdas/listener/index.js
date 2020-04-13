@@ -1,76 +1,73 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-'use strict';
-const controller = require('./_common/customers-controller.js')
+'use strict'
+const controller = require('dev-portal-common/customers-controller')
 
-console.log("starting listener function")
+console.log('starting listener function')
 
-exports.handler = (event, context, callback) => {
-    console.log('Received event:', JSON.stringify(event, null, 2))
+exports.handler = async (event) => {
+  console.log('Received event:', JSON.stringify(event, null, 2))
 
-    const message = JSON.parse(event.Records[0].Sns.Message);
+  const message = JSON.parse(event.Records[0].Sns.Message)
 
-    const action = message.action
-    const customerId = message['customer-identifier']
-    const productCode = message['product-code']
+  const action = message.action
+  const customerId = message['customer-identifier']
+  const productCode = message['product-code']
 
-    switch (action) {
-        case 'subscribe-success':
-            subscribe(customerId, productCode, callback);
-            break;
-        case 'subscribe-fail':
-            callback("not implemented");
-            break;
-        case 'unsubscribe-pending':
-            callback("not implemented");
-            break;
-        case 'unsubscribe-complete':
-            unsubscribe(customerId, productCode, callback);
-            break;
-        default:
-            console.log("Unknown action type " + action)
-            callback("Invalid action: " + action)
-            break;
-    }
-};
-
-function subscribe(customerId, productCode, callback) {
-    console.log(`Subscribing customer ${customerId} to product code ${productCode}`);
-
-    function err(err)  {
-        console.log("error: " + err);
-        callback(err);
-    }
-
-    // get identity id for marketplace customer id
-    controller.getCognitoIdentityId(customerId, err, identityId => {
-        console.log("Got cognito identity : " + identityId);
-
-        controller.getUsagePlanForProductCode(productCode, err, usagePlan => {
-            controller.subscribe(identityId, usagePlan.id, err, result => {
-                callback(null, result)
-            })
-        })
-    })
+  switch (action) {
+    case 'subscribe-success': return subscribe(customerId, productCode)
+    case 'subscribe-fail': throw new Error('not implemented')
+    case 'unsubscribe-pending': throw new Error('not implemented')
+    case 'unsubscribe-complete': return unsubscribe(customerId, productCode)
+    default:
+      console.log('Unknown action type ' + action)
+      throw new Error('Invalid action: ' + action)
+  }
 }
 
-function unsubscribe(customerId, productCode, callback) {
-    console.log(`Unsubscribing customer ${customerId} from product code ${productCode}`);
+async function subscribe (customerId, productCode) {
+  console.log(`Subscribing customer ${customerId} to product code ${productCode}`)
 
-    function err(err)  {
-        console.log("error: " + err);
-        callback(err);
-    }
-
+  try {
     // get identity id for marketplace customer id
-    controller.getCognitoIdentityId(customerId, err, identityId => {
-        console.log("Got cognito identity : " + identityId);
-
-        controller.getUsagePlanForProductCode(productCode, err, usagePlan => {
-            controller.unsubscribe(identityId, usagePlan.id, err, result => {
-                callback(null, result)
-            })
-        })
+    const identityId = await new Promise((resolve, reject) => {
+      controller.getCognitoIdentityId(customerId, reject, resolve)
     })
+    console.log('Got cognito identity : ' + identityId)
+
+    const usagePlan = await new Promise((resolve, reject) => {
+      controller.getUsagePlanForProductCode(customerId, reject, resolve)
+    })
+
+    return await new Promise((resolve, reject) => {
+      controller.subscribe(identityId, usagePlan.id, reject, resolve)
+    })
+  } catch (err) {
+    console.log('error: ' + err)
+    throw err
+  }
+}
+
+async function unsubscribe (customerId, productCode) {
+  console.log(`Unsubscribing customer ${customerId} from product code ${productCode}`)
+
+  try {
+    // get identity id for marketplace customer id
+    const identityId = await new Promise((resolve, reject) => {
+      controller.getCognitoIdentityId(customerId, reject, resolve)
+    })
+    console.log('Got cognito identity : ' + identityId)
+
+    const usagePlan = await new Promise((resolve, reject) => {
+      controller.getUsagePlanForProductCode(customerId, reject, resolve)
+    })
+
+    return await new Promise((resolve, reject) => {
+      controller.unsubscribe(identityId, usagePlan.id, reject, resolve)
+    })
+  } catch (err) {
+    console.log('error: ' + err)
+    throw err
+  }
 }

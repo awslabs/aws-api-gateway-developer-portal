@@ -1,0 +1,40 @@
+# top-level and lambda function specific
+/node_modules
+/coverage
+/lambdas/static-asset-uploader/build/
+/lambdas/coverage/
+/lambdas/backend/node_modules/
+/lambdas/catalog-updater/node_modules/
+/lambdas/cfn-cognito-user-pools-client-settings/node_modules/
+/lambdas/cfn-cognito-user-pools-domain/node_modules/
+/lambdas/cognito-user-pools-confirmation-strategy/node_modules/
+/lambdas/dump-v3-account-data/node_modules/
+/lambdas/listener/node_modules/
+/lambdas/shared/node_modules/
+/lambdas/static-asset-uploader/node_modules/
+
+# devportal specific
+
+# we're committing the artifacts, don't need the modules
+# note, though, that we do need our patched version of swagger-ui and not the npm version
+/dev-portal/node_modules/
+/dev-portal/public/apigateway-js-sdk/**
+
+# built artifacts
+/dev-portal/build
+
+# coverage reporting
+/dev-portal/coverage
+
+# details about setup needed for local dev; these are sensitive, do not commit them!
+/dev-portal/deployer.config.js
+/dev-portal/public/config.js
+
+# misc
+npm-debug.log
+.DS_Store
+packaged*.yaml
+cognito.js
+.idea
+.vscode
+*.iml
