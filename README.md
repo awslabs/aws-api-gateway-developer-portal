@@ -30,15 +30,28 @@ If you have previously set up a v1 developer portal (non-SAM deployed), you will
 #### Deploy
 
 Run:
+
 >In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists. Then, run:
+
 ```bash
-sam package --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged.yaml --s3-bucket your-lambda-artifacts-bucket-name
+sam package --template-file ./cloudformation/template.yaml \
+    --output-template-file ./cloudformation/packaged.yaml \
+    --s3-bucket your-lambda-artifacts-bucket-name
 ```
 
-Then run: 
+Then run:
+
 >In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists, and replace `custom-prefix` with some prefix that is globally unique, like your org name or username. Then, run:
+
 ```bash
-sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --s3-bucket your-lambda-artifacts-bucket-name --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CognitoDomainNameOrPrefix="custom-prefix"
+sam deploy --template-file ./cloudformation/packaged.yaml \
+    --stack-name "dev-portal" \
+    --s3-bucket your-lambda-artifacts-bucket-name \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --parameter-overrides \
+    DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" \
+    ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" \
+    CognitoDomainNameOrPrefix="custom-prefix"
 ```
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
@@ -46,13 +59,14 @@ The command will exit when the stack creation is successful. If you'd like to wa
 To get the URL for the newly created developer portal instance, find the websiteURL field in the cloudformation console's outputs or run this command:
 
 ```bash
-aws cloudformation describe-stacks --query "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
+aws cloudformation describe-stacks --query \
+    "Stacks[?StackName=='dev-portal'][Outputs[?OutputKey=='WebsiteURL']][][].OutputValue"
 ```
 
 You can override any of the parameters in the template using the `--parameter-overrides key="value"` format. This will be necessary if you intend to deploy several instances of the developer portal or customize some of the features. You can see a full list of overridable parameters in `cloudformation/template.yaml` under the `Parameters` section.
 
 ## Registering Users
-Users can self-register by clicking the 'Register' button in the developer portal. Cognito calls the `CognitoUserPoolsConfirmationStrategyFunction` to determine if the user is allowed to register themselves. By default, this function always accepts the user into the user pool, but you can customize the body of the function either in a local repository (followed by packaging and deploying) or in the lambda console. If you intend for the developer portal to be 'private' to some group of users (and not globally / freely accessible), you will need to write a lambda function that enforces your business logic for user registration. Documentation on this lambda function's use can be found [here](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-sign-up.html).
+Users can self-register by clicking the 'Register' button in the developer portal. Cognito calls the `CognitoPreSignupTriggerFn` lambda to determine if the user is allowed to register themselves. By default, this function always accepts the user into the user pool, but you can customize the body of the function either in a local repository (followed by packaging and deploying) or in the lambda console. If you intend for the developer portal to be 'private' to some group of users (and not globally / freely accessible), you will need to write a lambda function that enforces your business logic for user registration. Documentation on this lambda function's use can be found [here](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-sign-up.html).
 
 ### Promoting a User to an Admin
 Admin users can manage what APIs are visible to normal users and whether or not SDK generation is enabled (per api) for normal users. To promote a user to an admin, go to the Cognito console in the account the developer portal is in, select User Pools, then select the correct User Pool for the dev portal. From there, choose Users and groups, click on the users' name, choose Add to group, and select the group named `STACK-NAMEAdminsGroup`. This user is now an admin; if they're currently logged in, they will have to log out and back in to receive admin credentials.
@@ -97,7 +111,7 @@ If you chose `UseRoute53Nameservers=false`, instead point your nameservers at th
 See [this page on customization](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Customization)
 
 ## Updating to a new version
-The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version. For changes to major versions, please see [this page on updating](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Upgrading/_edit).
+The Developer Portal follows the semantic versioning scheme (major.minor.patch). Changes to the minor or patch version are backwards compatible so you should feel safe to get the latest version. For changes to major versions, please see [this page on updating](https://github.com/awslabs/aws-api-gateway-developer-portal/wiki/Updating/).
 
 ### To update a SAM deployment:
 1. Get the latest version from GitHub (Clone/Pull/Download).

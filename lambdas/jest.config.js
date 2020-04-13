@@ -27,7 +27,7 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: [ '/node_modules/', '/build/', 'express-server.js', 'express-server-local.js', 'setup-jest.js', 'jest.config.js', '/coverage/' ],
+  coveragePathIgnorePatterns: ['/node_modules/', '/build/', 'express-server.js', 'express-server-local.js', 'setup-jest.js', 'jest.config.js', '/coverage/'],
 
   // A list of reporter names that Jest uses when writing coverage reports
   // coverageReporters: [
@@ -56,9 +56,10 @@ module.exports = {
   // globals: {},
 
   // An array of directory names to be searched recursively up from the requiring module's location
-  // moduleDirectories: [
-  //   "node_modules"
-  // ],
+  moduleDirectories: [
+    'node_modules',
+    'lambdas/common-layer/nodejs/node_modules'
+  ],
 
   // An array of file extensions your modules use
   // moduleFileExtensions: [
@@ -116,13 +117,13 @@ module.exports = {
   // setupFiles: [],
 
   // The path to a module that runs some code to configure or set up the testing framework before each test
-  setupFilesAfterEnv: [ "<rootDir>/setup-jest.js" ],
+  setupFilesAfterEnv: ['<rootDir>/setup-jest.js'],
 
   // A list of paths to snapshot serializer modules Jest should use for snapshot testing
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: "node",
+  testEnvironment: 'node',
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -131,7 +132,7 @@ module.exports = {
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  testMatch: [ '**/__tests__/**/*.js' ],
+  testMatch: ['**/__tests__/**/*.js']
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   // testPathIgnorePatterns: [
@@ -172,4 +173,4 @@ module.exports = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
-};
+}
