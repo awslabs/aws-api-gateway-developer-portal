@@ -4,13 +4,8 @@
   "description": "developer portal component responsible for backend application logic",
   "main": "index.js",
   "config": {},
-  "scripts": {
-    "local": "node ./express-server-local",
-    "get-dependencies": "npm install"
-  },
   "license": "Apache-2.0",
   "dependencies": {
-    "aws-sdk": "^2.7.10",
     "aws-serverless-express": "^1.1.4",
     "body-parser": "^1.15.2",
     "cors": "^2.8.1",

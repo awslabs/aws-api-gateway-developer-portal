@@ -4,9 +4,6 @@
   "description": "developer portal component responsible for updating the catalog of usage plans and swagger files",
   "main": "index.js",
   "config": {},
-  "scripts": {
-    "get-dependencies": "npm install"
-  },
   "license": "Apache-2.0",
   "dependencies": {
     "js-yaml": "^3.13.1",

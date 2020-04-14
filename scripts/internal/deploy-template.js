@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 'use strict'
 
-const { execute, r } = require('./utils.js')
+const { exec, p } = require('./util.js')
+const deployerConfig = require('./get-deployer-config.js')
 
-module.exports = deployerConfig => {
+module.exports = async () => {
   const missing = []
 
-  function getRequired(key) {
+  function getRequired (key) {
     const value = deployerConfig[key]
     if (value) return value
     missing.push(key)
   }
 
-  function getOptional(key, orElse) {
+  function getOptional (key, orElse) {
     return deployerConfig[key] || orElse
   }
 
@@ -25,8 +26,8 @@ module.exports = deployerConfig => {
   const cognitoDomainName = getRequired('cognitoDomainName')
 
   // required (and defaulted) inputs
-  const samTemplate = getOptional('samTemplate', r('../../cloudformation/template.yaml'))
-  const packageConfig = getOptional('packageConfig', r('../../cloudformation/packaged.yaml'))
+  const samTemplate = getOptional('samTemplate', p('cloudformation/template.yaml'))
+  const packageConfig = getOptional('packageConfig', p('cloudformation/packaged.yaml'))
   const customersTableName = getOptional('customersTableName')
   const preLoginAccountsTableName = getOptional('preLoginAccountsTableName')
   const feedbackTableName = getOptional('feedbackTableName')
@@ -41,14 +42,14 @@ module.exports = deployerConfig => {
 
   if (missing.length) return missing
 
-  execute('sam', [
+  await exec('sam', [
     'package',
     '--template-file', samTemplate,
     '--output-template-file', packageConfig,
     '--s3-bucket', buildAssetsBucket,
     ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
   ])
-  execute('sam', [
+  await exec('sam', [
     'deploy',
     '--template-file', packageConfig,
     '--stack-name', stackName,

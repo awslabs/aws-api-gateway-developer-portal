@@ -11,17 +11,17 @@ const os = require('os')
 const path = require('path')
 const util = require('util')
 
-const { execute } = require('./utils.js')
+const { execPipe, exec } = require('./internal/util.js')
 
 const fetchLambdaOutput = async ({ stackName, workDir }) => {
-  const resourceData = JSON.parse((await execute(
-    'aws cloudformation describe-stack-resource' +
-    ' --logical-resource-id DumpV3AccountDataFn' +
-    ` --stack-name ${stackName}`, true)).stdout)
+  const resourceData = JSON.parse((await execPipe('aws', [
+    'cloudformation', 'describe-stack-resource',
+    '--logical-resource-id', 'DumpV3AccountDataFn',
+    '--stack-name', stackName
+  ])))
   const lambdaId = resourceData.StackResourceDetail.PhysicalResourceId
   const outFile = `${workDir}${path.sep}lambdaOut`
-  await execute(
-    `aws lambda invoke --function-name ${lambdaId} ${outFile}`, true)
+  await exec('aws', ['lambda', 'invoke', '--function-name', lambdaId, outFile])
   const output = JSON.parse(fs.readFileSync(outFile))
   fs.unlinkSync(outFile)
   return output

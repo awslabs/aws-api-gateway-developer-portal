@@ -3,7 +3,6 @@
   "version": "3.0.2",
   "private": true,
   "dependencies": {
-    "aws-sdk": "^2.326.0",
     "chart.js": "^2.7.2",
     "front-matter": "^3.0.0",
     "jwt-decode": "^2.2.0",
@@ -22,15 +21,11 @@
     "yamljs": "^0.3.0"
   },
   "scripts": {
-    "get-dependencies": "npm install; npm run build",
     "start": "react-scripts start",
-    "build": "react-scripts build; rm -rf ../lambdas/static-asset-uploader/build; cp -r ./build ../lambdas/static-asset-uploader",
-    "deploy": "node ./scripts/deploy-stack.js",
-    "write-config": "node ./scripts/write-config.js",
-    "release": "npm run build && npm run deploy",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "cover": "react-scripts test --coverage",
-    "coverage": "cover",
+    "coverage": "npm run cover",
     "eject": "react-scripts eject"
   },
   "browserslist": [

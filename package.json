@@ -4,14 +4,11 @@
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
   "scripts": {
-    "get-dependencies": "npm install && npm run get-dev-portal-dependencies && npm run get-lambda-dependencies;",
-    "get-lambda-dependencies": "find lambdas/*/package.json -type f -exec sh -c 'cd $(dirname {}) && npm run get-dependencies' \\;",
-    "get-dev-portal-dependencies": "(cd dev-portal; npm run get-dependencies)",
-    "test": "node scripts/test.js",
-    "coverage": "node scripts/test.js --coverage=true",
-    "integ": "node scripts/test.js --integ=true",
-    "cover": "npm run coverage",
-    "cfn-lint": "cfn-lint cloudformation/template.yaml -c I"
+    "test": "node run test",
+    "coverage": "node run test --coverage=true",
+    "integ": "node run test --integ=true",
+    "cover": "node run coverage",
+    "cfn-lint": "node run cfn-lint"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -28,8 +25,10 @@
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^3.0.0",
     "eslint-plugin-standard": "^4.0.1",
+    "fs-extra": "^9.0.0",
     "jest": "^25.2.4",
     "memorystream": "^0.3.1",
+    "node-fetch": "^2.3.0",
     "request-promise": "^4.2.5",
     "xml-js": "^1.6.11"
   },

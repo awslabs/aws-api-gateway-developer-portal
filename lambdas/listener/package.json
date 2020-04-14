@@ -4,12 +4,7 @@
   "description": "developer portal component responsible for aws marketplace integration",
   "main": "index.js",
   "config": {},
-  "scripts": {
-    "get-dependencies": "npm install"
-  },
   "license": "Apache-2.0",
-  "dependencies": {
-    "aws-sdk": "^2.6.7"
-  },
+  "dependencies": {},
   "devDependencies": {}
 }
