@@ -827,7 +827,7 @@ Resources:
               - cognito-idp:AdminDeleteUser
               - cognito-idp:AdminGetUser
               - cognito-idp:AdminListGroupsForUser
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Join ['', ['arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/', !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]]]
 
   CognitoPreSignupTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -881,7 +881,7 @@ Resources:
           - Effect: Allow
             Action:
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Join ['', ['arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/', !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]]]
 
   CognitoPostAuthenticationTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -918,7 +918,7 @@ Resources:
           - Effect: Allow
             Action:
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Join ['', ['arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/', !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]]]
 
   CatalogUpdaterLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -1093,14 +1093,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt CognitoPreSignupTriggerFn.Arn
       Principal: cognito-idp.amazonaws.com
-      SourceArn: !Join
-        - ''
-        - - 'arn:aws:cognito-idp:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':userpool/'
-          - !Ref CognitoUserPool
+      SourceArn: !Join ['', ['arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/', !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]]]
 
   CognitoPostConfirmationTriggerFnExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1108,14 +1101,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt CognitoPostConfirmationTriggerFn.Arn
       Principal: cognito-idp.amazonaws.com
-      SourceArn: !Join
-        - ''
-        - - 'arn:aws:cognito-idp:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':userpool/'
-          - !Ref CognitoUserPool
+      SourceArn: !Join ['', ['arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/', !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]]]
 
   CognitoPostAuthenticationTriggerFnExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1184,7 +1170,7 @@ Resources:
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
-          UserPoolId: !Ref CognitoUserPool
+          UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
           AdminsGroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
           RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
           DevelopmentMode: !Ref DevelopmentMode
@@ -1643,7 +1629,7 @@ Resources:
       GroupName: !Sub '${AWS::StackName}-RegisteredGroup'
       Precedence: 1
       RoleArn: !GetAtt CognitoRegisteredRole.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1806,7 +1792,7 @@ Resources:
       Environment:
         Variables:
           CustomersTableName: !Ref DevPortalCustomersTableName
-          UserPoolId: !Ref CognitoUserPool
+          UserPoolId: !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]
           AdminsGroupName: !Ref CognitoAdminsGroup
       Layers:
         - !Ref LambdaCommonLayer
@@ -1847,7 +1833,7 @@ Resources:
             Action:
               - cognito-idp:ListUsers
               - cognito-idp:ListUsersInGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Join ['', ['arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/', !If [CreateNewUserPool, !Ref CognitoUserPool, !Ref CognitoUserPoolId]]]
 
 Outputs:
   WebsiteURL:
