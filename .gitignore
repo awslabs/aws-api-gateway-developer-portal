@@ -32,4 +32,5 @@ packaged*.yaml
 cognito.js
 .idea
 .vscode
+.eslintcache
 *.iml

@@ -1,6 +1,6 @@
 {
   "name": "aws-serverless-dev-portal",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
   "scripts": {
@@ -15,21 +15,23 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
-    "aws-sdk": "^2.406.0",
-    "fs-extra": "^7.0.1",
-    "jest": "^24.8.0",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "aws-sdk": "^2.649.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^3.0.0",
+    "eslint-plugin-standard": "^4.0.1",
+    "jest": "^25.2.4",
     "memorystream": "^0.3.1",
-    "prettier": "1.18.2",
-    "xml-js": "^1.6.8"
+    "request-promise": "^4.2.5",
+    "xml-js": "^1.6.11"
   },
-  "dependencies": {
-    "request-promise": "^4.2.4"
-  },
-  "prettier": {
-    "trailingComma": "all",
-    "tabWidth": 2,
-    "semi": false,
-    "singleQuote": true,
-    "jsxSingleQuote": true
-  }
+  "dependencies": {}
 }
