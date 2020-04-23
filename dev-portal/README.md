@@ -6,13 +6,13 @@ Note: this is for advanced users who want to modify the developer portal code it
 
 1. Make sure you have [Node](https://nodejs.org/en/download/) installed - the setup process assumes you have at least Node v11, but v12 is recommended.
 
-1. Make sure you have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) and the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) installed - these are required for `npm run deploy` to work.
+2. Make sure you have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) and the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) installed - these are required for `npm run deploy` to work.
 
-2. Navigate to the `/dev-portal/` folder, and run `npm install`
+3. Navigate to the `/dev-portal/` folder, and run `npm install`
 
-3. Create a private S3 bucket for putting zipped lambda functions and zipped templates in. Note the bucket name for the next step. (This can be the same one you used during in the initial deployment)
+4. Create a private S3 bucket for putting zipped lambda functions and zipped templates in. Note the bucket name for the next step. (This can be the same one you used during in the initial deployment)
 
-4. Create a `deployer.config.js` file inside `/dev-portal/` with the structure below. We recommend using the same values you used during the initial deployment. (You can put this elsewhere and pass `DEPLOYER_CONFIG=/path/to/deployer.config.js` as an environment variable, in case you would prefer to manage it outside the repo.)
+5. Create a `deployer.config.js` file inside `/dev-portal/` with the structure below. We recommend using the same values you used during the initial deployment. (You can put this elsewhere and pass `DEPLOYER_CONFIG=/path/to/deployer.config.js` as an environment variable, in case you would prefer to manage it outside the repo.)
 
   ```js
   // replace your-lambda-artifacts-bucket-name with the name of the bucket you created in step 1
@@ -106,13 +106,13 @@ Note: this is for advanced users who want to modify the developer portal code it
   }
   ```
 
-5. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use.
+6. Run `npm run release`. This will build the static assets, deploy them, and generate the `dev-portal/public/config.js` file needed for local development. Take note of the bucket names you use.
 
-6. Run `npm run start` to start the local development server at `localhost:3000`.
+7. Run `npm run start` to start the local development server at `localhost:3000`.
 
-7. If you created the stack for the first time, you'll need to register a new admin account. In the dev portal, register it as an ordinary user, then go into the Cognito user pool generated for it (you can find it by going to the deployed stack in CloudFormation and searching for "CognitoUserPool" in the "Logical ID" column), search for the account in question (by email is easiest), open it, and add it to the admin group (look for `${STACK_NAME}AdminsGroup`).
+8. If you created the stack for the first time, you'll need to register a new admin account. In the dev portal, register it as an ordinary user, then go into the Cognito user pool generated for it (you can find it by going to the deployed stack in CloudFormation and searching for "CognitoUserPool" in the "Logical ID" column), search for the account in question (by email is easiest), open it, and add it to the admin group (look for `${STACK_NAME}AdminsGroup`).
 
-7. Make changes locally, test them at `localhost:3000`, and, when satisfied, run `npm run release` to build and upload the changes to your  cloud dev portal.
+9. Make changes locally, test them at `localhost:3000`, and, when satisfied, run `npm run release` to build and upload the changes to your  cloud dev portal.
 
 ### npm Scripts
 
