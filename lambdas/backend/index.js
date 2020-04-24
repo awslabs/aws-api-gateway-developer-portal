@@ -52,20 +52,13 @@ app.put('/admin/catalog/:id/sdkGeneration', wrapError(require('./routes/admin/ca
 app.delete('/admin/catalog/:id/sdkGeneration', wrapError(require('./routes/admin/catalog/sdkGeneration').delete))
 
 // Account management APIs
-// app.get('/accounts', handlers.getAccounts)
-app.get('/accounts', wrapError(require('./routes/accounts').get))
-// app.post('/accounts', handlers.createInvite)
-app.post('/accounts', wrapError(require('./routes/accounts').post))
-// app.put('/accounts/resendInvite', handlers.resendInvite)
-app.put('/accounts/resendInvite', wrapError(require('./routes/accounts/resendInvite').put))
-// app.put('/accounts/:userId/approveRequest', handlers.approveRequest)
-app.put('/accounts/:userId/approveRequest', wrapError(require('./routes/accounts/approveRequest').put))
-// app.put('/accounts/:userId/denyRequest', handlers.denyRequest)
-app.put('/accounts/:userId/denyRequest', wrapError(require('./routes/accounts/denyRequest').put))
-// app.put('/accounts/:userId/promoteToAdmin', handlers.promoteAccount)
-app.put('/accounts/:userId/promoteToAdmin', wrapError(require('./routes/accounts/promoteToAdmin').put))
-// app.delete('/accounts/:userId', handlers.deleteAccount)
-app.delete('/accounts/:userId', wrapError(require('./routes/accounts').delete))
+app.get('/admin/accounts', wrapError(require('./routes/admin/accounts').get))
+app.post('/admin/accounts', wrapError(require('./routes/admin/accounts').post))
+app.put('/admin/accounts/resendInvite', wrapError(require('./routes/accounts/resendInvite').put))
+app.put('/admin/accounts/:userId/approveRequest', wrapError(require('./routes/accounts/approveRequest').put))
+app.put('/admin/accounts/:userId/denyRequest', wrapError(require('./routes/accounts/denyRequest').put))
+app.put('/admin/accounts/:userId/promoteToAdmin', wrapError(require('./routes/accounts/promoteToAdmin').put))
+app.delete('/admin/accounts/:userId', wrapError(require('./routes/admin/accounts').delete))
 
 const server = awsServerlessExpress.createServer(app)
 

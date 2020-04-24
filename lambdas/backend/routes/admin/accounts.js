@@ -1,15 +1,16 @@
 'use strict'
 
 const customersController = require('dev-portal-common/customers-controller')
-const util = require('../util')
+const util = require('../../util')
 
 exports.get = async (req, res) => {
-  console.log('GET /accounts')
+  console.log('GET /admin/accounts')
 
   let accounts
 
   switch (req.query.filter) {
-    case 'pendingRequest': accounts = await customersController.listPendingRequestAccounts(); break
+    // Not implemented yet
+    // case 'pendingRequest': accounts = await customersController.listPendingRequestAccounts(); break
     case 'pendingInvite': accounts = await customersController.listPendingInviteAccounts(); break
     case 'admin': accounts = await customersController.listAdminAccounts(); break
     case 'registered': accounts = await customersController.listRegisteredAccounts(); break
@@ -25,7 +26,7 @@ exports.get = async (req, res) => {
 
 exports.post = async (req, res) => {
   const inviterUserId = util.getCognitoIdentityId(req)
-  console.log(`POST /accounts for Cognito ID: ${inviterUserId}`)
+  console.log(`POST /admin/accounts for Cognito ID: ${inviterUserId}`)
 
   console.log(JSON.stringify(req.apiGateway.event, null, 2))
 
@@ -44,7 +45,7 @@ exports.post = async (req, res) => {
 }
 
 exports.delete = async (req, res) => {
-  console.log('DELETE /accounts/:userId')
+  console.log('DELETE /admin/accounts/:userId')
 
   const userId = req.params.userId
   if (typeof userId !== 'string' || userId === '') {
