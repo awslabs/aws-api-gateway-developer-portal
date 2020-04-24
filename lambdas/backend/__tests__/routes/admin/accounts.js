@@ -1,10 +1,10 @@
-const util = require('../../util')
+const util = require('../../../util')
 const customersController = require('dev-portal-common/customers-controller')
-const { generateRequestContext, generateResponseContext } = require('../../../setup-jest')
+const { generateRequestContext, generateResponseContext } = require('../../../../setup-jest')
 
-const accounts = require('../../routes/accounts')
+const accounts = require('../../../routes/admin/accounts')
 
-describe('GET /accounts', () => {
+describe('GET /admin/accounts', () => {
   const originalListPendingRequestAccounts = customersController.listPendingRequestAccounts
   const originalListPendingInviteAccounts = customersController.listPendingInviteAccounts
   const originalListAdminAccounts = customersController.listAdminAccounts
@@ -162,7 +162,7 @@ describe('GET /accounts', () => {
   })
 })
 
-describe('POST /accounts', () => {
+describe('POST /admin/accounts', () => {
   const originalCreateAccountInvite = customersController.createAccountInvite
 
   afterEach(() => {
@@ -234,7 +234,7 @@ describe('POST /accounts', () => {
   })
 })
 
-describe('DELETE /accounts/:userId', () => {
+describe('DELETE /admin/accounts/:userId', () => {
   const originalDeleteAccountByUserId = customersController.deleteAccountByUserId
 
   afterEach(() => {
