@@ -28,7 +28,7 @@ Note: this is for advanced users who want to modify the developer portal code it
 
 7. If you created the stack for the first time (or changed the `n` from the development `deployer.config.js` example), you'll need to register a new admin account. In the dev portal, register it as an ordinary user, then go into the Cognito user pool generated for it (you can find it by going to the deployed stack in CloudFormation and searching for "CognitoUserPool" in the "Logical ID" column), search for the account in question (by email is easiest), open it, and add it to the admin group (look for `${STACK_NAME}AdminsGroup`).
 
-8. Make changes locally, test them at `http://localhost:3000`, and, when satisfied, run `npm run release` to build and upload the changes to your cloud dev portal.
+8. Make changes locally, test them at `http://localhost:3000`, and, when satisfied, run `node run release` to build and upload the changes to your cloud dev portal.
 
 ## npm Scripts
 
@@ -60,4 +60,4 @@ Gets the output from the CFN stack, writes a local version of the config.js file
 
 ## Notes on static assets
 
-The static assets are only re-uploaded on deployment if the previous deployment and the current deployment were provided different `StaticAssetRebuildToken` parameters. The `npm run deploy` script automatically creates a unique `StaticAssetRebuildToken` for you based on the current date.
+The static assets are only re-uploaded on deployment if the previous deployment and the current deployment were provided different `StaticAssetRebuildToken` parameters. The `node run deploy` script automatically creates a unique `StaticAssetRebuildToken` for you based on the current date.
