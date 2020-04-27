@@ -1,6 +1,9 @@
 'use strict'
 
-const { p, run, exec, green } = require('./internal/util.js')
+// Note: this *MUST NOT* globally depend on any module installed in `node_modules`, as it could be
+// loaded before they're installed.
+
+const { p, run, exec, green, blue, packageList } = require('./internal/util.js')
 const deployTemplate = require('./internal/deploy-template.js')
 const writeConfig = require('./internal/write-config.js')
 
@@ -25,6 +28,23 @@ function printReady () {
 require('./internal/execute-tasks.js')({
   async install () {
     await exec('node', [p('scripts/npm'), 'install'])
+  },
+
+  async reinstall () {
+    // Note: this might not necessarily be installed yet, so it can't be loaded globally.
+    const fse = require('fs-extra')
+
+    for (const { target, resolved } of packageList) {
+      console.log(green('Deleting ') + blue(target))
+      await fse.remove(resolved)
+    }
+
+    console.log(green('Preparing dependencies...'))
+    // We have the package and distribution bundles here in source control, and these should only
+    // be updated with that dependency. (Removing them causes build issues.)
+    await run('git', ['checkout', '--', 'dev-portal/node_modules'])
+
+    await this.install()
   },
 
   async lint () {

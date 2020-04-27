@@ -1,18 +1,12 @@
 'use strict'
 
-const { p, run } = require('./internal/util')
+// Note: this *MUST NOT* globally depend on any module installed in `node_modules`, as it could be
+// loaded before they're installed.
 
-function visit (folder) {
-  return run('npm', process.argv.slice(2), {
-    action: 'Execution',
-    target: `/${folder}`,
-    cwd: p(folder)
-  })
-}
+const { run, packageList } = require('./internal/util')
 
-visit('')
-  .then(() => visit('dev-portal'))
-  .then(() => visit('lambdas/backend'))
-  .then(() => visit('lambdas/catalog-updater'))
-  .then(() => visit('lambdas/listener'))
-  .then(() => visit('lambdas/static-asset-uploader'))
+;(async () => {
+  for (const { target, resolved } of packageList) {
+    await run('npm', process.argv.slice(2), { action: 'Execution', target, cwd: resolved })
+  }
+})()

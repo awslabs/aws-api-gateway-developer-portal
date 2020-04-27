@@ -1,5 +1,8 @@
 'use strict'
 
+// Note: this *MUST NOT* globally depend on any module installed in `node_modules`, as it could be
+// loaded before they're installed.
+
 const path = require('path')
 const cp = require('child_process')
 const { inspect, promisify } = require('util')
@@ -54,6 +57,18 @@ async function run (name, args, { action, target, ...opts }) {
 
 const p = relative => path.join(root, relative)
 
+const packageList = [
+  '',
+  'dev-portal',
+  'lambdas/backend',
+  'lambdas/catalog-updater',
+  'lambdas/listener',
+  'lambdas/static-asset-uploader'
+].map(rel => ({
+  target: `/${rel}`,
+  resolved: p(rel)
+}))
+
 module.exports = {
   red,
   blue,
@@ -62,5 +77,6 @@ module.exports = {
   execPipe,
   exec,
   run,
-  p
+  p,
+  packageList
 }

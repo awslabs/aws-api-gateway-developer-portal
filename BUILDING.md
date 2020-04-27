@@ -34,6 +34,10 @@ Note: this is for advanced users who want to modify the developer portal code it
 
 You can run each of these via `node run ${TASK}`, and you can run multiple together like `node run build deploy`. You can pass options via `node run ${TASK} --key=value` as applicable.
 
+### `node run reinstall`
+
+Removes and reinstalls the dependencies everywhere. It does the obvious `rm -rf node_modules && npm install` in each package, but before reinstalling, it also handles the edge case of within `dev-portal`, one of the dependencies is partially under source control.
+
 ### `node run build`
 
 Builds a production-quality build and copies it to the lambda uploader.
