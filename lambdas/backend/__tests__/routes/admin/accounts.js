@@ -17,41 +17,41 @@ describe('GET /admin/accounts', () => {
     customersController.listRegisteredAccounts = originalListRegisteredAccounts
   })
 
-  test('?filter=pendingRequest success', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-    req.query = { filter: 'pendingRequest' }
+  // test('?filter=pendingRequest success', async () => {
+  //   const req = generateRequestContext()
+  //   const res = generateResponseContext()
+  //   req.query = { filter: 'pendingRequest' }
 
-    customersController.listPendingRequestAccounts = jest.fn(async () => 'result')
+  //   customersController.listPendingRequestAccounts = jest.fn(async () => 'result')
 
-    await accounts.get(req, res)
+  //   await accounts.get(req, res)
 
-    expect(customersController.listPendingRequestAccounts).toBeCalledTimes(1)
-    expect(customersController.listPendingRequestAccounts).toBeCalledWith()
+  //   expect(customersController.listPendingRequestAccounts).toBeCalledTimes(1)
+  //   expect(customersController.listPendingRequestAccounts).toBeCalledWith()
 
-    expect(res.status).toHaveBeenCalledTimes(1)
-    expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.status.mock.results[0].value.json).toHaveBeenCalledTimes(1)
-    expect(res.status.mock.results[0].value.json).toHaveBeenCalledWith(
-      expect.objectContaining({ accounts: 'result' })
-    )
-  })
+  //   expect(res.status).toHaveBeenCalledTimes(1)
+  //   expect(res.status).toHaveBeenCalledWith(200)
+  //   expect(res.status.mock.results[0].value.json).toHaveBeenCalledTimes(1)
+  //   expect(res.status.mock.results[0].value.json).toHaveBeenCalledWith(
+  //     expect.objectContaining({ accounts: 'result' })
+  //   )
+  // })
 
-  test('?filter=pendingRequest fail', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-    req.query = { filter: 'pendingRequest' }
+  // test('?filter=pendingRequest fail', async () => {
+  //   const req = generateRequestContext()
+  //   const res = generateResponseContext()
+  //   req.query = { filter: 'pendingRequest' }
 
-    // eslint-disable-next-line prefer-promise-reject-errors
-    customersController.listPendingRequestAccounts = jest.fn(() => Promise.reject('result'))
+  //   // eslint-disable-next-line prefer-promise-reject-errors
+  //   customersController.listPendingRequestAccounts = jest.fn(() => Promise.reject('result'))
 
-    await expect(accounts.get(req, res)).rejects.toBe('result')
+  //   await expect(accounts.get(req, res)).rejects.toBe('result')
 
-    expect(customersController.listPendingRequestAccounts).toBeCalledTimes(1)
-    expect(customersController.listPendingRequestAccounts).toBeCalledWith()
+  //   expect(customersController.listPendingRequestAccounts).toBeCalledTimes(1)
+  //   expect(customersController.listPendingRequestAccounts).toBeCalledWith()
 
-    expect(res.status).not.toHaveBeenCalled()
-  })
+  //   expect(res.status).not.toHaveBeenCalled()
+  // })
 
   test('?filter=pendingInvite success', async () => {
     const req = generateRequestContext()
