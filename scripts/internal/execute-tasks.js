@@ -1,6 +1,6 @@
 'use strict'
 
-const { blue, red, green } = require('./util')
+const { red, blue, green } = require('chalk')
 
 module.exports = async tasks => {
   const opts = Object.create(null)
@@ -17,10 +17,10 @@ module.exports = async tasks => {
       })
       promise.then(
         () => {
-          console.error(green('Task succeeded: ') + blue(name))
+          console.error(green('Task completed: ') + blue(name))
         },
         err => {
-          console.error(red(`Task failed: ${name}`))
+          console.error(red(`Task errored: ${name}`))
           console.error(red(err.message))
           process.exitCode = 1
         }
@@ -48,9 +48,10 @@ module.exports = async tasks => {
     const names = args.filter(arg => !arg.startsWith('--') && arg[0] !== '_')
 
     for (const arg of args) {
-      if (arg.startsWith('--')) {
+      // Ignore color-related flags in options
+      if (/^--(?!color|no-color)/.test(arg)) {
         const [key, value] = arg.slice(2).split('=')
-        opts[key] = value
+        if (value != null) opts[key] = value
       }
     }
 
