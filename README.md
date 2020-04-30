@@ -131,6 +131,9 @@ You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See [
 
 Deleting the developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table before deleting the cloudformation stack. This table lists the provisioned api keys that will need to be cleaned up afterwards.
 
+<!--
+**FIXME**: These instructions are now out of date. Update the scripts and update this section of the README.
+
 ## Marketplace SaaS Setup Instructions
 
 **NOTE**: These instructions are now out of date!
@@ -171,3 +174,5 @@ At this point the API Key/buyer should not yet be authorized to use the product 
 At this point, the authenticated user (Cognito identity) is authorized to access your SaaS product. The authenticated user has an associated API Key in API Gateway and an associated marketplace customer ID tracked in DynamoDB. When the buyer makes requests to your product, their API Key will be authorized by API Gateway and they will be billed by AWS Marketplace according to your product configuration.
 
 The unsubscription process is directly analogous to the subscription process - on 'unsubscribe-complete', the listener function will remove the API Key from the Usage Plan.
+
+-->

@@ -1,3 +1,5 @@
+'use strict'
+
 const { spawn, spawnSync } = require('child_process')
 const path = require('path')
 const convert = require('xml-js')

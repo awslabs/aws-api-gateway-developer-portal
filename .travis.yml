@@ -1,18 +1,31 @@
 language: node_js
 node_js:
-  # we can't use latest because 11.11 breaks jest's env variable mock
-  - "11.10.1"
+  - "12"
 
-cache: npm
+cache:
+  directories:
+    - $HOME/.npm
+    - $HOME/.local
 
-before_install:
-  # install clis in parallel
-#  - pip install --user awscli
-#    pip install --user aws-sam-cli
-#    https://github.com/travis-ci/travis-ci/issues/3139
+# Currently unused
+# before_install:
+#   - pip install --user awscli
+#   - pip install --user aws-sam-cli
+#   - export PATH=$PATH:$HOME/.local/bin
+
+install:
+  # Do *not* use the default install command. Our system is a bit more complicated than that.
+
+  # Install dev portal dependencies
+  # Can't use `npm ci` because it fails to download our forked Swagger UI correctly.
   - cd dev-portal
-  # install everything in dev portal
   - npm install
   - cd ..
-  # lambda function test dependencies are currently installed at the top-level
-  - npm install --only=dev
+  # Restore what we have checked into Git
+  - node run reset-assets
+  # Install global dependencies
+  - npm install
+
+# Skip the npm wrapper
+script:
+  - node run test
