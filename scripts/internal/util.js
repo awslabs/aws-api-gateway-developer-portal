@@ -6,13 +6,9 @@
 const path = require('path')
 const cp = require('child_process')
 const { inspect, promisify } = require('util')
+const { red, blue, green } = require('chalk')
 
 const root = path.resolve(__dirname, '../..')
-
-const red = (text) => { return '\x1b[31m' + text + '\x1b[0m' }
-const blue = (text) => { return '\x1b[34m' + text + '\x1b[0m' }
-const green = (text) => { return '\x1b[32m' + text + '\x1b[0m' }
-const yellow = (text) => { return '\x1b[33m' + text + '\x1b[0m' }
 
 async function execPipe (name, args = []) {
   console.error(blue('[ run cmd ]  ' + [name, ...args].join(' ')))
@@ -70,10 +66,6 @@ const packageList = [
 }))
 
 module.exports = {
-  red,
-  blue,
-  green,
-  yellow,
   execPipe,
   exec,
   run,

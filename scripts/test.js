@@ -5,8 +5,7 @@ const path = require('path')
 const convert = require('xml-js')
 const fs = require('fs')
 
-// output with color, even in CI mode & through pipes
-process.env.FORCE_COLOR = true
+const bin = (root, name) => path.resolve(__dirname, '..', root, 'node_modules/.bin', name)
 
 function formatLine (line) {
   // add the leftmost pipe (jest is missing it) and also pad with a space or hyphen, as appropriate
@@ -72,16 +71,16 @@ function augmentChildProcess (childProcess, withCoverage) {
 }
 
 function testLambdas (withCoverage) {
-  const params = { stdio: withCoverage ? undefined : 'inherit', shell: true, cwd: path.join(process.cwd(), 'lambdas') }
-  const unitString = 'CI=true jest'
-  const coverageString = 'jest --coverage'
+  const params = { stdio: withCoverage ? undefined : 'inherit', shell: true, cwd: path.resolve(__dirname, '../lambdas') }
+  const unitString = 'CI=true ' + bin('', 'jest')
+  const coverageString = bin('', 'jest') + ' --coverage'
   return augmentChildProcess(spawn(withCoverage ? coverageString : unitString, params), withCoverage)
 }
 
 function testDevPortal (withCoverage) {
-  const params = { stdio: withCoverage ? undefined : 'inherit', shell: true, cwd: path.join(process.cwd(), 'dev-portal') }
-  const unitString = 'CI=true ./node_modules/.bin/react-scripts test'
-  const coverageString = './node_modules/.bin/react-scripts test --coverage'
+  const params = { stdio: withCoverage ? undefined : 'inherit', shell: true, cwd: path.resolve(__dirname, '../dev-portal') }
+  const unitString = 'CI=true ' + bin('dev-portal', 'react-scripts') + ' test'
+  const coverageString = bin('dev-portal', 'react-scripts') + ' test --coverage'
   return augmentChildProcess(spawn(withCoverage ? coverageString : unitString, params), withCoverage)
 }
 
@@ -144,7 +143,7 @@ async function runTests (withCoverage) {
 }
 
 function runIntegTests () {
-  const params = { stdio: 'inherit', shell: true, cwd: process.cwd() }
+  const params = { stdio: 'inherit', shell: true, cwd: path.resolve(__dirname, '..') }
 
   // run the tests with 4 worker threads so the 40 minute-long test runs run in parallel
   // increase this as tests are added, if needed
@@ -152,7 +151,7 @@ function runIntegTests () {
     spawnSync(`sam package --region ${region} --template-file ./cloudformation/template.yaml --output-template-file ./cloudformation/packaged-${region}.yaml --s3-bucket dev-portal-integ-${region}`, params)
   }
 
-  return spawnSync('jest -w 4 cfn-integration-test', params)
+  return spawnSync(bin('', 'jest') + ' -w 4 cfn-integration-test', params)
 }
 
 // maybe bring in an args parsing library later
