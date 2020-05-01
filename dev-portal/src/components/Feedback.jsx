@@ -62,7 +62,7 @@ class Feedback extends React.PureComponent {
                 borderTopLeftRadius: '0',
                 borderTopRightRadius: '0'
               }} onClick={this.handleOpenModal}
-            ><i className='envelope outline icon' />Got an opinon?
+            ><i className='envelope outline icon' />Got an opinion?
             </Button>
           </div>
         }
