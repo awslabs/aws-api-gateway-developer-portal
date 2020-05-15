@@ -1,6 +1,6 @@
 'use strict'
 
-const { red, blue, green } = require('chalk')
+const { red, blue, green } = require('./color').stderr
 
 module.exports = async tasks => {
   const opts = Object.create(null)

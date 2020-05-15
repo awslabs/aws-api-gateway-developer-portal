@@ -4,7 +4,7 @@
 // loaded before they're installed.
 
 const { p, run, exec, packageList } = require('./internal/util.js')
-const { blue, green, supportsColor } = require('chalk')
+const { blue, green } = require('./internal/color').stdout
 const deployTemplate = require('./internal/deploy-template.js')
 const writeConfig = require('./internal/write-config.js')
 
@@ -57,7 +57,7 @@ require('./internal/execute-tasks.js')({
     await exec('node', [p('scripts/test'), ...Object.entries(opts).map(p => '--' + p.join('='))], {
       // Output with color, even through pipes.
       // Do proxy existing color support, though.
-      env: { ...process.env, FORCE_COLOR: supportsColor ? supportsColor.level : '1' }
+      env: { ...process.env, FORCE_COLOR: true }
     })
   },
 

@@ -6,7 +6,7 @@
 const path = require('path')
 const cp = require('child_process')
 const { inspect, promisify } = require('util')
-const { red, blue, green } = require('chalk')
+const { red, blue, green } = require('./color').stderr
 
 const root = path.resolve(__dirname, '../..')
 
