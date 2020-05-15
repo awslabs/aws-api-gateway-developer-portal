@@ -6,12 +6,26 @@ const util = require('../../../util')
 
 const inspect = o => JSON.stringify(o, null, 2)
 
+// Let's try to minimize how many calls we make here.
+const MAX_REST_API_LIMIT = 500
+
 exports.get = async (req, res) => {
   console.log(`GET /admin/catalog/visibility for Cognito ID: ${util.getCognitoIdentityId(req)}`)
   try {
     const visibility = { apiGateway: [] }
     const catalogObject = await util.catalog()
-    const apis = (await util.apigateway.getRestApis().promise()).items
+    let restApiResult = await util.apigateway.getRestApis({
+      limit: MAX_REST_API_LIMIT
+    }).promise()
+    const apis = restApiResult.items
+
+    while (restApiResult.position != null) {
+      restApiResult = await util.apigateway.getRestApis({
+        limit: MAX_REST_API_LIMIT,
+        position: restApiResult.position
+      }).promise()
+      for (const api of restApiResult.apis) apis.push(api)
+    }
 
     console.log(`apis: ${inspect(apis)}`)
 
