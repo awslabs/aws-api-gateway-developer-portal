@@ -1173,6 +1173,7 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
+          NODE_ENV: production
           WEBSITE_BUCKET_NAME: !Ref DevPortalSiteS3BucketName
           StaticBucketName: !Ref ArtifactsS3BucketName
           CustomersTableName: !Ref DevPortalCustomersTableName
@@ -1222,7 +1223,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt CognitoPreSignupTriggerExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Timeout: 3
       Environment:
         Variables:
@@ -1238,7 +1239,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt CognitoPostConfirmationTriggerExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Timeout: 3
       Environment:
         Variables:
@@ -1256,7 +1257,7 @@ Resources:
       Handler: index.handler
       MemorySize: 128
       Role: !GetAtt CognitoPostAuthenticationTriggerExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Timeout: 3
       Environment:
         Variables:
