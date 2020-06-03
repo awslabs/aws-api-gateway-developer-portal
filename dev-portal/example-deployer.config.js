@@ -4,6 +4,9 @@
 //    org name, or some other unique identifier.
 //
 // The resulting bucket names must be globally unique.
+// 
+// Note: these configuration options do not always correlate to SAM template parameters, and many
+// that do feature different casing and/or different names entirely.
 module.exports = {
   // Required, bucket must be pre-made
   buildAssetsBucket: 'YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME',
