@@ -21,6 +21,7 @@ Note: this is for advanced users who want to modify the developer portal code it
     - If you're just building this to release it locally and a fresh environment isn't needed, you can just copy `/dev-portal/example-deployer.config.js` and fill it in locally.
     - If you need to develop in a fresh environment (say, for contributing back to the developer portal or for some more advanced customization), you can customize this further, and you may find `/dev-portal/example-dev-deployer.config.js` as an easier starting point. The fields are the same, just you can switch between deployments far more easily.
     - You can put this elsewhere and pass `DEPLOYER_CONFIG=/path/to/deployer.config.js` as an environment variable each time you run a task that uses it, in case you would prefer to manage it outside the repo.
+    - Please refer to [the example non-development config file](./dev-portal/example-deployer.config.js) for explanation of all the various options.
 
 5. Run `node run install release`. This will install everything (the `install`), build the static assets for the first time (the `build` part of `release`), and deploy them (the `deploy` part of `release`).
 
