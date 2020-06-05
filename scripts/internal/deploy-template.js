@@ -2,45 +2,35 @@
 // SPDX-License-Identifier: Apache-2.0
 'use strict'
 
-const { exec, p } = require('./util.js')
-const deployerConfig = require('./get-deployer-config.js')
+const { exec } = require('./util.js')
 
 module.exports = async () => {
-  const missing = []
+  const deployerConfig = require('./get-deployer-config.js')
+  if (deployerConfig.error) throw deployerConfig.error
 
-  function getRequired (key) {
-    const value = deployerConfig[key]
-    if (value) return value
-    missing.push(key)
-  }
-
-  function getOptional (key, orElse) {
-    return deployerConfig[key] || orElse
-  }
-
-  // required inputs
-  const stackName = getRequired('stackName')
-  const buildAssetsBucket = getRequired('buildAssetsBucket')
-  const siteAssetsBucket = getRequired('siteAssetsBucket')
-  const apiAssetsBucket = getRequired('apiAssetsBucket')
-  const cognitoDomainName = getRequired('cognitoDomainName')
-
-  // required (and defaulted) inputs
-  const samTemplate = getOptional('samTemplate', p('cloudformation/template.yaml'))
-  const packageConfig = getOptional('packageConfig', p('cloudformation/packaged.yaml'))
-  const customersTableName = getOptional('customersTableName')
-  const preLoginAccountsTableName = getOptional('preLoginAccountsTableName')
-  const feedbackTableName = getOptional('feedbackTableName')
-  const cognitoIdentityPoolName = getOptional('cognitoIdentityPoolName')
-
-  // optional inputs
-  const staticAssetRebuildMode = getOptional('staticAssetRebuildMode', '')
-  const developmentMode = getOptional('developmentMode')
-
-  // AWS SAM CLI configuration
-  const awsSamCliProfile = getOptional('awsSamCliProfile')
-
-  if (missing.length) return missing
+  const {
+    stackName,
+    buildAssetsBucket,
+    siteAssetsBucket,
+    apiAssetsBucket,
+    cognitoDomainName,
+    samTemplate,
+    packageConfig,
+    customersTableName,
+    preLoginAccountsTableName,
+    feedbackTableName,
+    cognitoIdentityPoolName,
+    marketplaceSubscriptionTopic,
+    accountRegistrationMode,
+    feedbackEmail,
+    cognitoDomainAcmCertArn,
+    customDomainName,
+    customDomainNameAcmCertArn,
+    useRoute53Nameservers,
+    staticAssetRebuildMode,
+    developmentMode,
+    awsSamCliProfile
+  } = deployerConfig
 
   await exec('sam', [
     'package',
@@ -64,7 +54,14 @@ module.exports = async () => {
     ...(feedbackTableName ? [`DevPortalFeedbackTableName=${feedbackTableName}`] : []),
     ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName=${cognitoIdentityPoolName}`] : []),
     ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
-    `CognitoDomainNameOrPrefix=${cognitoDomainName}`,
+    ...(cognitoDomainName ? [`CognitoDomainNameOrPrefix=${cognitoDomainName}`] : []),
+    ...(marketplaceSubscriptionTopic ? [`MarketplaceSubscriptionTopicProductCode=${marketplaceSubscriptionTopic}`] : []),
+    ...(accountRegistrationMode ? [`AccountRegistrationMode=${accountRegistrationMode}`] : []),
+    ...(feedbackEmail ? [`DevPortalAdminEmail=${feedbackEmail}`] : []),
+    ...(cognitoDomainAcmCertArn ? [`CognitoDomainAcmCertArn=${cognitoDomainAcmCertArn}`] : []),
+    ...(customDomainName ? [`CustomDomainName=${customDomainName}`] : []),
+    ...(customDomainNameAcmCertArn ? [`CustomDomainNameAcmCertArn=${customDomainNameAcmCertArn}`] : []),
+    ...(useRoute53Nameservers ? [`UseRoute53Nameservers=${useRoute53Nameservers}`] : []),
     '--s3-bucket', buildAssetsBucket,
     ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
   ])

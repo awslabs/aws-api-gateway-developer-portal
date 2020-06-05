@@ -4,12 +4,14 @@
 'use strict'
 
 const { execPipe, p } = require('./util.js')
-const deployerConfig = require('./get-deployer-config.js')
 
 module.exports = async () => {
   // Note: these might not necessarily be installed, so they can't be loaded globally.
   const fetch = require('node-fetch')
   const fse = require('fs-extra')
+
+  const deployerConfig = require('./get-deployer-config.js')
+  if (deployerConfig.error) throw deployerConfig.error
 
   const result = await execPipe('aws', [
     'cloudformation', 'describe-stacks',

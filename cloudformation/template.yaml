@@ -33,6 +33,8 @@ Metadata:
           - CustomDomainName
           - CustomDomainNameAcmCertArn
           - UseRoute53Nameservers
+          - CognitoDomainNameOrPrefix
+          - CognitoDomainAcmCertArn
       -
         Label:
           default: "Dev Portal Customer Feedback Configuration"
@@ -143,7 +145,8 @@ Parameters:
   
   AccountRegistrationMode:
     Type: String
-    Description: Methods allowed for account registration. In 'open' mode, any user may register for an account. In 'request' mode, any user may request an account, but an Admin must approve the request in order for the account to perform any privileged actions (like subscribing to an API). In 'invite' mode, users cannot register or request an account; instead, an Admin must send an invite for the user to accept. See the documentation for details.
+    # Description: Methods allowed for account registration. In 'open' mode, any user may register for an account. In 'request' mode, any user may request an account, but an Admin must approve the request in order for the account to perform any privileged actions (like subscribing to an API). In 'invite' mode, users cannot register or request an account; instead, an Admin must send an invite for the user to accept.
+    Description: Methods allowed for account registration. In 'open' mode, any user may register for an account. In 'invite' mode, users cannot register or request an account; instead, an Admin must send an invite for the user to accept.
     Default: 'open'
     AllowedValues:
       - 'open'

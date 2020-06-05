@@ -1,41 +1,34 @@
-// See `example-deployer.config.js` in this directory for more detailed documentation of each of
-// the relevant options.
+// See `example-deployer.config.js` in this directory for setup instructions and the "Deployer
+// configuration" section of `BUILDING.md` for documentation on each of the parameters.
 // 
-// It's recommended you track your live deployments here. You can change this
-// any time you want to do a fresh deployment.
+// It's recommended you track your live deployments here. You can change this any time you want to
+// do a fresh deployment.
 // Live: 0
+"use strict"
+
 const n = 0
 
 module.exports = {
-  // Required, bucket must be pre-made
   buildAssetsBucket: 'YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME',
 
-  // Required, created by stack
-  stackName: 'dev-portal',
-  siteAssetsBucket: 'CUSTOM_PREFIX-dev-portal-static-assets',
-  apiAssetsBucket: 'CUSTOM_PREFIX-dev-portal-artifacts',
-
-  // Required, turns on cognito hosted sign in/sign up UI
-  cognitoDomainName: `YOUR_NAMESPACE-auth${n}`,
-
-  // Optional, created by stack
+  // All of these are parametric over `n` so that if you need to have multiple stacks deployed
+  // during development or if you need to tear down a stack and don't want to wait for it to
+  // completely be torn down before deploying the replacement stack, you can just do it without
+  // much work.
+  stackName: `dev-portal${n}`,
+  siteAssetsBucket: `CUSTOM_PREFIX-dev-portal-static-assets${n}`,
+  apiAssetsBucket: `CUSTOM_PREFIX-dev-portal-artifacts${n}`,
+  cognitoDomainName: `CUSTOM_PREFIX-auth${n}`,
   customersTableName: `DevPortalCustomers${n}`,
   preLoginAccountsTableName: `DevPortalPreLoginAccounts${n}`,
   feedbackTableName: `DevPortalFeedback${n}`,
 
-  // optional, created by stack
-  // It's recommended you set this, though, for easier identification later.
+  // Optional, but highly recommended for easier identification.
   cognitoIdentityPoolName: `DevPortalIdentityPool${n}`,
 
-  // Always nuke and rebuild
+  // Optional, but highly recommended so you can keep the site in sync with what's in the repo.
   staticAssetRebuildMode: 'overwrite-content',
 
-  // AWS SAM CLI profile option: optional specific profile from your AWS credential file. Not used
-  // by default.
-  // awsSamCliProfile: 'my-profile',
-
-  // Set this to `true` if you want to enable development mode. It's `false` by default, and unless
-  // you're actively developing on the developer portal itself locally, you should generally leave
-  // it unset as it disables most protections, including CORS.
-  // developmentMode: false,
+  // Set development mode for local use.
+  developmentMode: true,
 }
