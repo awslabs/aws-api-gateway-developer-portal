@@ -99,10 +99,10 @@ Parameters:
     Type: String
     Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. This should be regionally unique.
 
-  # CognitoDomainAcmCertArn:
-  #   Type: String
-  #   Description: Doesn't yet do anything. Oh well.
-  #   Default: ''
+  CognitoDomainAcmCertArn:
+    Type: String
+    Description: The ARN for the ACM cert associated with the custom domain name used for your Cognito Hosted UI.
+    Default: ''
 
   CustomDomainName:
     Type: String
@@ -1483,6 +1483,7 @@ Resources:
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
       UserPoolId: !Ref CognitoUserPool
       Domain: !Ref CognitoDomainNameOrPrefix
+      CustomDomainConfig: !Ref CognitoDomainAcmCertArn
   
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
