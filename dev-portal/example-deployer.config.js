@@ -1,48 +1,30 @@
-// 1. Replace your-lambda-artifacts-bucket-name with the name of the bucket you created in step 3
-//    of the dev setup.
-// 2. Then, replace 'custom-prefix-' in siteAssetsBucket and apiAssetsBucket with your name, your
-//    org name, or some other unique identifier.
-//
-// The resulting bucket names must be globally unique.
+// Here's how you set this up:
 // 
-// Note: these configuration options do not always correlate to SAM template parameters, and many
-// that do feature different casing and/or different names entirely.
+// 1. Replace YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME with the name of the bucket you created in step 3 of the dev setup.
+// 2. Replace 'CUSTOM_PREFIX' in the properties that have it with your name, your org name, or some other unique identifier. For the S3 buckets and the Cognito user pool domain prefix, they must be globally unique. For the CloudFormation stack name, it need only be unique to all stacks deployed to your account.
+// 3. Set any other optional parameters as desired. For the DynamoDB tables, their names must be unique to all DynamoDB tables within your account.
+// 4. Save the file.
+// 
+// Note: these configuration parameters are *not* the same as the SAM template parameters - the names differ and the behavior in many areas also differ. Furthermore, some SAM template parameters like `StaticAssetsRebuildToken` are handled automatically internally and cannot be configured.
+// 
+// See the "Deployer configuration" section of `BUILDING.md` for documentation on each of the parameters.
+"use strict"
+
 module.exports = {
-  // Required, bucket must be pre-made
+  // Optional, but recommended if you have multiple active AWS CLI profiles.
+  // awsSamCliProfile: 'your-profile',
+
   buildAssetsBucket: 'YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME',
 
-  // Required, created by stack
-  stackName: 'dev-portal',
+  stackName: 'CUSTOM_PREFIX-dev-portal',
   siteAssetsBucket: 'CUSTOM_PREFIX-dev-portal-static-assets',
   apiAssetsBucket: 'CUSTOM_PREFIX-dev-portal-artifacts',
-
-  // Required, turns on cognito hosted sign in/sign up UI
   cognitoDomainName: 'CUSTOM_PREFIX-auth',
 
-  // Optional values (uncomment and change values if you want to use them)
-
-  // Change the name of the customers table. Useful for multiple stacks. Defaults to
-  // `'DevPortalCustomers'`.
-  // customersTableName: 'CustomPrefixDevPortalCustomers',
-
-  // Change the name of the pre-login accounts table. Useful for multiple stacks. Defaults to
-  // `'DevPortalPreLoginAccounts'`.
-  // preLoginAccountsTableName: 'CustomPrefixDevPortalPreLoginAccounts',
-
-  // Change the name of the pre-login accounts table. Useful for multiple stacks. Defaults to
-  // `'DevPortalFeedback'`.
-  // feedbackTableName: 'CustomPrefixDevPortalFeedback',
-
-  // Set this to overwrite-content if you want to reset your custom content back to the defaults.
-  // Defaults to `''`.
-  // staticAssetRebuildMode: 'overwrite-content', // ONLY SET
-
-  // AWS SAM CLI profile option: optional specific profile from your AWS credential file. Not used
-  // by default.
-  // awsSamCliProfile: 'my-profile',
-
-  // Set this to `true` if you want to enable development mode. It's `false` by default, and unless
-  // you're actively developing on the developer portal itself locally, you should generally leave
-  // it unset as it disables most protections, including CORS.
-  // developmentMode: false,
+  // Optional, but highly encouraged if you have such a domain ready. Not all of these may apply.
+  // customDomainName: 'developer.domain.example',
+  // customDomainNameAcmCertArn: 'arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012',
+  // cognitoDomainAcmCertArn: 'arn:aws:acm:us-east-1:123456789012:certificate/98765432-9876-9876-9876-987654321098',
+  // useRoute53Nameservers: true,
+  // feedbackEmail: 'admin@domain.example',
 }

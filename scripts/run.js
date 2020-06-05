@@ -11,13 +11,8 @@ const writeConfig = require('./internal/write-config.js')
 function runTask (task, args = []) {
   return run(
     'npm', ['run', task, '--', ...args],
-    { action: '/dev-portal/ task', target: task, cwd: p('dev-portal') }
+    { action: 'dev-portal/ task', target: task, cwd: p('dev-portal') }
   )
-}
-
-async function deploy () {
-  const missing = await deployTemplate()
-  if (missing != null) throw new Error(missing.map(key => key + ' must be defined').join('\n'))
 }
 
 function printReady () {
@@ -71,13 +66,13 @@ require('./internal/execute-tasks.js')({
   },
 
   async deploy () {
-    await deploy()
+    await deployTemplate()
     printReady()
   },
 
   async release () {
     await this.build()
-    await deploy()
+    await deployTemplate()
     await this['reset-assets']()
     printReady()
   },
