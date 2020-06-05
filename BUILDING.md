@@ -10,7 +10,7 @@
     - [Node](https://nodejs.org/en/download/) v12 or later
     - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
     - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
-    - [CloudFormation Linter](https://github.com/aws-cloudformation/cfn-python-lint)
+    - [CloudFormation Linter (`cfn-lint`)](https://github.com/aws-cloudformation/cfn-python-lint)
 
 2. Clone this repo to your local drive.
 
@@ -180,6 +180,29 @@ Synonymous with `node run build deploy reset-assets`, as that's a common operati
 ### `node run start`
 
 Gets the output from the CFN stack, writes a local version of the config.js file, and starts up the local development server.
+
+### `node run lint`
+
+Lint all code in the repo using ESLint and `cfn-lint`.
+
+### `node run test`
+
+Run all the unit tests.
+
+### `node run test --coverage=true`
+
+Run all the unit tests with coverage.
+
+### `node run test --integ=true`
+
+Run all the integration tests.
+
+## Notes on testing
+
+If you need to run the unit tests with a debugger, you'll need to run them manually using the relevant test runners.
+
+- For the unit tests in `dev-portal/`, run `npx react-scripts --inspect-brk test --runInBand --no-cache` in that directory.
+- For the unit tests in `lambdas/`, run `npx -n=--inspect-brk jest --runInBand --no-cache` in that directory.
 
 ## Notes on static assets
 
