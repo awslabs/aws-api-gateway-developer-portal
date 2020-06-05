@@ -1,6 +1,6 @@
 const customers = require('dev-portal-common/customers-controller')
 const pager = require('dev-portal-common/pager')
-const { promiser, bindEnv } = require('../../setup-jest')
+const { promiser, bindEnv, bindMock } = require('../../setup-jest')
 
 describe('customersController', () => {
   const setEnv = bindEnv()
@@ -274,6 +274,238 @@ describe('customersController', () => {
         tableName: 'TestCustomersTable'
       })
       expect(pager.fetchApiGatewayApiKeys).toHaveBeenCalledTimes(0)
+    })
+  })
+
+  describe('addAccountToAdminsGroup()', () => {
+    const setEnv = bindEnv()
+    const setMock = bindMock()
+
+    const isoDateRegexp = /^\d{4,}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{2,}Z$/
+
+    test('promotes an existing non-admin account in pre-login table to admin', async () => {
+      setEnv('UserPoolId', 'user-pool-id')
+      setEnv('PreLoginAccountsTableName', 'user-bucket-id')
+      setEnv('CustomersTableName', 'TestCustomersTable')
+      setEnv('AdminsGroupName', 'TestAdminGroup')
+
+      const promoterName = 'promoter@example.com'
+      const promoterId = '98765432-9876-5432-1098-987654321098'
+      const promoterSub = 'a1b2c3d4-a1b2-c3d4-e5f6-a1b2c3d4e5f6'
+      const userId = '12345678-1234-5678-9abc-123456789abc'
+
+      setMock(customers.cognitoIdp, 'adminListGroupsForUser').mockReturnValue(promiser({
+        Groups: [{ GroupName: 'TestUserGroup' }]
+      }))
+      setMock(customers.cognitoIdp, 'listUsers').mockReturnValue(promiser({
+        Users: [
+          { Attributes: [{ Name: 'email', Value: promoterName }] }
+        ]
+      }))
+      setMock(customers.dynamoDb, 'get', opts => {
+        if (opts.TableName === 'user-bucket-id') {
+          return promiser({ Item: { IdentityId: userId } })
+        }
+        return promiser({ Item: null })
+      })
+      setMock(customers.dynamoDb, 'scan').mockReturnValue(promiser({ Items: [] }))
+      setMock(customers.dynamoDb, 'put').mockReturnValue(promiser('updated account'))
+      setMock(customers.cognitoIdp, 'adminAddUserToGroup')
+        .mockReturnValue(promiser('updated user'))
+
+      await customers.addAccountToAdminsGroup({
+        targetUserId: userId,
+        promoterUserId: promoterId,
+        promoterUserSub: promoterSub
+      })
+
+      expect(customers.cognitoIdp.adminListGroupsForUser).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.adminListGroupsForUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Username: userId,
+          UserPoolId: 'user-pool-id'
+        })
+      )
+
+      expect(customers.cognitoIdp.listUsers).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.listUsers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Filter: `sub = "${promoterSub}"`,
+          Limit: 1,
+          AttributesToGet: ['email'],
+          UserPoolId: 'user-pool-id'
+        })
+      )
+
+      expect(customers.dynamoDb.get).toHaveBeenCalledTimes(1)
+      expect(customers.dynamoDb.get).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: 'user-bucket-id',
+          Key: { UserId: userId }
+        })
+      )
+
+      expect(customers.dynamoDb.scan).toHaveBeenCalledTimes(0)
+
+      expect(customers.dynamoDb.put).toHaveBeenCalledTimes(1)
+      expect(customers.dynamoDb.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: 'user-bucket-id',
+          Item: expect.objectContaining({
+            IdentityId: userId,
+            PromoterUserId: promoterId,
+            PromoterEmailAddress: promoterName,
+            DatePromoted: expect.stringMatching(isoDateRegexp)
+          }),
+          ConditionExpression: 'attribute_exists(UserId)'
+        })
+      )
+
+      expect(customers.cognitoIdp.adminAddUserToGroup).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.adminAddUserToGroup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          GroupName: 'TestAdminGroup',
+          UserPoolId: 'user-pool-id',
+          Username: userId
+        })
+      )
+    })
+
+    test('promotes an existing non-admin account in customers table to admin', async () => {
+      setEnv('UserPoolId', 'user-pool-id')
+      setEnv('PreLoginAccountsTableName', 'user-bucket-id')
+      setEnv('CustomersTableName', 'TestCustomersTable')
+      setEnv('AdminsGroupName', 'TestAdminGroup')
+
+      const promoterName = 'promoter@example.com'
+      const promoterId = '98765432-9876-5432-1098-987654321098'
+      const promoterSub = 'a1b2c3d4-a1b2-c3d4-e5f6-a1b2c3d4e5f6'
+      const userId = '12345678-1234-5678-9abc-123456789abc'
+
+      setMock(customers.cognitoIdp, 'adminListGroupsForUser').mockReturnValue(promiser({
+        Groups: [{ GroupName: 'TestUserGroup' }]
+      }))
+      setMock(customers.cognitoIdp, 'listUsers').mockReturnValue(promiser({
+        Users: [
+          { Attributes: [{ Name: 'email', Value: promoterName }] }
+        ]
+      }))
+      setMock(customers.dynamoDb, 'get', opts => {
+        if (opts.TableName === 'TestCustomersTable') {
+          return promiser({ Item: { IdentityId: userId } })
+        }
+        return promiser({ Item: null })
+      })
+      setMock(customers.dynamoDb, 'scan').mockReturnValue(promiser({
+        Items: [{ Id: userId }]
+      }))
+      setMock(customers.dynamoDb, 'put').mockReturnValue(promiser('updated account'))
+      setMock(customers.cognitoIdp, 'adminAddUserToGroup')
+        .mockReturnValue(promiser('updated user'))
+
+      await customers.addAccountToAdminsGroup({
+        targetUserId: userId,
+        promoterUserId: promoterId,
+        promoterUserSub: promoterSub
+      })
+
+      expect(customers.cognitoIdp.adminListGroupsForUser).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.adminListGroupsForUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Username: userId,
+          UserPoolId: 'user-pool-id'
+        })
+      )
+
+      expect(customers.cognitoIdp.listUsers).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.listUsers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Filter: `sub = "${promoterSub}"`,
+          Limit: 1,
+          AttributesToGet: ['email'],
+          UserPoolId: 'user-pool-id'
+        })
+      )
+
+      expect(customers.dynamoDb.get).toHaveBeenCalledTimes(1)
+      expect(customers.dynamoDb.get).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: 'user-bucket-id',
+          Key: { UserId: userId }
+        })
+      )
+
+      expect(customers.dynamoDb.scan).toHaveBeenCalledTimes(1)
+      expect(customers.dynamoDb.scan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: 'TestCustomersTable',
+          FilterExpression: 'UserPoolId = :userId',
+          ExpressionAttributeValues: { ':userId': userId }
+        })
+      )
+
+      expect(customers.dynamoDb.put).toHaveBeenCalledTimes(1)
+      expect(customers.dynamoDb.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          TableName: 'TestCustomersTable',
+          Item: expect.objectContaining({
+            Id: userId,
+            PromoterUserId: promoterId,
+            PromoterEmailAddress: promoterName,
+            DatePromoted: expect.stringMatching(isoDateRegexp)
+          }),
+          ConditionExpression: 'attribute_exists(Id)'
+        })
+      )
+
+      expect(customers.cognitoIdp.adminAddUserToGroup).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.adminAddUserToGroup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          GroupName: 'TestAdminGroup',
+          UserPoolId: 'user-pool-id',
+          Username: userId
+        })
+      )
+    })
+
+    test('does not re-promote an existing admin account', async () => {
+      setEnv('UserPoolId', 'user-pool-id')
+      setEnv('PreLoginAccountsTableName', 'user-bucket-id')
+      setEnv('CustomersTableName', 'TestCustomersTable')
+      setEnv('AdminsGroupName', 'TestAdminGroup')
+
+      const promoterId = '98765432-9876-5432-1098-987654321098'
+      const promoterSub = 'a1b2c3d4-a1b2-c3d4-e5f6-a1b2c3d4e5f6'
+      const userId = '12345678-1234-5678-9abc-123456789abc'
+
+      setMock(customers.cognitoIdp, 'adminListGroupsForUser').mockReturnValue(promiser({
+        Groups: [{ GroupName: 'TestUserGroup' }, { GroupName: 'TestAdminGroup' }]
+      }))
+      setMock(customers.cognitoIdp, 'listUsers')
+      setMock(customers.dynamoDb, 'get')
+      setMock(customers.dynamoDb, 'scan')
+      setMock(customers.dynamoDb, 'put')
+      setMock(customers.cognitoIdp, 'adminAddUserToGroup')
+
+      await customers.addAccountToAdminsGroup({
+        targetUserId: userId,
+        promoterUserId: promoterId,
+        promoterUserSub: promoterSub
+      })
+
+      expect(customers.cognitoIdp.adminListGroupsForUser).toHaveBeenCalledTimes(1)
+      expect(customers.cognitoIdp.adminListGroupsForUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Username: userId,
+          UserPoolId: 'user-pool-id'
+        })
+      )
+
+      expect(customers.cognitoIdp.listUsers).toHaveBeenCalledTimes(0)
+      expect(customers.dynamoDb.get).toHaveBeenCalledTimes(0)
+      expect(customers.dynamoDb.scan).toHaveBeenCalledTimes(0)
+      expect(customers.dynamoDb.put).toHaveBeenCalledTimes(0)
+      expect(customers.cognitoIdp.adminAddUserToGroup).toHaveBeenCalledTimes(0)
     })
   })
 })
