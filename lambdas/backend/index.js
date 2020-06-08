@@ -55,8 +55,9 @@ app.delete('/admin/catalog/:id/sdkGeneration', wrapError(require('./routes/admin
 app.get('/admin/accounts', wrapError(require('./routes/admin/accounts').get))
 app.post('/admin/accounts', wrapError(require('./routes/admin/accounts').post))
 app.put('/admin/accounts/resendInvite', wrapError(require('./routes/accounts/resendInvite').put))
-app.put('/admin/accounts/:userId/approveRequest', wrapError(require('./routes/accounts/approveRequest').put))
-app.put('/admin/accounts/:userId/denyRequest', wrapError(require('./routes/accounts/denyRequest').put))
+// Not ready for prime time just yet.
+// app.put('/admin/accounts/:userId/approveRequest', wrapError(require('./routes/accounts/approveRequest').put))
+// app.put('/admin/accounts/:userId/denyRequest', wrapError(require('./routes/accounts/denyRequest').put))
 app.put('/admin/accounts/:userId/promoteToAdmin', wrapError(require('./routes/accounts/promoteToAdmin').put))
 app.delete('/admin/accounts/:userId', wrapError(require('./routes/admin/accounts').delete))
 
