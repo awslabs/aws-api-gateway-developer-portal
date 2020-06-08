@@ -30,7 +30,7 @@ export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoRep
 function InfoReplacement ({ specSelectors }) {
   let endpoint
   if (specSelectors.hasHost()) {
-    endpoint = `https://${specSelectors.host()}${specSelectors.basePath()}`
+    endpoint = `https://${specSelectors.host()}${specSelectors.basePath() || ''}`
   } else {
     const servers = specSelectors.servers()
     if (servers && servers.size) endpoint = servers.getIn([0, 'url'])
