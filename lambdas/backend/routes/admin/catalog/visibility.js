@@ -3,6 +3,7 @@
 const hash = require('object-hash')
 const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
 const util = require('../../../util')
+const nodeUtil = require('util')
 
 const inspect = o => JSON.stringify(o, null, 2)
 
@@ -48,9 +49,9 @@ exports.get = async (req, res) => {
 
     // mark every api gateway managed api-stage in the catalog as visible
     catalogObject.apiGateway.forEach((usagePlan) => {
-      console.log(`usage plan: ${inspect(usagePlan)}`)
+      console.log(`usage plan: ${nodeUtil.inspect(usagePlan, null, 2)}`)
       usagePlan.apis.forEach((api) => {
-        console.log(`usage plan api: ${inspect(api)}`)
+        console.log(`usage plan api: ${nodeUtil.inspect(api, null, 1)}`)
         visibility.apiGateway.map((apiEntry) => {
           if (apiEntry.id === api.apiId && apiEntry.stage === api.apiStage) {
             console.log(`matching apiEntry: ${inspect(apiEntry)}`)
@@ -94,13 +95,22 @@ exports.get = async (req, res) => {
 
     // mark every api in the generic catalog as visible
     catalogObject.generic.forEach((catalogEntry) => {
+      console.log(`catalogEntry: ${nodeUtil.inspect(catalogEntry, null, 1)}`)
       // Unlike in the catalog and elsewhere, the visibility's `apiGateway` contains *all* API
       // Gateway-managed APIs, and only unmanaged APIs are in `visibility.generic`.
       if (catalogEntry.apiId != null) {
         const target = visibility.apiGateway.find((api) =>
           api.id === catalogEntry.apiId && api.stage === catalogEntry.apiStage
         )
-        if (target != null) { target.visibility = true; return }
+        if (target != null) {
+          target.visibility = true
+
+          if (catalogEntry.sdkGeneration !== undefined) {
+            target.sdkGeneration = catalogEntry.sdkGeneration
+          }
+
+          return
+        }
       }
 
       if (!visibility.generic) {
@@ -110,17 +120,6 @@ exports.get = async (req, res) => {
       visibility.generic[catalogEntry.id] = {
         visibility: true,
         name: (catalogEntry.swagger && catalogEntry.swagger.info && catalogEntry.swagger.info.title) || 'Untitled'
-      }
-
-      if (catalogEntry.sdkGeneration !== undefined) {
-        console.log(`catalogEntry: ${inspect(catalogEntry)}`)
-        visibility.apiGateway.map((api) => {
-          console.log(`api: ${inspect(api)}`)
-          if (api.id === catalogEntry.apiId && api.stage === catalogEntry.stage) {
-            api.sdkGeneration = catalogEntry.sdkGeneration
-          }
-          return api
-        })
       }
     })
 
