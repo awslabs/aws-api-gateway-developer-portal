@@ -98,11 +98,11 @@ export function getApi (apiId, selectIt = false, stage, cacheBust = false) {
         if (apiId === 'ANY' || apiId === 'FIRST') {
           thisApi = allApis[0]
         } else {
-          thisApi = allApis.find(api => api.id.toString() === apiId)
-        }
+          thisApi = allApis.find(api => (api.apiId === apiId && api.apiStage === stage))
 
-        if (stage) {
-          thisApi = store.apiList.apiGateway.find(api => api.apiId === apiId && api.apiStage === stage)
+          if (!thisApi) {
+            thisApi = allApis.find(api => (api.id.toString() === apiId))
+          }
         }
       }
 

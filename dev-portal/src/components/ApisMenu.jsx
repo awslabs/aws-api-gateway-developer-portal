@@ -18,22 +18,11 @@ import SidebarHeader from 'components/Sidebar/SidebarHeader'
 import MenuLink from 'components/MenuLink'
 
 function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
-  const apiGatewayApiList = _.get(store, 'apiList.apiGateway', []).map(api => ({
-    group: api.apiId,
-    id: api.apiStage,
-    title: api.swagger.info.title,
-    route: `/apis/${api.apiId}/${api.apiStage}`,
-    active: (
-      (selectedApiId && api.apiId === selectedApiId) &&
-      (!selectedStage || api.apiStage === selectedStage)
-    ),
-    stage: api.apiStage
-  }))
-  const genericApiList = _.get(store, 'apiList.generic', []).map(api => ({
+  const apiList = [].concat(_.get(store, 'apiList.generic', []), _.get(store, 'apiList.apiGateway', [])).map(api => ({
     group: api.apiId || api.id,
     id: api.apiStage || api.id,
     title: api.swagger.info.title,
-    route: `/apis/${api.id}`,
+    route: `/apis/${api.id}` + (api.apiStage ? '/' + api.apiStage : ''),
     active: (
       (selectedApiId && (api.id === selectedApiId || api.apiId === selectedApiId)) &&
       (!selectedStage || api.apiStage === selectedStage)
@@ -41,7 +30,7 @@ function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
     stage: api.apiStage
   }))
 
-  return _.toPairs(_.groupBy(apiGatewayApiList.concat(genericApiList), 'group'))
+  return _.toPairs(_.groupBy(apiList, 'group'))
     .map(([group, apis]) => ({ group, apis, active: _.some(apis, 'active'), title: apis[0].title }))
 }
 
