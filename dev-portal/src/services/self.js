@@ -39,6 +39,9 @@ function getRemainingSessionTime (idToken) {
   return jwtDecode(idToken).exp * 1000 - Date.now()
 }
 
+/**
+ * On page load, look for an active cookie. If it exists and isn't expired, great, use it. Otherwise, clear everything and make sure we're not logged in.
+ */
 export function init () {
   // attempt to refresh credentials from active session
 
@@ -62,6 +65,9 @@ export function init () {
   }
 }
 
+/**
+ * Gets triggered by the callback from the cognito user pool. Pretty much all it does is grab and store the idToken.
+ */
 export function login () {
   return new Promise((resolve, reject) => {
     let idToken
@@ -123,6 +129,7 @@ function setCredentials () {
       }
 
       initApiGatewayClient(AWS.config.credentials)
+      store.user = { email: jwtDecode(store.idToken).email }
       updateAllUserData()
 
       return apiGatewayClient()
@@ -131,6 +138,9 @@ function setCredentials () {
   })
 }
 
+/**
+ * Callback for the Cognito User Pool's logout just to make sure we clean up everything.
+ */
 export function logout () {
   clearTimeout(logoutTimer)
   logoutTimer = undefined
