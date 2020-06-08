@@ -536,6 +536,10 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
 
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
+      Key: 'catalog/unsubscribable_a1b2c3_prod.json'
+    })
+    expect(util.s3.deleteObject).toHaveBeenCalledWith({
+      Bucket: 'myOtherBucket',
       Key: 'catalog/a1b2c3_prod.json'
     })
 
@@ -556,6 +560,10 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
       Key: 'catalog/unsubscribable_a1b2c3_unmatched.json'
+    })
+    expect(util.s3.deleteObject).toHaveBeenCalledWith({
+      Bucket: 'myOtherBucket',
+      Key: 'catalog/a1b2c3_unmatched.json'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
