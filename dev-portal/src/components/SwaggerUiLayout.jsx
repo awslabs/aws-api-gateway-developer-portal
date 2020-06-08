@@ -83,15 +83,24 @@ function InfoReplacement ({ specSelectors }) {
 const SubscriptionButtons = observer(class SubscriptionButtons extends React.Component {
   render () {
     const { api } = store
-    return (
-      (api && isAuthenticated()) ? api.apiStage != null ? (
+
+    if (!api || !isAuthenticated()) {
+      return null
+    }
+
+    const apiIsSubscribable = !!(api && api.apiStage && api.usagePlan)
+
+    if (apiIsSubscribable) {
+      return (
         api.subscribed ? (
           <Button onClick={() => unsubscribe(api.usagePlan.id)}>Unsubscribe</Button>
         ) : (
           <Button onClick={() => subscribe(api.usagePlan.id)}>Subscribe</Button>
         )
-      ) : <Header style={{ marginTop: '0em' }} as='h4' color='grey'>This version of the API is not configured to be subscribable from the portal. Please contact an admin for more details.</Header> : null
-    )
+      )
+    } else {
+      return <Header style={{ marginTop: '0em' }} as='h4' color='grey'>This version of the API is not configured to be subscribable from the portal. Please contact an admin for more details.</Header>
+    }
   }
 })
 
