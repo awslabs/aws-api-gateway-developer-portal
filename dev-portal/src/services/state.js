@@ -21,7 +21,8 @@ function storeDefaults () {
       generic: []
     },
 
-    cognitoUser: undefined,
+    user: undefined,
+    idToken: undefined,
 
     usagePlans: [],
 
@@ -67,7 +68,7 @@ export const store = observable({
   },
 
   resetUserData () {
-    this.reset('apiKey', 'cognitoUser', 'subscriptions')
+    this.reset('apiKey', 'user', 'subscriptions')
   }
 })
 
