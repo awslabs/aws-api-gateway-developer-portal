@@ -6,7 +6,7 @@ const getAccountsWithFilter = async filter => {
     '/admin/accounts',
     undefined,
     undefined,
-    { queryParams: { filter } },
+    { queryParams: { filter } }
   )
   return response.data.accounts
 }
@@ -18,6 +18,7 @@ const fetch = (method, target, params = {}) =>
   getApiGatewayClient()
     .then(apiGatewayClient => apiGatewayClient[method](target, {}, params, {}))
     .then(response => response.data)
+    .catch(error => { throw error && (error.data || error) })
 
 export const fetchRegisteredAccounts = () => getAccountsWithFilter('registered')
 export const fetchAdminAccounts = () => getAccountsWithFilter('admin')

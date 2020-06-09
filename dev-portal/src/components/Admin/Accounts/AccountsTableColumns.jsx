@@ -27,11 +27,23 @@ export const EmailAddress = {
   title: 'Email address',
   render: account => account.EmailAddress,
   ordering: {
-    iteratee: 'EmailAddress',
+    iteratee: 'EmailAddress'
   },
   filtering: {
-    accessor: 'EmailAddress',
+    accessor: 'EmailAddress'
+  }
+}
+
+export const IsAdmin = {
+  id: 'IsAdmin',
+  title: 'Administrator',
+  render: account => account.IsAdmin ? 'Yes' : 'No',
+  ordering: {
+    iteratee: 'IsAdmin'
   },
+  filtering: {
+    accessor: 'IsAdmin'
+  }
 }
 
 export const DateRegistered = {
@@ -39,14 +51,14 @@ export const DateRegistered = {
   title: 'Date registered',
   render: account => formatDate(account.DateRegistered),
   ordering: {
-    iteratee: 'DateRegistered',
-  },
+    iteratee: 'DateRegistered'
+  }
 }
 
 export const RegistrationMethod = {
   id: 'RegistrationMethod',
   title: 'Registration method',
-  render: account => account.RegistrationMethod,
+  render: account => account.RegistrationMethod
 }
 
 export const ApiKeyId = {
@@ -54,8 +66,8 @@ export const ApiKeyId = {
   title: 'API key ID',
   render: account => account.ApiKeyId,
   filtering: {
-    accessor: 'ApiKeyId',
-  },
+    accessor: 'ApiKeyId'
+  }
 }
 
 export const Promoter = {
@@ -65,8 +77,8 @@ export const Promoter = {
     PromoterUserId ? `${PromoterEmailAddress} (${PromoterUserId})` : '',
   filtering: {
     accessor: ({ PromoterUserId, PromoterEmailAddress }) =>
-      PromoterUserId ? `${PromoterEmailAddress} ${PromoterUserId}` : '',
-  },
+      PromoterUserId ? `${PromoterEmailAddress} ${PromoterUserId}` : ''
+  }
 }
 
 export const Inviter = {
@@ -76,8 +88,8 @@ export const Inviter = {
     InviterUserId ? `${InviterEmailAddress} (${InviterUserId})` : '',
   filtering: {
     accessor: ({ InviterUserId, InviterEmailAddress }) =>
-      InviterUserId ? `${InviterEmailAddress} ${InviterUserId}` : '',
-  },
+      InviterUserId ? `${InviterEmailAddress} ${InviterUserId}` : ''
+  }
 }
 
 export const DatePromoted = {
@@ -85,8 +97,8 @@ export const DatePromoted = {
   title: 'Date promoted',
   render: ({ DatePromoted }) => (DatePromoted ? formatDate(DatePromoted) : ''),
   ordering: {
-    iteratee: 'DatePromoted',
-  },
+    iteratee: 'DatePromoted'
+  }
 }
 
 export const DateRequested = {
@@ -94,8 +106,8 @@ export const DateRequested = {
   title: 'Date requested',
   render: account => formatDate(account.DateRequested),
   ordering: {
-    iteratee: 'DateRequested',
-  },
+    iteratee: 'DateRequested'
+  }
 }
 
 export const DateInvited = {
@@ -103,8 +115,8 @@ export const DateInvited = {
   title: 'Date invited',
   render: account => formatDate(account.DateInvited),
   ordering: {
-    iteratee: 'DateInvited',
-  },
+    iteratee: 'DateInvited'
+  }
 }
 
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('default', {
@@ -113,7 +125,7 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('default', {
   day: 'numeric',
   hour: 'numeric',
   minute: 'numeric',
-  second: 'numeric',
+  second: 'numeric'
 })
 
 const formatDate = isoDateString =>

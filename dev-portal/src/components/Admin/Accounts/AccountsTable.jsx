@@ -7,7 +7,7 @@ import {
   Input,
   Pagination,
   Placeholder,
-  Table,
+  Table
 } from 'semantic-ui-react'
 
 import styles from './AccountsTable.module.css'
@@ -23,16 +23,16 @@ const NO_ORDER_COLUMN = Symbol('NO_ORDER_COLUMN')
 const ORDER_DIRECTIONS = [
   {
     lodashDirection: undefined,
-    iconName: 'sort',
+    iconName: 'sort'
   },
   {
     lodashDirection: 'asc',
-    iconName: 'sort up',
+    iconName: 'sort up'
   },
   {
     lodashDirection: 'desc',
-    iconName: 'sort down',
-  },
+    iconName: 'sort down'
+  }
 ]
 
 const nextDirectionIndex = index => (index + 1) % ORDER_DIRECTIONS.length
@@ -67,24 +67,24 @@ export const AccountsTable = ({
   loading,
   selectedAccount,
   onSelectAccount,
-  children: toolbarActions,
+  children: toolbarActions
 }) => {
   const pageSize = DEFAULT_PAGE_SIZE
 
   const [accountsView, setAccountsView] = useState(accounts)
   const [activePage, setActivePage] = useState(0)
   const [activePageAccounts, setActivePageAccounts] = useState(
-    [...Array(pageSize)].fill(FILLER_ACCOUNT),
+    [...Array(pageSize)].fill(FILLER_ACCOUNT)
   )
 
   const [filterableColumns, setFilterableColumns] = useState([])
   const [filter, setFilter] = useState({
     column: NO_FILTER_COLUMN,
-    value: NO_FILTER_VALUE,
+    value: NO_FILTER_VALUE
   })
   const [order, setOrder] = useState({
     column: NO_ORDER_COLUMN,
-    directionIndex: 0,
+    directionIndex: 0
   })
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export const AccountsTable = ({
     if (filterableColumns.length === 0) {
       setFilter({
         column: NO_FILTER_COLUMN,
-        value: NO_FILTER_VALUE,
+        value: NO_FILTER_VALUE
       })
     }
 
@@ -122,13 +122,13 @@ export const AccountsTable = ({
         view = view.filter(
           item =>
             !!item[filterAccessor] &&
-            item[filterAccessor].toString().includes(filter.value),
+            item[filterAccessor].toString().includes(filter.value)
         )
       } else if (typeof filterAccessor === 'function') {
         view = view.filter(item => filterAccessor(item).includes(filter.value))
       } else {
         throw new Error(
-          `Invalid filtering accessor on column ${filter.column.id}`,
+          `Invalid filtering accessor on column ${filter.column.id}`
         )
       }
     }
@@ -136,7 +136,7 @@ export const AccountsTable = ({
     if (order.column !== NO_ORDER_COLUMN) {
       view = view.orderBy(
         [order.column.ordering.iteratee],
-        [ORDER_DIRECTIONS[order.directionIndex].lodashDirection],
+        [ORDER_DIRECTIONS[order.directionIndex].lodashDirection]
       )
     }
 
@@ -157,7 +157,7 @@ export const AccountsTable = ({
       }
       return pageItems
     },
-    [accountsView, pageSize],
+    [accountsView, pageSize]
   )
 
   const totalPages = Math.ceil(accountsView.length / pageSize)
@@ -170,7 +170,7 @@ export const AccountsTable = ({
       setActivePageAccounts(computeAccountsPage(newActivePage, accountsView))
       onSelectAccount(undefined)
     },
-    [accountsView, onSelectAccount, computeAccountsPage],
+    [accountsView, onSelectAccount, computeAccountsPage]
   )
 
   useEffect(() => {
@@ -197,7 +197,7 @@ export const AccountsTable = ({
   })
 
   const filterColumnDropdownOptions = filterableColumns.map(
-    ({ title, id }, index) => ({ key: index, text: title, value: id }),
+    ({ title, id }, index) => ({ key: index, text: title, value: id })
   )
 
   const onFilterColumnDropdownChange = (_event, { value }) =>
@@ -205,7 +205,7 @@ export const AccountsTable = ({
       ...filter,
       column:
         filterableColumns.find(column => column.id === value) ||
-        NO_FILTER_COLUMN,
+        NO_FILTER_COLUMN
     }))
   const onSearchInputChange = (_event, { value }) =>
     setFilter(filter => ({ ...filter, value }))
