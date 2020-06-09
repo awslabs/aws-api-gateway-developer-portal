@@ -53,6 +53,11 @@ exports.delete = async (req, res) => {
     return
   }
 
+  if (util.getCognitoUserId(req) === userId) {
+    res.status(400).json({ message: 'Invalid value for "userId" URL parameter: cannot delete yourself.' })
+    return
+  }
+
   await customersController.deleteAccountByUserId(userId)
   res.status(200).json({})
 }
