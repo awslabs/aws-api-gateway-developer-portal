@@ -190,7 +190,7 @@ exports.post = async (req, res) => {
     let file
     if (req.body.subscribable === 'true' || req.body.subscribable === true) {
       file = `catalog/${restApiId}_${stageName}.json`
-    } else if (req.body.subscribable === 'false') {
+    } else if (req.body.subscribable === 'false' || req.body.subscribable === false) {
       file = `catalog/unsubscribable_${restApiId}_${stageName}.json`
     } else {
       res.status(400).json({ message: 'Invalid input. Request body must have the `subscribable` key.' })
@@ -226,21 +226,24 @@ exports.post = async (req, res) => {
 
 exports.delete = async (req, res) => {
   console.log(`DELETE /admin/catalog/visibility for Cognito ID: ${util.getCognitoIdentityId(req)}`)
-  const catalogObject = await util.catalog()
 
   // for apigateway managed APIs, provide "apiId_stageName"
   // in the apiKey field
   console.log('delete request params:', req.params)
   if (req.params && req.params.id) {
-    console.log('managed api')
-    const [id, stage] = req.params.id.split('_')
-    const unsubscribable = !catalogObject.apiGateway.some(usagePlan =>
-      usagePlan.apis.some(api => api.apiId === id && api.apiStage === stage)
-    )
+    if (!req.params.id.includes('_')) {
+      res.status(400).json({ message: 'Invalid input' })
+      return
+    }
 
-    // assumed: apiId_stageName.json is the only format
-    // no yaml, no autodetection based on file contents
-    await deleteFile(`catalog/${unsubscribable ? 'unsubscribable_' : ''}${req.params.id}.json`)
+    console.log('managed api')
+
+    // We assume it's JSON - users shouldn't be modifying this directly. However, we can't assume
+    // it's still unsubscribable as if the API is attached to a usage plan, that ends up out of
+    // sync with our catalog. In this case, we just try to delete both, as it's easier and faster
+    // than checking whether it *is* subscribable.
+    await deleteFile(`catalog/unsubscribable_${req.params.id}.json`)
+    await deleteFile(`catalog/${req.params.id}.json`)
     res.status(200).json({ message: 'Success' })
 
     // for generic swagger, provide the hashed swagger body
