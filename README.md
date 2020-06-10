@@ -5,7 +5,11 @@ The Amazon API Gateway Serverless Developer Portal is an application that you us
 
 For more information about Amazon API Gateway, visit the API Gateway [product page](https://aws.amazon.com/api-gateway/).
 
+<!--
+**FIXME**: Marketplace subscription is broken. Once fixed, update this section.
+
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
+-->
 
 ![Alt text](/screen-home.png?raw=true)
 ![Alt text](/screen-documentation.png?raw=true)
@@ -132,7 +136,7 @@ You can trace and troubleshoot the Lambda functions using CloudWatch Logs. See [
 Deleting the developer portal should be as easy as deleting the cloudformation stack. This will empty the `ArtifactsS3Bucket` and `DevPortalSiteS3Bucket` s3 buckets, including any custom files! Note that this will not delete any api keys provisioned by the developer portal. If you would like to delete api keys provisioned through the developer portal but not those provisioned through other means, make sure to download a backup of the `Customers` DDB table before deleting the cloudformation stack. This table lists the provisioned api keys that will need to be cleaned up afterwards.
 
 <!--
-**FIXME**: These instructions are now out of date. Update the scripts and update this section of the README.
+**FIXME**: Marketplace subscription is broken. Once fixed, update this section.
 
 ## Marketplace SaaS Setup Instructions
 

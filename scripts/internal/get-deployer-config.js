@@ -46,7 +46,8 @@ exports.customersTableName = getOptional('customersTableName')
 exports.preLoginAccountsTableName = getOptional('preLoginAccountsTableName')
 exports.feedbackTableName = getOptional('feedbackTableName')
 exports.cognitoIdentityPoolName = getOptional('cognitoIdentityPoolName')
-exports.marketplaceSubscriptionTopic = getOptional('marketplaceSubscriptionTopic')
+// FIXME: Marketplace support is currently broken
+// exports.marketplaceSubscriptionTopic = getOptional('marketplaceSubscriptionTopic')
 exports.accountRegistrationMode = getOptional('accountRegistrationMode')
 
 // optional inputs

@@ -1,5 +1,7 @@
 'use strict'
 
+// FIXME: Marketplace support is currently broken
+
 const AWS = require('aws-sdk')
 const customersController = require('dev-portal-common/customers-controller')
 const util = require('../util')
