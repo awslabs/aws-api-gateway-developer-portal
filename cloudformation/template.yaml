@@ -1272,6 +1272,8 @@ Resources:
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       UserPoolName: !Ref CognitoIdentityPoolName
       # Lambda trigger caveats:
@@ -1306,7 +1308,6 @@ Resources:
       Schema:
         - AttributeDataType: String
           Name: email
-          Required: true
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: !If [
           InviteAccountRegistrationMode, 'true', 'false',
