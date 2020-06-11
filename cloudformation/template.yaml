@@ -1714,6 +1714,36 @@ Resources:
       DevelopmentMode: !Ref DevelopmentMode
       FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
 
+  LambdaEdgeFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action: 
+              - "sts:AssumeRole"
+            Principal:
+              Service: 
+                - "lambda.amazonaws.com"
+                - "edgelambda.amazonaws.com"
+
+  CloudFrontSecurityHeadersLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/cloudfront-security
+      Handler: index.handler
+      MemorySize: 128
+      Role: !GetAtt LambdaEdgeFunctionRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 1
+      AutoPublishAlias: Live
+
   CloudFrontOriginAccessIdentity:
     Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
     Condition: 'NotDevelopmentMode'
@@ -1738,6 +1768,10 @@ Resources:
             QueryString: true
           TargetOriginId: 'dev-portal-site-s3-bucket'
           ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            -
+              EventType: origin-response
+              LambdaFunctionARN: !Ref CloudFrontSecurityHeadersLambda.Version
         DefaultRootObject: index.html
         Enabled: true
         Comment: !Sub '${AWS::StackName} distribution'
@@ -1767,6 +1801,10 @@ Resources:
             QueryString: true
           TargetOriginId: 'dev-portal-site-s3-bucket'
           ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            -
+              EventType: origin-response
+              LambdaFunctionARN: !Ref CloudFrontSecurityHeadersLambda.Version
         DefaultRootObject: index.html
         Enabled: true
         Comment: !Sub '${AWS::StackName} distribution'
