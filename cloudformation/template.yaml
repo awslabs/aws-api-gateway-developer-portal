@@ -1351,6 +1351,7 @@ Resources:
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
+      PreventUserExistenceErrors: true
 
   CognitoUserPoolClientSettingsBackingFnRole:
     Type: 'AWS::IAM::Role'
