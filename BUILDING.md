@@ -101,11 +101,16 @@ The name of the pre-login accounts DynamoDB table.
 
 The name of the feedback DynamoDB table.
 
+<!--
+**FIXME**: Marketplace subscription is broken. Once fixed, update this section.
+
 ### `marketplaceSubscriptionTopic: string`
 
 *Default: `'DevPortalMarketplaceSubscriptionTopic'`*
 
 The marketplace SNS topic suffix for subscription/unsubscription events.
+
+-->
 
 ### `accountRegistrationMode: string`
 

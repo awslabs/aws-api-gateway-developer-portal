@@ -21,11 +21,12 @@ Metadata:
           - CognitoIdentityPoolName
           - DevPortalCustomersTableName
           - AccountRegistrationMode
-      -
-        Label:
-          default: "Subscription Notification Configuration"
-        Parameters:
-          - MarketplaceSubscriptionTopicProductCode
+      # Marketplace support is currently broken
+      # -
+      #   Label:
+      #     default: "Subscription Notification Configuration"
+      #   Parameters:
+      #     - MarketplaceSubscriptionTopicProductCode
       -
         Label:
           default: "Custom Domain Configuration"
@@ -87,10 +88,11 @@ Parameters:
       - ''
     ConstraintDescription: Malformed input - Parameter StaticAssetRebuildMode value must be either 'overwrite-content' or left blank.
 
-  MarketplaceSubscriptionTopicProductCode:
-    Type: String
-    Description: The marketplace SNS topic suffix for subscription/unsubscription events
-    Default: DevPortalMarketplaceSubscriptionTopic
+  # Marketplace support is currently broken
+  # MarketplaceSubscriptionTopicProductCode:
+  #   Type: String
+  #   Description: The marketplace SNS topic suffix for subscription/unsubscription events
+  #   Default: DevPortalMarketplaceSubscriptionTopic
 
   CognitoIdentityPoolName:
     Type: String
@@ -279,53 +281,54 @@ Resources:
                 requestTemplates:
                   application/json: "{\"statusCode\": 200}"
                 type: mock
-          /marketplace-confirm/{usagePlanId}:
-            post:
-              security:
-              - sigv4: []
-              produces:
-              - application/json
-              responses: {}
-              x-amazon-apigateway-integration:
-                uri: !Join
-                  - ''
-                  - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
-                    - :${stageVariables.DevPortalFunctionName}/invocations
-                httpMethod: POST
-                type: aws_proxy
-            options:
-              consumes:
-              - application/json
-              produces:
-              - application/json
-              responses:
-                '200':
-                  description: 200 response
-                  schema:
-                    $ref: "#/definitions/Empty"
-                  headers:
-                    Access-Control-Allow-Origin:
-                      type: string
-                    Access-Control-Allow-Methods:
-                      type: string
-                    Access-Control-Allow-Headers:
-                      type: string
-              x-amazon-apigateway-integration:
-                responses:
-                  default:
-                    statusCode: 200
-                    responseParameters:
-                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
-                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
-                        'UseCustomDomainName',
-                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
-                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
-                      ]]
-                passthroughBehavior: when_no_match
-                requestTemplates:
-                  application/json: "{\"statusCode\": 200}"
-                type: mock
+          # Marketplace support is currently broken
+          # /marketplace-confirm/{usagePlanId}:
+          #   post:
+          #     security:
+          #     - sigv4: []
+          #     produces:
+          #     - application/json
+          #     responses: {}
+          #     x-amazon-apigateway-integration:
+          #       uri: !Join
+          #         - ''
+          #         - - !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function
+          #           - :${stageVariables.DevPortalFunctionName}/invocations
+          #       httpMethod: POST
+          #       type: aws_proxy
+          #   options:
+          #     consumes:
+          #     - application/json
+          #     produces:
+          #     - application/json
+          #     responses:
+          #       '200':
+          #         description: 200 response
+          #         schema:
+          #           $ref: "#/definitions/Empty"
+          #         headers:
+          #           Access-Control-Allow-Origin:
+          #             type: string
+          #           Access-Control-Allow-Methods:
+          #             type: string
+          #           Access-Control-Allow-Headers:
+          #             type: string
+          #     x-amazon-apigateway-integration:
+          #       responses:
+          #         default:
+          #           statusCode: 200
+          #           responseParameters:
+          #             method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+          #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+          #             method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
+          #               'UseCustomDomainName',
+          #               !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
+          #               !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+          #             ]]
+          #       passthroughBehavior: when_no_match
+          #       requestTemplates:
+          #         application/json: "{\"statusCode\": 200}"
+          #       type: mock
           /catalog:
             get:
               security:
@@ -635,26 +638,28 @@ Resources:
       AttributeDefinitions:
       - AttributeName: Id
         AttributeType: S
-      - AttributeName: MarketplaceCustomerId
-        AttributeType: S
+      # Marketplace support is currently broken
+      # - AttributeName: MarketplaceCustomerId
+      #   AttributeType: S
       KeySchema:
       - AttributeName: Id
         KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-      - IndexName: MarketplaceCustomerIdIndex
-        KeySchema:
-        - AttributeName: MarketplaceCustomerId
-          KeyType: HASH
-        Projection:
-          NonKeyAttributes:
-          - ApiKeyId
-          ProjectionType: INCLUDE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
+      # Marketplace support is currently broken
+      # GlobalSecondaryIndexes:
+      # - IndexName: MarketplaceCustomerIdIndex
+      #   KeySchema:
+      #   - AttributeName: MarketplaceCustomerId
+      #     KeyType: HASH
+      #   Projection:
+      #     NonKeyAttributes:
+      #     - ApiKeyId
+      #     ProjectionType: INCLUDE
+      #   ProvisionedThroughput:
+      #     ReadCapacityUnits: 5
+      #     WriteCapacityUnits: 5
 
   PreLoginAccountsTable:
     Type: AWS::DynamoDB::Table
@@ -749,10 +754,11 @@ Resources:
                 - '::/restapis/'
                 - !Ref ApiGatewayApi
                 - '/*/exports/*'
-          - Effect: Allow
-            Action:
-            - aws-marketplace:ResolveCustomer
-            Resource: '*'
+          # Marketplace support is currently broken
+          # - Effect: Allow
+          #   Action:
+          #   - aws-marketplace:ResolveCustomer
+          #   Resource: '*'
           - Effect: Allow
             Action:
             - dynamodb:GetItem
@@ -778,18 +784,19 @@ Resources:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
             Resource: !GetAtt PreLoginAccountsTable.Arn
-          - Effect: Allow
-            Action:
-            - dynamodb:Query
-            Resource: !Join
-              - ''
-              - - 'arn:aws:dynamodb:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - :table/
-                - !Ref CustomersTable
-                - /index/MarketplaceCustomerIdIndex
+          # Marketplace support is currently broken
+          # - Effect: Allow
+          #   Action:
+          #   - dynamodb:Query
+          #   Resource: !Join
+          #     - ''
+          #     - - 'arn:aws:dynamodb:'
+          #       - !Ref 'AWS::Region'
+          #       - ':'
+          #       - !Ref 'AWS::AccountId'
+          #       - :table/
+          #       - !Ref CustomersTable
+          #       - /index/MarketplaceCustomerIdIndex
           - Effect: Allow
             Action:
             - lambda:InvokeFunction
@@ -1046,30 +1053,31 @@ Resources:
                 - !Ref ArtifactsS3BucketName
                 - '/*'
 
-  ApiGatewayMarketplaceMeteringRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Join
-        - ''
-        - - !Ref AWS::StackName
-          - 'MeteringRole'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: apigateway.amazonaws.com
-          Action: sts:AssumeRole
-      Policies:
-      - PolicyName: ApiGatewayMeteringPolicy
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Action:
-            - aws-marketplace:BatchMeterUsage
-            - aws-marketplace:ResolveCustomer
-            Effect: Allow
-            Resource: '*'
+  # Marketplace support is currently broken
+  # ApiGatewayMarketplaceMeteringRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: !Join
+  #       - ''
+  #       - - !Ref AWS::StackName
+  #         - 'MeteringRole'
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         Effect: Allow
+  #         Principal:
+  #           Service: apigateway.amazonaws.com
+  #         Action: sts:AssumeRole
+  #     Policies:
+  #     - PolicyName: ApiGatewayMeteringPolicy
+  #       PolicyDocument:
+  #         Version: '2012-10-17'
+  #         Statement:
+  #         - Action:
+  #           - aws-marketplace:BatchMeterUsage
+  #           - aws-marketplace:ResolveCustomer
+  #           Effect: Allow
+  #           Resource: '*'
 
   LambdaApiGatewayExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1132,30 +1140,31 @@ Resources:
           - ':userpool/'
           - !Ref CognitoUserPool
 
-  LambdaSNSExecutionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt SubscriptionListenerLambdaFunction.Arn
-      Principal: sns.amazonaws.com
-      SourceArn: !Join
-        - ''
-        - - 'arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-'
-          - !Ref MarketplaceSubscriptionTopicProductCode
-
-  LambdaSNSExecutionTestPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt SubscriptionListenerLambdaFunction.Arn
-      Principal: sns.amazonaws.com
-      SourceArn: !Join
-        - ''
-        - - 'arn:aws:sns:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':marketplace-test-topic'
+  # Marketplace support is currently broken
+  # LambdaSNSExecutionPermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !GetAtt SubscriptionListenerLambdaFunction.Arn
+  #     Principal: sns.amazonaws.com
+  #     SourceArn: !Join
+  #       - ''
+  #       - - 'arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-'
+  #         - !Ref MarketplaceSubscriptionTopicProductCode
+  #
+  # LambdaSNSExecutionTestPermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !GetAtt SubscriptionListenerLambdaFunction.Arn
+  #     Principal: sns.amazonaws.com
+  #     SourceArn: !Join
+  #       - ''
+  #       - - 'arn:aws:sns:'
+  #         - !Ref 'AWS::Region'
+  #         - ':'
+  #         - !Ref 'AWS::AccountId'
+  #         - ':marketplace-test-topic'
 
   LambdaCommonLayer:
     Type: AWS::Serverless::LayerVersion
@@ -1206,17 +1215,18 @@ Resources:
       Layers:
         - !Ref LambdaCommonLayer
 
-  SubscriptionListenerLambdaFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ../lambdas/listener
-      Handler: index.handler
-      MemorySize: 128
-      Role: !GetAtt BackendLambdaExecutionRole.Arn
-      Runtime: nodejs12.x
-      Timeout: 30
-      Layers:
-        - !Ref LambdaCommonLayer
+  # Marketplace support is currently broken
+  # SubscriptionListenerLambdaFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: ../lambdas/listener
+  #     Handler: index.handler
+  #     MemorySize: 128
+  #     Role: !GetAtt BackendLambdaExecutionRole.Arn
+  #     Runtime: nodejs12.x
+  #     Timeout: 30
+  #     Layers:
+  #       - !Ref LambdaCommonLayer
 
   CognitoPreSignupTriggerFn:
     Type: AWS::Serverless::Function
@@ -1697,7 +1707,8 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       UserPoolClientId: !Ref CognitoUserPoolClient
       UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
-      MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
+      # Marketplace support is currently broken
+      # MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
       RebuildMode: !Ref StaticAssetRebuildMode
       DevelopmentMode: !Ref DevelopmentMode

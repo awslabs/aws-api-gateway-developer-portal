@@ -178,13 +178,14 @@ class State {
       params.ACL = 'public-read'
     }
 
-    console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)
+    // FIXME: Marketplace support is currently broken
+    // const suffix = this.event.ResourceProperties.MarketplaceSuffix
+    // if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
+    //   configObject.marketplaceSubscriptionTopic =
+    //     `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
+    // }
 
-    const suffix = this.event.ResourceProperties.MarketplaceSuffix
-    if (suffix !== 'DevPortalMarketplaceSubscriptionTopic') {
-      configObject.marketplaceSubscriptionTopic =
-        `arn:aws:sns:us-east-1:287250355862:aws-mp-subscription-notification-${suffix}`
-    }
+    console.log(`Adding uploadPromise for config.js file: ${JSON.stringify(configObject, null, 2)}`)
 
     return s3.upload(params, options).promise()
   }
