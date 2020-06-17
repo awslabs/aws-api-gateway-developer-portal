@@ -1737,12 +1737,70 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ../lambdas/cloudfront-security
-      Handler: index.handler
+      Handler: replicator.handler
       MemorySize: 128
-      Role: !GetAtt LambdaEdgeFunctionRole.Arn
+      Role: !GetAtt CloudFrontEdgeReplicatorRole.Arn
       Runtime: nodejs12.x
-      Timeout: 1
+      Timeout: 300
       AutoPublishAlias: Live
+      Environment:
+        Variables:
+          Bucket: !Ref ArtifactsS3BucketName
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  CloudFrontSecurityHeadersSetup:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt CloudFrontSecurityHeadersLambda.Arn
+      Name: !Ref CloudFrontSecurityHeadersLambda
+      RoleArn: !GetAtt LambdaEdgeFunctionRole.Arn
+      # To force update this any time the lambda changes
+      RebuildToken: !Ref CloudFrontSecurityHeadersLambda.Version
+  
+  CloudFrontEdgeReplicatorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - lambda:CreateFunction
+              - lambda:GetFunction
+              - lambda:UpdateFunctionCode
+              - lambda:PublishVersion
+            Resource: arn:aws:lambda:*:*:*
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:DeleteObject
+            - s3:PutObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
 
   CloudFrontOriginAccessIdentity:
     Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
@@ -1771,7 +1829,7 @@ Resources:
           LambdaFunctionAssociations:
             -
               EventType: origin-response
-              LambdaFunctionARN: !Ref CloudFrontSecurityHeadersLambda.Version
+              LambdaFunctionARN: !GetAtt CloudFrontSecurityHeadersSetup.EdgeArn
         DefaultRootObject: index.html
         Enabled: true
         Comment: !Sub '${AWS::StackName} distribution'
@@ -1804,7 +1862,7 @@ Resources:
           LambdaFunctionAssociations:
             -
               EventType: origin-response
-              LambdaFunctionARN: !Ref CloudFrontSecurityHeadersLambda.Version
+              LambdaFunctionARN: !GetAtt CloudFrontSecurityHeadersSetup.EdgeArn
         DefaultRootObject: index.html
         Enabled: true
         Comment: !Sub '${AWS::StackName} distribution'
