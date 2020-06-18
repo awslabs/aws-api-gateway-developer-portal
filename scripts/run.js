@@ -84,6 +84,7 @@ require('./internal/execute-tasks.js')({
 
   async 'reset-assets' () {
     await exec('git', ['checkout', '--force', '--', 'lambdas/static-asset-uploader/build'])
+    await exec('git', ['clean', '-d', '--force', '--', 'lambdas/static-asset-uploader/build'])
   },
 
   async 'cfn-lint' () {
