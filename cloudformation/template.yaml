@@ -35,7 +35,7 @@ Metadata:
           - CustomDomainNameAcmCertArn
           - UseRoute53Nameservers
           - CognitoDomainNameOrPrefix
-          - CognitoDomainAcmCertArn
+          # - CognitoDomainAcmCertArn
       -
         Label:
           default: "Dev Portal Customer Feedback Configuration"
@@ -697,8 +697,8 @@ Resources:
         Projection:
           ProjectionType: KEYS_ONLY
         ProvisionedThroughput:
-          ReadCapacityUnits: '5'
-          WriteCapacityUnits: '5'
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
 
   FeedbackSubmittedSNSTopic:
     Type: AWS::SNS::Topic
@@ -1320,7 +1320,7 @@ Resources:
           Name: email
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: !If [
-          InviteAccountRegistrationMode, 'true', 'false',
+          InviteAccountRegistrationMode, true, false,
         ]
         InviteMessageTemplate:
           EmailSubject: 'Developer Portal - Invitation'
@@ -1361,7 +1361,7 @@ Resources:
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
-      PreventUserExistenceErrors: true
+      PreventUserExistenceErrors: ENABLED
 
   CognitoUserPoolClientSettingsBackingFnRole:
     Type: 'AWS::IAM::Role'
@@ -1419,20 +1419,20 @@ Resources:
         [
           'http://localhost:3000/index.html?action=login',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=login' ]],
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
+          !Join [ '', [ 'https://', !If [ NoCustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName, !Ref CustomDomainName ], '/index.html?action=login' ]]
         ],
         [
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=login' ]]
+          !Join [ '', [ 'https://', !If [ NoCustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName, !Ref CustomDomainName ], '/index.html?action=login' ]]
         ]
       ]
       LogoutURL: !If [ LocalDevelopmentMode,
         [
           'http://localhost:3000/index.html?action=logout',
           !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html?action=logout' ]],
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=logout' ]],
+          !Join [ '', [ 'https://', !If [ NoCustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName, !Ref CustomDomainName ], '/index.html?action=logout' ]],
         ],
         [
-          !Join [ '', [ 'https://', !If [ UseCustomDomainName, !Ref CustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName ], '/index.html?action=logout' ]],
+          !Join [ '', [ 'https://', !If [ NoCustomDomainName, !GetAtt DefaultCloudfrontDistribution.DomainName, !Ref CustomDomainName ], '/index.html?action=logout' ]],
         ]
       ]
       AllowedOAuthFlowsUserPoolClient: true
