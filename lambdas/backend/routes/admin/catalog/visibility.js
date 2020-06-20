@@ -168,7 +168,7 @@ async function deleteFile (file) {
 }
 
 exports.post = async (req, res) => {
-  console.log(`POST /admin-catalog-visibility for Cognito ID: ${util.getCognitoIdentityId(req)}`)
+  console.log(`POST /admin/catalog/visibility for Cognito ID: ${util.getCognitoIdentityId(req)}`)
 
   // for apigateway managed APIs, provide "apiId_stageName"
   // in the apiKey field
