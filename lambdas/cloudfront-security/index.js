@@ -10,7 +10,7 @@ const headersToAdd = {
       'connect-src *',
       "prefetch-src 'self'",
       "font-src 'self' data: fonts.gstatic.com",
-      "img-src 'self'",
+      "img-src 'self' data:",
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' fonts.googleapis.com"
     ].join(';')
