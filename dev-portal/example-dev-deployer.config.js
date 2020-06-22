@@ -31,4 +31,9 @@ module.exports = {
 
   // Set development mode for local use.
   developmentMode: true,
+
+  // Toggle this any time the edge lambda or its replicator lambda are updated. In general, unless
+  // either you're modifying them yourself or they were changed upstream and you just pulled those
+  // changes, you shouldn't need to do anything about this value.
+  // edgeLambdaResetToken: 'reset',
 }

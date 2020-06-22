@@ -146,6 +146,16 @@ AWS SAM CLI profile option: optional specific profile from your AWS credential f
 
 Set this to `true` if you want to enable development mode. It's `false` by default, and unless you're actively developing on the developer portal itself locally, you should generally leave it unset as it disables most protections, including CORS.
 
+### `edgeLambdaRebuildToken: string`
+
+*Default: `'defaultRebuildToken'`*
+
+Change this value if you want to update the edge lambda or its replicator lambda in the next deployment. In general, you shouldn't need to set it unless either 1. you're developing against the project and need to make changes to it, or 2. the project updated that part of the code and you just pulled its changes in preparation to update your deployment.
+
+> Why is this not handled internally? At the time of writing, edge lambdas are difficult to delete due to how long it takes for all their replicas to delete, and you can't delete lambdas with active replicas. This process could take anywhere from a couple hours to several days (well past the largest timeout supported by Lambda), and neither CloudFront nor Lambda currently offer any hooks to know when all the replicas are gone. So edge lambda versions are only created, never deleted, by the template.
+>
+> For this reason, it's better to require the user to explicitly choose when to update the lambda, so that during development, you're not flooded with versions, and during production, you can be better aware of when things change (it's on your account, after all).
+
 ### `samTemplate: string`
 
 *Default: `cloudformation/template.yaml` relative to the repo's root*

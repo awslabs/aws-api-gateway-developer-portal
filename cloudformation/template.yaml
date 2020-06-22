@@ -79,6 +79,11 @@ Parameters:
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
     Default: 'defaultRebuildToken'
 
+  EdgeLambdaRebuildToken:
+    Type: String
+    Description: Provide a token different from the last deployment's token to update the edge lambda. You can provide a timestamp or GUID on each deployment to always update it.
+    Default: 'defaultRebuildToken'
+
   StaticAssetRebuildMode:
     Type: String
     Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
@@ -1755,8 +1760,7 @@ Resources:
       ServiceToken: !GetAtt CloudFrontSecurityHeadersLambda.Arn
       Name: !Ref CloudFrontSecurityHeadersLambda
       RoleArn: !GetAtt LambdaEdgeFunctionRole.Arn
-      # To force update this any time the lambda changes
-      RebuildToken: !Ref CloudFrontSecurityHeadersLambda.Version
+      RebuildToken: !Ref EdgeLambdaRebuildToken
   
   CloudFrontEdgeReplicatorRole:
     Type: AWS::IAM::Role
