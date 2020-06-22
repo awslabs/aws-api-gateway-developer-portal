@@ -79,6 +79,11 @@ Parameters:
     Description: Provide a token different from the last deployment's token to re-upload the dev portal site's static assets. You can provide a timestamp or GUID on each deployment to always re-upload the assets.
     Default: 'defaultRebuildToken'
 
+  EdgeLambdaRebuildToken:
+    Type: String
+    Description: Provide a token different from the last deployment's token to update the edge lambda. You can provide a timestamp or GUID on each deployment to always update it.
+    Default: 'defaultRebuildToken'
+
   StaticAssetRebuildMode:
     Type: String
     Description: By default, a static asset rebuild doesn't overwrite custom-content. Provide the value `overwrite-content` to replace the custom-content with your local version. Don't do this unless you know what you're doing -- all custom changes in your s3 bucket will be lost. 
@@ -1714,6 +1719,93 @@ Resources:
       DevelopmentMode: !Ref DevelopmentMode
       FeedbackEnabled: !If [ EnableFeedbackSubmission, 'true', 'false' ]
 
+  LambdaEdgeFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action: 
+              - "sts:AssumeRole"
+            Principal:
+              Service: 
+                - "lambda.amazonaws.com"
+                - "edgelambda.amazonaws.com"
+
+  CloudFrontSecurityHeadersLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/cloudfront-security
+      Handler: replicator.handler
+      MemorySize: 128
+      Role: !GetAtt CloudFrontEdgeReplicatorRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 300
+      AutoPublishAlias: Live
+      Environment:
+        Variables:
+          Bucket: !Ref ArtifactsS3BucketName
+      Layers:
+        - !Ref LambdaCommonLayer
+
+  CloudFrontSecurityHeadersSetup:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt CloudFrontSecurityHeadersLambda.Arn
+      Name: !Ref CloudFrontSecurityHeadersLambda
+      RoleArn: !GetAtt LambdaEdgeFunctionRole.Arn
+      RebuildToken: !Ref EdgeLambdaRebuildToken
+  
+  CloudFrontEdgeReplicatorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: '/'
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+              - lambda:CreateFunction
+              - lambda:GetFunction
+              - lambda:UpdateFunctionCode
+              - lambda:PublishVersion
+            Resource: arn:aws:lambda:*:*:*
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:DeleteObject
+            - s3:PutObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref ArtifactsS3BucketName
+                - '/*'
+
   CloudFrontOriginAccessIdentity:
     Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
     Condition: 'NotDevelopmentMode'
@@ -1738,6 +1830,10 @@ Resources:
             QueryString: true
           TargetOriginId: 'dev-portal-site-s3-bucket'
           ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            -
+              EventType: origin-response
+              LambdaFunctionARN: !GetAtt CloudFrontSecurityHeadersSetup.EdgeArn
         DefaultRootObject: index.html
         Enabled: true
         Comment: !Sub '${AWS::StackName} distribution'
@@ -1767,6 +1863,10 @@ Resources:
             QueryString: true
           TargetOriginId: 'dev-portal-site-s3-bucket'
           ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            -
+              EventType: origin-response
+              LambdaFunctionARN: !GetAtt CloudFrontSecurityHeadersSetup.EdgeArn
         DefaultRootObject: index.html
         Enabled: true
         Comment: !Sub '${AWS::StackName} distribution'

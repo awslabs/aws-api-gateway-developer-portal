@@ -30,6 +30,7 @@ module.exports = async () => {
     useRoute53Nameservers,
     staticAssetRebuildMode,
     developmentMode,
+    edgeLambdaRebuildToken,
     awsSamCliProfile
   } = deployerConfig
 
@@ -64,6 +65,7 @@ module.exports = async () => {
     ...(customDomainName ? [`CustomDomainName=${customDomainName}`] : []),
     ...(customDomainNameAcmCertArn ? [`CustomDomainNameAcmCertArn=${customDomainNameAcmCertArn}`] : []),
     ...(useRoute53Nameservers ? [`UseRoute53Nameservers=${useRoute53Nameservers}`] : []),
+    ...(edgeLambdaRebuildToken ? [`EdgeLambdaRebuildToken=${edgeLambdaRebuildToken}`] : []),
     '--s3-bucket', buildAssetsBucket,
     ...(awsSamCliProfile ? ['--profile', awsSamCliProfile] : [])
   ])

@@ -170,7 +170,8 @@ class State {
     const params = {
       Bucket: bucketName,
       Key: 'config.js',
-      Body: Buffer.from('window.config=' + JSON.stringify(configObject))
+      Body: Buffer.from('window.config=' + JSON.stringify(configObject)),
+      ContentType: 'application/javascript'
     }
     const options = {}
 

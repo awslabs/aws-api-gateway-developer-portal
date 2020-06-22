@@ -58,6 +58,7 @@ exports.customDomainNameAcmCertArn = getOptional('customDomainNameAcmCertArn')
 exports.useRoute53Nameservers = getOptional('useRoute53Nameservers')
 exports.staticAssetRebuildMode = getOptional('staticAssetRebuildMode')
 exports.developmentMode = getOptional('developmentMode')
+exports.edgeLambdaRebuildToken = getOptional('edgeLambdaRebuildToken')
 
 // AWS SAM CLI configuration
 exports.awsSamCliProfile = getOptional('awsSamCliProfile')

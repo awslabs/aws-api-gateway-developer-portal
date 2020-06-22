@@ -27,12 +27,12 @@ export default observer(class ApisPage extends React.Component {
   containerRef = React.createRef()
   hasRoot = false
 
-  componentDidMount () { this.updateApi() }
-  componentDidUpdate () { this.updateApi() }
+  componentDidMount () { this.updateApi(true) }
+  componentDidUpdate () { this.updateApi(false) }
   componentWillUnmount () { this.containerRef = null }
 
-  updateApi () {
-    return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
+  updateApi (isInitial) {
+    return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage, isInitial)
       .then(api => {
         if (this.containerRef == null) return
         const elem = this.containerRef.current

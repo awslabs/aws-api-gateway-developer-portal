@@ -45,7 +45,11 @@ function InfoReplacement ({ specSelectors }) {
   const docsUrl = externalDocs.get('url')
 
   return <Observer>
-    {() => <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
+    {/*
+      If no API is loaded, let's just swallow the state and move on. (Swagger UI doesn't offer any
+      way to clean up after itself.)
+    */}
+    {() => store.api == null ? null : <Container fluid textAlign='left' className='fixfloat' style={{ padding: '40px 0px' }}>
       <div style={{ display: 'flex' }}>
         <div style={{ flex: '0 0 auto', marginRight: '20px' }}>
           <Image size='small' src={store.api.logo} />

@@ -32,4 +32,8 @@ module.exports = {
   // cognitoDomainAcmCertArn: 'arn:aws:acm:us-east-1:123456789012:certificate/98765432-9876-9876-9876-987654321098',
   // useRoute53Nameservers: true,
   // feedbackEmail: 'admin@domain.example',
+
+  // Toggle this any time the edge lambda or its replicator lambda need updated. You will be told in
+  // the migration instructions to do so if you need to.
+  // edgeLambdaResetToken: 'reset',
 }
