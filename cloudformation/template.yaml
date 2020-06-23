@@ -18,7 +18,7 @@ Metadata:
         Label:
           default: "Dev Portal Customer Configuration"
         Parameters:
-          - CognitoIdentityPoolName2
+          - CognitoIdentityPoolNameV2
           - DevPortalCustomersTableName
           - AccountRegistrationMode
       # Marketplace support is currently broken
@@ -110,7 +110,7 @@ Parameters:
     Description: The name for your legacy identity pool. Set this only if you have an existing instance to fail over to and before updating it.
     Default: ''
 
-  CognitoIdentityPoolName2:
+  CognitoIdentityPoolNameV2:
     Type: String
     Description: The name for your Cognito Identity Pool.
     Default: 'DevPortalIdentityPool'
@@ -851,7 +851,7 @@ Resources:
               - cognito-idp:AdminDeleteUser
               - cognito-idp:AdminGetUser
               - cognito-idp:AdminListGroupsForUser
-            Resource: !GetAtt CognitoUserPool0.Arn
+            Resource: !GetAtt CognitoUserPoolV2.Arn
 
   CognitoPostConfirmationTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -882,7 +882,7 @@ Resources:
           - Effect: Allow
             Action:
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool0.Arn
+            Resource: !GetAtt CognitoUserPoolV2.Arn
 
   CognitoPostAuthenticationTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -919,7 +919,7 @@ Resources:
           - Effect: Allow
             Action:
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool0.Arn
+            Resource: !GetAtt CognitoUserPoolV2.Arn
 
   CognitoUserMigrationTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -947,7 +947,7 @@ Resources:
             Action:
               - cognito-idp:AdminInitiateAuth
               - cognito-idp:AdminGetUser
-            Resource: !GetAtt CognitoUserPool0.Arn
+            Resource: !GetAtt CognitoUserPoolV2.Arn
 
   CatalogUpdaterLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -1130,7 +1130,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool0
+          - !Ref CognitoUserPoolV2
 
   CognitoPostAuthenticationTriggerFnExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1145,7 +1145,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool0
+          - !Ref CognitoUserPoolV2
 
   # Marketplace support is currently broken
   # LambdaSNSExecutionPermission:
@@ -1201,7 +1201,7 @@ Resources:
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
-          UserPoolId: !Ref CognitoUserPool0
+          UserPoolId: !Ref CognitoUserPoolV2
           AdminsGroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
           RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
           DevelopmentMode: !Ref DevelopmentMode
@@ -1301,12 +1301,12 @@ Resources:
           Name: email
           Required: false
   
-  CognitoUserPool0:
+  CognitoUserPoolV2:
     Type: AWS::Cognito::UserPool
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      UserPoolName: !Ref CognitoIdentityPoolName2
+      UserPoolName: !Ref CognitoIdentityPoolNameV2
       # Lambda trigger caveats:
       #
       # - We can't use the functions' ARNs here, because there would be a
@@ -1382,7 +1382,7 @@ Resources:
     # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
     # settings won't be set, e.g., CallbackURL.
     Properties:
-      UserPoolId: !Ref CognitoUserPool0
+      UserPoolId: !Ref CognitoUserPoolV2
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
@@ -1437,7 +1437,7 @@ Resources:
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool0
+      UserPoolId: !Ref CognitoUserPoolV2
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
       CallbackURL: !If [ LocalDevelopmentMode,
@@ -1521,13 +1521,13 @@ Resources:
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool0
+      UserPoolId: !Ref CognitoUserPoolV2
       Domain: !Ref CognitoDomainNameOrPrefix
   
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      IdentityPoolName: !Ref CognitoIdentityPoolName2
+      IdentityPoolName: !Ref CognitoIdentityPoolNameV2
       AllowUnauthenticatedIdentities: false
       CognitoIdentityProviders:
         - ClientId: !Ref CognitoUserPoolClient
@@ -1536,7 +1536,7 @@ Resources:
             - - cognito-idp.
               - !Ref 'AWS::Region'
               - .amazonaws.com/
-              - !Ref CognitoUserPool0
+              - !Ref CognitoUserPoolV2
 
   CognitoIdentityPoolRoles:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
@@ -1670,7 +1670,7 @@ Resources:
       # since admin group has a precedence of 0, it takes priority
       Precedence: 0
       RoleArn: !GetAtt CognitoAdminRole.Arn
-      UserPoolId: !Ref CognitoUserPool0
+      UserPoolId: !Ref CognitoUserPoolV2
 
   CognitoRegisteredGroup:
     Type: AWS::Cognito::UserPoolGroup
@@ -1679,7 +1679,7 @@ Resources:
       GroupName: !Sub '${AWS::StackName}-RegisteredGroup'
       Precedence: 1
       RoleArn: !GetAtt CognitoRegisteredRole.Arn
-      UserPoolId: !Ref CognitoUserPool0
+      UserPoolId: !Ref CognitoUserPoolV2
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1729,7 +1729,7 @@ Resources:
       RestApiId: !Ref ApiGatewayApi
       Region: !Ref 'AWS::Region'
       IdentityPoolId: !Ref CognitoIdentityPool
-      UserPoolId: !Ref CognitoUserPool0
+      UserPoolId: !Ref CognitoUserPoolV2
       UserPoolClientId: !Ref CognitoUserPoolClient
       UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
       # Marketplace support is currently broken
@@ -1938,7 +1938,7 @@ Resources:
       Environment:
         Variables:
           CustomersTableName: !Ref DevPortalCustomersTableName
-          UserPoolId: !Ref CognitoUserPool0
+          UserPoolId: !Ref CognitoUserPoolV2
           AdminsGroupName: !Ref CognitoAdminsGroup
       Layers:
         - !Ref LambdaCommonLayer
@@ -1979,7 +1979,7 @@ Resources:
             Action:
               - cognito-idp:ListUsers
               - cognito-idp:ListUsersInGroup
-            Resource: !GetAtt CognitoUserPool0.Arn
+            Resource: !GetAtt CognitoUserPoolV2.Arn
 
 Outputs:
   WebsiteURL:
