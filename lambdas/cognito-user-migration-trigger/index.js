@@ -22,16 +22,18 @@ exports.handler = async (event) => {
       if (resp.AuthenticationResult == null) {
         // Username exists, but for whatever reason, the password wasn't sufficient.
         // Let's simplify and just force a password reset here.
-        const error = new Error()
-        error.code = 'PasswordResetRequiredException'
-        throw error
+        event.response.finalUserStatus = 'RESET_REQUIRED'
+      } else {
+        event.response.finalUserStatus = 'CONFIRMED'
       }
-
-      event.response.finalUserStatus = 'CONFIRMED'
+    }, e => {
+      // Let's go through the standard "forgot password" flow for these errors.
+      if (e.code !== 'PasswordResetRequiredException') throw e
+      event.response.finalUserStatus = 'RESET_REQUIRED'
     })
   } else if (event.triggerSource === 'UserMigration_ForgotPassword') {
     // Non-error response required to enable password-reset code to be sent to user
-    // `event.response.finalUserStatus` is left alone to trigger reset
+    event.response.finalUserStatus = 'RESET_REQUIRED'
   } else {
     throw new Error('Bad triggerSource ' + event.triggerSource)
   }
@@ -64,8 +66,6 @@ exports.handler = async (event) => {
       throw new Error('Bad username or password')
     }
 
-    // Let's go through the standard "forgot password" flow.
-    if (e.code === 'PasswordResetRequiredException') return
     if (e.code === 'InvalidParameterException') throw new Error('Invalid parameter')
     if (e.code === 'TooManyRequestsException') throw new Error('Too many requests')
     console.error(e)
