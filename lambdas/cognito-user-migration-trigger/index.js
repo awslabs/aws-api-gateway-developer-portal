@@ -35,7 +35,7 @@ exports.handler = async (event) => {
     // Non-error response required to enable password-reset code to be sent to user
     event.response.finalUserStatus = 'RESET_REQUIRED'
   } else {
-    throw new Error('Bad triggerSource ' + event.triggerSource)
+    throw new Error(`Bad trigger source: ${event.triggerSource}`)
   }
 
   try {
