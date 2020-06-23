@@ -19,30 +19,15 @@ exports.handler = async (event) => {
       ClientId: event.callerContext.clientId,
       UserPoolId: event.userPoolId
     }).promise().then(resp => {
-      if (resp.AuthenticationResult != null) {
-        event.response.finalUserStatus = 'CONFIRMED'
-      } else {
+      if (resp.AuthenticationResult == null) {
         // Username exists, but for whatever reason, the password wasn't sufficient.
         // Let's simplify and just force a password reset here.
-      }
-    }, e => {
-      // Mask the obvious errors.
-      if (
-        e.code === 'NotAuthorizedException' ||
-        e.code === 'UserLambdaValidationException' ||
-        e.code === 'UserNotConfirmedException' ||
-        e.code === 'UserNotFoundException' ||
-        e.code === 'MFAMethodNotFoundException'
-      ) {
-        throw new Error('Bad username or password')
+        const error = new Error()
+        error.code = 'PasswordResetRequiredException'
+        throw error
       }
 
-      // Let's go through the standard "forgot password" flow.
-      if (e.code === 'PasswordResetRequiredException') return
-      if (e.code === 'InvalidParameterException') throw new Error('Invalid parameter')
-      if (e.code === 'TooManyRequestsException') throw new Error('Too many requests')
-      console.error(e)
-      throw new Error('Internal error occurred')
+      event.response.finalUserStatus = 'CONFIRMED'
     })
   } else if (event.triggerSource === 'UserMigration_ForgotPassword') {
     // Non-error response required to enable password-reset code to be sent to user
@@ -51,32 +36,39 @@ exports.handler = async (event) => {
     throw new Error('Bad triggerSource ' + event.triggerSource)
   }
 
-  const [getUserResp] = await Promise.all([
-    exports.cognitoIdentityServiceProvider.adminGetUser({
-      UserPoolId: event.userPoolId,
-      Username: event.userName
-    }).promise().catch(e => {
-      // Mask the obvious errors.
-      if (
-        e.code === 'NotAuthorizedException' ||
-        e.code === 'UserNotFoundException'
-      ) {
-        throw new Error('Bad username or password')
-      }
+  try {
+    const [getUserResp] = await Promise.all([
+      exports.cognitoIdentityServiceProvider.adminGetUser({
+        UserPoolId: event.userPoolId,
+        Username: event.userName
+      }).promise(),
+      authReq
+    ])
 
-      if (e.code === 'InvalidParameterException') throw new Error('Invalid parameter')
-      if (e.code === 'TooManyRequestsException') throw new Error('Too many requests')
-      console.error(e)
-      throw new Error('Internal error occurred')
-    }),
-    authReq
-  ])
+    const email = getUserResp.UserAttributes.find(e => e.Name === 'email').Value
 
-  const email = getUserResp.UserAttributes.find(e => e.Name === 'email').Value
+    event.response.userAttributes = { email, email_verified: 'true' }
+    event.response.messageAction = 'SUPPRESS'
+    event.response.desiredDeliveryMediums = 'email'
+    event.response.forceAliasCreation = true
+    return event
+  } catch (e) {
+    // Mask the obvious errors.
+    if (
+      e.code === 'NotAuthorizedException' ||
+      e.code === 'UserLambdaValidationException' ||
+      e.code === 'UserNotConfirmedException' ||
+      e.code === 'UserNotFoundException' ||
+      e.code === 'MFAMethodNotFoundException'
+    ) {
+      throw new Error('Bad username or password')
+    }
 
-  event.response.userAttributes = { email, email_verified: 'true' }
-  event.response.messageAction = 'SUPPRESS'
-  event.response.desiredDeliveryMediums = 'email'
-  event.response.forceAliasCreation = true
-  return event
+    // Let's go through the standard "forgot password" flow.
+    if (e.code === 'PasswordResetRequiredException') return
+    if (e.code === 'InvalidParameterException') throw new Error('Invalid parameter')
+    if (e.code === 'TooManyRequestsException') throw new Error('Too many requests')
+    console.error(e)
+    throw new Error('Internal error occurred')
+  }
 }
