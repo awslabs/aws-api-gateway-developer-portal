@@ -81,7 +81,11 @@ The ARN of the ACM certificate corresponding to the custom domain to use to host
 
 *Default: `'DevPortalIdentityPool'`*
 
-The name of the generated Cognito identity pool.
+The name of the generated Cognito identity pool and user pool.
+
+### `legacyCognitoIdentityPoolName: string`
+
+The name of the old generated Cognito identity pool and user pool. Set this only if you have an existing instance to fail over to and before updating it. You don't need to set this if you're setting it up for the first time.
 
 ### `customersTableName: string`
 

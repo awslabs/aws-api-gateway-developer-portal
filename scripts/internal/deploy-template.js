@@ -20,6 +20,7 @@ module.exports = async () => {
     preLoginAccountsTableName,
     feedbackTableName,
     cognitoIdentityPoolName,
+    legacyCognitoIdentityPoolName,
     // FIXME: Marketplace support is currently broken
     // marketplaceSubscriptionTopic,
     accountRegistrationMode,
@@ -54,7 +55,8 @@ module.exports = async () => {
     ...(customersTableName ? [`DevPortalCustomersTableName=${customersTableName}`] : []),
     ...(preLoginAccountsTableName ? [`DevPortalPreLoginAccountsTableName=${preLoginAccountsTableName}`] : []),
     ...(feedbackTableName ? [`DevPortalFeedbackTableName=${feedbackTableName}`] : []),
-    ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName=${cognitoIdentityPoolName}`] : []),
+    ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName2=${cognitoIdentityPoolName}`] : []),
+    ...(legacyCognitoIdentityPoolName ? [`CognitoIdentityPoolName=${legacyCognitoIdentityPoolName}`] : []),
     ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
     ...(cognitoDomainName ? [`CognitoDomainNameOrPrefix=${cognitoDomainName}`] : []),
     // FIXME: Marketplace support is currently broken
