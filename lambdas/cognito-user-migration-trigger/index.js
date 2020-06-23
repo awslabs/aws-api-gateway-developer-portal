@@ -67,7 +67,7 @@ exports.handler = async (event) => {
       if (e.code === 'InvalidParameterException') throw new Error('Invalid parameter')
       if (e.code === 'TooManyRequestsException') throw new Error('Too many requests')
       console.error(e)
-      throw new Error('Internal error occurred.')
+      throw new Error('Internal error occurred')
     }),
     authReq
   ])
