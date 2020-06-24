@@ -6,16 +6,20 @@
 
 const customersController = require('dev-portal-common/customers-controller')
 const { getEnv } = require('dev-portal-common/get-env')
+const { performMigration } = require('dev-portal-common/migrate-group-membership')
 
 exports.handler = async event => {
   const accountRegistrationMode = getEnv('AccountRegistrationMode')
   const userId = event.request.userAttributes.sub
   const emailAddress = event.request.userAttributes.email
+  const groupsToEnsure = event.request.userAttributes.groups
 
   console.log(
     `In Post Confirmation trigger for userId=[${userId}]` +
       `, in accountRegistrationMode=[${accountRegistrationMode}]`
   )
+
+  if (groupsToEnsure) await performMigration(userId, groupsToEnsure)
 
   // We only care about sign-up confirmation, not forgot-password confirmation.
   if (event.triggerSource !== 'PostConfirmation_ConfirmSignUp') {
@@ -41,14 +45,10 @@ exports.handler = async event => {
       })
     ])
   } else if (accountRegistrationMode === 'request') {
-    try {
-      await customersController.saveRequestPreLoginAccount({
-        userId,
-        emailAddress
-      })
-    } catch (error) {
-      console.error(error)
-    }
+    await customersController.saveRequestPreLoginAccount({
+      userId,
+      emailAddress
+    })
   } else {
     // Note: Post Confirmation trigger *does not* run for accounts created via
     // AdminCreateUser (e.g. in Invite mode).

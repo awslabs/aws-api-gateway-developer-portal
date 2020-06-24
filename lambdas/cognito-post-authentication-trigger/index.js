@@ -6,12 +6,16 @@
 
 const customersController = require('dev-portal-common/customers-controller')
 const { getEnv } = require('dev-portal-common/get-env')
+const { performMigration } = require('dev-portal-common/migrate-group-membership')
 
 exports.handler = async event => {
   const userId = event.request.userAttributes.sub
   const userPoolId = event.userPoolId
+  const groupsToEnsure = event.request.userAttributes.groups
 
   console.log(`In Post Authentication trigger for userId=[${userId}]`)
+
+  if (groupsToEnsure) await performMigration(userId, groupsToEnsure)
 
   try {
     const { account, source } = await customersController.findAccountByUserId(

@@ -1,23 +1,26 @@
 'use strict'
 
 const AWS = require('aws-sdk')
+const { CognitoIdentityServiceProvider } = require('aws-sdk')
 
-exports.cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider({
+const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider({
   apiVersion: '2016-04-18'
 })
+
+exports.cognitoIdentityServiceProvider = CognitoIdentityServiceProvider
 
 exports.handler = async (event) => {
   let authReq
 
   if (event.triggerSource === 'UserMigration_Authentication') {
-    authReq = exports.cognitoIdentityServiceProvider.adminInitiateAuth({
+    authReq = cognitoIdentityServiceProvider.adminInitiateAuth({
       AuthFlow: 'ADMIN_USER_PASSWORD_AUTH',
       AuthParameters: {
         USERNAME: event.userName,
         PASSWORD: event.request.password
       },
       ClientId: event.callerContext.clientId,
-      UserPoolId: event.userPoolId
+      UserPoolId: process.env.OldUserPool
     }).promise().then(resp => {
       if (resp.AuthenticationResult == null) {
         // Username exists, but for whatever reason, the password wasn't sufficient.
@@ -39,17 +42,55 @@ exports.handler = async (event) => {
   }
 
   try {
-    const [getUserResp] = await Promise.all([
-      exports.cognitoIdentityServiceProvider.adminGetUser({
-        UserPoolId: event.userPoolId,
-        Username: event.userName
-      }).promise(),
+    const [userAttributes] = await Promise.all([
+      (async () => {
+        const options = {
+          UserPoolId: process.env.OldUserPool,
+          AttributesToGet: ['email', 'username'],
+          Filter: `email = "${event.userName.replace(/"/, '\\"')}"`,
+          Limit: 1
+        }
+
+        do {
+          const resp = await cognitoIdentityServiceProvider.listUsers(options).promise()
+
+          if (resp.Users.length) {
+            const user = resp.Users[0]
+            const groups = []
+
+            const options = {
+              UserPoolId: process.env.OldUserPool,
+              Username: user.Username
+            }
+
+            do {
+              const resp = await cognitoIdentityServiceProvider.adminListGroupsForUser(options).promise()
+
+              for (const group of resp.Groups) {
+                if (group.GroupName === process.env.OldAdminsGroup) groups.push('admin')
+                else if (group.GroupName === process.env.OldRegisteredGroup) groups.push('registered')
+              }
+
+              options.NextToken = resp.NextToken
+            } while (options.NextToken)
+
+            return {
+              email: user.Attributes.find(e => e.Name === 'email').Value,
+              username: user.Username,
+              email_verified: 'true',
+              'custom:groups': groups.join(',')
+            }
+          }
+
+          options.PaginationToken = resp.PaginationToken
+        } while (options.PaginationToken)
+
+        throw new Error('Bad username or password')
+      })(),
       authReq
     ])
 
-    const email = getUserResp.UserAttributes.find(e => e.Name === 'email').Value
-
-    event.response.userAttributes = { email, email_verified: 'true' }
+    event.response.userAttributes = userAttributes
     event.response.messageAction = 'SUPPRESS'
     event.response.desiredDeliveryMediums = 'email'
     event.response.forceAliasCreation = true

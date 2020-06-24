@@ -55,7 +55,7 @@ module.exports = async () => {
     ...(customersTableName ? [`DevPortalCustomersTableName=${customersTableName}`] : []),
     ...(preLoginAccountsTableName ? [`DevPortalPreLoginAccountsTableName=${preLoginAccountsTableName}`] : []),
     ...(feedbackTableName ? [`DevPortalFeedbackTableName=${feedbackTableName}`] : []),
-    ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName2=${cognitoIdentityPoolName}`] : []),
+    ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolNameV2=${cognitoIdentityPoolName}`] : []),
     ...(legacyCognitoIdentityPoolName ? [`CognitoIdentityPoolName=${legacyCognitoIdentityPoolName}`] : []),
     ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
     ...(cognitoDomainName ? [`CognitoDomainNameOrPrefix=${cognitoDomainName}`] : []),
