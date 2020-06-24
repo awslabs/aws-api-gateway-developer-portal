@@ -1323,6 +1323,7 @@ Resources:
       Schema:
         - AttributeDataType: String
           Name: email
+          Required: true
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: !If [
           InviteAccountRegistrationMode, true, false,
@@ -1643,6 +1644,8 @@ Resources:
 
   CognitoAdminsGroup:
     Type: AWS::Cognito::UserPoolGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       Description: 'Admin users of the developer portal'
       GroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
@@ -1654,6 +1657,8 @@ Resources:
 
   CognitoRegisteredGroup:
     Type: AWS::Cognito::UserPoolGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       Description: 'Registered users in the developer portal'
       GroupName: !Sub '${AWS::StackName}-RegisteredGroup'
@@ -1960,6 +1965,89 @@ Resources:
               - cognito-idp:ListUsers
               - cognito-idp:ListUsersInGroup
             Resource: !GetAtt CognitoUserPool.Arn
+
+  UserGroupImporterLogsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: cognito-idp.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: WriteCloudWatchLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:DescribeLogStreams
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+
+  UserGroupImporterExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: WriteCloudWatchLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: S3GetObject
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: s3:getObject
+            Resource: arn:aws:s3:::*/*
+      - PolicyName: UpdateCognitoUserList
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+              - cognito-idp:GetCSVHeader
+              - cognito-idp:CreateUserImportJob
+              - cognito-idp:StartUserImportJob
+              - cognito-idp:DescribeUserImportJob
+              - cognito-idp:AdminAddUserToGroup
+              - cognito-idp:AdminAddUserToGroup
+            Resource: !GetAtt CognitoUserPool.Arn
+  
+  UserGroupImporter:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambdas/dump-v3-account-data
+      Handler: index.handler
+      MemorySize: 512
+      Role: !GetAtt UserGroupImporterExecutionRole.Arn
+      Runtime: nodejs12.x
+      # Use the default max timeout duration.
+      Timeout: 900
+      Environment:
+        Variables:
+          UserPoolId: !Ref CognitoUserPool
+          LogsRoleArn: !Ref UserGroupImporterLogsRole
+          AdminsGroup: !Ref CognitoAdminsGroup
+          RegisteredGroup: !Ref CognitoRegisteredGroup
+      
 
 Outputs:
   WebsiteURL:
