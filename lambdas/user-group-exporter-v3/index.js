@@ -8,13 +8,17 @@ const AWS = require('aws-sdk')
 const cloudformation = new AWS.CloudFormation({ apiVersion: '2010-05-15' })
 const cognitoIdp = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-18' })
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+const dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10' })
 
 exports.handler = async event => {
   let userPoolId, adminsGroup, registeredGroup
+  let customersTableName, feedbackTableName
 
   {
     const options = { StackName: event.StackName }
 
+    // eslint-disable-next-line no-labels
+    search:
     do {
       const resp = await cloudformation.listStackResources(options).promise()
 
@@ -25,18 +29,47 @@ exports.handler = async event => {
           adminsGroup = summary.PhysicalResourceId
         } else if (summary.LogicalResourceId === 'CognitoRegisteredGroup') {
           registeredGroup = summary.PhysicalResourceId
+        } else if (summary.LogicalResourceId === 'CustomersTable') {
+          customersTableName = summary.PhysicalResourceId
+        } else if (summary.LogicalResourceId === 'FeedbackTable') {
+          feedbackTableName = summary.PhysicalResourceId
         }
-        if (userPoolId && adminsGroup && registeredGroup) break
+
+        if (
+          userPoolId &&
+          adminsGroup &&
+          registeredGroup &&
+          customersTableName &&
+          feedbackTableName
+        ) {
+          // eslint-disable-next-line no-labels
+          break search
+        }
       }
 
       options.NextToken = resp.NextToken
     } while (options.NextToken != null)
   }
 
+  await dynamodb.createBackup({
+    TableName: customersTableName,
+    BackupName: event.BackupPrefix + '-Customers'
+  })
+
+  await dynamodb.createBackup({
+    TableName: feedbackTableName,
+    BackupName: event.BackupPrefix + '-Feedback'
+  })
+
   return new Promise((resolve, reject) => {
     // Using newline-delimited JSON to reduce memory requirements in case the user list is
     // sufficiently large.
-    const uploadStream = new PassThrough()
+    const uploadStream = new PassThrough({
+      // Set a much higher high water mark than the default - this is only used once, and the
+      // pipeline won't wait for it to buffer. Intermediate values shouldn't come anywhere close
+      // to this.
+      writableHighWaterMark: 64 /* MB */ * 1024 /* KB */ * 1024 /* B */
+    })
     const uploadPromise = s3.upload({
       Bucket: event.Bucket,
       Key: 'dev-portal-migrate.ndjson',
@@ -75,7 +108,8 @@ exports.handler = async event => {
       start()
 
       const options = { UserPoolId: userPoolId, Username: user.Username }
-      const groups = new Set()
+      let isAdmin = false
+      let isRegistered = false
 
       do {
         const resp = await cognitoIdp.adminListGroupsForUser(options).promise()
@@ -83,33 +117,42 @@ exports.handler = async event => {
 
         for (const group of resp.Groups) {
           if (group.GroupName === adminsGroup) {
-            groups.push('admin')
+            isAdmin = true
           } else if (group.GroupName === registeredGroup) {
-            groups.push('registered')
+            isRegistered = true
           }
         }
       } while (options.NextToken != null)
 
-      uploadStream.write(JSON.stringify([user, [...groups]]) + '\n', 'utf-8')
-    }
+      // Only serialize what's needed, to save space and speed up restoration.
+      // (Restoration is more network-intensive than backup.)
+      const attributes = Object.create(null)
 
-    const userOptions = { UserPoolId: userPoolId }
-
-    async function loopUsers () {
-      start()
-      const { Users, PaginationToken } = await cognitoIdp.listUsers(userOptions).promise()
-
-      // Recurse before processing further, to schedule the network request in parallel.
-      if (PaginationToken != null) {
-        loopUsers({ UserPoolId: userPoolId, PaginationToken }).then(pass, fail)
+      for (const attr of user.Attributes) {
+        attributes[attr.Name] = attr.Value
       }
 
-      // Process each user concurrently.
-      for (const user of Users) {
-        processUser(user).then(pass, fail)
-      }
+      attributes._isAdmin = isAdmin
+      attributes._isRegistered = isRegistered
+
+      uploadStream.write(JSON.stringify(attributes) + '\n', 'utf-8')
     }
 
-    loopUsers({ UserPoolId: userPoolId }).then(pass, fail)
+    start()
+
+    ;(async () => {
+      const userOptions = { UserPoolId: userPoolId }
+
+      do {
+        const { Users, PaginationToken } = await cognitoIdp.listUsers(userOptions).promise()
+
+        userOptions.PaginationToken = PaginationToken
+
+        // Process each user concurrently.
+        for (const user of Users) {
+          processUser(user).then(pass, fail)
+        }
+      } while (userOptions.PaginationToken != null)
+    })().then(pass, fail)
   })
 }
