@@ -9,7 +9,19 @@ exports.get = async (req, res) => {
   try {
     const visibility = { apiGateway: [] }
     const catalogObject = await util.catalog()
-    const apis = (await util.apigateway.getRestApis().promise()).items
+    
+    const defaultParams = { limit: 500 };
+    let response = await util.apigateway.getRestApis(defaultParams).promise();
+    const apis = response.items;
+
+    while (response.position) {
+      console.log(
+        `Fetching next page of api, at position=[${response.position}]`
+      );
+      const nextParams = { ...defaultParams, position: response.position };
+      response = await util.apiGateway.getRestApis(nextParams).promise();
+      apis.push(...response.items);
+    }
 
     console.log(`network request: ${JSON.stringify(apis, null, 4)}`)
     console.log(`apis: ${JSON.stringify(apis, null, 4)}`)
