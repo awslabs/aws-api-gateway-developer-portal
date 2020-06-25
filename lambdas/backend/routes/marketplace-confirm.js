@@ -1,5 +1,7 @@
 'use strict'
 
+// FIXME: Marketplace support is currently broken
+
 const { inspect } = require('util')
 const util = require('../util')
 

@@ -21,6 +21,10 @@ afterEach(rtl.cleanup)
 const renderPage = () => testUtils.renderWithRouter(<PendingInvites />)
 
 describe('PendingInvites page', () => {
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+  
   it('renders', async () => {
     AccountService.fetchPendingInviteAccounts = jest.fn().mockResolvedValue([])
     const page = renderPage()
@@ -264,9 +268,13 @@ describe('PendingInvites page', () => {
 
     const page = renderPage()
     await accountsTestUtils.waitForAccountsToLoad(page)
+    // Wait for the full page to render first, *then* enable the fake timers. (Otherwise, the test
+    // will time out.)
+    jest.useFakeTimers()
 
     const startCreateButton = page.getByText(/Create invite/)
     rtl.fireEvent.click(startCreateButton)
+    console.error('run all timers'); jest.runAllTimers()
     const createModal = await rtl.waitForElement(() =>
       rtl.getByText(document, 'Create invite').closest('.modal'),
     )
@@ -285,25 +293,30 @@ describe('PendingInvites page', () => {
       !pleaseEnterAValidEmail.classList.contains('hidden')
 
     expect(confirmCreateButton.disabled).toBe(true)
-    expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
+    expect(pleaseEnterAValidEmailIsVisible()).toBe(false)
 
     rtl.fireEvent.change(emailInput, { target: { value: '000' } })
+    console.error('run all timers'); jest.runAllTimers()
     expect(confirmCreateButton.disabled).toBe(true)
     expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
 
     rtl.fireEvent.change(emailInput, { target: { value: '000@' } })
+    console.error('run all timers'); jest.runAllTimers()
     expect(confirmCreateButton.disabled).toBe(true)
     expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
 
     rtl.fireEvent.change(emailInput, { target: { value: '000@example.com' } })
+    console.error('run all timers'); jest.runAllTimers()
     expect(confirmCreateButton.disabled).toBe(false)
     expect(pleaseEnterAValidEmailIsVisible()).toBe(false)
 
     rtl.fireEvent.change(emailInput, { target: { value: '000' } })
+    console.error('run all timers'); jest.runAllTimers()
     expect(confirmCreateButton.disabled).toBe(true)
     expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
 
     rtl.fireEvent.change(emailInput, { target: { value: '' } })
+    console.error('run all timers'); jest.runAllTimers()
     expect(confirmCreateButton.disabled).toBe(true)
     expect(pleaseEnterAValidEmailIsVisible()).toBe(true)
   })

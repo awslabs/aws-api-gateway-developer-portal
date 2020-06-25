@@ -3,15 +3,14 @@
   "version": "3.0.2",
   "private": true,
   "dependencies": {
-    "aws-sdk": "^2.326.0",
     "chart.js": "^2.7.2",
     "front-matter": "^3.0.0",
     "jwt-decode": "^2.2.0",
     "lodash": "^4.17.13",
     "mobx": "^5.15.4",
-    "mobx-react": "^6.1.8",
-    "object-hash": "^1.3.1",
-    "query-string": "^6.8.1",
+    "mobx-react": "^6.2.2",
+    "object-hash": "^2.0.3",
+    "query-string": "^6.12.1",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
     "react-markdown": "^4.0.3",
@@ -22,15 +21,11 @@
     "yamljs": "^0.3.0"
   },
   "scripts": {
-    "get-dependencies": "npm install; npm run build",
     "start": "react-scripts start",
-    "build": "react-scripts build; rm -rf ../lambdas/static-asset-uploader/build; cp -r ./build ../lambdas/static-asset-uploader",
-    "deploy": "node ./scripts/deploy-stack.js",
-    "write-config": "node ./scripts/write-config.js",
-    "release": "npm run build && npm run deploy",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "cover": "react-scripts test --coverage",
-    "coverage": "cover",
+    "coverage": "npm run cover",
     "eject": "react-scripts eject"
   },
   "browserslist": [
@@ -42,15 +37,6 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^4.0.0",
     "@testing-library/react": "^8.0.4",
-    "@typescript-eslint/eslint-plugin": "^2.21.0",
-    "@typescript-eslint/parser": "^2.21.0",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-flowtype": "^3.13.0",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.18.3",
-    "eslint-plugin-react-hooks": "^1.7.0",
     "node-fetch": "^2.3.0",
     "react-scripts": "^3.4.0"
   }

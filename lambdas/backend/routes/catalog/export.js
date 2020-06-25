@@ -3,7 +3,7 @@
 const util = require('../../util')
 
 exports.get = async (req, res) => {
-  console.log(`GET /catalog/${req.params.id}/api for Cognito ID: ${util.getCognitoIdentityId(req)}`)
+  console.log(`GET /catalog/${req.params.id}/export for Cognito ID: ${util.getCognitoIdentityId(req)}`)
 
   // note that we only return an SDK if the API is in the catalog
   // this is important because the lambda function has permission to fetch any API's SDK
@@ -16,21 +16,17 @@ exports.get = async (req, res) => {
   } else if (!catalogObject.sdkGeneration) {
     res.status(403).json({ message: `API with ID (${restApiId}) and Stage (${stageName}) is not enabled for API export generation.` })
   } else {
-    let parameters = req.query.parameters
+    let { exportType, parameters } = req.query
     if (typeof parameters === 'string') {
       try { parameters = JSON.parse(parameters) } catch (e) {
         return res.status(400).json({ message: `Input parameters for API with ID (${restApiId}) and Stage (${stageName}) were a string, but not parsable JSON: ${parameters}` })
       }
     }
-    console.log(req.query.parameters)
-    console.log(parameters)
-    const resultsBuffer = (await util.apigateway.getExport({
-      restApiId,
-      exportType: req.query.exportType,
-      stageName,
-      parameters
-    }).promise()).body
+    console.log({ exportType, parameters })
+    const result = await util.apigateway.getExport({
+      restApiId, exportType, stageName, parameters
+    }).promise()
 
-    res.send(resultsBuffer)
+    res.status(200).type(parameters.accept).send(result.body)
   }
 }

@@ -27,13 +27,13 @@ export default function ApiSearch (props) {
   // TODO: replace this with a customized search eventually. At the very least, the Swagger API
   // fields shouldn't be here, and
   const dataSet = useMemo(() => !store.apiList ? [] : [
-    ...store.apiList.apiGateway.map(({ id, stage, swagger, usagePlan }) => ({
+    ...store.apiList.apiGateway.map(({ id, apiStage: stage, swagger, usagePlan }) => ({
       url: `/apis/${id}/${stage}`,
       title: `${swagger.info.title} - ${stage}`,
       stage: `${stage}`,
       searchable: prepareSearch(`${JSON.stringify(swagger)} ${JSON.stringify(usagePlan)} ${stage}`).join(' ')
     })),
-    ...store.apiList.generic.map(({ id, swagger, stage }) => {
+    ...store.apiList.generic.map(({ id, swagger, apiStage: stage }) => {
       const api = {
         url: `/apis/${id}`,
         title: stage ? `${swagger.info.title} - ${stage}` : `${swagger.info.title}`,

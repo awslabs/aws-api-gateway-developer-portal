@@ -1,0 +1,3 @@
+templates: ['cloudformation/template.yaml']
+include_checks: ['I']
+#regions: ['ALL_REGIONS']

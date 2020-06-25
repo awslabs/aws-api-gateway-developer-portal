@@ -58,7 +58,7 @@ datauri.on('error', err => console.log(err));
 datauri.encode('test/myfile.png');
 ```
 
-### Promise (node 0.12+, works with es2016 async/await)
+### Promise (works with es2016 async/await)
 ```js
 'use strict';
 
@@ -195,6 +195,10 @@ To run test specs
 ```CLI
 $ npm test
 ```
+
+## Requirements
+
+Node.js 4+
 
 ## License
 

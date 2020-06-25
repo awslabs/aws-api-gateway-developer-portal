@@ -25,16 +25,21 @@ import { observer } from 'mobx-react'
 
 export default observer(class ApisPage extends React.Component {
   containerRef = React.createRef()
-  removed = false
+  hasRoot = false
 
-  componentDidMount () { this.updateApi().then(() => updateUsagePlansAndApisList(true)) }
-  componentDidUpdate () { this.updateApi() }
-  componentWillUnmount () { this.removed = true }
+  componentDidMount () { this.updateApi(true) }
+  componentDidUpdate () { this.updateApi(false) }
+  componentWillUnmount () { this.containerRef = null }
 
-  updateApi () {
-    return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage)
+  updateApi (isInitial) {
+    return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage, isInitial)
       .then(api => {
-        if (api && !this.removed) {
+        if (this.containerRef == null) return
+        const elem = this.containerRef.current
+        const isFirstLoad = !this.hasRoot
+
+        this.hasRoot = elem != null
+        if (api && elem != null) {
           const cell = {
             shouldPreauthorizeApiKey: false,
             preauthorizeApiKey: () => {
@@ -61,6 +66,8 @@ export default observer(class ApisPage extends React.Component {
           if (cell.shouldPreauthorizeApiKey) {
             cell.preauthorizeApiKey()
           }
+
+          if (isFirstLoad) return updateUsagePlansAndApisList(true)
         }
       })
   }

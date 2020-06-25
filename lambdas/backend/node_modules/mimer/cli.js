@@ -8,6 +8,6 @@
  */
 
 var args = process.argv,
-    Mimer = require('./mimer');
+    Mimer = require('./dist/mimer');
 
 console.log( '"' + Mimer( process.argv[2] ) + '"' );

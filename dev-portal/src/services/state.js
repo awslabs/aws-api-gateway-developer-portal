@@ -13,6 +13,7 @@ function storeDefaults () {
   return {
     api: undefined,
     apiKey: undefined,
+    apiKeyFetchFailed: false,
 
     apiList: {
       loaded: false,
@@ -20,7 +21,8 @@ function storeDefaults () {
       generic: []
     },
 
-    cognitoUser: undefined,
+    user: undefined,
+    idToken: undefined,
 
     usagePlans: [],
 
@@ -66,7 +68,7 @@ export const store = observable({
   },
 
   resetUserData () {
-    this.reset('apiKey', 'cognitoUser', 'subscriptions')
+    this.reset('apiKey', 'user', 'subscriptions')
   }
 })
 
@@ -120,7 +122,7 @@ reactTo(
 function fetchApiImage (apiList) {
   apiList.forEach(api => {
     if (!api.logo) {
-      const key = api.stage == null ? api.id : `${api.id}_${api.stage}`
+      const key = api.apiStage == null ? api.id : `${api.apiId}_${api.apiStage}`
       const specificLogo = `/custom-content/api-logos/${key}.png`
 
       // fetch automatically follows redirects; setting redirect to `manual` prevents this

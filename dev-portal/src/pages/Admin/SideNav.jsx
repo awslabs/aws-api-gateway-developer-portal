@@ -23,7 +23,7 @@ export const SideNav = observer(() => isAdmin() && (
         <MenuLink to='/admin/accounts'>Users</MenuLink>
         <MenuLink to='/admin/accounts/admins'>Admins</MenuLink>
         <MenuLink to='/admin/accounts/invites'>Invites</MenuLink>
-        <MenuLink to='/admin/accounts/requests'>Requests</MenuLink>
+        {/* <MenuLink to='/admin/accounts/requests'>Requests</MenuLink> */}
       </Menu.Menu>
     </MenuLink>
   </Sidebar>

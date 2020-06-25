@@ -37,17 +37,13 @@ function promiser (mockResolveValue, mockRejectedValue) {
 }
 
 function generateResponseContext () {
-  return {
-    status: jest.fn().mockReturnValue({
-      json: jest.fn()
-    }),
-    attachment: jest.fn().mockReturnValue({
-      send: jest.fn()
-    }),
-    send: jest.fn().mockReturnValue({
-      send: jest.fn()
-    })
-  }
+  const result = {}
+  result.status = jest.fn().mockReturnValue(result)
+  result.json = jest.fn().mockReturnValue(result)
+  result.attachment = jest.fn().mockReturnValue(result)
+  result.send = jest.fn().mockReturnValue(result)
+  result.type = jest.fn().mockReturnValue(result)
+  return result
 }
 
 function generateRequestContext () {
@@ -82,13 +78,45 @@ function bindEnv () {
   }
 }
 
+/**
+ * @returns {<T>(host: T, key: {[P in keyof T]: T[P] extends ((...args: any) => any) ? P : never}[keyof T], impl: T[typeof key]) => any}
+ */
+function bindMock () {
+  const old = new Map()
+
+  afterEach(() => {
+    for (const [host, map] of old) {
+      for (const [key, desc] of map) {
+        if (desc != null) Reflect.defineProperty(host, key, desc)
+        else Reflect.deleteProperty(host, key)
+      }
+    }
+    old.clear()
+  })
+
+  return function setMock (host, key, impl) {
+    let map = old.get(host)
+    if (map == null) old.set(host, map = new Map())
+    const desc = Reflect.getOwnPropertyDescriptor(host, key)
+    map.set(key, desc)
+    const mock = jest.fn(impl)
+    Object.defineProperty(host, key, {
+      configurable: desc == null || Boolean(desc.configurable),
+      enumerable: desc == null || Boolean(desc.enumerable),
+      writable: desc == null || Boolean(desc.writable),
+      value: mock
+    })
+    return mock
+  }
+}
+
 function makeCatalog () {
   const apiGateway = []
   for (let i = 1; i <= 8; i++) {
     const apis = []
     for (let j = 1; j <= 4; j++) {
       for (let k = 1; k <= 4; k++) {
-        apis.push({ id: `plan${i}_api${j}`, stage: `plan${i}_stage${k}` })
+        apis.push({ apiId: `plan${i}_api${j}`, apiStage: `plan${i}_stage${k}` })
       }
     }
     apiGateway.push({ id: `plan${i}`, apis })
@@ -98,7 +126,7 @@ function makeCatalog () {
 
   for (let i = 1; i <= 8; i++) {
     for (let j = 1; j <= 4; j++) {
-      generic[`tracked${i}_${j}`] = { apiId: `tracked_api${i}`, stage: `tracked_stage${j}` }
+      generic[`tracked${i}_${j}`] = { apiId: `tracked_api${i}`, apiStage: `tracked_stage${j}` }
     }
     generic[`untracked${i}`] = { apiId: `untracked_api${i}` }
   }
@@ -112,5 +140,6 @@ exports = module.exports = {
   generateRequestContext,
   generateResponseContext,
   bindEnv,
+  bindMock,
   makeCatalog
 }

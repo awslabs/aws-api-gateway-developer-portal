@@ -3,7 +3,7 @@
 
 import _ from 'lodash'
 
-import { apiGatewayClient } from './api'
+import { apiGatewayClientWithCredentials } from './api'
 import { store } from './state'
 import { isAdmin } from './self'
 
@@ -15,7 +15,7 @@ import { isAdmin } from './self'
  *
  * @param {Boolean} bustCache=true   Ignore the cache and re-make the calls? Defaults to true.
  */
-export function updateAllUserData (bustCache = true) {
+export function updateAllUserData(bustCache = true) {
   const promises = [
     updateUsagePlansAndApisList(bustCache),
     updateSubscriptions(bustCache),
@@ -34,16 +34,16 @@ export function updateAllUserData (bustCache = true) {
  * @param {Boolean} [bustCache=false]   Ignore the cache and re-make the network call. Defaults to false.
  *
  */
-export function updateUsagePlansAndApisList (bustCache = false) {
+export function updateUsagePlansAndApisList(bustCache = false) {
   // if we've already tried, just return that promise
   if (!bustCache && catalogPromiseCache) return catalogPromiseCache
 
   store.apiList.loaded = false
 
   // eslint-disable-next-line no-return-assign
-  return catalogPromiseCache = apiGatewayClient()
+  return catalogPromiseCache = apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get('/catalog', {}, {}, {}))
-    .then(({ data = [] }) => {
+    .then(({ data = { apiGateway: [], generic: [] } }) => {
       store.usagePlans = data.apiGateway
       store.apiList = {
         loaded: true,
@@ -69,7 +69,7 @@ let catalogPromiseCache // WARNING: Don't touch this. Should only be used by upd
  *
  * returns an array of apis
  */
-function getApiGatewayApisFromUsagePlans (usagePlans) {
+function getApiGatewayApisFromUsagePlans(usagePlans) {
   return usagePlans.reduce((acc, usagePlan) => {
     usagePlan.apis.forEach(api => {
       api.usagePlan = _.cloneDeep(usagePlan)
@@ -87,7 +87,7 @@ function getApiGatewayApisFromUsagePlans (usagePlans) {
  * @param {String} apiId   An apiId or the special strings 'FIRST' or 'ANY'. 'FIRST' and 'ANY' both return the first api encountered.
  * @param {Boolean} [selectIt=false]   If true, sets the found API as the current 'selected' API.
  */
-export function getApi (apiId, selectIt = false, stage, cacheBust = false) {
+export function getApi(apiId, selectIt = false, stage, cacheBust = false) {
   return updateUsagePlansAndApisList(cacheBust)
     .then(() => {
       let thisApi
@@ -98,11 +98,11 @@ export function getApi (apiId, selectIt = false, stage, cacheBust = false) {
         if (apiId === 'ANY' || apiId === 'FIRST') {
           thisApi = allApis[0]
         } else {
-          thisApi = allApis.find(api => api.id.toString() === apiId)
-        }
+          thisApi = allApis.find(api => (api.apiId === apiId && api.apiStage === stage))
 
-        if (stage) {
-          thisApi = store.apiList.apiGateway.find(api => api.id.toString() === apiId && api.stage === stage)
+          if (!thisApi) {
+            thisApi = allApis.find(api => (api.id.toString() === apiId))
+          }
         }
       }
 
@@ -112,8 +112,8 @@ export function getApi (apiId, selectIt = false, stage, cacheBust = false) {
     })
 }
 
-export function updateVisibility (cacheBust = false) {
-  return apiGatewayClient()
+export function updateVisibility(cacheBust = false) {
+  return apiGatewayClientWithCredentials()
     .then(app => app.get('/admin/catalog/visibility', {}, {}, {}))
     .then(({ data }) => (store.visibility = data))
 }
@@ -125,29 +125,29 @@ export function updateVisibility (cacheBust = false) {
  *
  * @param {Boolean} [bustCache=false]   Ignore the cache and re-make the network call. Defaults to false.
  */
-export function updateSubscriptions (bustCache = false) {
+export function updateSubscriptions(bustCache = false) {
   const subscriptionsOrPromise = store.subscriptions.length ? store.subscriptions : subscriptionsPromiseCache
   if (!bustCache && subscriptionsOrPromise) return Promise.resolve(subscriptionsOrPromise)
 
   // eslint-disable-next-line no-return-assign
-  return subscriptionsPromiseCache = apiGatewayClient()
+  return subscriptionsPromiseCache = apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get('/subscriptions', {}, {}, {}))
     .then(({ data }) => (store.subscriptions = data))
 }
 let subscriptionsPromiseCache // WARNING: Don't touch this. Should only be used by updateCatalogAndApisList.
 
-export function getSubscribedUsagePlan (usagePlanId) {
+export function getSubscribedUsagePlan(usagePlanId) {
   return store.subscriptions.find(sub => sub.id === usagePlanId)
 }
 
-export function subscribe (usagePlanId) {
-  return apiGatewayClient()
+export function subscribe(usagePlanId) {
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.put('/subscriptions/' + usagePlanId, {}, {}))
     .then(() => updateSubscriptions(true))
 }
 
-export function unsubscribe (usagePlanId) {
-  return apiGatewayClient()
+export function unsubscribe(usagePlanId) {
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.delete(`/subscriptions/${usagePlanId}`, {}, {}))
     .then(() => updateSubscriptions(true))
 }
@@ -157,25 +157,49 @@ export function unsubscribe (usagePlanId) {
  * Fetches and updates the apiKey in the store. Both request and response are cached, so unless the cache is busted, this should only ever make one network call.
  *
  */
-export function updateApiKey (bustCache) {
+export function updateApiKey(bustCache) {
   const apiKeyOrPromise = store.apiKey ? store.apiKey : apiKeyPromiseCache
   if (!bustCache && apiKeyOrPromise) return Promise.resolve(apiKeyOrPromise)
+  store.apiKeyFetchFailed = false
 
-  return apiGatewayClient()
-    .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
-    .then(({ data }) => (store.apiKey = data.value))
+  const MAX_RETRIES = 5
+  let remaining = MAX_RETRIES
+
+  const timeouts = [
+    250,
+    500,
+    1000,
+    2000
+  ]
+
+  function loop() {
+    remaining--
+    const promise = apiGatewayClientWithCredentials()
+      .then(apiGatewayClient => apiGatewayClient.get('/apikey', {}, {}, {}))
+      .then(({ data }) => (store.apiKey = data.value))
+
+    return remaining
+      ? promise.catch(() =>
+        new Promise(resolve => setTimeout(resolve, timeouts[remaining])).then(loop)
+      )
+      : promise
+  }
+
+  return (apiKeyPromiseCache = loop()).catch(() => {
+    store.apiKeyFetchFailed = true
+  })
 }
 let apiKeyPromiseCache
 
-export function fetchUsage (usagePlanId) {
+export function fetchUsage(usagePlanId) {
   const date = new Date()
   const start = new Date(date.getFullYear(), date.getMonth(), 1).toJSON().split('T')[0]
   const end = date.toJSON().split('T')[0]
-  return apiGatewayClient()
+  return apiGatewayClientWithCredentials()
     .then(apiGatewayClient => apiGatewayClient.get('/subscriptions/' + usagePlanId + '/usage', { start, end }, {}))
 }
 
-export function mapUsageByDate (usage, usedOrRemaining) {
+export function mapUsageByDate(usage, usedOrRemaining) {
   const dates = {}
   Object.keys(usage.items).forEach(apiKeyId => {
     const apiKeyUsage = mapApiKeyUsageByDate(usage.items[apiKeyId], usage.startDate, usedOrRemaining)
@@ -203,7 +227,7 @@ export function mapUsageByDate (usage, usedOrRemaining) {
   return usageByDate
 }
 
-function mapApiKeyUsageByDate (apiKeyUsage, startDate) {
+function mapApiKeyUsageByDate(apiKeyUsage, startDate) {
   const apiKeyDate = new Date(startDate)
 
   if (apiKeyUsage && !Array.isArray(apiKeyUsage[0])) { apiKeyUsage = [apiKeyUsage] }
@@ -216,13 +240,14 @@ function mapApiKeyUsageByDate (apiKeyUsage, startDate) {
   })
 }
 
-/* Marketplace integration */
-
-export function confirmMarketplaceSubscription (usagePlanId, token) {
-  if (!usagePlanId) {
-    return
-  }
-
-  return apiGatewayClient()
-    .then(apiGatewayClient => apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, { token: token }))
-}
+// Marketplace support is currently broken
+// /* Marketplace integration */
+//
+// export function confirmMarketplaceSubscription (usagePlanId, token) {
+//   if (!usagePlanId) {
+//     return
+//   }
+//
+//   return apiGatewayClientWithCredentials()
+//     .then(apiGatewayClient => apiGatewayClient.put('/marketplace-subscriptions/' + usagePlanId, {}, { token: token }))
+// }

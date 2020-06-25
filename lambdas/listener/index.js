@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 'use strict'
+
+// FIXME: Marketplace support is currently broken
+
 const controller = require('dev-portal-common/customers-controller')
 
 console.log('starting listener function')

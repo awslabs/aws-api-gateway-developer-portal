@@ -5,6 +5,8 @@ import * as MessageList from 'components/MessageList'
 import * as AccountService from 'services/accounts'
 import * as AccountsTable from 'components/Admin/Accounts/AccountsTable'
 import * as AccountsTableColumns from 'components/Admin/Accounts/AccountsTableColumns'
+import { store } from 'services/state'
+import _ from 'lodash'
 
 const RegisteredAccounts = () => {
   const [accounts, setAccounts] = useState([])
@@ -14,10 +16,29 @@ const RegisteredAccounts = () => {
   const [promoteModalOpen, setPromoteModalOpen] = useState(false)
   const [messages, sendMessage] = MessageList.useMessages()
 
-  const refreshAccounts = () =>
-    AccountService.fetchRegisteredAccounts().then(accounts =>
-      setAccounts(accounts),
-    )
+  const refreshAccounts = async () => {
+    const [all, admins] = await Promise.all([
+      AccountService.fetchRegisteredAccounts(),
+      AccountService.fetchAdminAccounts()
+    ])
+
+    const allMap = {}
+
+    all.forEach(user => { allMap[user.UserId] = user })
+    admins.forEach(admin => {
+      admin.IsAdmin = true
+      if (admin.EmailAddress === store.user.email) {
+        admin.EmailAddress += ' (you)'
+      }
+      allMap[admin.UserId] = admin
+    })
+
+    return setAccounts(Object.values(allMap))
+  }
+
+  const isYou = (user) => {
+    return (_.get(store, 'user.email') + ' (you)') === user.EmailAddress
+  }
 
   // Initial load
   useEffect(() => {
@@ -25,7 +46,7 @@ const RegisteredAccounts = () => {
   }, [])
 
   const onSelectAccount = useCallback(account => setSelectedAccount(account), [
-    setSelectedAccount,
+    setSelectedAccount
   ])
 
   const onConfirmDelete = useCallback(async () => {
@@ -58,6 +79,7 @@ const RegisteredAccounts = () => {
       sendMessage(dismiss => (
         <PromoteSuccessMessage account={selectedAccount} dismiss={dismiss} />
       ))
+      await refreshAccounts()
     } catch (error) {
       sendMessage(dismiss => (
         <PromoteFailureMessage
@@ -79,18 +101,20 @@ const RegisteredAccounts = () => {
         accounts={accounts}
         columns={[
           AccountsTableColumns.EmailAddress,
+          AccountsTableColumns.IsAdmin,
           AccountsTableColumns.DateRegistered,
           AccountsTableColumns.RegistrationMethod,
-          AccountsTableColumns.ApiKeyId,
+          AccountsTableColumns.ApiKeyId
         ]}
         loading={loading}
         selectedAccount={selectedAccount}
         onSelectAccount={onSelectAccount}
       >
         <TableActions
-          canDelete={!loading && selectedAccount}
+          canDelete={!loading && selectedAccount && !isYou(selectedAccount)}
           onClickDelete={() => setDeleteModalOpen(true)}
           canPromote={!loading && selectedAccount}
+          isAdmin={selectedAccount && selectedAccount.IsAdmin}
           onClickPromote={() => setPromoteModalOpen(true)}
         />
       </AccountsTable.AccountsTable>
@@ -98,6 +122,7 @@ const RegisteredAccounts = () => {
         account={selectedAccount}
         onConfirm={onConfirmDelete}
         open={deleteModalOpen}
+        isAdmin={selectedAccount && selectedAccount.IsAdmin}
         onClose={() => setDeleteModalOpen(false)}
       />
       <PromoteAccountModal
@@ -112,28 +137,32 @@ const RegisteredAccounts = () => {
 export default RegisteredAccounts
 
 const TableActions = React.memo(
-  ({ canDelete, onClickDelete, canPromote, onClickPromote }) => (
+  ({ canDelete, onClickDelete, canPromote, onClickPromote, isAdmin }) => (
     <Button.Group>
       <Button content='Delete' disabled={!canDelete} onClick={onClickDelete} />
       <Button
         content='Promote to Admin'
-        disabled={!canPromote}
+        disabled={!canPromote || isAdmin}
         onClick={onClickPromote}
       />
     </Button.Group>
-  ),
+  )
 )
 
 const DeleteAccountModal = React.memo(
-  ({ account, onConfirm, open, onClose }) =>
+  ({ account, onConfirm, open, onClose, isAdmin }) =>
     account && (
       <Modal size='small' open={open} onClose={onClose}>
-        <Modal.Header>Confirm deletion</Modal.Header>
+        <Modal.Header>Delete account</Modal.Header>
         <Modal.Content>
+          {isAdmin && (
+            <Message negative>
+              <Message.Header>Danger! This is an admin account.</Message.Header>
+              <p><strong>Deleting an admin account could cause temporary loss of access and temporary inability to configure the developer portal.</strong></p>
+            </Message>
+          )}
           <p>
-            Are you sure you want to delete the account{' '}
-            <strong>{account.EmailAddress}</strong>, and de-activate the
-            associated API key? This action is irreversible.
+            Are you sure you want to delete the account <strong>{account.EmailAddress}</strong>, and de-activate the             associated API key? This action is irreversible.
           </p>
         </Modal.Content>
         <Modal.Actions>
@@ -143,7 +172,7 @@ const DeleteAccountModal = React.memo(
           </Button>
         </Modal.Actions>
       </Modal>
-    ),
+    )
 )
 
 const PromoteAccountModal = React.memo(
@@ -170,7 +199,7 @@ const PromoteAccountModal = React.memo(
           </Button>
         </Modal.Actions>
       </Modal>
-    ),
+    )
 )
 
 const DeleteSuccessMessage = React.memo(({ account, dismiss }) => (
@@ -191,7 +220,7 @@ const DeleteFailureMessage = React.memo(
         {errorMessage && <p>Error message: {errorMessage}</p>}
       </Message.Content>
     </Message>
-  ),
+  )
 )
 
 const PromoteSuccessMessage = React.memo(({ account, dismiss }) => (
@@ -212,5 +241,5 @@ const PromoteFailureMessage = React.memo(
         {errorMessage && <p>Error message: {errorMessage}</p>}
       </Message.Content>
     </Message>
-  ),
+  )
 )

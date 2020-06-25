@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import {
   Button,
   Container,
@@ -179,6 +179,15 @@ const TableActions = ({
   </Button.Group>
 )
 
+// Pulled from https://html.spec.whatwg.org/multipage/input.html#e-mail-state-(type%3Demail) and
+// optimized in a few ways for size:
+// - Classes of `[A-Za-z0-9]` were shortened to the equivalent `[^_\W]`.
+// - Other instances of `0-9` in classes were converted to the shorthand `\d`.
+// - The whole regexp was made case-insensitive to avoid the need for `A-Za-z` in classes.
+// - As we're only testing, I replaced all the non-capturing groups with capturing ones.
+const validEmailRegex =
+  /^[\w.!#$%&'*+\/=?^`{|}~-]+@[^_\W]([a-z\d-]{0,61}[^_\W])?(\.[^_\W]([a-z\d-]{0,61}[^_\W])?)*$/i
+
 /*
  * Note: `onConfirm` should return a boolean indicating whether the creation
  * succeeded.
@@ -186,18 +195,37 @@ const TableActions = ({
 const CreateInviteModal = ({ onConfirm, open, onClose, messages }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const isEmailValid = useMemo(() => /^[^@\s]+@[^@\s]+$/.test(email), [email])
+  const isEmailValid = useMemo(() => validEmailRegex.test(email), [email])
   const onChangeEmailAddress = useCallback(
     (_event, { value }) => setEmail(value),
     [],
   )
   const onClickCreate = useCallback(async () => {
     setLoading(true)
-    if (await onConfirm(email)) {
-      setEmail('')
+    try {
+      if (await onConfirm(email)) {
+        setEmail('')
+      }
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }, [onConfirm, email])
+  
+  // If the user stops typing, but the email is invalid, show the invalid email message as a hint
+  // for why they can't proceed. Don't make the timeout so short that it'd annoy a slow typer,
+  // though.
+  const [needsAssistance, setNeedsAssistance] = useState(false)
+  const emailEverSet = useRef(false)
+
+  useEffect(() => {
+    if (email) emailEverSet.current = true
+    if (isEmailValid) {
+      setNeedsAssistance(false)
+    } else if (!needsAssistance && emailEverSet.current) {
+      const timer = setTimeout(() => { setNeedsAssistance(true) }, 3000 /* ms */)
+      return () => { clearTimeout(timer) }
+    }
+  }, [email, needsAssistance])
 
   return (
     <Modal open={open} onClose={onClose} size={'small'}>
@@ -208,7 +236,7 @@ const CreateInviteModal = ({ onConfirm, open, onClose, messages }) => {
           send an invitation to create an account.
         </p>
         <MessageList.MessageList messages={messages} />
-        <Message hidden={isEmailValid || loading} warning>
+        <Message hidden={!needsAssistance || isEmailValid || loading} warning>
           Please enter a valid email address.
         </Message>
         <Input

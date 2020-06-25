@@ -18,30 +18,19 @@ import SidebarHeader from 'components/Sidebar/SidebarHeader'
 import MenuLink from 'components/MenuLink'
 
 function getApisWithStages (selectedApiId, selectedStage, activateFirst) {
-  const apiGatewayApiList = _.get(store, 'apiList.apiGateway', []).map(api => ({
-    group: api.id,
-    id: api.stage,
-    title: api.swagger.info.title,
-    route: `/apis/${api.id}/${api.stage}`,
-    active: (
-      (selectedApiId && api.id === selectedApiId) &&
-      (!selectedStage || api.stage === selectedStage)
-    ),
-    stage: api.stage
-  }))
-  const genericApiList = _.get(store, 'apiList.generic', []).map(api => ({
+  const apiList = [].concat(_.get(store, 'apiList.generic', []), _.get(store, 'apiList.apiGateway', [])).map(api => ({
     group: api.apiId || api.id,
-    id: api.stage || api.id,
+    id: api.apiStage || api.id,
     title: api.swagger.info.title,
-    route: `/apis/${api.id}`,
+    route: `/apis/${api.id}` + (api.apiStage ? '/' + api.apiStage : ''),
     active: (
       (selectedApiId && (api.id === selectedApiId || api.apiId === selectedApiId)) &&
-      (!selectedStage || api.stage === selectedStage)
+      (!selectedStage || api.apiStage === selectedStage)
     ),
-    stage: api.stage
+    stage: api.apiStage
   }))
 
-  return _.toPairs(_.groupBy(apiGatewayApiList.concat(genericApiList), 'group'))
+  return _.toPairs(_.groupBy(apiList, 'group'))
     .map(([group, apis]) => ({ group, apis, active: _.some(apis, 'active'), title: apis[0].title }))
 }
 
@@ -83,15 +72,17 @@ export default observer(function ApisMenu (props) {
 
       <>
         {apiGroupList.map(({ apis, title, group, active }) => (
-          <MenuLink key={group} active={active}>
+          <MenuLink key={group} active={active} to={apis[0].stage ? null : apis[0].route}>
             {title}
-            <Menu.Menu>
-              {apis.map(({ route, stage, active, id }) => (
-                <MenuLink key={id} to={route} active={active} style={{ fontWeight: '400' }}>
-                  {stage}
-                </MenuLink>
-              ))}
-            </Menu.Menu>
+            {apis[0].stage ? (
+              <Menu.Menu>
+                {apis.map(({ route, stage, active, id }) => (
+                  <MenuLink key={id} to={route} active={active} style={{ fontWeight: '400' }}>
+                    {stage}
+                  </MenuLink>
+                ))}
+              </Menu.Menu>
+            ) : null}
           </MenuLink>
         ))}
       </>
