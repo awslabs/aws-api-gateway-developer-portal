@@ -25,7 +25,7 @@ This deployment model is better if you plan to customize the developer portal he
 
 First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). Note that while the instructions specify Docker as a pre-requisite, Docker is only necessary for local development via SAM local. Feel free to skip installing Docker when you first set up the developer portal.
 
-Then, clone this repo into a local directory. Ensure that you have an S3 bucket to put zipped lambda functions into. It can be private, and will be referred to in this readme as "your-lambda-artifacts-bucket-name".
+Then, clone this repo into a local directory. Ensure that you have an S3 bucket to put zipped lambda functions into. It can be private, and will be referred to in this readme as `YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME`.
 
 If you have not used the AWS CLI or SAM CLI before, you may need to [configure your AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html).
 
@@ -33,29 +33,29 @@ If you have previously set up a v1 developer portal (non-SAM deployed), you will
 
 #### Deploy
 
-Run:
+Run the following, with `YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME` replaced with the name of a bucket that you manage and that already exists.
 
->In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists. Then, run:
+>If you're on Windows, you'll need to remove the backslashes and line breaks here for these commands to work.
 
 ```bash
 sam package --template-file ./cloudformation/template.yaml \
     --output-template-file ./cloudformation/packaged.yaml \
-    --s3-bucket your-lambda-artifacts-bucket-name
+    --s3-bucket YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME
 ```
 
-Then run:
+Then run the following, with `YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME` the same as above and `CUSTOM_PREFIX` in all cases replaced with some shared prefix that is globally unique across AWS, like your org name or username.
 
->In the command below, replace the `your-lambda-artifacts-bucket-name` with the name of a bucket that you manage and that already exists, and replace `custom-prefix` with some prefix that is globally unique, like your org name or username. Then, run:
+>Note: do *not* use the `sam deploy` command suggested by the `sam package` command.
 
 ```bash
 sam deploy --template-file ./cloudformation/packaged.yaml \
     --stack-name "dev-portal" \
-    --s3-bucket your-lambda-artifacts-bucket-name \
+    --s3-bucket YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME \
     --capabilities CAPABILITY_NAMED_IAM \
     --parameter-overrides \
-    DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" \
-    ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" \
-    CognitoDomainNameOrPrefix="custom-prefix"
+    DevPortalSiteS3BucketName="CUSTOM_PREFIX-dev-portal-static-assets" \
+    ArtifactsS3BucketName="CUSTOM_PREFIX-dev-portal-artifacts" \
+    CognitoDomainNameOrPrefix="CUSTOM_PREFIX"
 ```
 
 The command will exit when the stack creation is successful. If you'd like to watch it create in real-time, you can log into the cloudformation console.
@@ -101,8 +101,19 @@ When logged into the developer portal with an account that has a provisioned api
 ### Setup a custom domain for your Developer Portal
 You should [request and verify an ACM managed certificate for your custom domain name.](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html) Then, redeploy the CFN stack with the domain name and ACM cert ARN as parameter overrides. Additionally, you can control if Route 53 nameservers are created using the `UseRoute53Nameservers` override. A value of true will result in the creation of a Route 53 hosted zone and record set; false will skip the creation of these resources.
 
+> Use the same `CUSTOM_PREFIX` and `YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME` you used in the deploy before.
+
 ```bash
-sam deploy --template-file ./cloudformation/packaged.yaml --stack-name "dev-portal" --capabilities CAPABILITY_NAMED_IAM --parameter-overrides DevPortalSiteS3BucketName="custom-prefix-dev-portal-static-assets" ArtifactsS3BucketName="custom-prefix-dev-portal-artifacts" CustomDomainName="my.acm.managed.domain.name.com" CustomDomainNameAcmCertArn="arn:aws:acm:us-east-1:111111111111:certificate/12345678-1234-1234-1234-1234567890ab" UseRoute53Nameservers="false"
+sam deploy --template-file ./cloudformation/packaged.yaml \
+    --stack-name "dev-portal" \
+    --s3-bucket YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --parameter-overrides \
+    DevPortalSiteS3BucketName="CUSTOM_PREFIX-dev-portal-static-assets" \
+    ArtifactsS3BucketName="CUSTOM_PREFIX-dev-portal-artifacts" \
+    CustomDomainName="my.acm.managed.domain.name.com" \
+    CustomDomainNameAcmCertArn="arn:aws:acm:us-east-1:111111111111:certificate/12345678-1234-1234-1234-1234567890ab" \
+    UseRoute53Nameservers="false"
 ```
 
 This creates a cloudfront distribution in front of the S3 bucket serving the site, optionally sets up a Route53 hosted zone with records aliased to that distribution, and require HTTPS to communicate with the cloudfront distribution.
