@@ -59,7 +59,8 @@ const packageList = [
   'lambdas/backend',
   'lambdas/catalog-updater',
   'lambdas/listener',
-  'lambdas/static-asset-uploader'
+  'lambdas/static-asset-uploader',
+  'lambdas/user-group-importer'
 ].map(rel => ({
   target: `/${rel}`,
   resolved: p(rel)
