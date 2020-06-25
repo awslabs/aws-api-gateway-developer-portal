@@ -2,7 +2,7 @@
 
 const readline = require('readline')
 const AWS = require('aws-sdk')
-const { PassThrough, pipeline } = require('stream')
+const { PassThrough } = require('stream')
 const fetch = require('node-fetch')
 const cognitoIdp = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-18' })
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
@@ -15,40 +15,13 @@ const registeredGroup = process.env.RegisteredGroup
 const customersTableName = process.env.CustomersTable
 const feedbackTableName = process.env.FeedbackTable
 
-async function locateBackupArns (event) {
-  let customersTableArn = event.CustomersBackupArn
-  let feedbackTableArn = event.FeedbackBackupArn
+function readMigrateLines (event, file) {
+  console.log('Reading lines from migration file')
 
-  const options = { BackupType: 'USER' }
-
-  if (customersTableArn && feedbackTableArn) return { customersTableArn, feedbackTableArn }
-
-  do {
-    const resp = await dynamodb.listBackups(options).promise()
-
-    // Break early - we probably ran out of ARNs here.
-    if (!resp.BackupSummaries.length) break
-    options.LastEvaluatedBackupArn = resp.BackupSummaries[resp.BackupSummaries.length - 1]
-
-    for (const backup of resp.BackupSummaries) {
-      if (backup.BackupName === event.BackupPrefix + '-Customers') {
-        if (!customersTableArn) customersTableArn = backup.BackupArn
-      } else if (backup.BackupName === event.BackupPrefix + '-Feedback') {
-        if (!feedbackTableArn) feedbackTableArn = backup.BackupArn
-      }
-
-      if (customersTableArn && feedbackTableArn) return { customersTableArn, feedbackTableArn }
-    }
-  } while (options.NextToken != null)
-
-  throw new Error("Couldn't locate all requisite backups. Please look up their ARN and search for them directly")
-}
-
-function readMigrateLines (event) {
   return new Promise((resolve, reject) => {
     const downloadReq = s3.getObject({
       Bucket: event.Bucket,
-      Key: 'dev-portal-migrate.ndjson'
+      Key: file
     })
 
     downloadReq.on('httpHeaders', (statusCode, httpHeaders) => {
@@ -65,7 +38,7 @@ function readMigrateLines (event) {
     const bufferedStream = new PassThrough({
       // Set a much higher high water mark than the default - this is only used once, and the
       // pipeline will likely consume data slower than it's received due to parsing overhead.
-      writableHighWaterMark: 64 /* MB */ * 1024 /* KB */ * 1024 /* B */
+      writableHighWaterMark: 32 /* MB */ * 1024 /* KB */ * 1024 /* B */
     })
 
     const lineStream = readline.createInterface({
@@ -73,148 +46,160 @@ function readMigrateLines (event) {
       crlfDelay: Infinity
     })
 
-    pipeline(downloadReq.createReadStream(), bufferedStream)
+    downloadReq.createReadStream()
+      .on('error', e => { bufferedStream.destroy(e) })
+      .pipe(bufferedStream)
+  })
+}
+
+function restoreDBBackup (event, file, targetTable) {
+  return new Promise((resolve, reject) => {
+    let open = 1
+
+    function pass () {
+      if (open > 0 && --open === 0) {
+        console.log('Users backed up, ending upload stream and returning')
+        resolve()
+      }
+    }
+
+    function fail (e) {
+      if (open > 0) {
+        open = 0
+        console.error('An error occurred', e)
+        reject(e)
+      }
+    }
+
+    async function tryWrite (items) {
+      let retry = false
+      let delay = 500
+
+      while (items.length) {
+        if (retry) await new Promise(resolve => setTimeout(resolve, delay))
+        const resp = await dynamodb.batchWriteItem({
+          RequestItems: { [targetTable]: items }
+        }).promise()
+
+        delay *= 2
+        items = resp.UnprocessedItems
+        retry = true
+      }
+    }
+
+    let buffer = []
+
+    async function loop () {
+      for await (const line of await readMigrateLines(event, file)) {
+        if (open === 0) break
+        if (line) {
+          const record = JSON.parse(line)
+
+          // 25 = max batch size
+          if (buffer.length < 25) {
+            buffer.push(record)
+          } else {
+            const items = buffer
+            buffer = []
+            open++
+            tryWrite(items.map(item => ({ PutRequest: { Item: item } }))).then(pass, fail)
+          }
+        }
+      }
+    }
+
+    open++
+    loop().then(pass, fail)
+    pass()
   })
 }
 
 exports.handler = async event => {
-  const { customersTableArn, feedbackTableArn } = await locateBackupArns(event)
-
-  await Promise.all([
-    dynamodb.describeTable({ TableName: customersTableName }).promise()
-      .then(resp => dynamodb.restoreTableFromBackup({
-        TargetTableName: customersTableName,
-        BackupArn: customersTableArn,
-        GlobalSecondaryIndexOverride: resp.Table.GlobalSecondaryIndexes,
-        LocalSecondaryIndexOverride: resp.Table.LocalSecondaryIndexes
-      }).promise()),
-    dynamodb.describeTable({ TableName: feedbackTableName }).promise()
-      .then(resp => dynamodb.restoreTableFromBackup({
-        TargetTableName: feedbackTableName,
-        BackupArn: feedbackTableArn,
-        GlobalSecondaryIndexOverride: resp.Table.GlobalSecondaryIndexes,
-        LocalSecondaryIndexOverride: resp.Table.LocalSecondaryIndexes
-      }).promise())
-  ])
+  const promises = []
+  console.log('Restoring customer table from backups')
+  promises.push(restoreDBBackup(event, 'dev-portal-migrate/customers.ndjson', customersTableName))
+  if (feedbackTableName) promises.push(restoreDBBackup(event, 'dev-portal-migrate/feedback.ndjson', feedbackTableName))
 
   // Using newline-delimited JSON to reduce memory requirements in case the user list is
   // sufficiently large.
 
-  const jobName = `DevPortalV4ImportJob-${Math.random()}`
-  const [{ CSVHeader }, { UserImportJob: job }] = await Promise.all([
-    cognitoIdp.getCSVHeader({ UserPoolId: userPoolId }).promise(),
-    cognitoIdp.createUserImportJob({
-      CloudWatchLogsRoleArn: logsRoleArn,
-      JobName: jobName,
-      UserPoolId: userPoolId
-    }).promise()
-  ])
+  promises.push((async () => {
+    console.log('Starting Cognito import')
 
-  const uploadStream = new PassThrough({
-    // Set a much higher high water mark than the default - this is only used once, and the
-    // pipeline won't wait for it to buffer. Intermediate values shouldn't come anywhere close to
-    // this.
-    writableHighWaterMark: 32 /* MB */ * 1024 /* KB */ * 1024 /* B */
-  })
-  const fetchPromise = fetch(job.PreSignedUrl, {
-    method: 'POST',
-    body: uploadStream
-  })
+    return new Promise((resolve, reject) => {
+      let open = 1
 
-  // Write the headers first.
-  uploadStream.write(CSVHeader.join(',') + '\n')
+      function pass () {
+        if (open > 0 && --open === 0) {
+          console.log('Users backed up, ending upload stream and returning')
+          resolve()
+        }
+      }
 
-  for await (const line of readMigrateLines(event)) {
-    if (line) {
-      const attributes = JSON.parse(line)
+      function fail (e) {
+        if (open > 0) {
+          open = 0
+          console.error('An error occurred', e)
+          reject(e)
+        }
+      }
 
-      const parts = CSVHeader.map(key => {
-        switch (key) {
-          case 'cognito:mfa_enabled': return 'FALSE' // MFA is not configured for this pool.
-          case 'cognito:username': return attributes.sub
-          default: {
-            const value = attributes[key]
-            if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE'
-            if (typeof value === 'number') return `${value}`
-            if (typeof value === 'string') return value.replace(/,/g, '\\,')
-            throw new Error(`Unknown value type: ${value}`)
+      async function loop () {
+        for await (const line of await readMigrateLines(event, 'dev-portal-migrate/users.ndjson')) {
+          if (line) {
+            const attributes = JSON.parse(line)
+            const { _isAdmin, _isRegistered, email } = attributes
+
+            console.log(`Importing user: ${email}`)
+
+            // Don't block - we're doing this as we're also still receiving data from the network.
+            open++
+            cognitoIdp.adminCreateUser({
+              UserPoolId: userPoolId,
+              Username: email,
+              UserAttributes: [
+                ...Object.entries(attributes)
+                  .filter(([key]) => key[0] !== '_' && key !== 'sub')
+                  .map(([key, value]) => ({
+                    Name: key,
+                    Value: value
+                  })),
+                { Name: 'email_verified', Value: 'True' }
+              ],
+              MessageAction: 'SUPPRESS'
+            }).promise().then(() => {
+              console.log(`Restoring groups for user: ${email}`)
+
+              if (_isAdmin) {
+                // Don't block - we're doing this as we're also still receiving data from the network.
+                open++
+                cognitoIdp.adminAddUserToGroup({
+                  UserPoolId: userPoolId,
+                  Username: email,
+                  GroupName: adminsGroup
+                }).promise().then(pass, fail)
+              }
+
+              if (_isRegistered) {
+                // Don't block - we're doing this as we're also still receiving data from the network.
+                open++
+                cognitoIdp.adminAddUserToGroup({
+                  UserPoolId: userPoolId,
+                  Username: email,
+                  GroupName: registeredGroup
+                }).promise().then(pass, fail)
+              }
+
+              pass()
+            }, fail)
           }
         }
-      })
-
-      uploadStream.write(parts.join(',') + '\n', 'utf-8')
-    }
-  }
-
-  uploadStream.end()
-
-  const response = await fetchPromise
-  if (!response.ok) throw new Error(response.statusText)
-
-  await cognitoIdp.startUserImportJob({
-    JobId: job.JobId,
-    UserPoolId: userPoolId
-  })
-
-  const longPollDuration = 10 /* seconds */ * 1000 /* millis */
-
-  while (true) {
-    await new Promise(resolve => setTimeout(resolve, longPollDuration))
-    const resp = await cognitoIdp.describeUserImportJob({
-      JobId: job.JobId,
-      UserPoolId: userPoolId
-    }).promise()
-
-    if (resp.UserImportJob.Status === 'Succeeded') break
-    if (resp.UserImportJob.Status === 'Failed') {
-      throw new Error('Import job failed')
-    }
-  }
-
-  let open = 1
-  let resolveFn, rejectFn
-  const writePromise = new Promise((resolve, reject) => {
-    resolveFn = resolve
-    rejectFn = reject
-  })
-
-  function pass () {
-    if (open > 0 && --open === 0) resolveFn()
-  }
-
-  function fail (e) {
-    if (open > 0) {
-      open = 0
-      rejectFn(e)
-    }
-  }
-
-  for await (const line of readMigrateLines(event)) {
-    if (line) {
-      const { _isAdmin, _isRegistered, sub } = JSON.stringify(line)
-
-      if (_isAdmin) {
-        // Don't block - we're doing this as we're also still receiving data from the network.
-        open++
-        cognitoIdp.adminAddUserToGroup({
-          UserPoolId: userPoolId,
-          Username: sub,
-          GroupName: adminsGroup
-        }).promise().then(pass, fail)
       }
 
-      if (_isRegistered) {
-        // Don't block - we're doing this as we're also still receiving data from the network.
-        open++
-        cognitoIdp.adminAddUserToGroup({
-          UserPoolId: userPoolId,
-          Username: sub,
-          GroupName: registeredGroup
-        }).promise().then(pass, fail)
-      }
-    }
-  }
+      open++
+      loop().then(pass, fail)
+    })
+  })())
 
-  pass()
-  await writePromise
+  await Promise.all(promises)
 }

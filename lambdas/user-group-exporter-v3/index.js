@@ -10,9 +10,48 @@ const cognitoIdp = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 const dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10' })
 
+// Using newline-delimited JSON to reduce memory requirements in case the user list is
+// sufficiently large.
+async function uploadJsonStream ({ event, file, hwm }, init) {
+  console.log(`Creating stream to s3://${event.Bucket}/${file}`)
+  const uploadStream = new PassThrough({ writableHighWaterMark: hwm })
+  const uploadPromise = s3.upload({
+    Bucket: event.Bucket,
+    Key: file,
+    Body: uploadStream
+  }).promise()
+
+  try {
+    await init(item => {
+      uploadStream.write(JSON.stringify(item) + '\n')
+    })
+  } finally {
+    uploadStream.end()
+    console.log(`Closing stream for s3://${event.Bucket}/${file}`)
+    await uploadPromise
+  }
+}
+
+function createBackup (event, file, sourceTable) {
+  return uploadJsonStream({ event, file, hwm: 16 /* MB */ * 1024 /* KB */ * 1024 /* B */ }, async write => {
+    const options = { TableName: sourceTable }
+
+    do {
+      console.log('Reading users')
+      const resp = await dynamodb.scan(options).promise()
+
+      options.ExclusiveStartKey = resp.LastEvaluatedKey
+
+      for (const item of resp.Items) write(item)
+    } while (options.ExclusiveStartKey != null)
+  })
+}
+
 exports.handler = async event => {
   let userPoolId, adminsGroup, registeredGroup
   let customersTableName, feedbackTableName
+
+  console.log('Reading stack resources')
 
   {
     const options = { StackName: event.StackName }
@@ -51,47 +90,40 @@ exports.handler = async event => {
     } while (options.NextToken != null)
   }
 
-  await dynamodb.createBackup({
-    TableName: customersTableName,
-    BackupName: event.BackupPrefix + '-Customers'
-  })
+  const promises = []
 
-  await dynamodb.createBackup({
-    TableName: feedbackTableName,
-    BackupName: event.BackupPrefix + '-Feedback'
-  })
+  console.log('Creating customers table backup')
+  promises.push(createBackup(event, 'dev-portal-migrate/customers.ndjson', customersTableName))
 
-  return new Promise((resolve, reject) => {
-    // Using newline-delimited JSON to reduce memory requirements in case the user list is
-    // sufficiently large.
-    const uploadStream = new PassThrough({
-      // Set a much higher high water mark than the default - this is only used once, and the
-      // pipeline won't wait for it to buffer. Intermediate values shouldn't come anywhere close
-      // to this.
-      writableHighWaterMark: 64 /* MB */ * 1024 /* KB */ * 1024 /* B */
-    })
-    const uploadPromise = s3.upload({
-      Bucket: event.Bucket,
-      Key: 'dev-portal-migrate.ndjson',
-      Body: uploadStream
-    }).promise()
+  if (feedbackTableName) {
+    promises.push(createBackup(event, 'dev-portal-migrate/feedback.ndjson', feedbackTableName))
+  } else {
+    console.log('No feedback table found, skipping backup')
+  }
 
+  console.log('Creating user pool backup')
+
+  promises.push(uploadJsonStream({
+    event,
+    file: 'dev-portal-migrate/users.ndjson',
+    // Set a much higher high water mark than the default - this is only used once, and the
+    // pipeline won't wait for it to buffer. Intermediate values shouldn't come anywhere close
+    // to this.
+    hwm: 64 /* MB */ * 1024 /* KB */ * 1024 /* B */
+  }, write => new Promise((resolve, reject) => {
     let open = 1
-
-    function start () {
-      open++
-    }
 
     function pass () {
       if (open > 0 && --open === 0) {
-        uploadStream.end()
-        resolve(uploadPromise)
+        console.log('Users backed up, ending upload stream and returning')
+        resolve()
       }
     }
 
     function fail (e) {
       if (open > 0) {
         open = 0
+        console.error('An error occurred', e)
         reject(e)
       }
     }
@@ -105,12 +137,14 @@ exports.handler = async event => {
     //    any sort of results.
 
     async function processUser (user) {
-      start()
+      open++
+      console.log(`Backing up user: ${user.Username}`)
 
       const options = { UserPoolId: userPoolId, Username: user.Username }
       let isAdmin = false
       let isRegistered = false
 
+      console.log(`Enumerating groups for user: ${user.Username}`)
       do {
         const resp = await cognitoIdp.adminListGroupsForUser(options).promise()
         options.NextToken = resp.NextToken
@@ -124,6 +158,7 @@ exports.handler = async event => {
         }
       } while (options.NextToken != null)
 
+      console.log(`Serializing attributes for user: ${user.Username}`)
       // Only serialize what's needed, to save space and speed up restoration.
       // (Restoration is more network-intensive than backup.)
       const attributes = Object.create(null)
@@ -132,18 +167,20 @@ exports.handler = async event => {
         attributes[attr.Name] = attr.Value
       }
 
+      attributes.email = user.Username
       attributes._isAdmin = isAdmin
       attributes._isRegistered = isRegistered
 
-      uploadStream.write(JSON.stringify(attributes) + '\n', 'utf-8')
+      console.log(`Writing user: ${user.Username}`)
+      write(attributes)
     }
 
-    start()
-
+    open++
     ;(async () => {
       const userOptions = { UserPoolId: userPoolId }
 
       do {
+        console.log('Reading users')
         const { Users, PaginationToken } = await cognitoIdp.listUsers(userOptions).promise()
 
         userOptions.PaginationToken = PaginationToken
@@ -154,5 +191,8 @@ exports.handler = async event => {
         }
       } while (userOptions.PaginationToken != null)
     })().then(pass, fail)
-  })
+    pass()
+  })))
+
+  await Promise.all(promises)
 }
