@@ -1,6 +1,6 @@
 {
   "name": "serverless-developer-portal-user-group-importer",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Developer Portal component responsible for importing old users with their groups",
   "main": "index.js",
   "config": {},
