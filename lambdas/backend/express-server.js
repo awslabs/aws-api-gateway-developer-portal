@@ -11,6 +11,8 @@ const handlers = require('./express-route-handlers.js')
 
 const app = express()
 
+app.set('case sensitive routing', true)
+
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
