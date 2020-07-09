@@ -1,6 +1,6 @@
 {
   "name": "aws-serverless-dev-portal",
-  "version": "4.0.1",
+  "version": "4.0.3",
   "description": "Serverless Developer Portal for API Gateway",
   "main": "lambda.js",
   "scripts": {
