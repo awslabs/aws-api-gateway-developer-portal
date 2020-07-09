@@ -149,7 +149,7 @@ Resources:
         - https
         paths:
           # Version marker - please don't delete
-          /version/:v3_0_5:
+          /version/{v3_0_6}:
             options:
               consumes:
               - application/json
@@ -174,7 +174,7 @@ Resources:
                     responseParameters:
                       method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
                       method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'DevelopmentMode', "'*'", !If [
                         'UseCustomDomainName',
                         !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
                         !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
