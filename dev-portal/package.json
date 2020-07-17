@@ -6,7 +6,7 @@
     "chart.js": "^2.7.2",
     "front-matter": "^3.0.0",
     "jwt-decode": "^2.2.0",
-    "lodash": "^4.17.13",
+    "lodash": "^4.17.19",
     "mobx": "^5.15.4",
     "mobx-react": "^6.2.2",
     "object-hash": "^2.0.3",
