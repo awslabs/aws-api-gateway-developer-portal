@@ -585,11 +585,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
-#      PublicAccessBlockConfiguration:
-#        BlockPublicAcls: true
-#        BlockPublicPolicy: true
-#        IgnorePublicAcls: true
-#        RestrictPublicBuckets: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls:  !If [ NotDevelopmentMode, 'true', 'false' ]
+        BlockPublicPolicy: !If [ NotDevelopmentMode, 'true', 'false' ]
+        IgnorePublicAcls: !If [ NotDevelopmentMode, 'true', 'false' ]
+        RestrictPublicBuckets: !If [ NotDevelopmentMode, 'true', 'false' ]
 
   DevPortalSiteS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
