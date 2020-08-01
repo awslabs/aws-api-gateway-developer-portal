@@ -97,7 +97,7 @@ export const ApiManagement = observer(class ApiManagement extends React.Componen
         const reader = new window.FileReader()
 
         reader.onload = (e) => {
-          if (file.name.includes('yaml')) {
+          if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
             swaggerObject = YAML.parse(e.target.result)
             swagger = JSON.stringify(swaggerObject)
           } else {
