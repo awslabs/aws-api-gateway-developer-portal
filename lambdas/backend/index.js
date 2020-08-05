@@ -12,6 +12,9 @@ const util = require('./util')
 
 const app = express()
 
+app.set('case sensitive routing', true)
+app.set('strict routing', true)
+
 app.use(cors())
 app.use(bodyParser.json({ limit: '10mb' }))
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
