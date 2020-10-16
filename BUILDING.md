@@ -200,6 +200,10 @@ Gets the output from the CFN stack, writes a local version of the config.js file
 
 Lint all code in the repo using ESLint and `cfn-lint`.
 
+### `node run version --inc=patch|minor|major|prepatch|preminor|premajor|prerelease --type=beta`
+
+Update all package versions with a version increment and optional prerelease identifier (as used by [semver](https://www.npmjs.com/package/semver)), and create a commit with the updated files and all files that were already staged prior to running this command.
+
 ### `node run test`
 
 Run all the unit tests.

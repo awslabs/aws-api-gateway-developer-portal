@@ -36,15 +36,15 @@ function computeExtra ({ status, signal }) {
 }
 
 async function run (name, args, { action, target, ...opts }) {
-  console.error(green(`${action} for `) + blue(target) + green(' started'))
+  console.error(green(`${action} for `) + (target ? blue(target) : green('root')) + green(' started'))
   const result = await exec(name, args, opts)
 
   if (result.error != null) {
-    console.error(red(`${action} for ${target} errored\n${inspect(result.error, { colors: true })}`))
+    console.error(red(`${action} for ${target || 'root'} errored\n${inspect(result.error, { colors: true })}`))
     return false
   } else {
     console.error(
-      green(`${action} for `) + blue(target) + green(' completed') +
+      green(`${action} for `) + (target ? blue(target) : green('root')) + green(' completed') +
       computeExtra(result)
     )
     return result.status === 0
@@ -58,10 +58,12 @@ const packageList = [
   'dev-portal',
   'lambdas/backend',
   'lambdas/catalog-updater',
+  'lambdas/cloudfront-security',
   'lambdas/listener',
-  'lambdas/static-asset-uploader'
+  'lambdas/static-asset-uploader',
+  'lambdas/user-group-importer'
 ].map(rel => ({
-  target: `/${rel}`,
+  target: rel,
   resolved: p(rel)
 }))
 

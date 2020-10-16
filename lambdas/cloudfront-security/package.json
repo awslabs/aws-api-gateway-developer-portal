@@ -1,7 +1,7 @@
 {
   "name": "serverless-developer-cloudfront-security",
   "private": true,
-  "version": "3.0.3",
+  "version": "4.0.3",
   "description": "Developer Portal component responsible for managing the edge lambda",
   "main": "index.js",
   "config": {},

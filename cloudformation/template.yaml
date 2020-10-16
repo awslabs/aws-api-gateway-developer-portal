@@ -184,6 +184,41 @@ Resources:
         schemes:
         - https
         paths:
+          # Version marker - please don't delete
+          /version/{v4_0_3}:
+            options:
+              consumes:
+              - application/json
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Headers:
+                      type: string
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: !If [ 'LocalDevelopmentMode', "'*'", !If [
+                        'UseCustomDomainName',
+                        !Join ['', [ "'https://", !Ref CustomDomainName, "'" ]],
+                        !Join ['', [ "'https://", !GetAtt DefaultCloudfrontDistribution.DomainName, "'" ]]
+                      ]]
+                passthroughBehavior: when_no_match
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                type: mock
           /:
             x-amazon-apigateway-any-method:
               security:
@@ -1586,27 +1621,13 @@ Resources:
           - Effect: Allow
             Action:
             - execute-api:Invoke
-            Resource: !Join
-              - ''
-              - - 'arn:aws:execute-api:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - ':'
-                - !Ref ApiGatewayApi
-                - /prod/*/*
+            Resource:
+            - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/prod/*'
           - Effect: Deny
             Action:
             - execute-api:Invoke
-            Resource: !Join
-              - ''
-              - - 'arn:aws:execute-api:'
-                - !Ref 'AWS::Region'
-                - ':'
-                - !Ref 'AWS::AccountId'
-                - ':'
-                - !Ref ApiGatewayApi
-                - /prod/*/admin/*
+            Resource:
+            - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/prod/*/admin/*'
       Path: '/'
 
   CognitoAdminRole:
