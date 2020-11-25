@@ -155,3 +155,8 @@ export function logout () {
     }
   }
 }
+
+export function getCognitoUrl(type) {
+  const redirectUri = getLoginRedirectUrl()
+  return `${cognitoDomain}/${type}?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`
+}
