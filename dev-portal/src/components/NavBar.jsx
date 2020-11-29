@@ -25,7 +25,7 @@ import { store } from 'services/state'
 
 export const NavBar = observer(
   class NavBar extends React.Component {
-    render() {
+    render () {
       const email = store.user && store.user.email
       return <Menu inverted borderless attached style={{ flex: '0 0 auto' }} stackable>
         <MenuLink to='/'>
@@ -51,9 +51,9 @@ export const NavBar = observer(
               </div>
             </MenuLink>
           </> : <>
-              <MenuLink to={getCognitoUrl('login')}>Sign In</MenuLink>
-              <MenuLink to={getCognitoUrl('signup')}>Register</MenuLink>
-            </>}
+            <MenuLink to={getCognitoUrl('login')}>Sign In</MenuLink>
+            <MenuLink to={getCognitoUrl('signup')}>Register</MenuLink>
+          </>}
         </Menu.Menu>
       </Menu>
     }

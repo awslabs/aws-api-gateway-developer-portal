@@ -27,11 +27,11 @@ export default observer(class ApisPage extends React.Component {
   containerRef = React.createRef()
   hasRoot = false
 
-  componentDidMount() { this.updateApi(true) }
-  componentDidUpdate() { this.updateApi(false) }
-  componentWillUnmount() { this.containerRef = null }
+  componentDidMount () { this.updateApi(true) }
+  componentDidUpdate () { this.updateApi(false) }
+  componentWillUnmount () { this.containerRef = null }
 
-  updateApi(isInitial) {
+  updateApi (isInitial) {
     return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage, isInitial)
       .then(api => {
         if (this.containerRef == null) return
@@ -76,7 +76,7 @@ export default observer(class ApisPage extends React.Component {
     window.location = getCognitoUrl('login');
   }
 
-  render() {
+  render () {
     let errorHeader
     let errorBody
 
