@@ -11,16 +11,29 @@ For more information about Amazon API Gateway, visit the API Gateway [product pa
 It also optionally supports subscription/unsubscription through a SaaS product offering through the AWS Marketplace.
 -->
 
-![Alt text](/screen-home.png?raw=true)
-![Alt text](/screen-documentation.png?raw=true)
+![Home screen](/screen-home.png?raw=true)
+![Documentation screen](/screen-documentation.png?raw=true)
 
 ## Setup
-There are 2 main ways to deploy the Developer Portal today:
-### 1. Deploy with SAR
-This deployment model is better if you want an easy way to deploy the developer portal and use it as-is out of box. You can deploy the Serverless Developer Portal through SAR in a few clicks! See the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html).
 
-### 2. Deploy with SAM
-This deployment model is better if you plan to customize the developer portal heavily and setup CI/CD on it.
+There are three main ways to deploy the Developer Portal today:
+
+1. [Deploy using SAR](#1-deploy-using-sar)
+2. [Deploy using SAM](#2-deploy-using-sam)
+3. [Deploy using the development scripts](#3-deploy-using-the-development-scripts)
+
+### 1. Deploy using SAR
+
+If all you want to do is deploy it as it is out of the box, you can do it by simply [following the instructions in the Serverless Developer Portal documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-developer-portal.html#apigateway-developer-portal-create).
+
+### 2. Deploy using SAM
+
+If you plan to automate the deployment through your own infrastructure or if you just want to customize the template, you can just use the [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to do it. See the [SAM Deployment Guide](https://github.com/awslabs/aws-api-gateway-developer-portal/blob/master/BUILDING_SAM.md) for how to do this.
+
+### 3. Deploy using the development scripts
+
+This deployment model is better if you choose to modify the developer portal assets and/or design itself or if you need to do something else more advanced. See the [development guide](https://github.com/awslabs/aws-api-gateway-developer-portal/blob/master/BUILDING.md) for how to do this.
+
 #### Prerequisites
 
 First, ensure you have the [latest version of the SAM CLI installed](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html). Note that while the instructions specify Docker as a pre-requisite, Docker is only necessary for local development via SAM local. Feel free to skip installing Docker when you first set up the developer portal.
