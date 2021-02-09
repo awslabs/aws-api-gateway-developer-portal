@@ -12,6 +12,10 @@
     - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
     - [CloudFormation Linter (`cfn-lint`)](https://github.com/aws-cloudformation/cfn-python-lint)
 
+    If you have not used the AWS CLI or SAM CLI before, you may need to [configure your AWS credentials file](https://docs.aws.amazon.com/cli/latest/userguide/cli-config-files.html) as well.
+
+    You can feel free to ignore the Docker requirement for the SAM CLI as the build scripts offer a local development server to try your changes as you make them.
+
 2. Clone this repo to your local drive.
 
 3. Create a private S3 bucket for putting zipped lambda functions and zipped templates in. Note the bucket name for the next step. (This can be the same one you used during in the initial deployment.)
@@ -30,6 +34,8 @@
 7. If you created the stack for the first time (or changed the `n` from the development `deployer.config.js` example), you'll need to register a new admin account. In the dev portal, register it as an ordinary user, then go into the Cognito user pool generated for it (you can find it by going to the deployed stack in CloudFormation and searching for "CognitoUserPool" in the "Logical ID" column), search for the account in question (by email is easiest), open it, and add it to the admin group (look for `${STACK_NAME}AdminsGroup`).
 
 8. Make changes locally, test them at [`http://localhost:3000`](http://localhost:3000), and, when satisfied, run `node run release` to build and upload the changes to your cloud dev portal.
+
+> If you have previously set up a v1 developer portal through the Serverless Application Repo, you will need to either remove all the v1 developer portal resources (dynamo tables, roles, etc.) or provide new names for the v2 developer portal by passing in parameter overrides for every resource.
 
 ## Deployer configuration
 
