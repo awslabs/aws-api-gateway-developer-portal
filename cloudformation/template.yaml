@@ -2,7 +2,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
-Description: My Dev Portal Stack
+Description: Enview Development Portal
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -19,6 +19,9 @@ Metadata:
           default: "Dev Portal Customer Configuration"
         Parameters:
           - CognitoIdentityPoolName
+          - CognitoUserPoolID
+          - CognitoIdentityPoolID
+          - CognitoUserPoolARN
           - DevPortalCustomersTableName
           - AccountRegistrationMode
       # Marketplace support is currently broken
@@ -107,6 +110,19 @@ Parameters:
   CognitoDomainNameOrPrefix:
     Type: String
     Description: The Domain Name (or Prefix) at which your Cognito Hosted UI is located. This should be regionally unique.
+
+  CognitoIdentityPoolID:
+    Type: String
+    Description: The name for your Cognito Identity Pool.
+
+  CognitoUserPoolARN:
+    Type: String
+    Description: The name for your Cognito Identity Pool.
+
+  CognitoUserPoolID:
+    Type: String
+    Description: The name for your Cognito Identity Pool.
+    Default: 'DevPortalIdentityPool'
 
   # CognitoDomainAcmCertArn:
   #   Type: String
@@ -874,7 +890,7 @@ Resources:
               - cognito-idp:AdminDeleteUser
               - cognito-idp:AdminGetUser
               - cognito-idp:AdminListGroupsForUser
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Ref CognitoUserPoolARN
 
   CognitoPreSignupTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -928,7 +944,7 @@ Resources:
           - Effect: Allow
             Action:
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Ref CognitoUserPoolARN
 
   CognitoPostAuthenticationTriggerExecutionRole:
     Type: AWS::IAM::Role
@@ -965,7 +981,7 @@ Resources:
           - Effect: Allow
             Action:
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Ref CognitoUserPoolARN
 
   CatalogUpdaterLambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -1148,7 +1164,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool
+          - !Ref CognitoUserPoolID
 
   CognitoPostConfirmationTriggerFnExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1163,7 +1179,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool
+          - !Ref CognitoUserPoolID
 
   CognitoPostAuthenticationTriggerFnExecutionPermission:
     Type: AWS::Lambda::Permission
@@ -1178,7 +1194,7 @@ Resources:
           - ':'
           - !Ref 'AWS::AccountId'
           - ':userpool/'
-          - !Ref CognitoUserPool
+          - !Ref CognitoUserPoolID
 
   # Marketplace support is currently broken
   # LambdaSNSExecutionPermission:
@@ -1234,7 +1250,7 @@ Resources:
           FeedbackTableName: !Ref DevPortalFeedbackTableName
           FeedbackSnsTopicArn:
             !If [EnableFeedbackSubmission, !Ref FeedbackSubmittedSNSTopic, '']
-          UserPoolId: !Ref CognitoUserPool
+          UserPoolId: !Ref CognitoUserPoolID
           AdminsGroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
           RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
           DevelopmentMode: !Ref DevelopmentMode
@@ -1320,76 +1336,76 @@ Resources:
       Layers:
         - !Ref LambdaCommonLayer
 
-  CognitoUserPool:
-    Type: AWS::Cognito::UserPool
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      UserPoolName: !Ref CognitoIdentityPoolName
-      # Lambda trigger caveats:
-      #
-      # - We can't use the functions' ARNs here, because there would be a
-      #   circular dependency: some functions reference either the UserPool or
-      #   UserPoolGroups within it.
-      #
-      # - You must declare an AWS::Lambda::Permission for each lambda here, or
-      #   else calls from Cognito will fail with an AccessDeniedException. See
-      #   `CognitoPreSignupTriggerFnExecutionPermission` as an example. More
-      #   reading: <https://stackoverflow.com/a/42460847> and
-      #   <https://forums.aws.amazon.com/thread.jspa?messageID=748566#748566>
-      LambdaConfig:
-        PreSignUp: !Join
-          - ''
-          - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
-            - !Sub '${AWS::StackName}-CognitoPreSignupTriggerFn'
-        PostConfirmation: !Join
-          - ''
-          - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
-            - !Sub '${AWS::StackName}-CognitoPostConfirmationTriggerFn'
-        PostAuthentication: !Join
-          - ''
-          - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
-            - !Sub '${AWS::StackName}-CognitoPostAuthenticationTriggerFn'
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 12
-          RequireLowercase: true
-          RequireNumbers: true
-      Schema:
-        - AttributeDataType: String
-          Name: email
-          Required: true
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: !If [
-          InviteAccountRegistrationMode, true, false,
-        ]
-        InviteMessageTemplate:
-          EmailSubject: 'Developer Portal - Invitation'
-          EmailMessage: !Join [ '', [
-            '<h2>Developer Portal</h2><p>You have been invited to access the developer portal at <a href="',
-            !If [ 'DevelopmentMode',
-              !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
-              !If [
-                'UseCustomDomainName',
-                !Join [ '', [ 'https://', !Ref CustomDomainName ]],
-                !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
-              ]
-            ],
-            '">',
-            !If [ 'DevelopmentMode',
-              !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
-              !If [
-                'UseCustomDomainName',
-                !Join [ '', [ 'https://', !Ref CustomDomainName ]],
-                !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
-              ]
-            ],
-            '</a>.</p><p><b>Username:</b> {username}<br><b>Temporary password:</b> {####}</p>'
-          ] ]
-      AutoVerifiedAttributes: ['email']
-      UsernameAttributes: ['email']
-      EmailVerificationSubject: 'Developer Portal - Verification Code'
-      EmailVerificationMessage: '<h2>Developer Portal</h2><p>Your verification code is <b>{####}</b></p>'
+  # CognitoUserPool:
+  #   Type: AWS::Cognito::UserPool
+  #   DeletionPolicy: Retain
+  #   UpdateReplacePolicy: Retain
+  #   Properties:
+  #     UserPoolName: !Ref CognitoIdentityPoolName
+  #     # Lambda trigger caveats:
+  #     #
+  #     # - We can't use the functions' ARNs here, because there would be a
+  #     #   circular dependency: some functions reference either the UserPool or
+  #     #   UserPoolGroups within it.
+  #     #
+  #     # - You must declare an AWS::Lambda::Permission for each lambda here, or
+  #     #   else calls from Cognito will fail with an AccessDeniedException. See
+  #     #   `CognitoPreSignupTriggerFnExecutionPermission` as an example. More
+  #     #   reading: <https://stackoverflow.com/a/42460847> and
+  #     #   <https://forums.aws.amazon.com/thread.jspa?messageID=748566#748566>
+  #     LambdaConfig:
+  #       PreSignUp: !Join
+  #         - ''
+  #         - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
+  #           - !Sub '${AWS::StackName}-CognitoPreSignupTriggerFn'
+  #       PostConfirmation: !Join
+  #         - ''
+  #         - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
+  #           - !Sub '${AWS::StackName}-CognitoPostConfirmationTriggerFn'
+  #       PostAuthentication: !Join
+  #         - ''
+  #         - - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:'
+  #           - !Sub '${AWS::StackName}-CognitoPostAuthenticationTriggerFn'
+  #     Policies:
+  #       PasswordPolicy:
+  #         MinimumLength: 12
+  #         RequireLowercase: true
+  #         RequireNumbers: true
+  #     Schema:
+  #       - AttributeDataType: String
+  #         Name: email
+  #         Required: true
+  #     AdminCreateUserConfig:
+  #       AllowAdminCreateUserOnly: !If [
+  #         InviteAccountRegistrationMode, true, false,
+  #       ]
+  #       InviteMessageTemplate:
+  #         EmailSubject: 'Developer Portal - Invitation'
+  #         EmailMessage: !Join [ '', [
+  #           '<h2>Developer Portal</h2><p>You have been invited to access the developer portal at <a href="',
+  #           !If [ 'DevelopmentMode',
+  #             !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+  #             !If [
+  #               'UseCustomDomainName',
+  #               !Join [ '', [ 'https://', !Ref CustomDomainName ]],
+  #               !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+  #             ]
+  #           ],
+  #           '">',
+  #           !If [ 'DevelopmentMode',
+  #             !Join [ '', [ 'https://', !GetAtt DevPortalSiteS3Bucket.RegionalDomainName, '/index.html' ]],
+  #             !If [
+  #               'UseCustomDomainName',
+  #               !Join [ '', [ 'https://', !Ref CustomDomainName ]],
+  #               !Join [ '', [ 'https://', !GetAtt DefaultCloudfrontDistribution.DomainName ]]
+  #             ]
+  #           ],
+  #           '</a>.</p><p><b>Username:</b> {username}<br><b>Temporary password:</b> {####}</p>'
+  #         ] ]
+  #     AutoVerifiedAttributes: ['email']
+  #     UsernameAttributes: ['email']
+  #     EmailVerificationSubject: 'Developer Portal - Verification Code'
+  #     EmailVerificationMessage: '<h2>Developer Portal</h2><p>Your verification code is <b>{####}</b></p>'
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -1398,7 +1414,7 @@ Resources:
     # However, when this is updated and changes, the CUPCS custom resource doesn't re-run, and so a bunch of vital
     # settings won't be set, e.g., CallbackURL.
     Properties:
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !Ref CognitoUserPoolID
       ClientName: CognitoIdentityPool
       GenerateSecret: false
       RefreshTokenValidity: 30
@@ -1453,7 +1469,7 @@ Resources:
     Properties:
       Timeout: 360
       ServiceToken: !GetAtt CognitoUserPoolClientSettingsBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !Ref CognitoUserPoolID
       UserPoolClientId: !Ref CognitoUserPoolClient
       SupportedIdentityProviders: [ "COGNITO" ] # should (eventually) allow people to add values
       CallbackURL: !If [ LocalDevelopmentMode,
@@ -1480,86 +1496,86 @@ Resources:
       AllowedOAuthFlows: [ "implicit" ]
       AllowedOAuthScopes: [ "openid" ]
 
-  CognitoUserPoolDomainBackingFnRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          -
-            Effect: Allow
-            Action: 'sts:AssumeRole'
-            Principal:
-              Service: lambda.amazonaws.com
-      Policies:
-        - PolicyName: WriteCloudWatchLogs
-          PolicyDocument: 
-            Version: '2012-10-17'
-            Statement: 
-              -
-                Effect: Allow
-                Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Resource: 'arn:aws:logs:*:*:*'
-        - PolicyName: ManageUserPoolDomain
-          PolicyDocument: 
-            Version: '2012-10-17'
-            Statement: 
-              -
-                Effect: Allow
-                Action: 'cognito-idp:CreateUserPoolDomain'
-                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
-              -
-                Effect: Allow
-                Action: 'cognito-idp:DeleteUserPoolDomain'
-                Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
-              -
-                Effect: Allow
-                Action: 'cognito-idp:DescribeUserPoolDomain'
-                Resource: '*'
+  # CognitoUserPoolDomainBackingFnRole:
+  #   Type: 'AWS::IAM::Role'
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         -
+  #           Effect: Allow
+  #           Action: 'sts:AssumeRole'
+  #           Principal:
+  #             Service: lambda.amazonaws.com
+  #     Policies:
+  #       - PolicyName: WriteCloudWatchLogs
+  #         PolicyDocument: 
+  #           Version: '2012-10-17'
+  #           Statement: 
+  #             -
+  #               Effect: Allow
+  #               Action:
+  #                 - 'logs:CreateLogGroup'
+  #                 - 'logs:CreateLogStream'
+  #                 - 'logs:PutLogEvents'
+  #               Resource: 'arn:aws:logs:*:*:*'
+  #       - PolicyName: ManageUserPoolDomain
+  #         PolicyDocument: 
+  #           Version: '2012-10-17'
+  #           Statement: 
+  #             -
+  #               Effect: Allow
+  #               Action: 'cognito-idp:CreateUserPoolDomain'
+  #               Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+  #             -
+  #               Effect: Allow
+  #               Action: 'cognito-idp:DeleteUserPoolDomain'
+  #               Resource: 'arn:aws:cognito-idp:*:*:userpool/*'
+  #             -
+  #               Effect: Allow
+  #               Action: 'cognito-idp:DescribeUserPoolDomain'
+  #               Resource: '*'
 
-  CognitoUserPoolDomainBackingFn:
-    Type: AWS::Serverless::Function
-    Properties:
-      Runtime: nodejs12.x
-      MemorySize: 128
-      Timeout: 300
-      CodeUri: ../lambdas/cfn-cognito-user-pools-domain
-      Handler: index.handler
-      Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
-      Layers:
-        - !Ref LambdaCommonLayer
+  # CognitoUserPoolDomainBackingFn:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Runtime: nodejs12.x
+  #     MemorySize: 128
+  #     Timeout: 300
+  #     CodeUri: ../lambdas/cfn-cognito-user-pools-domain
+  #     Handler: index.handler
+  #     Role: !GetAtt CognitoUserPoolDomainBackingFnRole.Arn
+  #     Layers:
+  #       - !Ref LambdaCommonLayer
 
-  CognitoUserPoolDomain:
-    Type: AWS::CloudFormation::CustomResource
-    Properties:
-      Timeout: 360
-      ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
-      UserPoolId: !Ref CognitoUserPool
-      Domain: !Ref CognitoDomainNameOrPrefix
+  # CognitoUserPoolDomain:
+  #   Type: AWS::CloudFormation::CustomResource
+  #   Properties:
+  #     Timeout: 360
+  #     ServiceToken: !GetAtt CognitoUserPoolDomainBackingFn.Arn
+  #     UserPoolId: !Ref CognitoUserPool
+  #     Domain: !Ref CognitoDomainNameOrPrefix
   
-  CognitoIdentityPool:
-    Type: AWS::Cognito::IdentityPool
-    Properties:
-      IdentityPoolName: !Ref CognitoIdentityPoolName
-      AllowUnauthenticatedIdentities: false
-      CognitoIdentityProviders:
-        - ClientId: !Ref CognitoUserPoolClient
-          ProviderName: !Join
-            - ''
-            - - cognito-idp.
-              - !Ref 'AWS::Region'
-              - .amazonaws.com/
-              - !Ref CognitoUserPool
+  # CognitoIdentityPool:
+  #   Type: AWS::Cognito::IdentityPool
+  #   Properties:
+  #     IdentityPoolName: !Ref CognitoIdentityPoolName
+  #     AllowUnauthenticatedIdentities: false
+  #     CognitoIdentityProviders:
+  #       - ClientId: !Ref CognitoUserPoolClient
+  #         ProviderName: !Join
+  #           - ''
+  #           - - cognito-idp.
+  #             - !Ref 'AWS::Region'
+  #             - .amazonaws.com/
+  #             - !Ref CognitoUserPool
 
-  CognitoIdentityPoolRoles:
-    Type: AWS::Cognito::IdentityPoolRoleAttachment
-    Properties:
-      IdentityPoolId: !Ref CognitoIdentityPool
-      Roles:
-        authenticated: !GetAtt CognitoAuthenticatedRole.Arn
+  # CognitoIdentityPoolRoles:
+  #   Type: AWS::Cognito::IdentityPoolRoleAttachment
+  #   Properties:
+  #     IdentityPoolId: !Ref CognitoIdentityPool
+  #     Roles:
+  #       authenticated: !GetAtt CognitoAuthenticatedRole.Arn
 
   # Every logged-in Cognito user is "authenticated".
   CognitoAuthenticatedRole:
@@ -1574,7 +1590,8 @@ Resources:
           Action: sts:AssumeRoleWithWebIdentity
           Condition:
             StringEquals:
-              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
+              #'cognito-identity.amazonaws.com:aud': 'us-west-2:fff8259b-f6be-4f44-a6f1-eb9a2c8a4c9e'
+              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPoolID
             'ForAnyValue:StringLike':
               'cognito-identity.amazonaws.com:amr': authenticated
       Policies:
@@ -1610,7 +1627,7 @@ Resources:
           Action: sts:AssumeRoleWithWebIdentity
           Condition:
             StringEquals:
-              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
+              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPoolID
             'ForAnyValue:StringLike':
               'cognito-identity.amazonaws.com:amr': authenticated
       Policies:
@@ -1642,7 +1659,7 @@ Resources:
           Action: sts:AssumeRoleWithWebIdentity
           Condition:
             StringEquals:
-              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPool
+              'cognito-identity.amazonaws.com:aud': !Ref CognitoIdentityPoolID
             'ForAnyValue:StringLike':
               'cognito-identity.amazonaws.com:amr': authenticated
       Policies:
@@ -1663,7 +1680,7 @@ Resources:
                 - !Ref ApiGatewayApi
                 - /prod/*/*
 
-  CognitoAdminsGroup:
+  CognitoAdminsPortalGroup:
     Type: AWS::Cognito::UserPoolGroup
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
@@ -1674,9 +1691,9 @@ Resources:
       # since admin group has a precedence of 0, it takes priority
       Precedence: 0
       RoleArn: !GetAtt CognitoAdminRole.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !Ref CognitoUserPoolID
 
-  CognitoRegisteredGroup:
+  CognitoRegisteredPortalGroup:
     Type: AWS::Cognito::UserPoolGroup
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
@@ -1685,7 +1702,7 @@ Resources:
       GroupName: !Sub '${AWS::StackName}-RegisteredGroup'
       Precedence: 1
       RoleArn: !GetAtt CognitoRegisteredRole.Arn
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId: !Ref CognitoUserPoolID
 
   CatalogUpdaterLambdaFunction:
     Type: AWS::Serverless::Function
@@ -1734,10 +1751,10 @@ Resources:
       BucketName: !Ref DevPortalSiteS3Bucket
       RestApiId: !Ref ApiGatewayApi
       Region: !Ref 'AWS::Region'
-      IdentityPoolId: !Ref CognitoIdentityPool
-      UserPoolId: !Ref CognitoUserPool
+      IdentityPoolId: !Ref CognitoIdentityPoolID
+      UserPoolId: !Ref CognitoUserPoolID
       UserPoolClientId: !Ref CognitoUserPoolClient
-      UserPoolDomain: !GetAtt CognitoUserPoolDomain.FullUrl
+      UserPoolDomain: !Ref CognitoDomainNameOrPrefix
       # Marketplace support is currently broken
       # MarketplaceSuffix: !Ref MarketplaceSubscriptionTopicProductCode
       RebuildToken: !Ref StaticAssetRebuildToken
@@ -1944,8 +1961,8 @@ Resources:
       Environment:
         Variables:
           CustomersTableName: !Ref DevPortalCustomersTableName
-          UserPoolId: !Ref CognitoUserPool
-          AdminsGroupName: !Ref CognitoAdminsGroup
+          UserPoolId: !Ref CognitoUserPoolID
+          AdminsGroupName: !Ref CognitoAdminsPortalGroup
       Layers:
         - !Ref LambdaCommonLayer
 
@@ -1985,7 +2002,7 @@ Resources:
             Action:
               - cognito-idp:ListUsers
               - cognito-idp:ListUsersInGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Ref CognitoUserPoolARN
 
   UserGroupImporterLogsRole:
     Type: AWS::IAM::Role
@@ -2071,7 +2088,7 @@ Resources:
             Action:
               - cognito-idp:AdminCreateUser
               - cognito-idp:AdminAddUserToGroup
-            Resource: !GetAtt CognitoUserPool.Arn
+            Resource: !Ref CognitoUserPoolARN
   
   UserGroupImporter:
     Type: AWS::Serverless::Function
@@ -2085,10 +2102,10 @@ Resources:
       Timeout: 900
       Environment:
         Variables:
-          UserPoolId: !Ref CognitoUserPool
+          UserPoolId: !Ref CognitoUserPoolID
           LogsRoleArn: !GetAtt UserGroupImporterLogsRole.Arn
-          AdminsGroup: !Ref CognitoAdminsGroup
-          RegisteredGroup: !Ref CognitoRegisteredGroup
+          AdminsGroup: !Ref CognitoAdminsPortalGroup
+          RegisteredGroup: !Ref CognitoRegisteredPortalGroup
           CustomersTable: !Ref CustomersTable
           FeedbackTable: !If [EnableFeedbackSubmission, !Ref FeedbackTable, !Ref AWS::NoValue]
       
@@ -2109,3 +2126,15 @@ Outputs:
     Condition: UseCustomDomainName
     Value: !Ref CustomDomainName
     Description: Custom URL for website
+
+  lambdapostautharnoutput:
+    Value: !GetAtt CognitoPostAuthenticationTriggerFn.Arn
+    Description: Lambda Function triggered after user is authenticated
+
+  cognitoclientidoutput:
+    Value: !Ref CognitoUserPoolClient
+    Description: Client added to the congnito user pool
+
+  apigatewayidoutput:
+    Value: !Ref ApiGatewayApi
+    Description: Dev Portal back-end Api Gateway
