@@ -1303,7 +1303,7 @@ Resources:
   CognitoPostConfirmationTriggerFn:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub '${AWS::StackName}-CognitoPostConfirmationTriggerFn'
+      FunctionName: !Sub '${AWS::StackName}-CognitoPostConfirmTriggerFn'
       CodeUri: ../lambdas/cognito-post-confirmation-trigger
       Handler: index.handler
       MemorySize: 128
