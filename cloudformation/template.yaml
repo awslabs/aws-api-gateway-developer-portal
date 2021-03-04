@@ -1321,7 +1321,7 @@ Resources:
   CognitoPostAuthenticationTriggerFn:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub '${AWS::StackName}-CognitoPostAuthenticationTriggerFn'
+      FunctionName: !Sub '${AWS::StackName}-CognitoPostAuthTriggerFn'
       CodeUri: ../lambdas/cognito-post-authentication-trigger
       Handler: index.handler
       MemorySize: 128
