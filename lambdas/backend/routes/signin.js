@@ -29,8 +29,9 @@ exports.post = async (req, res) => {
       cognitoUserId,
       'NO_API_KEY'
     )
+    const email = await customersController.getEmailForUserSub(cognitoUserId)
     await customersController.ensureApiKeyForCustomer({
-      userId: cognitoUserId,
+      userId: email,
       identityId: cognitoIdentityId
     })
   } catch (error) {
