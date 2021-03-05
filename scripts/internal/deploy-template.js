@@ -31,7 +31,10 @@ module.exports = async () => {
     staticAssetRebuildMode,
     developmentMode,
     edgeLambdaRebuildToken,
-    awsSamCliProfile
+    awsSamCliProfile,
+    cognitoUserPoolID,
+    cognitoUserPoolARN,
+    cognitoIdentityPoolID
   } = deployerConfig
 
   await exec('sam', [
@@ -57,6 +60,9 @@ module.exports = async () => {
     ...(cognitoIdentityPoolName ? [`CognitoIdentityPoolName=${cognitoIdentityPoolName}`] : []),
     ...(developmentMode ? [`LocalDevelopmentMode=${developmentMode}`] : []),
     ...(cognitoDomainName ? [`CognitoDomainNameOrPrefix=${cognitoDomainName}`] : []),
+    ...(cognitoUserPoolID ? [`CognitoUserPoolID=${cognitoUserPoolID}`] : []),
+    ...(cognitoIdentityPoolID ? [`CognitoIdentityPoolID=${cognitoIdentityPoolID}`] : []),
+    ...(cognitoUserPoolARN ? [`CognitoUserPoolARN=${cognitoUserPoolARN}`] : []),
     // FIXME: Marketplace support is currently broken
     // ...(marketplaceSubscriptionTopic ? [`MarketplaceSubscriptionTopicProductCode=${marketplaceSubscriptionTopic}`] : []),
     ...(accountRegistrationMode ? [`AccountRegistrationMode=${accountRegistrationMode}`] : []),

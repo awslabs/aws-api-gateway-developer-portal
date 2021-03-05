@@ -18,11 +18,19 @@ exports.handler = async event => {
       userId
     )
     if (account === null) {
-      console.error('No matching account found!')
-      throw new Error('No matching account found!')
-    }
+      const registeredGroupName = getEnv('RegisteredGroupName')
+      const username = event.userName
+      const emailAddress = event.request.userAttributes.email
 
-    if (account.RegistrationStatus === 'pendingInvite') {
+      await Promise.all([
+        customersController.saveOpenPreLoginAccount({ userId, emailAddress }),
+        customersController.addAccountToRegisteredGroup({
+          username,
+          userPoolId,
+          registeredGroupName
+        })
+      ])
+    } else if (account.RegistrationStatus === 'pendingInvite') {
       console.log('Found pendingInvite account')
       const updateStatusPromise = customersController.updateAccountFromSource({
         account: {

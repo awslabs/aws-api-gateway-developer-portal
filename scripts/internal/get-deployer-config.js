@@ -49,7 +49,9 @@ exports.cognitoIdentityPoolName = getOptional('cognitoIdentityPoolName')
 // FIXME: Marketplace support is currently broken
 // exports.marketplaceSubscriptionTopic = getOptional('marketplaceSubscriptionTopic')
 exports.accountRegistrationMode = getOptional('accountRegistrationMode')
-
+exports.cognitoUserPoolID = getRequired('cognitoUserPoolID')
+exports.cognitoUserPoolARN = getRequired('cognitoUserPoolARN')
+exports.cognitoIdentityPoolID = getRequired('cognitoIdentityPoolID')
 // optional inputs
 exports.feedbackEmail = getOptional('feedbackEmail')
 exports.cognitoDomainAcmCertArn = getOptional('cognitoDomainAcmCertArn')
