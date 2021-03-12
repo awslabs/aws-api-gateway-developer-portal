@@ -28,7 +28,7 @@
     "fs-extra": "^9.0.0",
     "jest": "^25.3.0",
     "memorystream": "^0.3.1",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.1",
     "request-promise": "^4.2.5",
     "semver": "^7.3.2",
     "xml-js": "^1.6.11"
