@@ -41,13 +41,14 @@ async function run (name, args, { action, target, ...opts }) {
 
   if (result.error != null) {
     console.error(red(`${action} for ${target || 'root'} errored\n${inspect(result.error, { colors: true })}`))
-    return false
+    // eslint-disable-next-line no-throw-literal
+    throw 1
   } else {
     console.error(
       green(`${action} for `) + (target ? blue(target) : green('root')) + green(' completed') +
       computeExtra(result)
     )
-    return result.status === 0
+    if (result.status) throw result.status
   }
 }
 

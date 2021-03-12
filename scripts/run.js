@@ -123,6 +123,12 @@ require('./internal/execute-tasks.js')({
     await Promise.all([
       fs.writeFile(p('package.json'), JSON.stringify(rootPkg, null, 2) + '\n', 'utf-8'),
       updatePackage(p('package-lock.json'), 'package-lock.json'),
+      fs.readFile(p('cloudformation/template.yaml'), { encoding: 'utf-8' })
+        .then(content => content.replace(
+          /\/version\/{v\d+_\d+_\d+}:/g,
+          `/version/{v${newVersion.replace(/\./g, '_')}}:`
+        ))
+        .then(replaced => fs.writeFile(p('cloudformation/template.yaml'), replaced, { encoding: 'utf-8' })),
       ...packageList
         .filter(p => p.target !== '')
         .map(async ({ target, resolved }) => Promise.all([
@@ -134,12 +140,21 @@ require('./internal/execute-tasks.js')({
     console.log(green('Committing updated packages'))
 
     await exec('git', [
-      'commit', '--message', `v${newVersion}`,
-      'lambdas/static-asset-uploader/build',
+      'add',
+      p('cloudformation/template.yaml'),
+      p('lambdas/static-asset-uploader/build'),
+      ...(
+        await Promise.all(
+          packageList
+            .map(p => path.join(p.target, 'node_modules'))
+            .map(f => fs.access(f, fs.constants.R_OK).catch(() => null))
+        )
+      ).filter(f => f != null),
       ...packageList.map(p => path.join(p.target, 'package.json')),
       ...packageList.map(p => path.join(p.target, 'package-lock.json'))
     ])
 
+    await exec('git', ['commit', '--message', `v${newVersion}`])
     await exec('git', ['tag', `v${newVersion}`])
 
     console.log(green('Release tag created: ') + blue(`v${newVersion}`))

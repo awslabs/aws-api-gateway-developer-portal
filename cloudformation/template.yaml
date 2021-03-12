@@ -184,7 +184,7 @@ Resources:
         schemes:
         - https
         paths:
-          # Version marker - please don't delete
+          # Version marker - please don't delete (this is how we track version usage)
           /version/{v4_0_3}:
             options:
               consumes:
