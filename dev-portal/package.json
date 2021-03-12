@@ -7,7 +7,7 @@
     "chart.js": "^2.7.2",
     "front-matter": "^3.0.0",
     "jwt-decode": "^2.2.0",
-    "lodash": "^4.17.13",
+    "lodash": "^4.17.21",
     "mobx": "^5.5.0",
     "mobx-react": "^5.2.8",
     "object-hash": "^1.3.1",
@@ -18,10 +18,11 @@
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "0.85.0",
-    "swagger-ui": "git@github.com:Trial-In-Error/swagger-ui.git#a183e909ab467693cb1bbf87d5cc4d1e6b899579",
+    "swagger-ui": "git+ssh://git@github.com/amazon-meaisiah/swagger-ui.git#2b0dfa37e8cae46bb843ae379f6d15631d9a060f",
     "yamljs": "^0.3.0"
   },
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "get-dependencies": "npm install; npm run build",
     "start": "react-scripts start",
     "build": "react-scripts build; rm -rf ../lambdas/static-asset-uploader/build; cp -r ./build ../lambdas/static-asset-uploader",
@@ -44,7 +45,12 @@
   ],
   "devDependencies": {
     "mobx-react-devtools": "^6.0.3",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.1",
+    "npm-force-resolutions": "0.0.10",
     "react-scripts": "^3.0.1"
+  },
+  "resolutions": {
+    "isomorphic-fetch": "^3.0.0",
+    "swagger-ui/**/isomorphic-fetch": "isomorphic-fetch@^3.0.0"
   }
 }
