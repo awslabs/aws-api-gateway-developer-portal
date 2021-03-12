@@ -148,8 +148,8 @@ Resources:
         schemes:
         - https
         paths:
-          # Version marker - please don't delete
-          /version/{v3_0_6}:
+          # Version marker - please don't delete (this is how we track version usage)
+          /version/{v3_0_7}:
             options:
               consumes:
               - application/json
