@@ -17,7 +17,7 @@
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.87.3",
-    "swagger-ui": "git@github.com:amazon-meaisiah/swagger-ui.git#66cbe58352bc2455ea80ff99573fe06dee273f56",
+    "swagger-ui": "git@github.com:amazon-meaisiah/swagger-ui.git#6a027304cf3ad5650cf1b455971e4d6e0b871a31",
     "yamljs": "^0.3.0"
   },
   "scripts": {
@@ -37,7 +37,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^4.0.0",
     "@testing-library/react": "^8.0.4",
-    "node-fetch": "^2.3.0",
-    "react-scripts": "^3.4.0"
+    "node-fetch": "^2.6.1",
+    "react-scripts": "^4.0.3"
   }
 }
