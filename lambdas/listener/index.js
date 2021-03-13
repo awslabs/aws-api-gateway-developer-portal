@@ -57,18 +57,12 @@ async function unsubscribe (customerId, productCode) {
 
   try {
     // get identity id for marketplace customer id
-    const identityId = await new Promise((resolve, reject) => {
-      controller.getCognitoIdentityId(customerId, reject, resolve)
-    })
+    const identityId = await controller.getCognitoIdentityId(customerId)
     console.log('Got cognito identity : ' + identityId)
 
-    const usagePlan = await new Promise((resolve, reject) => {
-      controller.getUsagePlanForProductCode(customerId, reject, resolve)
-    })
+    const usagePlan = await controller.getUsagePlanForProductCode(customerId)
 
-    return await new Promise((resolve, reject) => {
-      controller.unsubscribe(identityId, usagePlan.id, reject, resolve)
-    })
+    return await controller.unsubscribe(identityId, usagePlan.id)
   } catch (err) {
     console.log('error: ' + err)
     throw err

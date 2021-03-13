@@ -7,9 +7,7 @@ exports.get = async (event) => {
   const cognitoIdentityId = util.getCognitoIdentityId(event)
   console.log(`GET /apikey for Cognito ID: ${cognitoIdentityId}`)
 
-  const data = await new Promise((resolve, reject) => {
-    customersController.getApiKeyForCustomer(cognitoIdentityId, reject, resolve)
-  })
+  const data = await customersController.getApiKeyForCustomer(cognitoIdentityId)
 
   if (data.items.length === 0) {
     return {

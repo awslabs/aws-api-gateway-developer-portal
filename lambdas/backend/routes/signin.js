@@ -1,7 +1,6 @@
 'use strict'
 
 const customersController = require('dev-portal-common/customers-controller')
-const { promisify2 } = require('dev-portal-common/promisify2')
 const util = require('../util')
 
 exports.post = async (event) => {
@@ -17,11 +16,7 @@ exports.post = async (event) => {
   // the item itself exists; if not, it will be updated later by
   // `ensureApiKeyForCustomer`. So we can safely pass a dummy here while
   // upholding the invariant.
-  await promisify2(customersController.ensureCustomerItem)(
-    cognitoIdentityId,
-    cognitoUserId,
-    'NO_API_KEY'
-  )
+  await customersController.ensureCustomerItem(cognitoIdentityId, cognitoUserId)
   await customersController.ensureApiKeyForCustomer({
     userId: cognitoUserId,
     identityId: cognitoIdentityId

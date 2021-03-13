@@ -7,9 +7,7 @@ exports.get = async (event) => {
   const cognitoIdentityId = util.getCognitoIdentityId(event)
   console.log(`GET /subscriptions for Cognito ID: ${cognitoIdentityId}`)
 
-  return new Promise((resolve, reject) => {
-    customersController.getUsagePlansForCustomer(cognitoIdentityId, reject, resolve)
-  })
+  return customersController.getUsagePlansForCustomer(cognitoIdentityId)
 }
 
 exports.put = async (event, usagePlanId) => {
@@ -26,9 +24,7 @@ exports.put = async (event, usagePlanId) => {
   if (!catalogUsagePlan) return util.abort(event, 404, 'Invalid Usage Plan ID')
   if (!catalogUsagePlan.apis.length) return util.abort(event, 404, 'Invalid Usage Plan ID')
   // allow subscription if (the usage plan exists, at least 1 of its apis are visible)
-  return util.custom(event, 201, await new Promise((resolve, reject) => {
-    customersController.subscribe(cognitoIdentityId, usagePlanId, reject, resolve)
-  }))
+  return util.custom(event, 201, await customersController.subscribe(cognitoIdentityId, usagePlanId))
 }
 
 exports.delete = async (event, usagePlanId) => {
@@ -39,7 +35,5 @@ exports.delete = async (event, usagePlanId) => {
   const usagePlan = util.getUsagePlanFromCatalog(usagePlanId, catalog)
 
   if (!usagePlan || !usagePlan.apis.length) return util.abort(event, 404, 'Invalid Usage Plan ID')
-  return new Promise((resolve, reject) => {
-    customersController.unsubscribe(cognitoIdentityId, usagePlanId, reject, resolve)
-  })
+  return customersController.unsubscribe(cognitoIdentityId, usagePlanId)
 }

@@ -30,11 +30,7 @@ exports.put = async (event, usagePlanId) => {
 
   // persist the marketplaceCustomerId in DDB
   // this is used when the subscription listener receives the subscribe notification
-  await new Promise((resolve, reject) => {
-    customersController.updateCustomerMarketplaceId(cognitoIdentityId, data.CustomerIdentifier, reject, resolve)
-  })
+  await customersController.updateCustomerMarketplaceId(cognitoIdentityId, data.CustomerIdentifier)
 
-  return new Promise((resolve, reject) => {
-    customersController.subscribe(cognitoIdentityId, usagePlanId, reject, resolve)
-  })
+  return customersController.subscribe(cognitoIdentityId, usagePlanId)
 }

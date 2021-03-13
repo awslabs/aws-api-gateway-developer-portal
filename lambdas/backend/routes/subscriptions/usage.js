@@ -13,9 +13,7 @@ exports.get = async (event, usagePlanId) => {
   // could error here if customer is not subscribed to usage plan, or save an extra request by just showing 0 usage
   if (!usagePlan) return util.abort(event, 404, 'Invalid Usage Plan ID')
 
-  const data = await new Promise((resolve, reject) => {
-    customersController.getApiKeyForCustomer(cognitoIdentityId, reject, resolve)
-  })
+  const data = await customersController.getApiKeyForCustomer(cognitoIdentityId)
 
   return util.apigateway.getUsage({
     endDate: event.queryStringParameters.end,

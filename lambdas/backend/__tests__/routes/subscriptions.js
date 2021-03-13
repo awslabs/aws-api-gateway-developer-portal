@@ -12,34 +12,27 @@ describe('GET /subscriptions', () => {
   })
 
   test('it returns the list of items on success', async () => {
-    customersController.getUsagePlansForCustomer = jest.fn((id, error, success) => {
-      process.nextTick(success, { items: 'result' })
-    })
+    customersController.getUsagePlansForCustomer = jest.fn(() => Promise.resolve({ items: 'result' }))
 
     const result = await invoke(subscriptions.get)
 
     expect(customersController.getUsagePlansForCustomer).toHaveBeenCalledTimes(1)
     expect(customersController.getUsagePlansForCustomer).toHaveBeenCalledWith(
-      util.getCognitoIdentityId(generateEvent()),
-      expect.any(Function),
-      expect.any(Function)
+      util.getCognitoIdentityId(generateEvent())
     )
 
     expect(result).toEqual(response(201, 'result'))
   })
 
   test('it propagates errors', async () => {
-    customersController.getUsagePlansForCustomer = jest.fn((id, error, success) => {
-      process.nextTick(error, 'error')
-    })
+    // eslint-disable-next-line prefer-promise-reject-errors
+    customersController.getUsagePlansForCustomer = jest.fn(() => Promise.reject('error'))
 
     await expect(invoke(subscriptions.get)).rejects.toBe('error')
 
     expect(customersController.getUsagePlansForCustomer).toHaveBeenCalledTimes(1)
     expect(customersController.getUsagePlansForCustomer).toHaveBeenCalledWith(
-      util.getCognitoIdentityId(generateEvent()),
-      expect.any(Function),
-      expect.any(Function)
+      util.getCognitoIdentityId(generateEvent())
     )
   })
 })
@@ -63,9 +56,7 @@ describe('PUT /subscriptions/:usagePlanId', () => {
     }
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
-    customersController.subscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(success, 'result')
-    })
+    customersController.subscribe = jest.fn(() => Promise.resolve('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -74,9 +65,7 @@ describe('PUT /subscriptions/:usagePlanId', () => {
     expect(customersController.subscribe).toHaveBeenCalledTimes(1)
     expect(customersController.subscribe).toHaveBeenCalledWith(
       util.getCognitoIdentityId(generateEvent()),
-      'plan2',
-      expect.any(Function),
-      expect.any(Function)
+      'plan2'
     )
 
     expect(result).toEqual(response(201, 'result'))
@@ -91,9 +80,7 @@ describe('PUT /subscriptions/:usagePlanId', () => {
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
     // In case it fails, I still want it to resolve.
-    customersController.subscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(success, 'result')
-    })
+    customersController.subscribe = jest.fn(() => Promise.resolve('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -111,9 +98,7 @@ describe('PUT /subscriptions/:usagePlanId', () => {
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
     // In case it fails, I still want it to resolve.
-    customersController.subscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(success, 'result')
-    })
+    customersController.subscribe = jest.fn(() => Promise.resolve('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -131,9 +116,8 @@ describe('PUT /subscriptions/:usagePlanId', () => {
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
     // In case it fails, I still want it to resolve.
-    customersController.subscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(error, 'result')
-    })
+    // eslint-disable-next-line prefer-promise-reject-errors
+    customersController.subscribe = jest.fn(() => Promise.reject('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -142,9 +126,7 @@ describe('PUT /subscriptions/:usagePlanId', () => {
     expect(customersController.subscribe).toHaveBeenCalledTimes(1)
     expect(customersController.subscribe).toHaveBeenCalledWith(
       util.getCognitoIdentityId(generateEvent()),
-      'plan2',
-      expect.any(Function),
-      expect.any(Function)
+      'plan2'
     )
   })
 })
@@ -168,9 +150,7 @@ describe('DELETE /subscriptions/:usagePlanId', () => {
     }
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
-    customersController.unsubscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(success, 'result')
-    })
+    customersController.unsubscribe = jest.fn(() => Promise.resolve('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -179,9 +159,7 @@ describe('DELETE /subscriptions/:usagePlanId', () => {
     expect(customersController.unsubscribe).toHaveBeenCalledTimes(1)
     expect(customersController.unsubscribe).toHaveBeenCalledWith(
       util.getCognitoIdentityId(generateEvent()),
-      'plan2',
-      expect.any(Function),
-      expect.any(Function)
+      'plan2'
     )
 
     expect(result).toEqual(response(200, 'result'))
@@ -196,9 +174,7 @@ describe('DELETE /subscriptions/:usagePlanId', () => {
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
     // In case it fails, I still want it to resolve.
-    customersController.unsubscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(success, 'result')
-    })
+    customersController.unsubscribe = jest.fn(() => Promise.resolve('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -216,9 +192,7 @@ describe('DELETE /subscriptions/:usagePlanId', () => {
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
     // In case it fails, I still want it to resolve.
-    customersController.unsubscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(success, 'result')
-    })
+    customersController.unsubscribe = jest.fn(() => Promise.resolve('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -236,9 +210,8 @@ describe('DELETE /subscriptions/:usagePlanId', () => {
 
     util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
     // In case it fails, I still want it to resolve.
-    customersController.unsubscribe = jest.fn((id, usagePlanId, error, success) => {
-      process.nextTick(error, 'result')
-    })
+    // eslint-disable-next-line prefer-promise-reject-errors
+    customersController.unsubscribe = jest.fn(() => Promise.reject('result'))
 
     setEnv('StaticBucketName', 'test-bucket')
 
@@ -247,9 +220,7 @@ describe('DELETE /subscriptions/:usagePlanId', () => {
     expect(customersController.unsubscribe).toHaveBeenCalledTimes(1)
     expect(customersController.unsubscribe).toHaveBeenCalledWith(
       util.getCognitoIdentityId(generateEvent()),
-      'plan2',
-      expect.any(Function),
-      expect.any(Function)
+      'plan2'
     )
   })
 })

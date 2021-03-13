@@ -6,12 +6,10 @@ describe('customersController', () => {
   const setEnv = bindEnv()
 
   test('ensureCustomerItem verifies that DDB is up-to-date', async () => {
-    const error = jest.fn()
-    const callback = jest.fn()
     const entry = {
       Id: 'cognitoIdentityId',
       UserPoolId: 'cognitoUserId',
-      ApiKeyId: 'keyId'
+      ApiKeyId: 'NO_API_KEY'
     }
     setEnv('PreLoginAccountsTableName', 'PreLoginAccountsTable')
     setEnv('CustomersTableName', 'DevPortalCustomers')
@@ -24,7 +22,7 @@ describe('customersController', () => {
       }
     })
 
-    await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId', 'keyId', error, callback)
+    const result = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId')
 
     expect(customers.dynamoDb.get).toHaveBeenCalledTimes(2)
     expect(customers.dynamoDb.get).toHaveBeenCalledWith({
@@ -40,17 +38,14 @@ describe('customersController', () => {
       }
     })
 
-    expect(callback).toHaveBeenCalledTimes(1)
-    expect(callback).toHaveBeenCalledWith(entry)
+    expect(result).toEqual(entry)
   })
 
   test('ensureCustomerItem fixes DDB if it is not up-to-date', async () => {
-    const error = jest.fn()
-    const callback = jest.fn()
     // const entry = {
     //   Id: 'cognitoIdentityId',
     //   UserPoolId: 'cognitoUserId',
-    //   ApiKeyId: 'keyId'
+    //   ApiKeyId: 'NO_API_KEY'
     // }
     setEnv('PreLoginAccountsTableName', 'PreLoginAccountsTable')
     setEnv('CustomersTableName', 'CustomersTable')
@@ -71,7 +66,7 @@ describe('customersController', () => {
     customers.dynamoDb.put = jest.fn().mockReturnValue(promiser({}))
     customers.dynamoDb.delete = jest.fn().mockReturnValue(promiser({}))
 
-    await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId', 'keyId', error, callback)
+    const result = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId')
 
     // Once for PreLoginAccountsTable, once for CustomersTable
     expect(customers.dynamoDb.get).toHaveBeenCalledTimes(2)
@@ -92,7 +87,7 @@ describe('customersController', () => {
     expect(customers.dynamoDb.put).toHaveBeenCalledWith({
       TableName: 'CustomersTable',
       Item: {
-        ApiKeyId: 'keyId',
+        ApiKeyId: 'NO_API_KEY',
         Id: 'cognitoIdentityId',
         UserPoolId: 'cognitoUserId',
         RegistrationStatus: 'registered'
@@ -107,9 +102,8 @@ describe('customersController', () => {
       }
     })
 
-    expect(callback).toHaveBeenCalledTimes(1)
-    expect(callback).toHaveBeenCalledWith({
-      ApiKeyId: 'keyId',
+    expect(result).toEqual({
+      ApiKeyId: 'NO_API_KEY',
       Id: 'cognitoIdentityId',
       UserPoolId: 'cognitoUserId',
       RegistrationStatus: 'registered'
@@ -117,23 +111,21 @@ describe('customersController', () => {
   })
 
   // test('ensureCustomerItem backfills UserPoolId', async () => {
-  //   const error = jest.fn()
-  //   const callback = jest.fn()
   //   const oldEntry = {
   //     Id: 'cognitoIdentityId',
-  //     ApiKeyId: 'keyId'
+  //     ApiKeyId: 'NO_API_KEY'
   //   }
   //   const entry = {
   //     Id: 'cognitoIdentityId',
   //     UserPoolId: 'cognitoUserId',
-  //     ApiKeyId: 'keyId'
+  //     ApiKeyId: 'NO_API_KEY'
   //   }
 
   //   customers.dynamoDb.get = jest.fn().mockReturnValue(promiser({ Item: oldEntry }))
 
   //   customers.dynamoDb.put = jest.fn().mockReturnValue(promiser({}))
 
-  //   const returnValue = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId', 'keyId', error, callback)
+  //   const returnValue = await customers.ensureCustomerItem('cognitoIdentityId', 'cognitoUserId')
 
   //   expect(customers.dynamoDb.get).toHaveBeenCalledTimes(1)
   //   expect(customers.dynamoDb.get).toHaveBeenCalledWith({
