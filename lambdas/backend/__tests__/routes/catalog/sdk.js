@@ -1,5 +1,5 @@
 const util = require('../../../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../../../setup-jest')
+const { promiser, invoke, response, generateEvent } = require('../../../../setup-jest')
 const catalogSdk = require('../../../routes/catalog/sdk')
 
 const originalCatalog = util.catalog
@@ -14,13 +14,6 @@ describe('GET /catalog/:apiId/sdk', () => {
   })
 
   test('it should return a generated SDK, proxying through params', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-
-    req.params = { id: 'apiId_stageName' }
-    req.query = {}
-    req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
-
     util.apigateway.getSdk = jest.fn().mockReturnValue(promiser({
       body: Buffer.from('returnedSDK')
     }))
@@ -40,7 +33,9 @@ describe('GET /catalog/:apiId/sdk', () => {
       generic: {}
     })
 
-    await catalogSdk.get(req, res)
+    const result = await invoke(e => catalogSdk.get(e, 'apiId_stageName'), generateEvent({
+      query: { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
+    }))
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
@@ -52,17 +47,17 @@ describe('GET /catalog/:apiId/sdk', () => {
       parameters: { serviceName: 'my-new-ruby-service' }
     })
 
-    expect(res.send).toHaveBeenCalledTimes(1)
-    expect(res.send.mock.calls[0][0]).toContain('data:application/zip;base64,')
+    expect(result).toEqual({
+      statusCode: 200,
+      isBase64Encoded: true,
+      headers: {
+        'content-type': 'application/zip'
+      },
+      body: Buffer.from('returnedSDK').toString('base64')
+    })
   })
 
   test('it should not return SDKs for APIs not in the catalog', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-
-    req.params = { id: 'anApi_notInTheCatalog' }
-    req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
-
     util.catalog.mockReturnValue({
       apiGateway: [
         {
@@ -78,27 +73,18 @@ describe('GET /catalog/:apiId/sdk', () => {
       generic: {}
     })
 
-    await catalogSdk.get(req, res)
+    const result = await invoke(e => catalogSdk.get(e, 'anApi_notInTheCatalog'), generateEvent({
+      query: { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
+    }))
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
     expect(util.apigateway.getSdk).toHaveBeenCalledTimes(0)
 
-    expect(res.status).toHaveBeenCalledTimes(1)
-    expect(res.status).toHaveBeenCalledWith(404)
-    expect(res.json).toHaveBeenCalledTimes(1)
-    expect(res.json).toHaveBeenCalledWith({ message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' })
+    expect(result).toEqual(response(404, { message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' }))
   })
 
   test('it should not return SDKs for APIs in the catalog but with SDK generation disabled', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-
-    req.params = { id: 'thisApi_shouldNotGenerateSDKs' }
-    req.query = {}
-    req.query.sdkType = 'whitespace'
-    req.query = { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
-
     util.catalog.mockReturnValue({
       apiGateway: [
         {
@@ -119,15 +105,14 @@ describe('GET /catalog/:apiId/sdk', () => {
       generic: {}
     })
 
-    await catalogSdk.get(req, res)
+    const result = await invoke(e => catalogSdk.get(e, 'thisApi_shouldNotGenerateSDKs'), generateEvent({
+      query: { sdkType: 'ruby', parameters: { serviceName: 'my-new-ruby-service' } }
+    }))
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
     expect(util.apigateway.getSdk).toHaveBeenCalledTimes(0)
 
-    expect(res.status).toHaveBeenCalledTimes(1)
-    expect(res.status).toHaveBeenCalledWith(403)
-    expect(res.json).toHaveBeenCalledTimes(1)
-    expect(res.json).toHaveBeenCalledWith({ message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for SDK generation.' })
+    expect(result).toEqual(response(403, { message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for SDK generation.' }))
   })
 })

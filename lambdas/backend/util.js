@@ -1,7 +1,113 @@
 'use strict'
 
 const AWS = require('aws-sdk')
+const qs = require('qs')
 const { getEnv } = require('dev-portal-common/get-env')
+
+exports.Custom = function (response) {
+  this.response = response
+}
+
+function serializeBody (event, body) {
+  if (body == null) {
+    if (event.httpMethod !== 'GET') return ''
+    body = {}
+  }
+  const contentType = event.headers['content-type']
+  const valueToSerialize = typeof body === 'string' ? { message: body } : body
+
+  if (contentType != null) {
+    const semicolon = contentType.indexOf(';')
+    const mimeType = semicolon < 0 ? contentType : contentType.slice(0, semicolon)
+
+    switch (mimeType.trim()) {
+      case 'application/x-www-form-urlencoded': return qs.stringify(valueToSerialize)
+      case 'application/json': body = valueToSerialize; break
+    }
+  }
+
+  if (typeof body === 'string') return body
+  return JSON.stringify(valueToSerialize)
+}
+
+exports.serializeCustom = (event, status, body, extra = {}) => {
+  const serialized = serializeBody(event, body)
+  const result = { statusCode: status, body: serialized }
+  Object.assign(result, extra)
+  if (event.headers['content-type'] && serialized) {
+    result.headers = { ...result.headers, 'response-type': event.headers['content-type'] }
+  }
+  return result
+}
+
+exports.custom = (event, status, response, extra = {}) => {
+  throw new exports.Custom(exports.serializeCustom(event, status, response, extra))
+}
+
+exports.abort = (event, status, message) =>
+  exports.custom(event, status, { message })
+
+const bodySizeLimit = 10 * 1024 * 1024 // 10 megabytes
+
+exports.getBody = event => {
+  // assert charset is supported
+  const contentType = event.headers['content-type']
+
+  if (contentType == null) {
+    throw new exports.Custom({
+      statusCode: 415,
+      body: 'A content type is required',
+      contentType: 'text/plain'
+    })
+  }
+
+  const [mimeType, ...params] = contentType.split(';')
+
+  if (params.every(param => !/^\s*charset\s*=\s*utf-8\s*$/i.test(param))) {
+    throw new exports.Custom({
+      statusCode: 415,
+      body: 'Invalid character set in content type',
+      contentType: 'text/plain'
+    })
+  }
+
+  let body = event.body
+
+  const byteLength = Buffer.byteLength(body, event.isBase64Encoded ? 'base64' : 'utf-8')
+  if (byteLength > bodySizeLimit) {
+    return exports.custom(event, 413, {
+      message: 'request entity too large',
+      length: byteLength,
+      expected: bodySizeLimit,
+      limit: bodySizeLimit
+    })
+  }
+
+  if (event.isBase64Encoded) {
+    try {
+      body = Buffer.from(body, 'base64').toString('utf-8')
+    } catch {
+      return exports.abort(event, 400, 'Invalid Base64 received')
+    }
+  }
+
+  switch (mimeType.trim()) {
+    case 'application/json':
+      try {
+        return JSON.parse(body)
+      } catch {
+        return exports.abort(event, 400, 'Invalid body syntax')
+      }
+    case 'application/x-www-form-urlencoded':
+      try {
+        return qs.parse(body)
+      } catch {
+        return exports.abort(event, 400, 'Invalid URL-encoded text received')
+      }
+    default:
+      return exports.abort(event, 415, 'Invalid character set in content type')
+  }
+}
 
 exports.makeErrorResponse = (error, message = null) => {
   const response = { message: message === null ? error.message : message }
@@ -11,12 +117,12 @@ exports.makeErrorResponse = (error, message = null) => {
   return response
 }
 
-exports.getCognitoIdentityId = req => {
-  return req.apiGateway.event.requestContext.identity.cognitoIdentityId
+exports.getCognitoIdentityId = event => {
+  return event.requestContext.identity.cognitoIdentityId
 }
 
-exports.getCognitoIdentitySub = req => {
-  const provider = req.apiGateway.event.requestContext.identity.cognitoAuthenticationProvider
+exports.getCognitoIdentitySub = event => {
+  const provider = event.requestContext.identity.cognitoAuthenticationProvider
   if (provider == null) return undefined
   const index = provider.indexOf(':CognitoSignIn:')
   if (index < 0) return undefined
@@ -24,8 +130,8 @@ exports.getCognitoIdentitySub = req => {
 }
 
 // strategy borrowed from: https://serverless-stack.com/chapters/mapping-cognito-identity-id-and-user-pool-id.html
-exports.getCognitoUserId = req => {
-  const authProvider = req.apiGateway.event.requestContext.identity.cognitoAuthenticationProvider
+exports.getCognitoUserId = event => {
+  const authProvider = event.requestContext.identity.cognitoAuthenticationProvider
 
   // Cognito authentication provider looks like:
   // cognito-idp.us-east-1.amazonaws.com/us-east-1_xxxxxxxxx,cognito-idp.us-east-1.amazonaws.com/us-east-1_aaaaaaaaa:CognitoSignIn:qqqqqqqq-1111-2222-3333-rrrrrrrrrrrr
@@ -42,8 +148,8 @@ exports.getCognitoUserId = req => {
 // this returns the key we use in the CustomersTable. It's constructed from the issuer field and the username when we
 // allow multiple identity providers, this will allow google's example@example.com to be distinguishable from
 // Cognito's or Facebook's example@example.com
-// exports.getCognitoKey = req => {
-//   return req.apiGateway.event.requestContext.authorizer.claims.iss + ' ' + getCognitoUsername(req)
+// exports.getCognitoKey = event => {
+//   return event.requestContext.authorizer.claims.iss + ' ' + getCognitoUsername(req)
 // }
 
 exports.getUsagePlanFromCatalog = (usagePlanId, catalog) => {

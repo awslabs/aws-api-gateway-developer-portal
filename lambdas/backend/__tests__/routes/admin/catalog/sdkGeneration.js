@@ -1,5 +1,5 @@
 const util = require('../../../../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../../../../setup-jest')
+const { promiser, generateEvent } = require('../../../../../setup-jest')
 
 const sdkGeneration = require('../../../../routes/admin/catalog/sdkGeneration')
 const originalIdempotentSdkGenerationUpdate = sdkGeneration.idempotentSdkGenerationUpdate
@@ -15,13 +15,10 @@ describe('PUT /admin/catalog/:id/sdkGeneration', () => {
   })
 
   test('it should call idempotentSdkGenerationUpdate', async () => {
-    const req = generateRequestContext()
-    req.params = { id: 'apiid_stagename' }
-
-    await sdkGeneration.put(req, {})
+    await sdkGeneration.put(generateEvent(), 'apiid_stagename')
 
     expect(sdkGeneration.idempotentSdkGenerationUpdate).toHaveBeenCalledTimes(1)
-    expect(sdkGeneration.idempotentSdkGenerationUpdate).toHaveBeenCalledWith(true, 'apiid_stagename', {})
+    expect(sdkGeneration.idempotentSdkGenerationUpdate).toHaveBeenCalledWith(true, 'apiid_stagename')
   })
 })
 
@@ -32,13 +29,10 @@ describe('DELETE /admin/catalog/:id/sdkGeneration', () => {
   })
 
   test('it should call idempotentSdkGenerationUpdate', async () => {
-    const req = generateRequestContext()
-    req.params = { id: 'apiid_stagename' }
-
-    await sdkGeneration.delete(req, {})
+    await sdkGeneration.delete(generateEvent(), 'apiid_stagename')
 
     expect(sdkGeneration.idempotentSdkGenerationUpdate).toHaveBeenCalledTimes(1)
-    expect(sdkGeneration.idempotentSdkGenerationUpdate).toHaveBeenCalledWith(false, 'apiid_stagename', {})
+    expect(sdkGeneration.idempotentSdkGenerationUpdate).toHaveBeenCalledWith(false, 'apiid_stagename')
   })
 
   afterEach(() => {
@@ -53,7 +47,6 @@ describe('idempotentSdkGenerationUpdate', () => {
   })
 
   test('it should update sdkGeneration.json', async () => {
-    const res = generateResponseContext()
     const body = JSON.stringify({
       apiid_stagename: false,
       otherapiid_otherstagename: false
@@ -68,7 +61,7 @@ describe('idempotentSdkGenerationUpdate', () => {
     process.env.StaticBucketName = 'staticBucketName'
     process.env.CatalogUpdaterFunctionArn = 'somebigfunctionarn'
 
-    await sdkGeneration.idempotentSdkGenerationUpdate(true, 'apiid_stagename', res)
+    const result = await sdkGeneration.idempotentSdkGenerationUpdate(true, 'apiid_stagename')
 
     expect(util.s3.getObject).toHaveBeenCalledTimes(1)
     expect(util.s3.getObject).toHaveBeenCalledWith({
@@ -93,12 +86,10 @@ describe('idempotentSdkGenerationUpdate', () => {
       LogType: 'None'
     })
 
-    expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.status().json).toHaveBeenCalledWith({ message: 'Success' })
+    expect(result).toEqual({ message: 'Success' })
   })
 
   test('it should update sdkGeneration.json even when the api is not yet in the file', async () => {
-    const res = generateResponseContext()
     const body = JSON.stringify({
       otherapiid_otherstagename: false
     })
@@ -112,7 +103,7 @@ describe('idempotentSdkGenerationUpdate', () => {
     process.env.StaticBucketName = 'staticBucketName'
     process.env.CatalogUpdaterFunctionArn = 'somebigfunctionarn'
 
-    await sdkGeneration.idempotentSdkGenerationUpdate(true, 'apiid_stagename', res)
+    const result = await sdkGeneration.idempotentSdkGenerationUpdate(true, 'apiid_stagename')
 
     expect(util.s3.getObject).toHaveBeenCalledTimes(1)
     expect(util.s3.getObject).toHaveBeenCalledWith({
@@ -137,12 +128,10 @@ describe('idempotentSdkGenerationUpdate', () => {
       LogType: 'None'
     })
 
-    expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.status().json).toHaveBeenCalledWith({ message: 'Success' })
+    expect(result).toEqual({ message: 'Success' })
   })
 
   test('it should not update sdkGeneration.json when it\'s unnecessary', async () => {
-    const res = generateResponseContext()
     const body = JSON.stringify({
       apiid_stagename: false,
       otherapiid_otherstagename: false
@@ -157,7 +146,7 @@ describe('idempotentSdkGenerationUpdate', () => {
     process.env.StaticBucketName = 'staticBucketName'
     process.env.CatalogUpdaterFunctionArn = 'somebigfunctionarn'
 
-    await sdkGeneration.idempotentSdkGenerationUpdate(false, 'apiid_stagename', res)
+    const result = await sdkGeneration.idempotentSdkGenerationUpdate(false, 'apiid_stagename')
 
     expect(util.s3.getObject).toHaveBeenCalledTimes(1)
     expect(util.s3.getObject).toHaveBeenCalledWith({
@@ -168,7 +157,6 @@ describe('idempotentSdkGenerationUpdate', () => {
     expect(util.s3.upload).toHaveBeenCalledTimes(0)
     expect(util.lambda.invoke).toHaveBeenCalledTimes(0)
 
-    expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.status().json).toHaveBeenCalledWith({ message: 'Success' })
+    expect(result).toEqual({ message: 'Success' })
   })
 })

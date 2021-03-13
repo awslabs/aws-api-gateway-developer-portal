@@ -1,5 +1,5 @@
 const util = require('../../../util')
-const { promiser, generateRequestContext, generateResponseContext } = require('../../../../setup-jest')
+const { promiser, invoke, response, generateEvent } = require('../../../../setup-jest')
 const catalogExport = require('../../../routes/catalog/export')
 
 const originalCatalog = util.catalog
@@ -14,13 +14,6 @@ describe('GET /catalog/:apiId/export', () => {
   })
 
   test('it should return a generated API export, proxying through params', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-
-    req.params = { id: 'apiId_stageName' }
-    req.query = {}
-    req.query = { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
-
     util.apigateway.getExport = jest.fn().mockReturnValue(promiser({
       body: Buffer.from('returnedSDK')
     }))
@@ -40,7 +33,9 @@ describe('GET /catalog/:apiId/export', () => {
       generic: {}
     })
 
-    await catalogExport.get(req, res)
+    const result = await invoke(e => catalogExport.get(e, 'apiId_stageName'), generateEvent({
+      query: { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
+    }))
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
@@ -52,17 +47,16 @@ describe('GET /catalog/:apiId/export', () => {
       parameters: { serviceName: 'my-new-openapi-service' }
     })
 
-    expect(res.send).toHaveBeenCalledTimes(1)
-    expect(res.send.mock.calls[0][0]).toBeInstanceOf(Buffer)
+    expect(result).toEqual({
+      statusCode: 200,
+      body: Buffer.from('returnedSDK').toString('base64'),
+      headers: {
+        'response-type': 'application/zip'
+      }
+    })
   })
 
   test('it should not return SDKs for APIs not in the catalog', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-
-    req.params = { id: 'anApi_notInTheCatalog' }
-    req.query = { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
-
     util.catalog.mockReturnValue({
       apiGateway: [
         {
@@ -78,27 +72,18 @@ describe('GET /catalog/:apiId/export', () => {
       generic: {}
     })
 
-    await catalogExport.get(req, res)
+    const result = await invoke(e => catalogExport.get(e, 'anApi_notInTheCatalog'), generateEvent({
+      query: { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
+    }))
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
     expect(util.apigateway.getExport).toHaveBeenCalledTimes(0)
 
-    expect(res.status).toHaveBeenCalledTimes(1)
-    expect(res.status).toHaveBeenCalledWith(404)
-    expect(res.json).toHaveBeenCalledTimes(1)
-    expect(res.json).toHaveBeenCalledWith({ message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' })
+    expect(result).toEqual(response(404, { message: 'API with ID (anApi) and Stage (notInTheCatalog) could not be found.' }))
   })
 
   test('it should not return SDKs for APIs in the catalog but with API export generation disabled', async () => {
-    const req = generateRequestContext()
-    const res = generateResponseContext()
-
-    req.params = { id: 'thisApi_shouldNotGenerateSDKs' }
-    req.query = {}
-    req.query.exportType = 'whitespace'
-    req.query = { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
-
     util.catalog.mockReturnValue({
       apiGateway: [
         {
@@ -119,15 +104,14 @@ describe('GET /catalog/:apiId/export', () => {
       generic: {}
     })
 
-    await catalogExport.get(req, res)
+    const result = await invoke(e => catalogExport.get(e, 'thisApi_shouldNotGenerateSDKs'), generateEvent({
+      query: { exportType: 'oas30', parameters: { serviceName: 'my-new-openapi-service' } }
+    }))
 
     expect(util.catalog).toHaveBeenCalledTimes(1)
 
     expect(util.apigateway.getExport).toHaveBeenCalledTimes(0)
 
-    expect(res.status).toHaveBeenCalledTimes(1)
-    expect(res.status).toHaveBeenCalledWith(403)
-    expect(res.json).toHaveBeenCalledTimes(1)
-    expect(res.json).toHaveBeenCalledWith({ message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for API export generation.' })
+    expect(result).toEqual(response(403, { message: 'API with ID (thisApi) and Stage (shouldNotGenerateSDKs) is not enabled for API export generation.' }))
   })
 })

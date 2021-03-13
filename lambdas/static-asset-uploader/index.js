@@ -3,12 +3,14 @@
 const path = require('path')
 const AWS = require('aws-sdk')
 const notifyCFN = require('dev-portal-common/notify-cfn')
-const { inspectStringify } = require('dev-portal-common/inspect-stringify')
+const util = require('util')
 const fs = require('fs')
 const klaw = require('klaw')
 // const crypto = require('crypto')
 
 const s3 = new AWS.S3()
+
+const inspect = value => util.inspect(value, { depth: Infinity, breakLength: Infinity })
 
 /**
  * Removes the leading slash from a filePath if it exists.
@@ -68,9 +70,9 @@ async function cleanS3Bucket (bucketName) {
     Bucket: bucketName
   }).promise()
 
-  console.log(`result: ${inspectStringify(result)}`)
+  console.log(`result: ${inspect(result)}`)
   const keys = result.Contents.map((obj) => {
-    console.log(`obj: ${inspectStringify(obj)}`)
+    console.log(`obj: ${inspect(obj)}`)
     return { Key: obj.Key }
   })
 
@@ -82,7 +84,7 @@ async function cleanS3Bucket (bucketName) {
         Objects: keys
       }
     })
-    console.log(`deleteObjects result: ${inspectStringify(result)}`)
+    console.log(`deleteObjects result: ${inspect(result)}`)
   }
 }
 

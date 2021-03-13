@@ -6,46 +6,35 @@ const AWS = require('aws-sdk')
 const customersController = require('dev-portal-common/customers-controller')
 const util = require('../util')
 
-exports.put = (req, res) => {
-  const cognitoIdentityId = util.getCognitoIdentityId(req)
+const marketplace = new AWS.MarketplaceMetering()
+
+exports.put = async (event, usagePlanId) => {
+  const cognitoIdentityId = util.getCognitoIdentityId(event)
   console.log(`PUT /marketplace-subscriptions/:usagePlanId for Cognito ID: ${cognitoIdentityId}`)
 
-  const marketplaceToken = req.body.token
-  const usagePlanId = req.params.usagePlanId
+  const marketplaceToken = util.getBody(event).token
   console.log(`Marketplace token: ${marketplaceToken} usage plan id: ${usagePlanId}`)
   console.log(`cognito id: ${cognitoIdentityId}`)
 
-  function error (data) {
-    console.log(`error: ${data}`)
-    res.status(500).json(data)
-  }
-
-  function success (data) {
-    res.status(200).json(data)
-  }
-
-  function subscribeCustomerToUsagePlan (data) {
-    customersController.subscribe(cognitoIdentityId, usagePlanId, error, success)
-  }
-
-  const marketplace = new AWS.MarketplaceMetering()
-
-  const params = {
-    RegistrationToken: marketplaceToken
-  }
-
   // call MMS to crack token into marketpltestSingleAccountId_apiKeysConfigace customer ID and product code
-  marketplace.resolveCustomer(params, (err, data) => {
-    if (err) {
-      console.log(`marketplace error: ${JSON.stringify(err)}`)
-      res.status(400).json(err.message)
-    } else {
-      console.log(`marketplace data: ${JSON.stringify(data)}`)
+  let data
 
-      // persist the marketplaceCustomerId in DDB
-      // this is used when the subscription listener receives the subscribe notification
-      const marketplaceCustomerId = data.CustomerIdentifier
-      customersController.updateCustomerMarketplaceId(cognitoIdentityId, marketplaceCustomerId, error, subscribeCustomerToUsagePlan)
-    }
+  try {
+    data = await marketplace.resolveCustomer({ RegistrationToken: marketplaceToken }).promise()
+  } catch (err) {
+    console.log(`marketplace error: ${JSON.stringify(err)}`)
+    return util.abort(event, 400, err.message)
+  }
+
+  console.log(`marketplace data: ${JSON.stringify(data)}`)
+
+  // persist the marketplaceCustomerId in DDB
+  // this is used when the subscription listener receives the subscribe notification
+  await new Promise((resolve, reject) => {
+    customersController.updateCustomerMarketplaceId(cognitoIdentityId, data.CustomerIdentifier, reject, resolve)
+  })
+
+  return new Promise((resolve, reject) => {
+    customersController.subscribe(cognitoIdentityId, usagePlanId, reject, resolve)
   })
 }

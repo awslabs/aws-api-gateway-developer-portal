@@ -11,9 +11,10 @@ const yaml = require('js-yaml')
 let bucketName = ''
 const hash = require('object-hash')
 const path = require('path')
+const util = require('util')
 
 const { getAllUsagePlans } = require('dev-portal-common/get-all-usage-plans')
-const { inspectStringify } = require('dev-portal-common/inspect-stringify')
+const inspect = value => util.inspect(value, { depth: Infinity, breakLength: Infinity })
 
 /**
  * Takes in an s3 listObjectsV2 object and returns whether it's a "swagger file" (one ending in .JSON, .YAML, or .YML),
@@ -186,18 +187,18 @@ class CatalogBuilder {
 }
 
 async function handler (event, context) {
-  console.log(`event: ${inspectStringify(event)}`)
+  console.log(`event: ${inspect(event)}`)
   bucketName = process.env.BucketName
 
   const sdkGeneration = JSON.parse(
     (await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json' }).promise())
       .Body.toString()
   )
-  console.log(`sdkGeneration: ${inspectStringify(sdkGeneration)}`)
+  console.log(`sdkGeneration: ${inspect(sdkGeneration)}`)
 
   const usagePlansPromise = getAllUsagePlans(exports.apiGateway)
   const builderPromise = usagePlansPromise.then(usagePlans => {
-    console.log(`usagePlans: ${inspectStringify(usagePlans)}`)
+    console.log(`usagePlans: ${inspect(usagePlans)}`)
     return new CatalogBuilder(usagePlans, sdkGeneration)
   })
 
@@ -228,7 +229,7 @@ async function handler (event, context) {
   await Promise.all(promises)
   const { catalog } = await builderPromise
 
-  console.log(`catalog: ${inspectStringify(catalog)}`)
+  console.log(`catalog: ${inspect(catalog)}`)
 
   const params = {
     Bucket: bucketName,

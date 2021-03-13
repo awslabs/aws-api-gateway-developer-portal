@@ -5,25 +5,18 @@ const util = require('../util')
 
 const feedbackEnabled = !!process.env.FeedbackSnsTopicArn
 
-exports.get = async (req, res) => {
-  console.log(`GET /feedback for Cognito ID: ${util.getCognitoIdentityId(req)}`)
+exports.get = async (event) => {
+  console.log(`GET /feedback for Cognito ID: ${util.getCognitoIdentityId(event)}`)
 
-  if (!feedbackEnabled) {
-    res.status(401).json('Customer feedback not enabled')
-  } else {
-    const feedback = await feedbackController.fetchFeedback()
-    res.status(200).json(feedback)
-  }
+  if (!feedbackEnabled) return util.abort(event, 401, 'Customer feedback not enabled')
+  return feedbackController.fetchFeedback()
 }
 
-exports.post = async (req, res) => {
-  const cognitoIdentityId = util.getCognitoIdentityId(req)
+exports.post = async (event) => {
+  const cognitoIdentityId = util.getCognitoIdentityId(event)
   console.log(`POST /feedback for Cognito ID: ${cognitoIdentityId}`)
 
-  if (!feedbackEnabled) {
-    res.status(401).json('Customer feedback not enabled')
-  } else {
-    await feedbackController.submitFeedback(cognitoIdentityId, req.body.message)
-    res.status(200).json('success')
-  }
+  if (!feedbackEnabled) return util.abort(event, 401, 'Customer feedback not enabled')
+  await feedbackController.submitFeedback(cognitoIdentityId, util.getBody(event).message)
+  return { message: 'success' }
 }

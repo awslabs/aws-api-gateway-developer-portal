@@ -15,7 +15,7 @@ const util = require('../../../util')
  * @param {String} id the id of the API to be modified
  * @param {Object} res an express response object
  */
-exports.idempotentSdkGenerationUpdate = async (parity, id, res) => {
+exports.idempotentSdkGenerationUpdate = async (parity, id) => {
   const sdkGeneration =
     JSON.parse((await util.s3.getObject({
       Bucket: process.env.StaticBucketName,
@@ -41,20 +41,20 @@ exports.idempotentSdkGenerationUpdate = async (parity, id, res) => {
       LogType: 'None'
     }).promise()
 
-    res.status(200).json({ message: 'Success' })
+    return { message: 'Success' }
   } else {
-    res.status(200).json({ message: 'Success' })
+    return { message: 'Success' }
   }
 }
 
-exports.put = async (req, res) => {
-  console.log(`PUT /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${util.getCognitoIdentityId(req)}`)
+exports.put = async (event, id) => {
+  console.log(`PUT /admin/catalog/${id}/sdkGeneration for Cognito ID: ${util.getCognitoIdentityId(event)}`)
 
-  await exports.idempotentSdkGenerationUpdate(true, req.params.id, res)
+  await exports.idempotentSdkGenerationUpdate(true, id)
 }
 
-exports.delete = async (req, res) => {
-  console.log(`DELETE /admin/catalog/${req.params.id}/sdkGeneration for Cognito ID: ${util.getCognitoIdentityId(req)}`)
+exports.delete = async (event, id) => {
+  console.log(`DELETE /admin/catalog/${id}/sdkGeneration for Cognito ID: ${util.getCognitoIdentityId(event)}`)
 
-  await exports.idempotentSdkGenerationUpdate(false, req.params.id, res)
+  await exports.idempotentSdkGenerationUpdate(false, id)
 }

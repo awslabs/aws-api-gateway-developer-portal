@@ -3,8 +3,8 @@
 const customersController = require('dev-portal-common/customers-controller')
 const util = require('../util')
 
-exports.get = async (req, res) => {
-  const cognitoIdentityId = util.getCognitoIdentityId(req)
+exports.get = async (event) => {
+  const cognitoIdentityId = util.getCognitoIdentityId(event)
   console.log(`GET /apikey for Cognito ID: ${cognitoIdentityId}`)
 
   const data = await new Promise((resolve, reject) => {
@@ -12,13 +12,15 @@ exports.get = async (req, res) => {
   })
 
   if (data.items.length === 0) {
-    res.status(404).json({ error: 'No API Key for customer' })
-  } else {
-    const item = data.items[0]
-    const key = {
-      id: item.id,
-      value: item.value
+    return {
+      statusCode: 404,
+      body: 'No API key for customer'
     }
-    res.status(200).json(key)
+  } else {
+    const { id, value } = data.items[0]
+    return {
+      statusCode: 200,
+      body: { id, value }
+    }
   }
 }

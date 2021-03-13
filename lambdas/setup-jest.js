@@ -46,17 +46,26 @@ function generateResponseContext () {
   return result
 }
 
+function generateEvent ({ query, body } = {}) {
+  return {
+    headers: {
+      'content-type': 'application/json'
+    },
+    requestContext: {
+      identity: {
+        cognitoIdentityId: 'qwertyuiop',
+        cognitoAuthenticationProvider: 'cognito-idp.us-west-2.amazonaws.com/us-west-2_qwertyuio,cognito-idp.us-west-2.amazonaws.com/us-west-2_asdfghjkl:CognitoSignIn:a1b2c3d4-a1b2-c3d4-e5f6-a1b2c3d4e5f6'
+      }
+    },
+    queryStringParameters: query,
+    body
+  }
+}
+
 function generateRequestContext () {
   return {
     apiGateway: {
-      event: {
-        requestContext: {
-          identity: {
-            cognitoIdentityId: 'qwertyuiop',
-            cognitoAuthenticationProvider: 'cognito-idp.us-west-2.amazonaws.com/us-west-2_qwertyuio,cognito-idp.us-west-2.amazonaws.com/us-west-2_asdfghjkl:CognitoSignIn:a1b2c3d4-a1b2-c3d4-e5f6-a1b2c3d4e5f6'
-          }
-        }
-      }
+      event: generateEvent()
     }
   }
 }
@@ -134,11 +143,37 @@ function makeCatalog () {
   return { apiGateway, generic }
 }
 
+// Let's try to not have this loaded unless we have to.
+let backendUtil
+
+async function invoke (method, event = generateEvent()) {
+  if (!backendUtil) backendUtil = require('./backend/util')
+  try {
+    return backendUtil.serializeCustom(event, 200, await method(event))
+  } catch (e) {
+    if (e instanceof backendUtil.Custom) return e.response
+    throw e
+  }
+}
+
+function response (status, body) {
+  return {
+    statusCode: status,
+    body: JSON.stringify(body),
+    headers: {
+      'response-type': 'application/json'
+    }
+  }
+}
+
 // export helpers
 exports = module.exports = {
   promiser,
   generateRequestContext,
   generateResponseContext,
+  generateEvent,
+  invoke,
+  response,
   bindEnv,
   bindMock,
   makeCatalog
