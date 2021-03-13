@@ -81,7 +81,7 @@ async function cleanS3Bucket (bucketName) {
       Delete: {
         Objects: keys
       }
-    })
+    }).promise()
     console.log(`deleteObjects result: ${inspectStringify(result)}`)
   }
 }
