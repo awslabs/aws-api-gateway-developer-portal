@@ -1,7 +1,7 @@
 'use strict'
 
 const customersController = require('dev-portal-common/customers-controller')
-const util = require('../../util')
+const util = require('../../../util')
 
 exports.put = async (req, res) => {
   const userId = req.params.userId
@@ -13,7 +13,12 @@ exports.put = async (req, res) => {
   }
 
   try {
-    await customersController.approveAccountPendingRequest(userId)
+    const promoterUserId = util.getCognitoUserId(req)
+    await customersController.addAccountToAdminsGroup({
+      targetUserId: userId,
+      promoterUserSub: util.getCognitoIdentitySub(req),
+      promoterUserId
+    })
     res.status(200).json({})
   } catch (error) {
     console.log('Error:', error)

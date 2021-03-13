@@ -10,6 +10,26 @@ const awsServerlessExpressMiddleware = require('aws-serverless-express/middlewar
 const awsServerlessExpress = require('aws-serverless-express')
 const util = require('./util')
 
+const signinRoute = require('./routes/signin')
+const catalogRoute = require('./routes/catalog')
+const apikeyRoute = require('./routes/apikey')
+const subscriptionsRoute = require('./routes/subscriptions')
+const subscriptionsUsageRoute = require('./routes/subscriptions/usage')
+// Marketplace support is currently broken
+// const marketplaceConfirmRoute = require('./routes/marketplace-confirm')
+// const marketplaceSubscriptionRoute = require('./routes/marketplace-subscriptions')
+const feedbackRoute = require('./routes/feedback')
+const catalogSdkRoute = require('./routes/catalog/sdk')
+const catalogExportRoute = require('./routes/catalog/export')
+const adminCatalogVisibilityRoute = require('./routes/admin/catalog/visibility')
+const adminCatalogSdkGenerationRoute = require('./routes/admin/catalog/sdkGeneration')
+const adminAccountsRoute = require('./routes/admin/accounts')
+const adminAccountsResendInviteRoute = require('./routes/admin/accounts/resendInvite')
+// Not ready for prime time just yet.
+// const adminAccountsApproveRequestRoute = require('./routes/admin/accounts/approveRequest')
+// const adminAccountsDenyRequestRoute = require('./routes/admin/accounts/denyRequest')
+const adminAccountsPromoteToAdminRoute = require('./routes/admin/accounts/promoteToAdmin')
+
 const app = express()
 
 app.set('case sensitive routing', true)
@@ -32,38 +52,38 @@ function wrapError (func) {
 }
 
 // user APIs
-app.post('/signin', wrapError(require('./routes/signin').post))
-app.get('/catalog', wrapError(require('./routes/catalog').get))
-app.get('/apikey', wrapError(require('./routes/apikey').get))
-app.get('/subscriptions', wrapError(require('./routes/subscriptions').get))
-app.put('/subscriptions/:usagePlanId', wrapError(require('./routes/subscriptions').put))
-app.get('/subscriptions/:usagePlanId/usage', wrapError(require('./routes/subscriptions/usage').get))
-app.delete('/subscriptions/:usagePlanId', wrapError(require('./routes/subscriptions').delete))
+app.post('/signin', wrapError(signinRoute.post))
+app.get('/catalog', wrapError(catalogRoute.get))
+app.get('/apikey', wrapError(apikeyRoute.get))
+app.get('/subscriptions', wrapError(subscriptionsRoute.get))
+app.put('/subscriptions/:usagePlanId', wrapError(subscriptionsRoute.put))
+app.get('/subscriptions/:usagePlanId/usage', wrapError(subscriptionsUsageRoute.get))
+app.delete('/subscriptions/:usagePlanId', wrapError(subscriptionsRoute.delete))
 // Marketplace support is currently broken
-// app.post('/marketplace-confirm/:usagePlanId', wrapError(require('./routes/marketplace-confirm').post))
-// app.put('/marketplace-subscriptions/:usagePlanId', wrapError(require('./routes/marketplace-subscription').put))
-app.get('/feedback', wrapError(require('./routes/feedback').get))
-app.post('/feedback', wrapError(require('./routes/feedback').post))
-app.get('/catalog/:id/sdk', wrapError(require('./routes/catalog/sdk').get))
-app.get('/catalog/:id/export', wrapError(require('./routes/catalog/export').get))
+// app.post('/marketplace-confirm/:usagePlanId', wrapError(marketplaceConfirmRoute.post))
+// app.put('/marketplace-subscriptions/:usagePlanId', wrapError(marketplaceSubscriptions.put))
+app.get('/feedback', wrapError(feedbackRoute.get))
+app.post('/feedback', wrapError(feedbackRoute.post))
+app.get('/catalog/:id/sdk', wrapError(catalogSdkRoute.get))
+app.get('/catalog/:id/export', wrapError(catalogExportRoute.get))
 
 // admin APIs
-app.get('/admin/catalog/visibility', wrapError(require('./routes/admin/catalog/visibility').get))
-app.post('/admin/catalog/visibility', wrapError(require('./routes/admin/catalog/visibility').post))
-app.delete('/admin/catalog/visibility/:id', wrapError(require('./routes/admin/catalog/visibility').delete))
-app.delete('/admin/catalog/visibility/generic/:genericId', wrapError(require('./routes/admin/catalog/visibility').delete))
-app.put('/admin/catalog/:id/sdkGeneration', wrapError(require('./routes/admin/catalog/sdkGeneration').put))
-app.delete('/admin/catalog/:id/sdkGeneration', wrapError(require('./routes/admin/catalog/sdkGeneration').delete))
+app.get('/admin/catalog/visibility', wrapError(adminCatalogVisibilityRoute.get))
+app.post('/admin/catalog/visibility', wrapError(adminCatalogVisibilityRoute.post))
+app.delete('/admin/catalog/visibility/:id', wrapError(adminCatalogVisibilityRoute.delete))
+app.delete('/admin/catalog/visibility/generic/:genericId', wrapError(adminCatalogVisibilityRoute.delete))
+app.put('/admin/catalog/:id/sdkGeneration', wrapError(adminCatalogSdkGenerationRoute.put))
+app.delete('/admin/catalog/:id/sdkGeneration', wrapError(adminCatalogSdkGenerationRoute.delete))
 
 // Account management APIs
-app.get('/admin/accounts', wrapError(require('./routes/admin/accounts').get))
-app.post('/admin/accounts', wrapError(require('./routes/admin/accounts').post))
-app.put('/admin/accounts/resendInvite', wrapError(require('./routes/accounts/resendInvite').put))
+app.get('/admin/accounts', wrapError(adminAccountsRoute.get))
+app.post('/admin/accounts', wrapError(adminAccountsRoute.post))
+app.put('/admin/accounts/resendInvite', wrapError(adminAccountsResendInviteRoute.put))
 // Not ready for prime time just yet.
-// app.put('/admin/accounts/:userId/approveRequest', wrapError(require('./routes/accounts/approveRequest').put))
-// app.put('/admin/accounts/:userId/denyRequest', wrapError(require('./routes/accounts/denyRequest').put))
-app.put('/admin/accounts/:userId/promoteToAdmin', wrapError(require('./routes/accounts/promoteToAdmin').put))
-app.delete('/admin/accounts/:userId', wrapError(require('./routes/admin/accounts').delete))
+// app.put('/admin/accounts/:userId/approveRequest', wrapError(adminAccountsApproveRequestRoute.put))
+// app.put('/admin/accounts/:userId/denyRequest', wrapError(adminAccountsDenyRequestRoute.put))
+app.put('/admin/accounts/:userId/promoteToAdmin', wrapError(adminAccountsPromoteToAdminRoute.put))
+app.delete('/admin/accounts/:userId', wrapError(adminAccountsRoute.delete))
 
 const server = awsServerlessExpress.createServer(app)
 
