@@ -8,7 +8,6 @@
 
 const AWS = require('aws-sdk')
 const yaml = require('js-yaml')
-let bucketName = ''
 const hash = require('object-hash')
 const path = require('path')
 const util = require('util')
@@ -27,12 +26,15 @@ const inspect = value => util.inspect(value, { depth: Infinity, breakLength: Inf
  */
 function swaggerFileFilter (file) {
   const isSwagger = /^\.(?:json|yaml|yml)$/.test(path.extname(file.Key))
-  console.log(`file ${file.Key} is${isSwagger ? '' : ' not'} a swagger file.`)
+  console.log(
+    isSwagger ? `file ${file.Key} is a swagger file.` : `file ${file.Key} is not a swagger file.`
+  )
   return isSwagger
 }
 
 /**
- * Takes an s3 file representation and fetches the file's body, putting it into a new, internal file representation.
+ * Takes an s3 file representation and fetches the file's body, putting it into a new, internal
+ * file representation.
  *
  * Example internal file representation:
  * {
@@ -46,15 +48,13 @@ function swaggerFileFilter (file) {
  * }
  *
  * @param file an s3 file representation
- * @returns {Promise.<Object>} a promise that resolves to an internal file representation
+ * @returns {Promise<Object>} a promise that resolves to an internal file representation
  */
 async function getSwaggerFile (file) {
-  const params = {
-    Bucket: bucketName,
+  const s3Repr = await exports.s3.getObject({
+    Bucket: process.env.BucketName,
     Key: file.Key
-  }
-
-  const s3Repr = await exports.s3.getObject(params).promise()
+  }).promise()
 
   console.log(`Processing file: ${file.Key}`)
   let body
@@ -186,60 +186,85 @@ class CatalogBuilder {
   }
 }
 
-async function handler (event, context) {
+const handler = (event) => new Promise((resolve, reject) => {
   console.log(`event: ${inspect(event)}`)
-  bucketName = process.env.BucketName
 
-  const sdkGeneration = JSON.parse(
-    (await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json' }).promise())
-      .Body.toString()
-  )
-  console.log(`sdkGeneration: ${inspect(sdkGeneration)}`)
+  let s3Request
+  let builder = []
+  let open = 1
+
+  function abort (err) {
+    if (open === 0) return
+    open = 0
+    if (s3Request != null) {
+      s3Request.abort()
+      s3Request = null
+    }
+    return reject(err)
+  }
+
+  function complete () {
+    if (open === 0) return
+    open--
+    if (open === 0) {
+      console.log(`catalog: ${inspect(builder.catalog)}`)
+
+      const params = {
+        Bucket: process.env.BucketName,
+        Key: 'catalog.json',
+        Body: JSON.stringify(builder.catalog),
+        ContentType: 'application/json'
+      }
+
+      resolve(exports.s3.upload(params).promise())
+    }
+  }
 
   const usagePlansPromise = getAllUsagePlans(exports.apiGateway)
-  const builderPromise = usagePlansPromise.then(usagePlans => {
-    console.log(`usagePlans: ${inspect(usagePlans)}`)
-    return new CatalogBuilder(usagePlans, sdkGeneration)
-  })
+  usagePlansPromise.catch(abort)
+  exports.s3.getObject({ Bucket: process.env.BucketName, Key: 'sdkGeneration.json' }).promise()
+    .then(response => {
+      const sdkGeneration = JSON.parse(response.Body.toString())
+      console.log(`sdkGeneration: ${inspect(sdkGeneration)}`)
+      usagePlansPromise.then(usagePlans => {
+        const swaggers = builder
+        console.log(`usagePlans: ${inspect(usagePlans)}`)
+        builder = new CatalogBuilder(usagePlans, sdkGeneration)
+        for (const s of swaggers) builder.addToCatalog(s)
+        complete()
+      })
+    }, abort)
 
-  const promises = []
-  let token
-
-  while (true) {
-    const listObjectsResult = await exports.s3.listObjectsV2(
-      token != null
-        ? { Bucket: bucketName, Prefix: 'catalog/', ContinuationToken: token }
-        : { Bucket: bucketName, Prefix: 'catalog/' }
-    ).promise()
-
+  function consumeNext (listObjectsResult) {
+    if (listObjectsResult.IsTruncated) loop(listObjectsResult.NextContinuationToken)
     for (const file of listObjectsResult.Contents) {
       if (exports.swaggerFileFilter(file)) {
-        promises.push(
-          builderPromise.then(builder =>
-            exports.getSwaggerFile(file).then(s => builder.addToCatalog(s))
-          )
-        )
+        open++
+        getSwaggerFile(file).then(s => {
+          complete()
+          if (Array.isArray(builder)) {
+            builder.push(s)
+          } else {
+            builder.addToCatalog(s)
+          }
+        }, abort)
       }
     }
-
-    if (!listObjectsResult.IsTruncated) break
-    token = listObjectsResult.NextContinuationToken
+    complete()
   }
 
-  await Promise.all(promises)
-  const { catalog } = await builderPromise
-
-  console.log(`catalog: ${inspect(catalog)}`)
-
-  const params = {
-    Bucket: bucketName,
-    Key: 'catalog.json',
-    Body: JSON.stringify(catalog),
-    ContentType: 'application/json'
+  function loop (token) {
+    open++
+    s3Request = exports.s3.listObjectsV2(
+      token != null
+        ? { Bucket: process.env.BucketName, Prefix: 'catalog/', ContinuationToken: token }
+        : { Bucket: process.env.BucketName, Prefix: 'catalog/' }
+    )
+    s3Request.promise().then(consumeNext, abort)
   }
 
-  await exports.s3.upload(params).promise()
-}
+  loop()
+})
 
 // make available for unit testing
 // see: https://stackoverflow.com/questions/45111198/how-to-mock-functions-in-the-same-module-using-jest
