@@ -3,13 +3,11 @@
 const readline = require('readline')
 const AWS = require('aws-sdk')
 const { PassThrough } = require('stream')
-const fetch = require('node-fetch')
 const cognitoIdp = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-18' })
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 const dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10' })
 
 const userPoolId = process.env.UserPoolId
-const logsRoleArn = process.env.LogsRoleArn
 const adminsGroup = process.env.AdminsGroup
 const registeredGroup = process.env.RegisteredGroup
 const customersTableName = process.env.CustomersTable
