@@ -5,7 +5,7 @@ import {
   Header,
   Input,
   Message,
-  Modal,
+  Modal
 } from 'semantic-ui-react'
 
 import * as MessageList from 'components/MessageList'
@@ -20,21 +20,21 @@ const PendingInvites = () => {
   const [loading, setLoading] = useState(true)
   const [selectedAccount, setSelectedAccount] = useState(undefined)
   const [isCreateModalOpen, openCreateModal, closeCreateModal] = useBoolean(
-    false,
+    false
   )
   const [isDeleteModalOpen, openDeleteModal, closeDeleteModal] = useBoolean(
-    false,
+    false
   )
   const [messages, sendMessage] = MessageList.useMessages()
   const [
     createModalMessages,
     sendCreateModalMessage,
-    clearCreateModalMessages,
+    clearCreateModalMessages
   ] = MessageList.useMessages()
 
   const refreshAccounts = () =>
     AccountService.fetchPendingInviteAccounts().then(accounts =>
-      setAccounts(accounts),
+      setAccounts(accounts)
     )
 
   // Initial load
@@ -44,7 +44,7 @@ const PendingInvites = () => {
 
   const onSelectAccount = useCallback(
     account => setSelectedAccount(account),
-    [],
+    []
   )
 
   const onConfirmCreate = useCallback(
@@ -77,8 +77,8 @@ const PendingInvites = () => {
       sendMessage,
       sendCreateModalMessage,
       clearCreateModalMessages,
-      closeCreateModal,
-    ],
+      closeCreateModal
+    ]
   )
 
   const onConfirmResend = useCallback(async () => {
@@ -128,7 +128,7 @@ const PendingInvites = () => {
         columns={[
           AccountsTableColumns.EmailAddress,
           AccountsTableColumns.DateInvited,
-          AccountsTableColumns.Inviter,
+          AccountsTableColumns.Inviter
         ]}
         loading={loading}
         selectedAccount={selectedAccount}
@@ -166,7 +166,7 @@ const TableActions = ({
   canResend,
   onClickResend,
   canDelete,
-  onClickDelete,
+  onClickDelete
 }) => (
   <Button.Group>
     <Button
@@ -186,7 +186,7 @@ const TableActions = ({
 // - The whole regexp was made case-insensitive to avoid the need for `A-Za-z` in classes.
 // - As we're only testing, I replaced all the non-capturing groups with capturing ones.
 const validEmailRegex =
-  /^[\w.!#$%&'*+\/=?^`{|}~-]+@[^_\W]([a-z\d-]{0,61}[^_\W])?(\.[^_\W]([a-z\d-]{0,61}[^_\W])?)*$/i
+  /^[\w.!#$%&'*+/=?^`{|}~-]+@[^_\W]([a-z\d-]{0,61}[^_\W])?(\.[^_\W]([a-z\d-]{0,61}[^_\W])?)*$/i
 
 /*
  * Note: `onConfirm` should return a boolean indicating whether the creation
@@ -198,7 +198,7 @@ const CreateInviteModal = ({ onConfirm, open, onClose, messages }) => {
   const isEmailValid = useMemo(() => validEmailRegex.test(email), [email])
   const onChangeEmailAddress = useCallback(
     (_event, { value }) => setEmail(value),
-    [],
+    []
   )
   const onClickCreate = useCallback(async () => {
     setLoading(true)
@@ -210,7 +210,7 @@ const CreateInviteModal = ({ onConfirm, open, onClose, messages }) => {
       setLoading(false)
     }
   }, [onConfirm, email])
-  
+
   // If the user stops typing, but the email is invalid, show the invalid email message as a hint
   // for why they can't proceed. Don't make the timeout so short that it'd annoy a slow typer,
   // though.

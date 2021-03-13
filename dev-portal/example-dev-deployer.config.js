@@ -1,10 +1,10 @@
 // See `example-deployer.config.js` in this directory for setup instructions and the "Deployer
 // configuration" section of `BUILDING.md` for documentation on each of the parameters.
-// 
+//
 // It's recommended you track your live deployments here. You can change this any time you want to
 // do a fresh deployment.
 // Live: 0
-"use strict"
+'use strict'
 
 const n = 0
 
@@ -30,7 +30,7 @@ module.exports = {
   staticAssetRebuildMode: 'overwrite-content',
 
   // Set development mode for local use.
-  developmentMode: true,
+  developmentMode: true
 
   // Toggle this any time the edge lambda or its replicator lambda are updated. In general, unless
   // either you're modifying them yourself or they were changed upstream and you just pulled those

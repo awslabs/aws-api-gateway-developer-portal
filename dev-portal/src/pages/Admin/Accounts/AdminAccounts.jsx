@@ -12,7 +12,7 @@ const AdminAccounts = () => {
 
   const refreshAccounts = () =>
     AccountService.fetchAdminAccounts().then(accounts =>
-      setAccounts(accounts),
+      setAccounts(accounts)
     )
 
   // Initial load
@@ -21,7 +21,7 @@ const AdminAccounts = () => {
   }, [])
 
   const onSelectAccount = useCallback(account => setSelectedAccount(account), [
-    setSelectedAccount,
+    setSelectedAccount
   ])
 
   return (
@@ -32,7 +32,7 @@ const AdminAccounts = () => {
         columns={[
           AccountsTableColumns.EmailAddress,
           AccountsTableColumns.DatePromoted,
-          AccountsTableColumns.Promoter,
+          AccountsTableColumns.Promoter
         ]}
         loading={loading}
         selectedAccount={selectedAccount}

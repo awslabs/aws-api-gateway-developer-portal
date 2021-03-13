@@ -87,6 +87,7 @@ export const AccountsTable = ({
     directionIndex: 0
   })
 
+  /* eslint-disable brace-style */
   useEffect(() => {
     const filterableColumns = columns.filter(column => column.filtering)
     setFilterableColumns(filterableColumns)
@@ -109,6 +110,7 @@ export const AccountsTable = ({
       setFilter(filter => ({ ...filter, column: NO_FILTER_COLUMN }))
     }
   }, [columns, filter])
+  /* eslint-enable brace-style */
 
   /**
    * Sets `accountsView` to the filtered and sorted subset of `props.accounts`.

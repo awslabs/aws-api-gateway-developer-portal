@@ -5,8 +5,5 @@
   "main": "index.js",
   "config": {},
   "license": "Apache-2.0",
-  "dependencies": {
-    "node-fetch": "^2.6.1"
-  },
   "devDependencies": {}
 }
