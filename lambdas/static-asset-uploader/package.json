@@ -1,6 +1,6 @@
 {
   "name": "serverless-developer-portal-static-asset-uploader",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "developer portal component responsible for uploading static assets to S3",
   "main": "index.js",
   "config": {},

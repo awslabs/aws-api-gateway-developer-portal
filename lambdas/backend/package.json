@@ -1,6 +1,6 @@
 {
   "name": "serverless-developer-backend",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "developer portal component responsible for backend application logic",
   "main": "index.js",
   "config": {},

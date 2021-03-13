@@ -185,7 +185,7 @@ Resources:
         - https
         paths:
           # Version marker - please don't delete (this is how we track version usage)
-          /version/{v4_0_3}:
+          /version/{v4_0_4}:
             options:
               consumes:
               - application/json

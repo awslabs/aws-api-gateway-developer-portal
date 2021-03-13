@@ -1,6 +1,6 @@
 {
   "name": "serverless-developer-portal-catalog-updater",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "developer portal component responsible for updating the catalog of usage plans and swagger files",
   "main": "index.js",
   "config": {},
