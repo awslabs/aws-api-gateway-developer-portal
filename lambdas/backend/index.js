@@ -21,9 +21,9 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
 app.use(awsServerlessExpressMiddleware.eventContext())
 
 function wrapError (func) {
-  return async (req, res, callback) => {
+  return async (req, res) => {
     try {
-      await func(req, res, callback)
+      await func(req, res)
     } catch (e) {
       console.error(`Error: ${e.stack}`)
       res.status(500).json(util.makeErrorResponse(e))

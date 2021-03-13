@@ -4,6 +4,15 @@ Transform: 'AWS::Serverless-2016-10-31'
 
 Description: My Dev Portal Stack
 Metadata:
+  cfn-lint:
+    config:
+      ignore_checks:
+        # There's circular dependencies between the API + backend lambda and API + IAM execution role for
+        # that won't get fixed anytime remotely soon.
+        - E3004
+        # Not useful at all.
+        - I1022
+
   AWS::CloudFormation::Interface:
     ParameterGroups:
       -
@@ -673,6 +682,8 @@ Resources:
 
   CustomersTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Ref DevPortalCustomersTableName
       AttributeDefinitions:
@@ -703,6 +714,8 @@ Resources:
 
   PreLoginAccountsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Ref DevPortalPreLoginAccountsTableName
       AttributeDefinitions:
@@ -718,6 +731,8 @@ Resources:
   FeedbackTable:
     Type: AWS::DynamoDB::Table
     Condition: EnableFeedbackSubmission
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Ref DevPortalFeedbackTableName
       AttributeDefinitions:
@@ -727,8 +742,8 @@ Resources:
       - AttributeName: Id
         KeyType: HASH
       ProvisionedThroughput:
-        ReadCapacityUnits: '5'
-        WriteCapacityUnits: '5'
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
       GlobalSecondaryIndexes:
       - IndexName: FeedbackIdIndex
         KeySchema:
@@ -1987,29 +2002,6 @@ Resources:
               - cognito-idp:ListUsersInGroup
             Resource: !GetAtt CognitoUserPool.Arn
 
-  UserGroupImporterLogsRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: cognito-idp.amazonaws.com
-          Action: sts:AssumeRole
-      Policies:
-      - PolicyName: WriteCloudWatchLogs
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:DescribeLogStreams
-            - logs:PutLogEvents
-            Resource: arn:aws:logs:*:*:*
-
   UserGroupImporterExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -2031,14 +2023,6 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource: arn:aws:logs:*:*:*
-      - PolicyName: PassRole
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - iam:PassRole
-            Resource: !GetAtt UserGroupImporterLogsRole.Arn
       - PolicyName: S3GetObject
         PolicyDocument:
           Version: '2012-10-17'
@@ -2086,7 +2070,6 @@ Resources:
       Environment:
         Variables:
           UserPoolId: !Ref CognitoUserPool
-          LogsRoleArn: !GetAtt UserGroupImporterLogsRole.Arn
           AdminsGroup: !Ref CognitoAdminsGroup
           RegisteredGroup: !Ref CognitoRegisteredGroup
           CustomersTable: !Ref CustomersTable
