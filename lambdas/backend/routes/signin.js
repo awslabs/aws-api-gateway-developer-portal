@@ -24,12 +24,34 @@ exports.post = async (req, res) => {
     // the item itself exists; if not, it will be updated later by
     // `ensureApiKeyForCustomer`. So we can safely pass a dummy here while
     // upholding the invariant.
+
     await promisify2(customersController.ensureCustomerItem)(
       cognitoIdentityId,
       cognitoUserId,
       'NO_API_KEY'
     )
     const email = await customersController.getEmailForUserSub(cognitoUserId)
+
+
+    try {
+
+      await Promise.all([
+        customersController.saveOpenPreLoginAccount({ cognitoUserId, email }),
+        customersController.addAccountToRegisteredGroup({
+          username,
+          userPoolId,
+          registeredGroupName
+        })
+      ])
+    } catch (error) {
+        //ignoring this error in the case where the user may be already
+        //registered
+        console.log(`error: ${error}`)
+        res.status(200).json({})
+        return
+
+    }
+
     await customersController.ensureApiKeyForCustomer({
       userId: email,
       identityId: cognitoIdentityId
