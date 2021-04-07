@@ -47,9 +47,8 @@ exports.post = async (req, res) => {
         //ignoring this error in the case where the user may be already
         //registered
         console.log(`error: ${error}`)
-        res.status(200).json({})
+        res.status(500).json({})
         return
-
     }
 
     await customersController.ensureApiKeyForCustomer({
