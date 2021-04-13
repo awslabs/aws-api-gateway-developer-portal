@@ -30,11 +30,11 @@ exports.post = async (req, res) => {
       cognitoUserId,
       'NO_API_KEY'
     )
+    //EOD HERE -THIS WAS ADDED BY US - is this code being called???? how was Armando getting it called???
     const email = await customersController.getEmailForUserSub(cognitoUserId)
 
-
     try {
-
+/*
       await Promise.all([
         customersController.saveOpenPreLoginAccount({ cognitoUserId, email }),
         customersController.addAccountToRegisteredGroup({
@@ -47,12 +47,16 @@ exports.post = async (req, res) => {
         //ignoring this error in the case where the user may be already
         //registered
         console.log(`error: ${error}`)
-        res.status(500).json({})
+        res.status(200).json({})
         return
-    }
+    }*/
+
+//EOD HERE NOW
+    //IT VERY WELL MAY BE FAILING BEFORE GETTING TO THE NEXT LINE HERE B/C OF POLICY ....
+
 
     await customersController.ensureApiKeyForCustomer({
-      userId: email,
+      userId: email,                                      //EOD note : this was changed by Armando...
       identityId: cognitoIdentityId
     })
   } catch (error) {
