@@ -58,7 +58,6 @@ export const NavBar = observer(
             </MenuLink>
           </> : <>
             <MenuLink to={getCognitoUrl('login')}>Sign In</MenuLink>
-            <MenuLink to={getCognitoUrl('signup')}>Register</MenuLink>
           </>}
         </Menu.Menu>
       </Menu>
