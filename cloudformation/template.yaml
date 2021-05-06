@@ -39,6 +39,8 @@ Metadata:
           - UseRoute53Nameservers
           - CognitoDomainNameOrPrefix
           # - CognitoDomainAcmCertArn
+          - Route53HostedZoneId
+          - Route53HostedZoneName
       -
         Label:
           default: "Dev Portal Customer Feedback Configuration"
@@ -147,6 +149,14 @@ Parameters:
       - 'false'
       - 'true'
     ConstraintDescription: Malformed input - Parameter UseRoute53Nameservers value must be either 'true' or 'false'
+
+  Route53HostedZoneId:
+    Type: String
+    Description: Mandatory to tie into an existing hosted zone for dns
+
+  Route53HostedZoneName:
+    Type: String
+    Description: Mandatory to tie into an existing hosted zone for dns
 
   DevelopmentMode:
     Type: String
@@ -1929,17 +1939,18 @@ Resources:
       CloudFrontOriginAccessIdentityConfig:
         Comment: !Sub 'CloudFront OAI for ${CustomDomainName}'
 
-  CustomDomainHostedZone:
-    Type: AWS::Route53::HostedZone
-    Condition: UseRoute53
-    Properties:
-      Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+  # Must pass in an exaisting hosted zone id in the creation
+  # CustomDomainHostedZone:
+  #  Type: AWS::Route53::HostedZone
+  #  Condition: UseRoute53
+  #  Properties:
+  #    Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
 
   CustomDomainRecordSet:
     Type: AWS::Route53::RecordSetGroup
     Condition: UseRoute53
     Properties:
-      HostedZoneName: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+      HostedZoneName: !Ref Route53HostedZoneName
       RecordSets:
         - Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
           Type: A
@@ -1947,7 +1958,7 @@ Resources:
             DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
             # this is a "magic string" for using CFN aliases; see this link:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
-            HostedZoneId: 'Z2FDTNDATAQYW2'
+            HostedZoneId: !Ref Route53HostedZoneId
 
   DumpV3AccountDataFn:
     Type: AWS::Serverless::Function
