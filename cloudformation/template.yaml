@@ -143,7 +143,7 @@ Parameters:
   UseRoute53Nameservers:
     Type: String
     Description: Only applicable if creating a custom domain name for your dev portal. Defaults to false, and you'll need to provide your own nameserver hosting. If set to true, a Route53 HostedZone and RecordSet are created for you.
-    Default: 'false'
+    Default: 'true'
     AllowedValues:
       - 'false'
       - 'true'
@@ -1942,7 +1942,7 @@ Resources:
   #    Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
 
   CustomDomainRecord:
-    Type: AWS::Route53:RecordSet
+    Type: AWS::Route53::RecordSet
     Condition: UseRoute53
     Properties:
       AliasTarget: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
