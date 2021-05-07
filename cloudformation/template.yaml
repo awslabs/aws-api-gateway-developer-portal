@@ -1950,7 +1950,7 @@ Resources:
     Type: AWS::Route53::RecordSetGroup
     Condition: UseRoute53
     Properties:
-      HostedZoneName: !Ref Route53HostedZoneName
+      HostedZoneId: !Ref Route53HostedZoneId
       RecordSets:
         - Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
           Type: A
@@ -1958,7 +1958,7 @@ Resources:
             DNSName: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
             # this is a "magic string" for using CFN aliases; see this link:
             # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
-            HostedZoneId: !Ref Route53HostedZoneId
+            HostedZoneId: 'Z2FDTNDATAQYW2'
 
   DumpV3AccountDataFn:
     Type: AWS::Serverless::Function
