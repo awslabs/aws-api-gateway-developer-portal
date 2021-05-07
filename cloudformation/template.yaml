@@ -1944,10 +1944,10 @@ Resources:
   CustomDomainRecord:
     Type: AWS::Route53:RecordSet
     Condition: UseRoute53
-      Properties:
-        AliasTarget: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
-        HostedZoneId: !Ref Route53HostedZoneId
-        Name: Fn::Select: [ 0, Fn::Split: [ '.', !Ref CustomDomainName ] ]
+    Properties:
+      AliasTarget: !Join [ '', [ !GetAtt CustomDomainCloudfrontDistribution.DomainName, '.' ] ]
+      HostedZoneId: !Ref Route53HostedZoneId
+      Name: Fn::Select: [ 0, Fn::Split: [ '.', !Ref CustomDomainName ] ]
 
   CustomDomainRecordSet:
     Type: AWS::Route53::RecordSetGroup
