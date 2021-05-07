@@ -40,7 +40,6 @@ Metadata:
           - CognitoDomainNameOrPrefix
           # - CognitoDomainAcmCertArn
           - Route53HostedZoneId
-          - Route53HostedZoneName
       -
         Label:
           default: "Dev Portal Customer Feedback Configuration"
@@ -151,10 +150,6 @@ Parameters:
     ConstraintDescription: Malformed input - Parameter UseRoute53Nameservers value must be either 'true' or 'false'
 
   Route53HostedZoneId:
-    Type: String
-    Description: Mandatory to tie into an existing hosted zone for dns
-
-  Route53HostedZoneName:
     Type: String
     Description: Mandatory to tie into an existing hosted zone for dns
 
