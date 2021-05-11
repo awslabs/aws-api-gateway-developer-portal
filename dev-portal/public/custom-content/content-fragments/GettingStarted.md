@@ -4,9 +4,9 @@ title: Getting Started
 
 ## Getting Started
 
-### Create an account and subscribe to APIs
+### Create an account and Authorize APIs
 
-To use any of our APIs you must create a developer account. A developer account provides an API Key for accessing our APIs, a playground for testing our APIs, and API usage metrics. Create or sign in using the buttons in the top right.
+<!-- To use any of our APIs you must create a developer account. A developer account provides an API Key for accessing our APIs, a playground for testing our APIs, and API usage metrics. Create or sign in using the buttons in the top right.
 
 After you create a new account, you will have a new API Key but it won't be linked to any of our APIs. To activate it for a particular API, navigate to [APIs](/apis) and find the API you want. Click `subscribe`. Your API Key is now subscribed to the API and you can make calls to its methods.
 
@@ -18,4 +18,6 @@ If you need your API Key for any reason, you can always find it on [your dashboa
 
 ### Monitor your usage
 
-Typically each API has a usage limit set for each API Key. As you scale up your usage of the APIs, you can monitor your usage towards the limits on [your dashboard](/dashboard).
+Typically each API has a usage limit set for each API Key. As you scale up your usage of the APIs, you can monitor your usage towards the limits on [your dashboard](/dashboard). -->
+
+To use any of our APIs, you must first have a developer account created. **Please reach out to your Enview point of contact**, or email support@enview.com in order to have an account created for you. A developer account allows you to generate authentication tokens for accessing our APIs.
