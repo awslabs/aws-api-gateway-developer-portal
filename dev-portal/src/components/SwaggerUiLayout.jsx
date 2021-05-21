@@ -1,13 +1,14 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react'
+import React, { useMemo } from 'react'
 
 // semantic-ui
 import { Button, Header, Image, Container } from 'semantic-ui-react'
 
 // markdown for external docs description
-import Markdown from 'react-markdown/with-html'
+import marked from 'marked'
+import DOMPurify from 'dompurify'
 
 // services
 import { subscribe, unsubscribe } from 'services/api-catalog'
@@ -21,6 +22,15 @@ import { store } from 'services/state.js'
 
 // Create the plugin that provides our layout component
 export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoReplacement } })
+
+function Markdown ({ source }) {
+  const rendered = useMemo(() => DOMPurify.sanitize(marked(source, {
+    headerIds: false,
+    silent: true
+  })), [source])
+
+  return <div dangerouslySetInnerHTML={{ __html: rendered }} />
+}
 
 // replaces the InfoContainer component
 // https://github.com/swagger-api/swagger-ui/blob/dd3afdc45656bda2a64ae6a7f9bdad006ea98149/src/core/components/layouts/base.jsx
