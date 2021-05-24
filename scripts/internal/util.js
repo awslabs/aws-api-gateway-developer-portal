@@ -60,9 +60,7 @@ const packageList = [
   'lambdas/backend',
   'lambdas/catalog-updater',
   'lambdas/cloudfront-security',
-  'lambdas/listener',
-  'lambdas/static-asset-uploader',
-  'lambdas/user-group-importer'
+  'lambdas/static-asset-uploader'
 ].map(rel => ({
   target: rel,
   resolved: p(rel)
