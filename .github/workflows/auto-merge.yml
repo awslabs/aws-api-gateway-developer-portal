@@ -1,7 +1,7 @@
 name: auto-merge
 
 on:
-  pulll_request_target:
+  pull_request_target:
     branches: [ master ]
 
 jobs:
