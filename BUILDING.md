@@ -57,6 +57,12 @@ This S3 bucket is used to hold all the build artifacts. Unlike everything else h
 
 This is the name of the CloudFormation stack to create and deploy. As a CloudFormation stack name, it must be unique to your account.
 
+### `region: string` (Required)
+
+This is the name of the region to deploy the CloudFormation stack to.
+
+Note: the edge lambda will always be created in us-east-1 regardless of the value of this.
+
 ### `siteAssetsBucket: string` (Required)
 
 This S3 bucket holds the site's static assets to serve from the generated CloudFront distribution. As an S3 bucket, the name must be globally unique.

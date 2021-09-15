@@ -16,6 +16,9 @@
 'use strict'
 
 module.exports = {
+  // Optional
+  // region: 'us-west-1',
+
   // Optional, but recommended if you have multiple active AWS CLI profiles.
   // awsSamCliProfile: 'your-profile',
 
