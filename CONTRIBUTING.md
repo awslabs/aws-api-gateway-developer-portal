@@ -23,18 +23,18 @@ reported the issue. Please try to include as much information as you can. Detail
 ## Contributing via Pull Requests
 Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
 
-1. You are working against the latest source on the *staging* branch.
+1. You are working against the latest source on the *master* branch.
 2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
 3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
 
 To send us a pull request, please:
 
 1. Fork the repository.
-2. Working off the latest version of the *staging* branch, modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
+2. Working off the latest version of the *master* branch, modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
 3. Ensure local tests pass.
 4. Run `standard --fix` on your new code to ensure style consistency. Remember to only reformat files relevant to your changes.
 5. Commit to your fork using clear commit messages.
-6. Send us a pull request merging into the *staging* branch, answering any default questions in the pull request interface.
+6. Send us a pull request merging into the *master* branch, answering any default questions in the pull request interface.
 7. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and 

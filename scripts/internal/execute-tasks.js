@@ -21,8 +21,14 @@ module.exports = async tasks => {
         },
         err => {
           console.error(red(`Task errored: ${name}`))
-          console.error(red(err.message))
-          process.exitCode = 1
+          // Pass `fail` to cause it to fail without also causing an additional error message to
+          // display. (Good for if an error message was already displayed previously.)
+          if (typeof err === 'number') {
+            process.exitCode = err
+          } else {
+            console.error(red(err.message))
+            process.exitCode = 1
+          }
         }
       )
       try {

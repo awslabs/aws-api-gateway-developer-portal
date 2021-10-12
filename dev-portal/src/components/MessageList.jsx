@@ -19,7 +19,7 @@ export const MessageList = ({ messages }) =>
 export const useMessages = () => {
   const [state, setState] = useState({
     messages: [],
-    nextId: 0,
+    nextId: 0
   })
 
   const sendMessage = renderWithDismiss => {
@@ -27,16 +27,16 @@ export const useMessages = () => {
     const dismiss = () => {
       setState(state => ({
         ...state,
-        messages: state.messages.filter(message => message.id !== id),
+        messages: state.messages.filter(message => message.id !== id)
       }))
     }
     const newMessage = {
       render: () => renderWithDismiss(dismiss),
-      id: state.nextId,
+      id: state.nextId
     }
     setState(state => ({
       messages: [...state.messages, newMessage],
-      nextId: state.nextId + 1,
+      nextId: state.nextId + 1
     }))
   }
 

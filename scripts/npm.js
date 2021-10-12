@@ -7,6 +7,11 @@ const { run, packageList } = require('./internal/util')
 
 ;(async () => {
   for (const { target, resolved } of packageList) {
-    await run('npm', process.argv.slice(2), { action: 'Execution', target, cwd: resolved })
+    try {
+      await run('npm', process.argv.slice(2), { action: 'Execution', target, cwd: resolved })
+    } catch (e) {
+      if (typeof e === 'number') process.exitCode = e
+      else throw e
+    }
   }
 })()

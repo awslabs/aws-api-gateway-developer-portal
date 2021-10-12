@@ -7,7 +7,6 @@ import { isAdmin } from 'services/self'
 
 import { observer } from 'mobx-react'
 
-import { Link } from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
 import Sidebar from 'components/Sidebar/Sidebar'
 import SidebarHeader from 'components/Sidebar/SidebarHeader'

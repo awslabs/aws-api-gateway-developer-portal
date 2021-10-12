@@ -20,7 +20,7 @@
 //
 // This is the same regexp as is used in dev-portal/src/pages/Admin/Accounts/PendingInvites.jsx.
 const validEmailRegex =
-  /^[\w.!#$%&'*+\/=?^`{|}~-]+@[^_\W]([a-z\d-]{0,61}[^_\W])?(\.[^_\W]([a-z\d-]{0,61}[^_\W])?)*$/i
+  /^[\w.!#$%&'*+/=?^`{|}~-]+@[^_\W]([a-z\d-]{0,61}[^_\W])?(\.[^_\W]([a-z\d-]{0,61}[^_\W])?)*$/i
 
 exports.handler = async event => {
   const email = event.request.userAttributes.email

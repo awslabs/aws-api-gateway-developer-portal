@@ -1,17 +1,11 @@
+# because ESLint configs frequently need to be JS.
+
 # top-level and lambda function specific
-/node_modules
+**/node_modules
 /coverage
 /lambdas/static-asset-uploader/build/
 /lambdas/coverage/
-/lambdas/backend/node_modules/
-/lambdas/catalog-updater/node_modules/
-/lambdas/cfn-cognito-user-pools-client-settings/node_modules/
-/lambdas/cfn-cognito-user-pools-domain/node_modules/
-/lambdas/cognito-user-pools-confirmation-strategy/node_modules/
-/lambdas/dump-v3-account-data/node_modules/
-/lambdas/listener/node_modules/
-/lambdas/shared/node_modules/
-/lambdas/static-asset-uploader/node_modules/
+!/lambdas/common-layer/nodejs/node_modules
 
 # devportal specific
 

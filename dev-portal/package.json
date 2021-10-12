@@ -1,23 +1,24 @@
 {
   "name": "dev-portal",
-  "version": "4.0.3",
+  "version": "4.1.0",
   "private": true,
   "dependencies": {
-    "chart.js": "^2.7.2",
+    "chart.js": "^2.9.4",
+    "dompurify": "^2.2.8",
     "front-matter": "^3.0.0",
     "jwt-decode": "^2.2.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
+    "marked": "^2.0.4",
     "mobx": "^5.15.4",
     "mobx-react": "^6.2.2",
     "object-hash": "^2.0.3",
     "query-string": "^6.12.1",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
-    "react-markdown": "^4.0.3",
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.87.3",
-    "swagger-ui": "git@github.com:amazon-meaisiah/swagger-ui.git#66cbe58352bc2455ea80ff99573fe06dee273f56",
+    "swagger-ui": "git+https://github.com/awslabs/swagger-ui.git#apigw-fork-v4",
     "yamljs": "^0.3.0"
   },
   "scripts": {
@@ -37,7 +38,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^4.0.0",
     "@testing-library/react": "^8.0.4",
-    "node-fetch": "^2.3.0",
-    "react-scripts": "^3.4.0"
+    "node-fetch": "^2.6.1",
+    "react-scripts": "^4.0.3"
   }
 }

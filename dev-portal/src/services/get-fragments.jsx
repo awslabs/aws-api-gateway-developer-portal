@@ -1,7 +1,8 @@
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
 
 // react-router
 import { Link } from 'react-router-dom'
@@ -11,7 +12,7 @@ import { observable } from 'mobx'
 
 // markdown parsing
 import frontmatter from 'front-matter'
-import Markdown from 'react-markdown/with-html'
+import marked from 'marked'
 
 export const fragments = observable({})
 
@@ -22,8 +23,10 @@ export const loadFragments = () => {
 }
 
 /**
- *
- * Pre-load the custom-content markdown, parses its frontmatter, and renders it as JSX. This method is asynchronous and doesn't actually return anything -- instead, it acts on a MobX Observable -- the fragment. The fragment is an object with a `jsx` property that maps to the rendered component, and any number of other properties collected from the front-matter.
+ * Pre-load the custom-content markdown, parses its frontmatter, and renders it as JSX. This method
+ * is asynchronous and doesn't actually return anything -- instead, it acts on a MobX Observable --
+ * the fragment. The fragment is an object with a `jsx` property that maps to the rendered
+ * component, and any number of other properties collected from the front-matter.
  *
  * @param {String} path   Path to the file to load in. Should be a markdown file.
  * @param {String} fragment   Name of the fragment. Determines where rendered data gets stored.
@@ -36,34 +39,61 @@ function loadHtml (path, fragment) {
 
   window.fetch(path).then(response => response.text().then(text => {
     const parsedMarkdown = frontmatter(text)
+    const html = marked(parsedMarkdown.body, {
+      headerPrefix: 'header-',
+      silent: true
+    })
 
     fragments[fragment] = {
-      jsx: () => (
-        <Markdown
-          escapeHtml={false}
-          source={parsedMarkdown.body}
-          renderers={renderers}
-        />
-      ),
+      jsx: () => <ShowHTML html={html} />,
       ...parsedMarkdown.attributes
     }
   }))
 }
 
-/**
- * Renderers is a map of node type to component.
- *
- * In this case, we only override links. Any time react-markdown tries to render a link, it'll render this component. Normal links will work, but the cause a full page reload. We don't want that, so we can replacing them with react-router Links. However, replacing external links with react-router Links causes them to not work at all. We don't want that either, so we attempt to determine if a link is external or not, and use `Link` or `a` appropriately.
- */
-const renderers = {
-  link: ({ href, ...props }) => {
-    // if absolute url, use an `a` tag
-    // https://stackoverflow.com/a/19709846/4060061
-    if (/^(?:[a-z]+:)?\/\//i.test(href)) {
-      return <a href={href} target='_blank' rel='noopener noreferrer' {...props} />
+function ShowHTML ({ html }) {
+  /** @type {import("react").MutableRefObject<HTMLDivElement>} */
+  const ref = useRef()
+
+  // Easier to do it here than to use a separate `useMemo` hook.
+  useLayoutEffect(() => {
+    // Normal links will work, but the cause a full page reload. We don't want that, so we replace
+    // them with react-router Links. However, replacing external links with react-router Links
+    // causes them to not work at all. We don't want that either, so we attempt to determine if a
+    // link is external or not, and replace them as appropriate.
+
+    const mountPoints = []
+    const links = ref.current.getElementsByTagName('a')
+
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i]
+      // if absolute url, use an `a` tag
+      // https://stackoverflow.com/a/19709846/4060061
+      if (/^(?:[a-z]+:)?\/\//i.test(link.href)) {
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+      } else {
+        // Replace links with react-router-dom tags so that they route correctly
+        const span = document.createElement('span')
+        // If there's CSS, don't listen to it.
+        span.style.setProperty('display', 'inline', 'important')
+        ReactDOM.render(<Link
+          to={link.href}
+          target={link.target}
+          dangerouslySetInnerHTML={{ __html: link.innerHTML }}
+        />, span)
+        link.replaceWith(span)
+        mountPoints.push(span)
+      }
     }
 
-    // replace links with react-router-dom tags so that they
-    return <Link to={href} {...props} />
-  }
+    // Gracefully unmount any mount points that were added
+    return () => {
+      mountPoints.forEach(elem => {
+        ReactDOM.render(null, elem)
+      })
+    }
+  }, [])
+
+  return <div ref={ref} dangerouslySetInnerHTML={{ __html: html }} />
 }

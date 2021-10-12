@@ -10,6 +10,7 @@ module.exports = async () => {
 
   const {
     stackName,
+    region,
     buildAssetsBucket,
     siteAssetsBucket,
     apiAssetsBucket,
@@ -36,6 +37,7 @@ module.exports = async () => {
 
   await exec('sam', [
     'package',
+    '--region', region,
     '--template-file', samTemplate,
     '--output-template-file', packageConfig,
     '--s3-bucket', buildAssetsBucket,
@@ -43,6 +45,7 @@ module.exports = async () => {
   ])
   await exec('sam', [
     'deploy',
+    '--region', region,
     '--template-file', packageConfig,
     '--stack-name', stackName,
     '--capabilities', 'CAPABILITY_NAMED_IAM',
