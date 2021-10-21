@@ -17,7 +17,7 @@ const headersToAdd = {
   }],
   'x-content-type-options': [{ value: 'nosniff' }],
   'x-frame-options': [{ value: 'DENY' }],
-  'x-xss-protection': [{ value: '1; mode=block' }],
+  'x-xss-protection': [{ value: '0' }],
   'referrer-policy': [{ value: 'same-origin' }]
 }
 
