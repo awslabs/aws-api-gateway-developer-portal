@@ -160,12 +160,13 @@ describe('backend/util', () => {
       util.s3.getObject = jest.fn().mockReturnValue(promiser(response))
 
       setEnv('StaticBucketName', 'test-bucket')
+      setEnv('SourceAccount', '123412341234')
 
       const result = await util.catalog()
 
       expect(util.s3.getObject).toBeCalledTimes(1)
       expect(util.s3.getObject).toBeCalledWith(
-        expect.objectContaining({ Bucket: 'test-bucket', Key: 'catalog.json' })
+        expect.objectContaining({ Bucket: 'test-bucket', Key: 'catalog.json', ExpectedBucketOwner: '123412341234' })
       )
       expect(result).toMatchObject(catalog)
     })
@@ -182,6 +183,7 @@ describe('backend/util', () => {
       util.s3.getObject = jest.fn().mockReturnValue(promiser(null, response))
 
       setEnv('StaticBucketName', 'test-bucket')
+      setEnv('SourceAccount', '123412341234')
 
       // Suppress error messages - we're expecting an error here.
       console.error = () => {}
@@ -190,7 +192,7 @@ describe('backend/util', () => {
 
       expect(util.s3.getObject).toBeCalledTimes(1)
       expect(util.s3.getObject).toBeCalledWith(
-        expect.objectContaining({ Bucket: 'test-bucket', Key: 'catalog.json' })
+        expect.objectContaining({ Bucket: 'test-bucket', Key: 'catalog.json', ExpectedBucketOwner: '123412341234' })
       )
       expect(result).toMatchObject(catalog)
     })
@@ -203,6 +205,7 @@ describe('backend/util', () => {
       util.s3.getObject = jest.fn().mockReturnValue(promiser(null, response))
 
       setEnv('StaticBucketName', 'test-bucket')
+      setEnv('SourceAccount', '123412341234')
 
       // Suppress error messages - we're expecting an error here.
       console.error = () => {}
@@ -211,7 +214,7 @@ describe('backend/util', () => {
 
       expect(util.s3.getObject).toBeCalledTimes(1)
       expect(util.s3.getObject).toBeCalledWith(
-        expect.objectContaining({ Bucket: 'test-bucket', Key: 'catalog.json' })
+        expect.objectContaining({ Bucket: 'test-bucket', Key: 'catalog.json', ExpectedBucketOwner: '123412341234' })
       )
     })
   })

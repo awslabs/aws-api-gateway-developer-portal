@@ -50,7 +50,8 @@ function swaggerFileFilter (file) {
 async function getSwaggerFile (file) {
   const params = {
     Bucket: bucketName,
-    Key: file.Key
+    Key: file.Key,
+    ExpectedBucketOwner: process.env.SourceAccount
   }
 
   const s3Repr = await exports.s3.getObject(params).promise()
@@ -190,7 +191,7 @@ async function handler (event, context) {
   bucketName = process.env.BucketName
 
   const sdkGeneration = JSON.parse(
-    (await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json' }).promise())
+    (await exports.s3.getObject({ Bucket: bucketName, Key: 'sdkGeneration.json', ExpectedBucketOwner: process.env.SourceAccount }).promise())
       .Body.toString()
   )
   console.log(`sdkGeneration: ${inspectStringify(sdkGeneration)}`)
@@ -207,8 +208,8 @@ async function handler (event, context) {
   while (true) {
     const listObjectsResult = await exports.s3.listObjectsV2(
       token != null
-        ? { Bucket: bucketName, Prefix: 'catalog/', ContinuationToken: token }
-        : { Bucket: bucketName, Prefix: 'catalog/' }
+        ? { Bucket: bucketName, Prefix: 'catalog/', ContinuationToken: token, ExpectedBucketOwner: process.env.SourceAccount }
+        : { Bucket: bucketName, Prefix: 'catalog/', ExpectedBucketOwner: process.env.SourceAccount }
     ).promise()
 
     for (const file of listObjectsResult.Contents) {
@@ -234,7 +235,8 @@ async function handler (event, context) {
     Bucket: bucketName,
     Key: 'catalog.json',
     Body: JSON.stringify(catalog),
-    ContentType: 'application/json'
+    ContentType: 'application/json',
+    ExpectedBucketOwner: process.env.SourceAccount
   }
 
   await exports.s3.upload(params).promise()

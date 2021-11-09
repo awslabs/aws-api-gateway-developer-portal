@@ -156,14 +156,14 @@ async function uploadFile (file, body) {
   console.log('upload bucket: ', process.env.StaticBucketName)
   console.log('upload key: ', file)
   console.log('upload body length: ', body.byteLength)
-  await util.s3.upload({ Bucket: process.env.StaticBucketName, Key: file, Body: body }).promise()
+  await util.s3.upload({ Bucket: process.env.StaticBucketName, Key: file, Body: body, ExpectedBucketOwner: process.env.SourceAccount }).promise()
   await catalogUpdate()
 }
 
 async function deleteFile (file) {
   console.log('remove bucket: ', process.env.StaticBucketName)
   console.log('remove key: ', file)
-  await util.s3.deleteObject({ Bucket: process.env.StaticBucketName, Key: file }).promise()
+  await util.s3.deleteObject({ Bucket: process.env.StaticBucketName, Key: file, ExpectedBucketOwner: process.env.SourceAccount }).promise()
   await catalogUpdate()
 }
 

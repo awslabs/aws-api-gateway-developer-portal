@@ -9,16 +9,20 @@ const cloudformation = new AWS.CloudFormation({ apiVersion: '2010-05-15' })
 const cognitoIdp = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-18' })
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
 const dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10' })
+const sts = new AWS.STS({ apiVersion: '2011-06-15' })
 
 // Using newline-delimited JSON to reduce memory requirements in case the user list is
 // sufficiently large.
 async function uploadJsonStream ({ event, file, hwm }, init) {
+  const callerIdentity = await sts.getCallerIdentity({}).promise()
+
   console.log(`Creating stream to s3://${event.Bucket}/${file}`)
   const uploadStream = new PassThrough({ writableHighWaterMark: hwm })
   const uploadPromise = s3.upload({
     Bucket: event.Bucket,
     Key: file,
-    Body: uploadStream
+    Body: uploadStream,
+    ExpectedBucketOwner: callerIdentity.Account
   }).promise()
 
   try {
