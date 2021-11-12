@@ -203,13 +203,15 @@ describe('handler', () => {
     setMock(index.s3, 'getObject', opts => promiser({ Body: Buffer.from(JSON.stringify(files[opts.Key])) }))
     setMock(index.s3, 'upload', () => promiser())
     setEnv('BucketName', 'TestBucket')
+    setEnv('SourceAccount', '123412341234')
 
     await index.handler({})
     expect(index.s3.upload).toBeCalledWith({
       Bucket: 'TestBucket',
       Key: 'catalog.json',
       Body: JSON.stringify(expectedCatalog),
-      ContentType: 'application/json'
+      ContentType: 'application/json',
+      ExpectedBucketOwner: '123412341234'
     })
   })
 })

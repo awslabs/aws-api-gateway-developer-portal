@@ -19,7 +19,8 @@ exports.idempotentSdkGenerationUpdate = async (parity, id, res) => {
   const sdkGeneration =
     JSON.parse((await util.s3.getObject({
       Bucket: process.env.StaticBucketName,
-      Key: 'sdkGeneration.json'
+      Key: 'sdkGeneration.json',
+      ExpectedBucketOwner: process.env.SourceAccount
     }).promise()).Body)
 
   if (sdkGeneration[id] !== parity) {
@@ -28,7 +29,8 @@ exports.idempotentSdkGenerationUpdate = async (parity, id, res) => {
     await util.s3.upload({
       Bucket: process.env.StaticBucketName,
       Key: 'sdkGeneration.json',
-      Body: JSON.stringify(sdkGeneration)
+      Body: JSON.stringify(sdkGeneration),
+      ExpectedBucketOwner: process.env.SourceAccount
     }).promise()
 
     // call catalogUpdater to build a fresh catalog.json that includes changes from sdkGeneration.json

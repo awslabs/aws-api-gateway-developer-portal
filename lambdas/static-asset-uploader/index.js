@@ -65,7 +65,8 @@ function determineContentType (filePath) {
  */
 async function cleanS3Bucket (bucketName) {
   const result = await s3.listObjectsV2({
-    Bucket: bucketName
+    Bucket: bucketName,
+    ExpectedBucketOwner: process.env.SourceAccount
   }).promise()
 
   console.log(`result: ${inspectStringify(result)}`)
@@ -80,7 +81,8 @@ async function cleanS3Bucket (bucketName) {
       Bucket: bucketName,
       Delete: {
         Objects: keys
-      }
+      },
+      ExpectedBucketOwner: process.env.SourceAccount
     }).promise()
     console.log(`deleteObjects result: ${inspectStringify(result)}`)
   }
@@ -94,7 +96,7 @@ async function cleanS3Bucket (bucketName) {
  */
 async function createCatalogDirectory (staticBucketName) {
   try {
-    await s3.upload({ Bucket: staticBucketName, Key: 'catalog/', Body: '' }).promise()
+    await s3.upload({ Bucket: staticBucketName, Key: 'catalog/', Body: '', ExpectedBucketOwner: process.env.SourceAccount }).promise()
   } catch (err) {
     console.log('Error creating "catalog" directory', err)
   }
@@ -108,11 +110,11 @@ async function createCatalogDirectory (staticBucketName) {
  */
 async function createSdkGenerationFile (staticBucketName) {
   try {
-    return await s3.headObject({ Bucket: staticBucketName, Key: 'sdkGeneration.json' }).promise()
+    return await s3.headObject({ Bucket: staticBucketName, Key: 'sdkGeneration.json', ExpectedBucketOwner: process.env.SourceAccount }).promise()
   } catch (_) {
     // assume it's a NotFound error, and upload a new version
     console.log('Uploading sdkGeneration.json since it seems to not exist')
-    const params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}' }
+    const params = { Bucket: staticBucketName, Key: 'sdkGeneration.json', Body: '{}', ExpectedBucketOwner: process.env.SourceAccount }
     return s3.upload(params).promise()
   }
 }
@@ -171,7 +173,8 @@ class State {
       Bucket: bucketName,
       Key: 'config.js',
       Body: Buffer.from('window.config=' + JSON.stringify(configObject)),
-      ContentType: 'application/javascript'
+      ContentType: 'application/javascript',
+      ExpectedBucketOwner: process.env.SourceAccount
     }
     const options = {}
 
@@ -205,7 +208,8 @@ class State {
         Bucket: bucketName,
         Key: sanitizeFilePath(generalizeFilePath(filePath)),
         Body: readResults,
-        ContentType: determineContentType(filePath)
+        ContentType: determineContentType(filePath),
+        ExpectedBucketOwner: process.env.SourceAccount
       }
       const options = {}
 
@@ -218,7 +222,8 @@ class State {
         Bucket: params.Bucket,
         Key: params.Key,
         BodyLength: params.Body.byteLength,
-        ContentType: params.ContentType
+        ContentType: params.ContentType,
+        ExpectedBucketOwner: params.ExpectedBucketOwner
       })
       uploadPromises.push(s3.upload(params, options).promise())
     } catch (error) {

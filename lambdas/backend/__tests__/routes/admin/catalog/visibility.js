@@ -405,6 +405,7 @@ describe('POST /admin/catalog/visibility', () => {
     util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myBucket'
+    process.env.SourceAccount = '123412341234'
 
     await adminCatalogVisibility.post(req, mockResponseObject)
 
@@ -422,7 +423,8 @@ describe('POST /admin/catalog/visibility', () => {
       Key: 'catalog/a1b2c3_prod.json',
       Body: Buffer.from(JSON.stringify({
         info: { title: 'swagger document' }
-      }))
+      })),
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -443,6 +445,7 @@ describe('POST /admin/catalog/visibility', () => {
     util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myBucket'
+    process.env.SourceAccount = '123412341234'
 
     await adminCatalogVisibility.post(req, mockResponseObject)
 
@@ -460,7 +463,8 @@ describe('POST /admin/catalog/visibility', () => {
       Key: 'catalog/unsubscribable_a1b2c3_prod.json',
       Body: Buffer.from(JSON.stringify({
         info: { title: 'swagger document' }
-      }))
+      })),
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -475,13 +479,15 @@ describe('POST /admin/catalog/visibility', () => {
     util.lambda.invoke = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myPail'
+    process.env.SourceAccount = '123412341234'
 
     await adminCatalogVisibility.post(req, mockResponseObject)
 
     expect(util.s3.upload).toHaveBeenCalledWith({
       Bucket: 'myPail',
       Key: `catalog/${hash({ info: { title: 'swagger document' } })}.json`,
-      Body: Buffer.from(JSON.stringify({ info: { title: 'swagger document' } }))
+      Body: Buffer.from(JSON.stringify({ info: { title: 'swagger document' } })),
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -531,16 +537,19 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
     util.s3.deleteObject = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myOtherBucket'
+    process.env.SourceAccount = '123412341234'
 
     await adminCatalogVisibility.delete(req, mockResponseObject)
 
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
-      Key: 'catalog/unsubscribable_a1b2c3_prod.json'
+      Key: 'catalog/unsubscribable_a1b2c3_prod.json',
+      ExpectedBucketOwner: '123412341234'
     })
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
-      Key: 'catalog/a1b2c3_prod.json'
+      Key: 'catalog/a1b2c3_prod.json',
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -554,16 +563,19 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
     util.s3.deleteObject = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'myOtherBucket'
+    process.env.SourceAccount = '123412341234'
 
     await adminCatalogVisibility.delete(req, mockResponseObject)
 
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
-      Key: 'catalog/unsubscribable_a1b2c3_unmatched.json'
+      Key: 'catalog/unsubscribable_a1b2c3_unmatched.json',
+      ExpectedBucketOwner: '123412341234'
     })
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'myOtherBucket',
-      Key: 'catalog/a1b2c3_unmatched.json'
+      Key: 'catalog/a1b2c3_unmatched.json',
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)
@@ -577,12 +589,14 @@ describe('DELETE /admin/catalog/visibility/:id', () => {
     util.s3.deleteObject = jest.fn().mockReturnValue(promiser())
 
     process.env.StaticBucketName = 'anotherBucket'
+    process.env.SourceAccount = '123412341234'
 
     await adminCatalogVisibility.delete(req, mockResponseObject)
 
     expect(util.s3.deleteObject).toHaveBeenCalledWith({
       Bucket: 'anotherBucket',
-      Key: 'catalog/somebighash123456.json'
+      Key: 'catalog/somebighash123456.json',
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(mockResponseObject.status).toHaveBeenCalledWith(200)

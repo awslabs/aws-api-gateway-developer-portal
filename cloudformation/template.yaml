@@ -1253,6 +1253,7 @@ Resources:
           AdminsGroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
           RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
           DevelopmentMode: !Ref DevelopmentMode
+          SourceAccount: !Ref AWS::AccountId
       # Adds the API as a trigger
       Events:
         ProxyApiRoot:
@@ -1714,6 +1715,7 @@ Resources:
       Environment:
         Variables:
           BucketName: !Ref ArtifactsS3BucketName
+          SourceAccount: !Ref AWS::AccountId
       Layers:
         - !Ref LambdaCommonLayer
 
@@ -1738,6 +1740,7 @@ Resources:
       Environment:
         Variables:
           StaticBucketName: !Ref ArtifactsS3BucketName
+          SourceAccount: !Ref AWS::AccountId
       Layers:
         - !Ref LambdaCommonLayer
 
@@ -2074,6 +2077,7 @@ Resources:
           RegisteredGroup: !Ref CognitoRegisteredGroup
           CustomersTable: !Ref CustomersTable
           FeedbackTable: !If [EnableFeedbackSubmission, !Ref FeedbackTable, !Ref AWS::NoValue]
+          SourceAccount: !Ref AWS::AccountId
       
 
 Outputs:
