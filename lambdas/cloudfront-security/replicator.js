@@ -52,16 +52,16 @@ exports.handler = async (event, context) => {
       if (event.RequestType === 'Create') {
         console.log('Creating function')
         const createResult = await lambdaEdge.createFunction({
-            Code: {
-              ZipFile: zipped
-            },
-            Description: '',
-            FunctionName: functionName,
-            Handler: 'index.handler',
-            MemorySize: 128,
-            Role: event.ResourceProperties.RoleArn,
-            Runtime: 'nodejs12.x',
-            Timeout: 1
+          Code: {
+            ZipFile: zipped
+          },
+          Description: '',
+          FunctionName: functionName,
+          Handler: 'index.handler',
+          MemorySize: 128,
+          Role: event.ResourceProperties.RoleArn,
+          Runtime: 'nodejs12.x',
+          Timeout: 1
         }).promise()
         await lambdaEdge.waitFor('functionExists', { FunctionName: functionName }).promise()
         await lambdaEdge.waitFor('functionActive', { FunctionName: functionName, $waiter: { delay: 2, maxAttempts: 5 } }).promise()
