@@ -1832,6 +1832,7 @@ Resources:
             Action:
               - lambda:CreateFunction
               - lambda:GetFunction
+              - lambda:GetFunctionConfiguration
               - lambda:UpdateFunctionCode
               - lambda:PublishVersion
             Resource: arn:aws:lambda:*:*:*
