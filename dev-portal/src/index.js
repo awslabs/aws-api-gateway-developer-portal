@@ -15,7 +15,6 @@ import 'semantic-ui-css/semantic.css'
 
 // pages
 import Home from 'pages/Home'
-import GettingStarted from 'pages/GettingStarted'
 import Dashboard from 'pages/Dashboard'
 import Apis from 'pages/Apis'
 import { Admin } from 'pages/Admin'
@@ -60,7 +59,6 @@ export const AdminRoute = ({ component: Component, ...rest }) => (
 
 // To shut up a dev warning
 const HomeWrap = props => <Home {...props} />
-const GettingStartedWrap = props => <GettingStarted {...props} />
 const DashboardWrap = props => <Dashboard {...props} />
 
 class App extends React.Component {
@@ -97,7 +95,6 @@ class App extends React.Component {
                 return <Redirect to='/' />
               }}
             />
-            <Route path='/getting-started' component={GettingStartedWrap} />
             <RegisteredRoute path='/dashboard' component={DashboardWrap} />
             <AdminRoute path='/admin' component={Admin} />
             <Route exact path='/apis' component={Apis} />

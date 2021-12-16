@@ -19,9 +19,3 @@ test('Page renders', async () => {
   const { baseElement } = renderWithRouter(<HomePage />)
   expect(baseElement).toBeTruthy()
 })
-
-test('Get Started link is visible', async () => {
-  const rendered = renderWithRouter(<HomePage />)
-  const gettingStartedLink = await rendered.findByTestId('gettingStartedLink')
-  expect(gettingStartedLink).toBeVisible()
-})
