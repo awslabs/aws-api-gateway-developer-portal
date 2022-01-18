@@ -1,6 +1,6 @@
 {
   "name": "dev-portal",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "private": true,
   "dependencies": {
     "chart.js": "^2.9.4",
