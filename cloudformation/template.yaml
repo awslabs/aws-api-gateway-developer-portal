@@ -1708,7 +1708,7 @@ Resources:
     Properties:
       CodeUri: ../lambdas/catalog-updater
       Handler: index.handler
-      MemorySize: 128
+      MemorySize: 512
       Role: !GetAtt CatalogUpdaterLambdaExecutionRole.Arn
       Runtime: nodejs12.x
       Timeout: 20
