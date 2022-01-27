@@ -8,7 +8,7 @@
     "front-matter": "^3.0.0",
     "jwt-decode": "^2.2.0",
     "lodash": "^4.17.21",
-    "marked": "^2.0.4",
+    "marked": "^4.0.10",
     "mobx": "^5.15.4",
     "mobx-react": "^6.2.2",
     "object-hash": "^2.0.3",
