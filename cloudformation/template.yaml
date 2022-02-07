@@ -1,8 +1,11 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-
-Description: My Dev Portal Stack
+# The below 3 lines ensure _Stage_ stage is not created as part of the deployment. Only _prod_ stage is created
+Globals:
+  Api:
+    OpenApiVersion: 3.0.3
+Description: Flowcast Dev Portal Stack
 Metadata:
   cfn-lint:
     config:
@@ -1923,6 +1926,7 @@ Resources:
             S3OriginConfig:
              OriginAccessIdentity: !Sub >-
                origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
+        PriceClass: 'PriceClass_100'
 
   CustomDomainDistributionAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
