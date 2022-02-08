@@ -1,10 +1,15 @@
 /* Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0*/
 
+@font-face {
+    font-family: 'WorkSans';
+    src: local('WorkSans'), url(./fonts/WorkSans-Regular.otf) format('opentype');
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: WorkSans;
 }
 
 h1, h2, h3, h4, h5 {

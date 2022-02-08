@@ -57,7 +57,7 @@ export default observer(function ApisMenu (props) {
   }
 
   return (
-    <Sidebar>
+    <Sidebar >
       <SidebarHeader
         as={Link}
         className='item'
@@ -68,7 +68,7 @@ export default observer(function ApisMenu (props) {
         Search APIs
       </SidebarHeader>
 
-      <SidebarHeader>APIs</SidebarHeader>
+      <SidebarHeader >APIs</SidebarHeader>
 
       <>
         {apiGroupList.map(({ apis, title, group, active }) => (

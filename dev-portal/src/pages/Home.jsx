@@ -18,7 +18,7 @@ import { Header, Segment, Container, Image, Button } from 'semantic-ui-react'
 export const HomePage = observer(() => (
   <>
     <Segment vertical textAlign='center' style={{ color: 'whitesmoke', backgroundColor: 'slategray', padding: '40px 0px', margin: '0px !important' }}>
-      <Image centered size='small' src='/custom-content/home-image.png' />
+      <Image centered src='/custom-content/home-image.png' />
       <Header as='h1' style={{ color: 'whitesmoke' }}>{fragments.Home.header}</Header>
       <p>{fragments.Home.tagline}</p>
       <Link to='/getting-started' data-testid='gettingStartedLink'>

@@ -13,7 +13,7 @@ import SidebarHeader from 'components/Sidebar/SidebarHeader'
 import MenuLink from 'components/MenuLink'
 
 export const SideNav = observer(() => isAdmin() && (
-  <Sidebar>
+  <Sidebar >
     <SidebarHeader>Admin</SidebarHeader>
     <MenuLink to='/admin/apis'>APIs</MenuLink>
     <MenuLink>
