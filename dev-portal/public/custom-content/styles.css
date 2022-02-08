@@ -3,3 +3,12 @@
 Add your custom styling here. Note that styling in the source is loaded AFTER this sheet, and has higher priority. Make sure your styles here don't collide with source styles.
 
 */
+#root .swagger-ui .opblock.opblock-options{ display: none; }
+
+.ui.borderless.inverted.stackable.attached.menu {
+    background-color: slategray;
+}
+
+.ui.attached.inverted.menu {
+    background-color: slategray;
+}
