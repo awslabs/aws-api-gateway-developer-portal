@@ -40,6 +40,7 @@ Metadata:
         Label:
           default: "Custom Domain Configuration"
         Parameters:
+          - CustomDomainSubnet
           - CustomDomainName
           - CustomDomainNameAcmCertArn
           - UseRoute53Nameservers
@@ -121,6 +122,11 @@ Parameters:
   #   Type: String
   #   Description: Doesn't yet do anything. Oh well.
   #   Default: ''
+
+  CustomDomainSubnet:
+    Type: String
+    Description: Optionally provide a custom domain Subnet, where to deploy the Custom Domain to create a developer portal at that domain name (provide with the format foo.bar.net). Leave blank to create a developer portal without a custom domain name. Standing up a developer portal stack with a custom domain name will take significantly longer than without.
+    Default: ''
 
   CustomDomainName:
     Type: String
@@ -1931,17 +1937,17 @@ Resources:
       CloudFrontOriginAccessIdentityConfig:
         Comment: !Sub 'CloudFront OAI for ${CustomDomainName}'
 
-  CustomDomainHostedZone:
-    Type: AWS::Route53::HostedZone
-    Condition: UseRoute53
-    Properties:
-      Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+#  CustomDomainHostedZone:
+#    Type: AWS::Route53::HostedZone
+#    Condition: UseRoute53
+#    Properties:
+#      Name: !Join [ '', [ !Ref CustomDomainSubnet, '.' ] ]
 
   CustomDomainRecordSet:
     Type: AWS::Route53::RecordSetGroup
     Condition: UseRoute53
     Properties:
-      HostedZoneName: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
+      HostedZoneName: !Join [ '', [ !Ref CustomDomainSubnet, '.' ] ]
       RecordSets:
         - Name: !Join [ '', [ !Ref CustomDomainName, '.' ] ]
           Type: A
