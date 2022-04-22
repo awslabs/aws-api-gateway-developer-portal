@@ -1,0 +1,162 @@
+version: 2.1
+
+# -----------------------------------------------------------------------
+# Tips for working in this file:
+#
+# - Download and use the circleci CLI for testing and validation
+# - https://circleci.com/docs/2.0/local-cli/
+#
+# - Collapse this file in VSCODE with the Fold-All command for readability
+# -----------------------------------------------------------------------
+
+description: ctg-aws-devportal-service
+
+references:
+  master_workflow_filters: &master_workflow_filters
+    branches:
+      only: main
+
+# -----------------------------------------------------------------------
+# CI docker images
+# -----------------------------------------------------------------------
+executors:
+  nodejs:
+    docker:
+      - image: 880659461790.dkr.ecr.us-east-1.amazonaws.com/rbi/nodejs:14.17.3.0
+        aws_auth: &ecr_auth
+          aws_access_key_id: $ECR_AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $ECR_AWS_SECRET_ACCESS_KEY
+
+# # -----------------------------------------------------------------------
+# # Pipeline workflow parameters for workflows triggered by the API
+# # -----------------------------------------------------------------------
+# parameters:
+#   trigger:
+#     type: enum
+#     enum: ['default', 'pr-closed', 'update-packages']
+#     default: 'default'
+#   version:
+#     type: string
+#     default: ''
+
+# -----------------------------------------------------------------------
+# Reusable Commands
+#
+# In general, all commands execute from /home/circleci/project
+# -----------------------------------------------------------------------
+commands:
+  # Node Module cache commands
+  # restore_yarn_cache:
+  #   steps:
+  #     - restore_cache:
+  #         keys:
+  #           - yarn-cache-v1-{{ checksum "yarn.lock" }}
+  save_yarn_cache:
+    steps:
+      - save_cache:
+          name: Save node_modules
+          key: yarn-cache-v1-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+
+  # Build artifacts cache commands
+
+# -----------------------------------------------------------------------
+# Workflow Jobs
+#
+# In general, jobs should execute from /home/circleci/project
+# -----------------------------------------------------------------------
+jobs:
+  # -----------------------------------------------------------------------
+  # Install and cache node_modules for a workspace
+  # Build the artifacts for this CI run
+  # -----------------------------------------------------------------------
+  build:
+    executor: nodejs
+    steps:
+      - checkout
+
+
+  # -----------------------------------------------------------------------
+  # Install and cache node_modules for a workspace
+  # Build the artifacts for this CI run
+  # -----------------------------------------------------------------------
+  tag:
+    executor: nodejs
+    parameters:
+      stage:
+        type: string
+    steps:
+      - checkout
+      - run:
+          command: |
+            git config user.email "rbi.ctg.eng@gmail.com"
+            git config user.name "CircleCI"
+            yarn release << parameters.stage >>
+
+workflows:
+  # Pull Requests
+  # pull-request:
+  #   jobs:
+  #     - build:
+  #         context: rbi.dev
+  #         filters: *pr_workflow_filters
+  #     - test:
+  #         context: rbi.dev
+  #         requires:
+  #           - build
+  #     - test-integration:
+  #         context: rbi.dev
+  #         requires:
+  #           - build
+  #     - sonarcloud:
+  #         context: SonarCloud
+  #         requires:
+  #           - test
+  #     - release:
+  #         name: release-preview-<< matrix.region >>
+  #         context: rbi.dev
+  #         matrix:
+  #           parameters:
+  #             region: [us-east-1]
+  #         requires:
+  #           - test
+  #           - test-integration
+  #     - terraform:
+  #         name: deploy-preview-<< matrix.brand >>
+  #         context: rbi.dev
+  #         stage: dev
+  #         command: apply
+  #         matrix:
+  #           parameters:
+  #             workspace: [service]
+  #             region: [us-east-1]
+  #             brand: [bk]
+  #         requires:
+  #           - release-preview-<< matrix.region >>
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - /^rbibot\/rbilabs\/.*/
+  #               - /^dependabot\/.*/
+  #     - test-e2e:
+  #         context: rbi.dev
+  #         requires:
+  #           - terraform
+  #     - automerge:
+  #         context: rbi.dev
+  #         filters: &rbi-bot
+  #           branches:
+  #             only:
+  #               - /^rbibot\/rbilabs\/.*/
+  #         requires:
+  #           - sonarcloud
+
+  # ---------------------------------------------------------
+  # Dev Deployment
+  # ---------------------------------------------------------
+  master:
+    jobs:
+      - build:
+          context: rbi.dev
+          filters: *master_workflow_filters
