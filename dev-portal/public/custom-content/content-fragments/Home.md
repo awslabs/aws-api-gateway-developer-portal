@@ -6,11 +6,18 @@ gettingStartedButton: Get Started
 apiListButton: Our APIs
 ---
 
-### EXPLORE AND BUILD
-        
-Read the Getting Started guide to learn how to hit the ground running to get an application up and running in no time.
+___________________________________________________________________________________________________________________________________________________________________________________________
 
-See what APIs we have to offer, including extensive documentation, and generated SDKs.
+### Welcome to Munich Airport Open API.
 
-Sign in to manage your subscriptions, see your current usage, get your API Key, and test against our live API.
-Test
+Please klick on „Getting Started“, if you would like to know how to make a request via a REST client or our API Playground. 
+
+___________________________________________________________________________________________________________________________________________________________________________________________
+
+### Willkommen beim Flughafen München Open API 
+
+Bitte klicken Sie auf „Getting Started“, wenn Sie wissen möchten, wie Sie eine Anfrage über einen REST-Client oder unseren API Playground stellen können.
+
+___________________________________________________________________________________________________________________________________________________________________________________________
+
+[Impresssum](https://www.munich-airport.de/impressum-375921)____________[Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)___________[Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datenschutz-376066)
