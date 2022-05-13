@@ -20,4 +20,4 @@ Bitte klicken Sie auf „Getting Started“, wenn Sie wissen möchten, wie Sie e
 
 ___________________________________________________________________________________________________________________________________________________________________________________________
 
-[Impresssum](https://www.munich-airport.de/impressum-375921)____________[Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)___________[Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datenschutz-376066)
+[Impresssum](https://www.munich-airport.de/impressum-375921)   |      [Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)      |      [Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datenschutz-376066)
