@@ -24,4 +24,4 @@ Für jede API wird in der Regel ein Nutzungslimit für jeden API-Schlüssel fest
 
 -----------------------------------------------------------------------------------------------------------------
 
-[Impresssum](https://www.munich-airport.de/impressum-375921)   |      [Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)      |      [Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datensch
+[Impresssum](https://www.munich-airport.de/impressum-375921)   |      [Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)      |      [Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datensch)
