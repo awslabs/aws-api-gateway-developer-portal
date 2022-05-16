@@ -20,6 +20,6 @@ Der API Key ist jederzeit in „My Dashboard“ zu finden.
 Überwachen Sie die Nutzung
 Für jede API wird in der Regel ein Nutzungslimit für jeden API-Schlüssel festgelegt. Sie können Ihre Nutzung jederzeit auf Ihrem Dashboard überwachen.
 
-[Impresssum](https://www.munich-airport.de/impressum-375921)____________[Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)___________[Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datenschutz-376066)
+[Impresssum](https://www.munich-airport.de/impressum-375921)____________ [Nutzungsbestimmungen](https://www.munich-airport.de/nutzungsbestimmungen-783787)___________ [Datenschutz](https://www.munich-airport.de/datenschutzerklaerung-hinweise-zum-datenschutz-376066)
 
 -----------------------------------------------------------------------------------------------------------------
