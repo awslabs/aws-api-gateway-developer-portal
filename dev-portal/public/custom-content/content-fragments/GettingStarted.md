@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------
-Getting started: 
+### Getting started:
 
 Create an account and subscribe to APIs
 To use any of our APIs, please create a developer account. A developer account provides an API Key for accessing our APIs, a playground for testing and usage metrics. Create or sign in by using the buttons on the top right side.
