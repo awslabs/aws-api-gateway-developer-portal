@@ -4,6 +4,7 @@ header: Developer Portal
 tagline: Your gateway to the data.
 gettingStartedButton: Get Started
 apiListButton: Our APIs
+background: !(H:\Abteilung\ITPC\API\15.png)
 ---
 
 ___________________________________________________________________________________________________________________________________________________________________________________________
