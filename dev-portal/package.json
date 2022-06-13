@@ -18,7 +18,7 @@
     "react-router-dom": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.87.3",
-    "swagger-ui": "git+https://github.com/awslabs/swagger-ui.git#apigw-fork-v4",
+    "swagger-ui": "github:awslabs/swagger-ui#apigw-fork-v4",
     "yamljs": "^0.3.0"
   },
   "scripts": {
@@ -38,7 +38,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^4.0.0",
     "@testing-library/react": "^8.0.4",
-    "node-fetch": "^2.6.1",
-    "react-scripts": "^4.0.3"
+    "node-fetch": "^2.6.7",
+    "react-scripts": "^5.0.0"
   }
 }
