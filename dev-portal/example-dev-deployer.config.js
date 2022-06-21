@@ -9,6 +9,9 @@
 const n = 0
 
 module.exports = {
+  // Optional
+  // region: 'us-west-1',
+
   buildAssetsBucket: 'YOUR_LAMBDA_ARTIFACTS_BUCKET_NAME',
 
   // All of these are parametric over `n` so that if you need to have multiple stacks deployed

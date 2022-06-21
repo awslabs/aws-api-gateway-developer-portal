@@ -12,6 +12,7 @@ const adminsGroup = process.env.AdminsGroup
 const registeredGroup = process.env.RegisteredGroup
 const customersTableName = process.env.CustomersTable
 const feedbackTableName = process.env.FeedbackTable
+const sourceAccount = process.env.SourceAccount
 
 function readMigrateLines (event, file) {
   console.log('Reading lines from migration file')
@@ -19,7 +20,8 @@ function readMigrateLines (event, file) {
   return new Promise((resolve, reject) => {
     const downloadReq = s3.getObject({
       Bucket: event.Bucket,
-      Key: file
+      Key: file,
+      ExpectedBucketOwner: sourceAccount
     })
 
     downloadReq.on('httpHeaders', (statusCode, httpHeaders) => {

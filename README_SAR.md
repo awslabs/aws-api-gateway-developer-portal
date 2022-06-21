@@ -1,6 +1,6 @@
 ### Introduction
 The Serverless Developer Portal is an application that you use for developer engagement by making your API Gateway APIs available to your customers through self-service discovery of those APIs. Your customers can use the developer portal to browse API documentation, register for – and immediately receive – their own API key that can be used to build applications, test published APIs, and monitor their own API usage.
-![Alt text](https://raw.githubusercontent.com/awslabs/aws-api-gateway-developer-portal/staging/screen-home.png)
+![Home screen](https://raw.githubusercontent.com/awslabs/aws-api-gateway-developer-portal/main/screen-home.png)
 
 ### How to use:
 #### To deploy

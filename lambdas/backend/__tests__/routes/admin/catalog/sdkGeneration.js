@@ -67,13 +67,15 @@ describe('idempotentSdkGenerationUpdate', () => {
 
     process.env.StaticBucketName = 'staticBucketName'
     process.env.CatalogUpdaterFunctionArn = 'somebigfunctionarn'
+    process.env.SourceAccount = '123412341234'
 
     await sdkGeneration.idempotentSdkGenerationUpdate(true, 'apiid_stagename', res)
 
     expect(util.s3.getObject).toHaveBeenCalledTimes(1)
     expect(util.s3.getObject).toHaveBeenCalledWith({
       Bucket: 'staticBucketName',
-      Key: 'sdkGeneration.json'
+      Key: 'sdkGeneration.json',
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(util.s3.upload).toHaveBeenCalledTimes(1)
@@ -83,7 +85,8 @@ describe('idempotentSdkGenerationUpdate', () => {
       Body: JSON.stringify({
         apiid_stagename: true,
         otherapiid_otherstagename: false
-      })
+      }),
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(util.lambda.invoke).toHaveBeenCalledTimes(1)
@@ -111,13 +114,15 @@ describe('idempotentSdkGenerationUpdate', () => {
 
     process.env.StaticBucketName = 'staticBucketName'
     process.env.CatalogUpdaterFunctionArn = 'somebigfunctionarn'
+    process.env.SourceAccount = '123412341234'
 
     await sdkGeneration.idempotentSdkGenerationUpdate(true, 'apiid_stagename', res)
 
     expect(util.s3.getObject).toHaveBeenCalledTimes(1)
     expect(util.s3.getObject).toHaveBeenCalledWith({
       Bucket: 'staticBucketName',
-      Key: 'sdkGeneration.json'
+      Key: 'sdkGeneration.json',
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(util.s3.upload).toHaveBeenCalledTimes(1)
@@ -127,7 +132,8 @@ describe('idempotentSdkGenerationUpdate', () => {
       Body: JSON.stringify({
         otherapiid_otherstagename: false,
         apiid_stagename: true
-      })
+      }),
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(util.lambda.invoke).toHaveBeenCalledTimes(1)
@@ -156,13 +162,15 @@ describe('idempotentSdkGenerationUpdate', () => {
 
     process.env.StaticBucketName = 'staticBucketName'
     process.env.CatalogUpdaterFunctionArn = 'somebigfunctionarn'
+    process.env.SourceAccount = '123412341234'
 
     await sdkGeneration.idempotentSdkGenerationUpdate(false, 'apiid_stagename', res)
 
     expect(util.s3.getObject).toHaveBeenCalledTimes(1)
     expect(util.s3.getObject).toHaveBeenCalledWith({
       Bucket: 'staticBucketName',
-      Key: 'sdkGeneration.json'
+      Key: 'sdkGeneration.json',
+      ExpectedBucketOwner: '123412341234'
     })
 
     expect(util.s3.upload).toHaveBeenCalledTimes(0)

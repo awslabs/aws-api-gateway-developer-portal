@@ -1,5 +1,5 @@
 const index = require('../index')
-const promiser = require('../../setup-jest').promiser
+const { promiser, bindEnv } = require('../../setup-jest')
 
 describe('sanitizeFilePath', () => {
   test('removes all leading slashes from a filepath', () => {
@@ -41,13 +41,18 @@ describe('determineContentType', () => {
 })
 
 describe('cleanS3Bucket', () => {
+  const setEnv = bindEnv()
+
   test('should delete all the contents of a bucket', async () => {
     const expectedDeleteObjectsRequest = {
       Bucket: 'bucketName',
       Delete: {
         Objects: [{ Key: 'static/asset.js' }, { Key: 'README' }]
-      }
+      },
+      ExpectedBucketOwner: '123412341234'
     }
+
+    setEnv('SourceAccount', '123412341234')
 
     index.s3.listObjectsV2 = jest.fn().mockReturnValue(promiser({
       Contents: [
@@ -61,12 +66,14 @@ describe('cleanS3Bucket', () => {
     await index.cleanS3Bucket('bucketName')
 
     expect(index.s3.listObjectsV2)
-      .toHaveBeenNthCalledWith(1, { Bucket: 'bucketName' })
+      .toHaveBeenNthCalledWith(1, { Bucket: 'bucketName', ExpectedBucketOwner: '123412341234' })
     expect(index.s3.deleteObjects)
       .toHaveBeenNthCalledWith(1, expectedDeleteObjectsRequest)
   })
 
   test('should safely handle attempting to delete an empty bucket', async () => {
+    setEnv('SourceAccount', '123412341234')
+
     index.s3.listObjectsV2 =
             jest.fn().mockReturnValue(promiser({ Contents: [] }))
 
@@ -77,19 +84,24 @@ describe('cleanS3Bucket', () => {
     await promise
 
     expect(promise).toEqual(expect.any(Promise))
-    expect(index.s3.listObjectsV2).toHaveBeenNthCalledWith(1, { Bucket: 'bucketName' })
+    expect(index.s3.listObjectsV2).toHaveBeenNthCalledWith(1, { Bucket: 'bucketName', ExpectedBucketOwner: '123412341234' })
     expect(index.s3.deleteObjects).not.toHaveBeenCalled()
   })
 })
 
 describe('createCatalogDirectory', () => {
+  const setEnv = bindEnv()
+
   test('should create the catalog directory', async () => {
+    setEnv('SourceAccount', '123412341234')
+
     const expectedInputs = {
       Bucket: 'bucketName',
       Key: 'catalog/',
       // empty body makes it a "directory" to most S3 clients
       // e.g., the S3 console
-      Body: ''
+      Body: '',
+      ExpectedBucketOwner: '123412341234'
     }
     index.s3.upload = jest.fn().mockReturnValue(promiser('success!'))
 
@@ -134,6 +146,8 @@ describe('notifyCFNThatUploadFailed', () => {
 })
 
 describe('handler', () => {
+  const setEnv = bindEnv()
+
   test('should, on delete, delete the contents of the site assets bucket and the catalog bucket', async () => {
     const event = {
       ResourceProperties: {
@@ -171,8 +185,9 @@ describe('handler', () => {
       test: 'context'
     }
     const state = new index.State(event, context)
+    setEnv('SourceAccount', '123412341234')
+    setEnv('StaticBucketName', 'staticBucketName')
 
-    process.env.StaticBucketName = 'staticBucketName'
     index.createCatalogDirectory = jest.fn().mockResolvedValue()
     state.uploadStaticAssets = jest.fn()
     index.s3.headObject = jest.fn().mockReturnValue(promiser({}))
@@ -185,10 +200,9 @@ describe('handler', () => {
     expect(index.s3.headObject).toHaveBeenCalledTimes(1)
     expect(index.s3.headObject).toHaveBeenCalledWith({
       Bucket: 'staticBucketName',
-      Key: 'sdkGeneration.json'
+      Key: 'sdkGeneration.json',
+      ExpectedBucketOwner: '123412341234'
     })
-
-    delete process.env.StaticBucketName
   })
 
   test('should notify CFN of failure if bucket name is not defined in the event', async () => {

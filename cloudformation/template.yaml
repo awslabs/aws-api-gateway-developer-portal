@@ -194,7 +194,7 @@ Resources:
         - https
         paths:
           # Version marker - please don't delete (this is how we track version usage)
-          /version/{v4_1_0}:
+          /version/{v4_1_1}:
             options:
               consumes:
               - application/json
@@ -1253,6 +1253,7 @@ Resources:
           AdminsGroupName: !Join ['', [!Ref 'AWS::StackName', 'AdminsGroup']]
           RegisteredGroupName: !Sub '${AWS::StackName}-RegisteredGroup'
           DevelopmentMode: !Ref DevelopmentMode
+          SourceAccount: !Ref AWS::AccountId
       # Adds the API as a trigger
       Events:
         ProxyApiRoot:
@@ -1714,6 +1715,7 @@ Resources:
       Environment:
         Variables:
           BucketName: !Ref ArtifactsS3BucketName
+          SourceAccount: !Ref AWS::AccountId
       Layers:
         - !Ref LambdaCommonLayer
 
@@ -1738,6 +1740,7 @@ Resources:
       Environment:
         Variables:
           StaticBucketName: !Ref ArtifactsS3BucketName
+          SourceAccount: !Ref AWS::AccountId
       Layers:
         - !Ref LambdaCommonLayer
 
@@ -1829,6 +1832,7 @@ Resources:
             Action:
               - lambda:CreateFunction
               - lambda:GetFunction
+              - lambda:GetFunctionConfiguration
               - lambda:UpdateFunctionCode
               - lambda:PublishVersion
             Resource: arn:aws:lambda:*:*:*
@@ -2074,7 +2078,8 @@ Resources:
           RegisteredGroup: !Ref CognitoRegisteredGroup
           CustomersTable: !Ref CustomersTable
           FeedbackTable: !If [EnableFeedbackSubmission, !Ref FeedbackTable, !Ref AWS::NoValue]
-
+          SourceAccount: !Ref AWS::AccountId
+      
 
 Outputs:
   WebsiteURL:

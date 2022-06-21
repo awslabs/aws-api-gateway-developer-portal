@@ -42,6 +42,7 @@ exports.cognitoDomainName = getRequired('cognitoDomainName')
 // required (and defaulted) inputs
 exports.samTemplate = getOptionalPath('samTemplate', 'cloudformation/template.yaml')
 exports.packageConfig = getOptionalPath('packageConfig', 'cloudformation/packaged.yaml')
+exports.region = getOptional('region', 'us-east-1')
 exports.customersTableName = getOptional('customersTableName')
 exports.preLoginAccountsTableName = getOptional('preLoginAccountsTableName')
 exports.feedbackTableName = getOptional('feedbackTableName')

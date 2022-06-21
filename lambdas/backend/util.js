@@ -77,7 +77,8 @@ exports.catalog = () => {
   // function when the user updates the catalog. This led to confusing behavior, so I removed it.
   const params = {
     Bucket: process.env.StaticBucketName,
-    Key: 'catalog.json'
+    Key: 'catalog.json',
+    ExpectedBucketOwner: process.env.SourceAccount
   }
 
   console.log(`params: ${JSON.stringify(params, null, 4)}`)
