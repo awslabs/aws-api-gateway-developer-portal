@@ -11,7 +11,7 @@ const writeConfig = require('./internal/write-config.js')
 
 function runTask (task, args = []) {
   return run(
-    'npm', ['run', task, '--', ...args],
+    'npm.cmd', ['run', task, '--', ...args],
     { action: 'dev-portal/ task', target: task, cwd: p('dev-portal') }
   )
 }
