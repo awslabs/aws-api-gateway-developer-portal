@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = {
-  extends: ['react-app', '../.eslintrc.js'],
+  extends: ['react-app'],
   overrides: [
     {
       files: ['.eslintrc.js', './*.js'],

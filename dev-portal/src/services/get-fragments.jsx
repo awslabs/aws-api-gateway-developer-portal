@@ -12,7 +12,7 @@ import { observable } from 'mobx'
 
 // markdown parsing
 import frontmatter from 'front-matter'
-import marked from 'marked'
+import { marked } from 'marked'
 
 export const fragments = observable({})
 

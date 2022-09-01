@@ -34,5 +34,7 @@
     "semver": "^7.3.2",
     "xml-js": "^1.6.11"
   },
-  "dependencies": {}
+  "dependencies": {
+    "util": "^0.12.4"
+  }
 }
