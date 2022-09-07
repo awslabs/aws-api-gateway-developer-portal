@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
           Handler: 'index.handler',
           MemorySize: 128,
           Role: event.ResourceProperties.RoleArn,
-          Runtime: 'nodejs12.x',
+          Runtime: 'nodejs16.x',
           Timeout: 1
         }).promise()
         await lambdaEdge.waitFor('functionExists', { FunctionName: functionName }).promise()
