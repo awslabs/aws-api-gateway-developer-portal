@@ -7,7 +7,7 @@ import React, { useMemo } from 'react'
 import { Button, Header, Image, Container } from 'semantic-ui-react'
 
 // markdown for external docs description
-import marked from 'marked'
+import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
 // services

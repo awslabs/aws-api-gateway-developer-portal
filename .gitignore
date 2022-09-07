@@ -1,10 +1,11 @@
 # top-level and lambda function specific
 /node_modules
 /coverage
-/lambdas/static-asset-uploader/build/config.js
+/lambdas/static-asset-uploader/build
 /lambdas/coverage
 
 # devportal specific
+/dev-portal/build
 
 # we're committing the artifacts, don't need the modules
 # note, though, that we do need our patched version of swagger-ui and not the npm version
@@ -34,3 +35,5 @@ cognito.js
 .vscode
 .eslintcache
 *.iml
+
+
