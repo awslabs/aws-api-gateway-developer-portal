@@ -18,7 +18,7 @@ async function execPipe (name, args = []) {
 
 const exec = (name, args = [], opts = {}) => new Promise(resolve => {
   console.error(blue('[ run cmd ]  ' + [name, ...args].join(' ')))
-  cp.spawn(name, args, { stdio: 'inherit', cwd: root, ...opts })
+  cp.spawn(name, args, { stdio: 'inherit', cwd: root, shell: true, ...opts })
     .on('exit', (status, signal) => resolve({ status, signal }))
     .on('error', error => resolve({ error }))
 })
