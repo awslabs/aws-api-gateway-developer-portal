@@ -1,11 +1,11 @@
 # top-level and lambda function specific
 /node_modules
 /coverage
-/lambdas/static-asset-uploader/build
+!/lambdas/static-asset-uploader/build
 /lambdas/coverage
 
 # devportal specific
-/dev-portal/build
+!/dev-portal/build
 
 # we're committing the artifacts, don't need the modules
 # note, though, that we do need our patched version of swagger-ui and not the npm version
@@ -16,15 +16,12 @@ dev-portal/node_modules/swagger-ui/*
 !dev-portal/node_modules/swagger-ui/package.json
 !dev-portal/node_modules/swagger-ui/dist/
 
-# built artifacts
-/dev-portal/build
-
 # coverage reporting
 /dev-portal/coverage
 
 # details about setup needed for local dev; these are sensitive, do not commit them!
 /dev-portal/deployer.config.js
-/dev-portal/public/config.js
+**/config.js
 
 # misc
 npm-debug.log
