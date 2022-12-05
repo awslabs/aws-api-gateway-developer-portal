@@ -1,3 +1,7 @@
+##### The Serverless Developer Portal is in maintenance mode. During maintenance mode, we will continue to supply bug fixes and security updates.
+
+<br/>
+
 ## Introduction
 [![Build Status](https://travis-ci.org/awslabs/aws-api-gateway-developer-portal.svg?branch=master)](https://travis-ci.org/awslabs/aws-api-gateway-developer-portal)
 
