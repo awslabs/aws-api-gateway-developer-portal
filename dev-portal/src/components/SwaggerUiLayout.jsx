@@ -24,7 +24,7 @@ import { store } from 'services/state.js'
 export const SwaggerLayoutPlugin = () => ({ components: { InfoContainer: InfoReplacement } })
 
 function Markdown ({ source }) {
-  const rendered = useMemo(() => DOMPurify.sanitize(marked(source, {
+  const rendered = useMemo(() => DOMPurify.sanitize(marked.parse(source, {
     headerIds: false,
     silent: true
   })), [source])

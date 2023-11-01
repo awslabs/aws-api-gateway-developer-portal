@@ -39,7 +39,7 @@ function loadHtml (path, fragment) {
 
   window.fetch(path).then(response => response.text().then(text => {
     const parsedMarkdown = frontmatter(text)
-    const html = marked(parsedMarkdown.body, {
+    const html = marked.parse(parsedMarkdown.body, {
       headerPrefix: 'header-',
       silent: true
     })
