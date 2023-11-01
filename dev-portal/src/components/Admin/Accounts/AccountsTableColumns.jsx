@@ -49,7 +49,7 @@ export const IsAdmin = {
 export const DateRegistered = {
   id: 'DateRegistered',
   title: 'Date registered',
-  render: account => formatDate(account.DateRegistered),
+  render: account => account.DateRegistered ? formatDate(account.DateRegistered) : '-',
   ordering: {
     iteratee: 'DateRegistered'
   }
