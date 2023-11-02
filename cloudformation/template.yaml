@@ -630,10 +630,10 @@ Resources:
     Properties:
       BucketName: !Ref DevPortalSiteS3BucketName
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        BlockPublicAcls:  !If [ NotDevelopmentMode, 'true', 'false' ]
+        BlockPublicPolicy: !If [ NotDevelopmentMode, 'true', 'false' ]
+        IgnorePublicAcls: !If [ NotDevelopmentMode, 'true', 'false' ]
+        RestrictPublicBuckets: !If [ NotDevelopmentMode, 'true', 'false' ]
 
   DevPortalSiteS3BucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
@@ -655,10 +655,10 @@ Resources:
     Properties:
       BucketName: !Ref ArtifactsS3BucketName
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        BlockPublicAcls:  !If [ NotDevelopmentMode, 'true', 'false' ]
+        BlockPublicPolicy: !If [ NotDevelopmentMode, 'true', 'false' ]
+        IgnorePublicAcls: !If [ NotDevelopmentMode, 'true', 'false' ]
+        RestrictPublicBuckets: !If [ NotDevelopmentMode, 'true', 'false' ]
       NotificationConfiguration:
         LambdaConfigurations:
           -
