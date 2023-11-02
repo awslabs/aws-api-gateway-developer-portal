@@ -9,10 +9,8 @@ import {
   isAuthenticated,
   isRegistered,
   logout,
-  getLoginRedirectUrl
+  getCognitoUrl
 } from 'services/self'
-
-import { cognitoDomain, cognitoClientId } from '../services/api'
 
 // mobx
 import { observer } from 'mobx-react'
@@ -24,10 +22,6 @@ import { fragments } from 'services/get-fragments'
 import MenuLink from 'components/MenuLink'
 import { store } from 'services/state'
 
-function getCognitoUrl (type) {
-  const redirectUri = getLoginRedirectUrl()
-  return `${cognitoDomain}/${type}?response_type=token&client_id=${cognitoClientId}&redirect_uri=${redirectUri}`
-}
 
 export const NavBar = observer(
   class NavBar extends React.Component {

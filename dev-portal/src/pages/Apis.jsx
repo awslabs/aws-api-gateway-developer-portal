@@ -8,10 +8,10 @@ import SwaggerUI from 'swagger-ui'
 import 'swagger-ui/dist/swagger-ui.css'
 
 // semantic-ui
-import { Container, Header, Icon } from 'semantic-ui-react'
+import { Segment, Button, Container, Header, Icon } from 'semantic-ui-react'
 
 // services
-import { isRegistered } from 'services/self'
+import { isRegistered, getCognitoUrl } from 'services/self'
 import { updateUsagePlansAndApisList, getApi } from 'services/api-catalog'
 
 // components
@@ -72,9 +72,25 @@ export default observer(class ApisPage extends React.Component {
       })
   }
 
+  signIn() {
+    window.location = getCognitoUrl('login');
+  }
+
   render () {
     let errorHeader
     let errorBody
+
+    if (!store.apiKey) {
+      return (
+        <Segment placeholder style={{ margin: '5em' }}>
+          <Header icon>
+            <Icon name='sign-in' />
+            Please sign-in to access the available APIs
+          </Header>
+          <Button positive onClick={this.signIn}>Sign In</Button>
+        </Segment>
+      )
+    }
 
     if (store.apiList.loaded) {
       if (!store.apiList.apiGateway.length && !store.apiList.generic.length) {
