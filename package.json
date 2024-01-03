@@ -35,6 +35,8 @@
     "xml-js": "^1.6.11"
   },
   "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "util": "^0.12.4"
   }
 }
