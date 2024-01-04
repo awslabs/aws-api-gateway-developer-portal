@@ -22,10 +22,10 @@
     "swagger-ui": "github:awslabs/swagger-ui#apigw-fork-v4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "cover": "react-scripts test --coverage",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "cover": "react-app-rewired test --coverage",
     "coverage": "npm run cover",
     "eject": "react-scripts eject"
   },
@@ -39,6 +39,7 @@
     "@testing-library/jest-dom": "^4.0.0",
     "@testing-library/react": "^8.0.4",
     "node-fetch": "^2.6.7",
+    "react-app-rewired": "^2.2.1",
     "react-scripts": "^5.0.1"
   }
 }

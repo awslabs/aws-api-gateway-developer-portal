@@ -54,7 +54,7 @@ class Dropdown extends React.Component {
     document.addEventListener('click', this.hideDropdown)
   }
 
-  componentWillUnmount () {
+  UNSAFE_componentWillUnmount () {
     document.removeEventListener('click', this.hideDropdown)
   }
 

@@ -16,7 +16,6 @@
 
 var apiGateway = apiGateway || {};
 apiGateway.core = apiGateway.core || {};
-var Buffer = require('buffer/').Buffer;
 
 apiGateway.core.utils = {
     assertDefined: function (object, name) {

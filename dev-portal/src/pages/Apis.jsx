@@ -29,7 +29,7 @@ export default observer(class ApisPage extends React.Component {
 
   componentDidMount () { this.updateApi(true) }
   componentDidUpdate () { this.updateApi(false) }
-  componentWillUnmount () { this.containerRef = null }
+  UNSAFE_componentWillUnmount () { this.containerRef = null }
 
   updateApi (isInitial) {
     return getApi(this.props.match.params.apiId || 'ANY', true, this.props.match.params.stage, isInitial)

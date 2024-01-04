@@ -38,7 +38,7 @@ export const NavBar = observer(
           <Image size='mini' src='/custom-content/nav-logo.png' style={{ paddingRight: '10px' }} />
           {fragments.Home.title}
         </MenuLink>
-
+        <MenuLink to='/credentials'>Credentials</MenuLink>
         <MenuLink to='/getting-started'>{fragments.GettingStarted.title}</MenuLink>
         <MenuLink to='/apis'>{fragments.APIs.title}</MenuLink>
 
