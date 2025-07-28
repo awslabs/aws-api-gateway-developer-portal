@@ -128,6 +128,13 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Configure Git to use HTTPS
+        run: |
+          echo "🔧 Configuring Git to use HTTPS instead of SSH..."
+          git config --global url."https://github.com/".insteadOf git@github.com:
+          git config --global url."https://github.com/".insteadOf git://github.com/
+          git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+
       - name: Install dependencies
         run: |
           echo "📦 Installing dependencies..."
@@ -365,6 +372,13 @@ jobs:
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
+
+      - name: Configure Git to use HTTPS
+        run: |
+          echo "🔧 Configuring Git to use HTTPS instead of SSH..."
+          git config --global url."https://github.com/".insteadOf git@github.com:
+          git config --global url."https://github.com/".insteadOf git://github.com/
+          git config --global url."https://github.com/".insteadOf ssh://git@github.com/
 
       - name: Install dependencies
         run: poetry install
