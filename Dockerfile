@@ -1,4 +1,4 @@
-# Dockerfile for augint-library development environment
+# Dockerfile for development environment
 # Optimized for Claude Code SSH access and IDE integration
 
 FROM python:3.12-bookworm
@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     iproute2 \
     dos2unix \
-    bind9-dnsutils \
+    bind9-utils \
     # Python development
     python3-dev \
     # AWS CLI dependencies
@@ -127,9 +127,17 @@ RUN echo '# Useful aliases' >> /root/.bashrc && \
     echo '' >> /root/.bashrc && \
     echo '# Auto-activate Poetry virtualenv if pyproject.toml exists' >> /root/.bashrc && \
     echo 'if command -v poetry &> /dev/null && [ -f "pyproject.toml" ]; then' >> /root/.bashrc && \
+    echo '    # Install dependencies if not already installed' >> /root/.bashrc && \
+    echo '    if ! poetry env info --path >/dev/null 2>&1; then' >> /root/.bashrc && \
+    echo '        echo "Installing project dependencies..."' >> /root/.bashrc && \
+    echo '        poetry install --no-interaction --no-ansi' >> /root/.bashrc && \
+    echo '    fi' >> /root/.bashrc && \
+    echo '    # Activate the virtualenv' >> /root/.bashrc && \
     echo '    VENV_PATH=$(poetry env info --path 2>/dev/null)' >> /root/.bashrc && \
     echo '    if [ -n "$VENV_PATH" ] && [ -f "$VENV_PATH/bin/activate" ]; then' >> /root/.bashrc && \
     echo '        source "$VENV_PATH/bin/activate"' >> /root/.bashrc && \
+    echo '        # Also add poetry bin to PATH for direct command access' >> /root/.bashrc && \
+    echo '        export PATH="$VENV_PATH/bin:$PATH"' >> /root/.bashrc && \
     echo '    fi' >> /root/.bashrc && \
     echo 'fi' >> /root/.bashrc && \
     echo '' >> /root/.bashrc && \
@@ -172,17 +180,12 @@ RUN git config --global --add safe.directory '*' && \
     git config --global core.editor vim && \
     git config --global credential.helper store && \
     git config --global init.defaultBranch main && \
-    git config --global --unset-all http.sslbackend || true && \
-    git config --global core.hooksPath /dev/null
+    git config --global --unset-all http.sslbackend || true
 
 # Configure system-wide git safe directories using build arg
 ARG PROJECT_DIR=current-project
 RUN echo "[safe]" >> /etc/gitconfig && \
-    echo "    directory = /root/projects/${PROJECT_DIR}" >> /etc/gitconfig && \
-    echo "    directory = /root/projects/${PROJECT_DIR}/api-portal" >> /etc/gitconfig && \
-    echo "    directory = /root/projects/${PROJECT_DIR}/augint-api" >> /etc/gitconfig && \
-    echo "    directory = /root/projects/${PROJECT_DIR}/augint-web" >> /etc/gitconfig && \
-    echo "    directory = /root/projects/${PROJECT_DIR}/augint-library" >> /etc/gitconfig
+    echo "    directory = /root/projects/${PROJECT_DIR}" >> /etc/gitconfig
 
 # Set up vim with basic config
 RUN echo 'set number' >> /root/.vimrc && \
@@ -205,15 +208,12 @@ RUN echo '#!/bin/bash' > /usr/local/bin/git && \
     echo 'exec /usr/bin/git -c http.sslBackend=gnutls "$@"' >> /usr/local/bin/git && \
     chmod +x /usr/local/bin/git
 
-# Install project dependencies if pyproject.toml exists
-ARG PROJECT_DIR=current-project
-RUN if [ -f /root/projects/${PROJECT_DIR}/pyproject.toml ]; then \
-        cd /root/projects/${PROJECT_DIR} && \
-        poetry install --no-interaction --no-ansi || true; \
-    fi
+# Note: Project dependencies are installed on container startup via entrypoint
+# This is because the project files aren't available during build time
 
 # Add startup script to configure Git authentication
 RUN echo '#!/bin/bash\n\
+set -e\n\
 # Copy Windows gitconfig if it exists and create Linux-compatible version\n\
 if [ -f /root/.gitconfig.windows ]; then\n\
     # Copy all settings except SSL backend\n\
@@ -226,10 +226,32 @@ if [ -n "$GH_TOKEN" ]; then\n\
 fi\n\
 # Force gnutls SSL backend globally only\n\
 git config --global http.sslBackend gnutls\n\
+# Install project dependencies FIRST, before anything else starts\n\
+# This ensures Claude Code has access to all tools\n\
+if [ -f "pyproject.toml" ]; then\n\
+    if ! poetry env info --path >/dev/null 2>&1; then\n\
+        echo "===================================="\n\
+        echo "Installing project dependencies..."\n\
+        echo "===================================="\n\
+        poetry install --no-interaction --no-ansi\n\
+        echo "===================================="\n\
+        echo "Dependencies installed successfully!"\n\
+        echo "===================================="\n\
+    fi\n\
+    # Export the virtualenv path for child processes\n\
+    VENV_PATH=$(poetry env info --path 2>/dev/null)\n\
+    if [ -n "$VENV_PATH" ]; then\n\
+        export PATH="$VENV_PATH/bin:$PATH"\n\
+        export VIRTUAL_ENV="$VENV_PATH"\n\
+    fi\n\
+fi\n\
 # Note: No cd command - Docker Compose working_dir handles the directory\n\
 exec "$@"' > /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+
 # Default command keeps container running
 CMD ["tail", "-f", "/dev/null"]
